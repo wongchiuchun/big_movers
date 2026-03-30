@@ -1611,8 +1611,8 @@ function updateCrosshairInfo(param) {
 
   if (!param || !param.point || !currentBars || !currentBars.length) { clear(); return; }
 
-  // ── 1. 把 param.time 统一转成 "YYYY-MM-DD" 字符串 ──
-  // v3 中 param.time 可能是 {year,month,day} 对象，也可能是时间戳数字或字符串
+  // ── 1. Normalize param.time to a "YYYY-MM-DD" string ──
+  // In v3, param.time may be a {year,month,day} object, a Unix timestamp, or a string
   function paramTimeToStr(t) {
     if (!t) return null;
     if (typeof t === 'string') return t;
@@ -1630,7 +1630,7 @@ function updateCrosshairInfo(param) {
   const timeStr = paramTimeToStr(param.time);
   if (!timeStr) { clear(); return; }
 
-  // ── 2. 从 seriesData / seriesPrices 拿 OHLC ──
+  // ── 2. Read OHLC from seriesData / seriesPrices ──
   let ohlc = null;
   if (priceSeries && param.seriesData) {
     ohlc = param.seriesData.get(priceSeries) || null;
@@ -1640,11 +1640,11 @@ function updateCrosshairInfo(param) {
     if (v && typeof v === 'object' && v.open !== undefined) ohlc = v;
   }
 
-  // ── 3. 按 timeStr 找 resampledBar（含 volume）──
+  // ── 3. Find resampledBar by timeStr (includes volume) ──
   const resampledBars = resampleBars(currentBars, currentTF);
   let bar = resampledBars.find(b => b.time === timeStr) || null;
   if (!bar) {
-    // 最近日期兜底
+    // Fallback: nearest bar if exact date not found
     let best = null, bestDiff = Infinity;
     const target = new Date(timeStr).getTime();
     for (const b of resampledBars) {
@@ -1654,14 +1654,14 @@ function updateCrosshairInfo(param) {
     bar = best;
   }
 
-  // ── 4. 用 seriesData 的 OHLC 覆盖（更准确），保留 bar 的 volume ──
+  // ── 4. Prefer OHLC from seriesData (more accurate); keep bar volume ──
   if (ohlc && ohlc.open !== undefined) {
     bar = bar
       ? { ...bar, open: ohlc.open, high: ohlc.high, low: ohlc.low, close: ohlc.close }
       : { time: timeStr, open: ohlc.open, high: ohlc.high, low: ohlc.low, close: ohlc.close, volume: 0 };
   }
 
-  // ── 5. 同时从 volSeries seriesData 拿 volume（最可靠）──
+  // ── 5. Also read volume from volSeries seriesData (most reliable) ──
   if (volSeries && param.seriesData) {
     const vd = param.seriesData.get(volSeries);
     if (vd && vd.value !== undefined) {
@@ -1671,7 +1671,7 @@ function updateCrosshairInfo(param) {
 
   if (!bar) { clear(); return; }
 
-  // ── 6. 渲染 ──
+  // ── 6. Render ──
   infoDate.textContent = bar.time || timeStr;
 
   const barIdx = resampledBars.findIndex(b => b.time === bar.time);
@@ -2122,7 +2122,7 @@ function drawOne(d,sel=false){
       ctx2.lineTo(x1+(dx/len)*canvas.width*3,y1+(dy/len)*canvas.width*3);
     } else {ctx2.moveTo(x1,y1);ctx2.lineTo(x2,y2);}
     ctx2.stroke();ctx2.setLineDash([]);
-    // seg：不画端点圆点；ray/extended line：仅在“选中(sel=true)”时画两个端点圆点
+    // seg: no endpoint dots; ray/extended line: endpoint dots only when selected (sel=true)
     if(sel && (d.type === 'ray' || d.type === 'line')){
       [x1,x2].forEach((hx,i)=>{const hy=i===0?y1:y2;ctx2.beginPath();ctx2.arc(hx,hy,5,0,Math.PI*2);ctx2.fillStyle=c;ctx2.fill();});
     }

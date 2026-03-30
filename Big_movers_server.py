@@ -11,7 +11,7 @@ from flask import Flask, jsonify, send_from_directory, request, Response
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, static_folder=SCRIPT_DIR, static_url_path="")
 
-# 配置路径
+# Path configuration
 RESULTS_CSV = os.path.join(SCRIPT_DIR, "big_movers_result.csv")
 STOCKS_DIRS = [
     os.path.join(SCRIPT_DIR, "collected_stocks"),
@@ -180,7 +180,7 @@ def api_ohlcv():
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
-    # 在所有目录里查找
+    # Search configured directories
     path = None
     for d in STOCKS_DIRS:
         for fname in [f"{symbol}.csv", f"{symbol.lower()}.csv"]:
@@ -201,7 +201,7 @@ def api_ohlcv():
             header = next(reader, None)
             if not header:
                 return jsonify([])
-            # 判断格式
+            # Detect CSV column layout
             if len(header) >= 2 and "date" in (header[1] or "").lower():
                 fmt = "new"
             elif len(header) >= 1 and "date" in (header[0] or "").lower():
