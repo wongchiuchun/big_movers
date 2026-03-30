@@ -1,6 +1,6 @@
 # Big Movers — A Stock Research & Charting Platform
 
-**Built on the Qullamaggie Breakout Methodology**
+**Built on the Qullamaggie Breakout Methodology** — [notes on X (Twitter)](https://x.com/traderwillhu/status/2033669135628955960)
 
 ---
 
@@ -68,3 +68,15 @@ Everything runs offline on your own machine. No cloud, no subscription, no data 
 Big Movers is built for traders and researchers who want to study price history systematically rather than relying on screeners that only show current market data. By reviewing hundreds of historical setups that share the same structure — strong fundamentals, tight consolidation, explosive breakout — you build the visual pattern recognition that is the foundation of discretionary trading.
 
 The tool does not give buy or sell signals. It gives you the raw material to study, annotate, and learn from the market's best historical moves at your own pace.
+
+---
+
+## Disclaimer
+
+Stock data and any statistics or charts derived from it are **not** guaranteed to be 100% accurate or complete. You are responsible for independently verifying the accuracy and suitability of the data before using it for any purpose.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
