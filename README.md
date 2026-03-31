@@ -71,6 +71,15 @@ The tool does not give buy or sell signals. It gives you the raw material to stu
 
 ---
 
+## Download (Windows EXE)
+
+For quick setup on Windows, download the packaged executable here:
+
+- [Big Movers shared folder (Google Drive)](https://drive.google.com/drive/folders/1RG534vqo7b4UC6RKGHWqcr-33BEgBi68?usp=sharing)
+
+---
+
+
 ## Disclaimer
 
 Stock data and any statistics or charts derived from it are **not** guaranteed to be 100% accurate or complete. You are responsible for independently verifying the accuracy and suitability of the data before using it for any purpose.
