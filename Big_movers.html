@@ -1253,6 +1253,7 @@ let _syncingVolRange=false;
 let priceSeries=null;
 let currentBars=[],currentSymbol='';
 let currentMoveRow=null; // cache selected row for re-applying markers after setData()
+let activeOhlcvController=null;
 let sortCol='year',sortDir=1;
 let isLogScale=false;
 let maList=[],maIdCounter=0;
@@ -3442,6 +3443,13 @@ function renderTable(){
 // SELECT ROW
 // ==============================================
 async function selectRow(i){
+  if (activeOhlcvController) {
+    try { activeOhlcvController.abort(); } catch (e) {}
+    activeOhlcvController = null;
+  }
+  const reqController = new AbortController();
+  activeOhlcvController = reqController;
+
   activeIdx=i;renderTable();
   document.querySelector('.row.active')?.scrollIntoView({block:'nearest'});
   const r=filtered[i];
@@ -3455,8 +3463,13 @@ async function selectRow(i){
   document.getElementById('placeholder').classList.add('hidden');
   document.getElementById('loading').classList.remove('hidden');
   try{
-    const bars=await(await fetch(`/api/ohlcv?symbol=${r.symbol}`)).json();
+    const resp = await fetch(`/api/ohlcv?symbol=${encodeURIComponent(r.symbol)}`, { signal: reqController.signal });
+    if(!resp.ok){
+      throw new Error(`HTTP ${resp.status}`);
+    }
+    const bars=await resp.json();
     if(bars.error)throw new Error(bars.error);
+    if (activeOhlcvController !== reqController) return;
     currentBars=bars;
     candleSeries.setData(bars.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close})));
     volSeries.setData(bars.map(b => {
@@ -3480,8 +3493,18 @@ async function selectRow(i){
     // Reset crosshair info
     updateCrosshairInfo(null);
   }catch(e){
-    console.error(e);document.getElementById('ct-gain').textContent=`Error: ${e.message}`;
-  }finally{document.getElementById('loading').classList.add('hidden');}
+    if(e && e.name === 'AbortError'){
+      return;
+    }
+    console.error(e);
+    // Keep gain text stable; show transient error on range label.
+    document.getElementById('ct-range').textContent=`${r.low_date} → ${r.high_date}  |  Error: ${e.message}`;
+  }finally{
+    if (activeOhlcvController === reqController) {
+      activeOhlcvController = null;
+    }
+    document.getElementById('loading').classList.add('hidden');
+  }
 }
 
 // ==============================================
