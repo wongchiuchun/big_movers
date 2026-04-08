@@ -51,7 +51,7 @@
   .stat-badge span{color:var(--accent);}
   .main{display:grid;grid-template-columns:clamp(320px,30vw,480px) 1fr;overflow:hidden;}
   .table-panel{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-  .table-header{display:grid;grid-template-columns:18% 12% 22% 22% 16% 10%;padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;user-select:none;}
+  .table-header{display:grid;grid-template-columns:14% 9% 18% 18% 13% 18% 10%;padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;user-select:none;}
   .table-header span{cursor:pointer;transition:color 0.15s;}
   .table-header span:hover{color:var(--accent);}
   .table-header span.sort-asc::after{content:' ▲';color:var(--accent);}
@@ -59,7 +59,7 @@
   .table-body{flex:1;overflow-y:auto;}
   .table-body::-webkit-scrollbar{width:4px;}
   .table-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-  .row{display:grid;grid-template-columns:18% 12% 22% 22% 16% 10%;padding:7px 12px;border-bottom:1px solid var(--row-border);font-family:var(--mono);font-size:11px;cursor:pointer;transition:background 0.1s;align-items:center;}
+  .row{display:grid;grid-template-columns:14% 9% 18% 18% 13% 18% 10%;padding:7px 12px;border-bottom:1px solid var(--row-border);font-family:var(--mono);font-size:11px;cursor:pointer;transition:background 0.1s;align-items:center;}
   .row:hover{background:var(--bg3);}
   .row.active{background:var(--row-active);border-left:2px solid var(--accent);}
   .sym{color:var(--text);font-weight:600;}
@@ -74,6 +74,30 @@
   .chart-topbar .ma-toggle-btn{width:var(--ctrl);height:var(--ctrl);border-radius:10px;}
   .chart-topbar .ma-toggle-btn.text{font-size:12px;font-weight:900;letter-spacing:0.02em;font-family:var(--mono);}
   .chart-topbar .ma-toggle-btn.active{border-color:var(--accent);color:var(--accent);}
+  /* Study drawer */
+  .study-float{position:absolute;top:44px;right:12px;z-index:200;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;width:300px;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.25);max-height:calc(100vh - 120px);overflow-y:auto;}
+  .study-float.open{display:block;}
+  .study-section{margin-bottom:12px;}
+  .study-section:last-child{margin-bottom:0;}
+  .study-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;}
+  .study-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .study-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:6px;outline:none;cursor:pointer;}
+  .study-notes{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px;border-radius:6px;resize:vertical;outline:none;min-height:60px;}
+  .study-notes:focus{border-color:var(--accent);}
+  .study-tags-grid{display:flex;flex-wrap:wrap;gap:4px;}
+  .study-tag-chip{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all 0.15s;user-select:none;}
+  .study-tag-chip.active{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+  .study-tag-chip:hover{border-color:var(--accent);}
+  .study-add-tag{display:flex;gap:4px;margin-top:8px;}
+  .study-add-tag input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:6px;outline:none;}
+  .study-add-tag button{background:var(--accent);color:var(--bg);border:none;font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;font-weight:700;}
+  /* Study column in table */
+  .study-cell{font-family:var(--mono);font-size:9px;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:3px;}
+  .study-badge{display:inline-block;padding:1px 4px;border-radius:3px;font-weight:600;font-size:9px;letter-spacing:0.3px;}
+  .dir-long{color:#26a69a;}
+  .dir-short{color:#ef5350;}
+  .tag-mini{display:inline-block;padding:1px 3px;border-radius:2px;font-size:8px;background:var(--bg3);color:var(--muted);border:1px solid var(--border);}
+
   .chart-symbol{font-size:15px;font-weight:600;color:var(--text);}
   .chart-cond{font-size:10px;padding:2px 7px;border-radius:2px;border:1px solid var(--accent);color:var(--accent);}
   .chart-gain{color:var(--green);font-weight:600;}
@@ -893,6 +917,9 @@
       <label>Min%</label><input id="f-gain" type="number" placeholder="0" style="width:4em">
       <label>Symbol</label><input id="f-sym" type="text" placeholder="AAPL" style="width:5em;text-transform:uppercase">
       <label>Year</label><input id="f-year" type="number" placeholder="2025" style="width:5.4em">
+      <label>Tag</label><select id="f-tag" class="study-select" style="width:6.5em"><option value="">All</option></select>
+      <label>Dir</label><select id="f-dir" class="study-select" style="width:5em"><option value="">All</option><option value="long">Long</option><option value="short">Short</option></select>
+      <label>Min Rtg</label><select id="f-rating" class="study-select" style="width:4em"><option value="">All</option><option value="A">≥A</option><option value="B">≥B</option><option value="C">≥C</option><option value="D">≥D</option></select>
     </div>
     <div class="stat-badge">Showing <span id="count">0</span> stocks</div>
     <div class="spacer"></div>
@@ -904,6 +931,7 @@
       <div class="table-header" id="table-header">
         <span data-col="symbol">Symbol</span>
         <span data-col="year">Year</span>
+        <span data-col="study">Study</span>
         <span data-col="low_date">Low</span>
         <span data-col="high_date">High</span>
         <span data-col="gain_pct">Gain%</span>
@@ -990,6 +1018,7 @@
           </svg>
         </button>
         <button id="spy-toggle" class="ma-toggle-btn text" title="Benchmark overlay (VS SPY): Off → Line → Candle → Bar" aria-label="Benchmark overlay">VS</button>
+        <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
         <div class="tb-sep"></div>
         <div class="tb-sep"></div>
       </div>
@@ -999,7 +1028,49 @@
           <button class="tb-btn" id="ma-add-btn">+ MA</button>
         </div>
       </div>
-      
+
+      <div class="study-float" id="study-panel">
+        <div class="study-section">
+          <div class="study-label">Rating</div>
+          <div class="study-row">
+            <select id="study-rating" class="study-select" style="width:60px">
+              <option value="">—</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+            </select>
+          </div>
+        </div>
+        <div class="study-section">
+          <div class="study-label">Direction</div>
+          <div class="study-row">
+            <select id="study-direction" class="study-select" style="width:80px">
+              <option value="">—</option>
+              <option value="long">Long</option>
+              <option value="short">Short</option>
+            </select>
+          </div>
+        </div>
+        <div class="study-section">
+          <div class="study-label">Tags</div>
+          <div class="study-tags-grid" id="study-tags-grid"></div>
+          <div class="study-add-tag">
+            <input id="study-custom-tag" type="text" placeholder="Custom tag...">
+            <button id="study-add-tag-btn">+</button>
+          </div>
+        </div>
+        <div class="study-section">
+          <div class="study-label">Notes</div>
+          <textarea id="study-notes" class="study-notes" rows="4" placeholder="Your observations..."></textarea>
+          <div style="text-align:right;font-size:9px;color:var(--muted);margin-top:2px"><span id="study-notes-count">0</span> chars</div>
+        </div>
+        <div class="study-section" style="display:flex;gap:6px">
+          <a id="study-tv-link" href="#" target="_blank" class="study-select" style="text-decoration:none;text-align:center;flex:1;display:block">Open TradingView</a>
+        </div>
+      </div>
+
       <!-- Crosshair Info Bar -->
       <div class="crosshair-info" id="crosshair-info">
         <div class="info-item">
@@ -1270,6 +1341,24 @@ let priceColors = { up: '#26a69a', down: '#ef5350' };
 let drawings={};      // {symbol:[{id,type,...}]}
 let drawIdCtr=0;
 
+let metadata = { version: 1, customTags: [], items: {} };
+const PRESET_TAGS = ['EP','VCP','Parabolic','HTF','Breakout','Flag','Power Earnings Gap','IPO Base','Low Cheat','Other'];
+const RATING_COLORS = { A:'#26a69a', B:'#5cb85c', C:'#f5c842', D:'#ff8c00', E:'#ef5350' };
+
+function moveKey(r) { return r ? `${r.symbol}_${r.year}` : ''; }
+function drawKey() { return moveKey(currentMoveRow) || currentSymbol; }
+function getMeta(r) {
+  const k = moveKey(r);
+  return (metadata.items && metadata.items[k]) || { tags:[], rating:'', direction:'', notes:'' };
+}
+function setMeta(r, patch) {
+  const k = moveKey(r);
+  if (!k) return;
+  if (!metadata.items) metadata.items = {};
+  metadata.items[k] = { ...getMeta(r), ...patch };
+  saveMetadata();
+}
+
 const RIGHT_OFFSET_BARS = 6;
 let persistedRightOffset = RIGHT_OFFSET_BARS;
 
@@ -1422,6 +1511,23 @@ async function saveDrawings(){
 }
 async function loadDrawings(){
   try{const r=await fetch('/api/drawings');drawings=await r.json();}catch(e){drawings={};}
+}
+async function saveMetadata() {
+  try {
+    await fetch('/api/metadata', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(metadata)
+    });
+  } catch(e) {}
+}
+async function loadMetadata() {
+  try {
+    const r = await fetch('/api/metadata');
+    const d = await r.json();
+    if (d && d.version) metadata = d;
+    else if (d && typeof d === 'object') metadata = { version:1, customTags:[], items:d };
+  } catch(e) { metadata = { version:1, customTags:[], items:{} }; }
 }
 function flash(msg){
   const el=document.getElementById('save-flash');
@@ -2045,8 +2151,9 @@ function time2p(t){
 
 function redrawAll(){
   ctx2.clearRect(0,0,canvas.width,canvas.height);
-  if(currentSymbol&&drawings[currentSymbol])
-    for(const d of drawings[currentSymbol])drawOne(d,d.id===selectedId);
+  const dk=drawKey();
+  if(dk&&drawings[dk])
+    for(const d of drawings[dk])drawOne(d,d.id===selectedId);
   if(pendingP1)drawPreview();
   if(measureStart)drawMeasure();
 }
@@ -2247,8 +2354,9 @@ function setTool(t){
 }
 TOOLS.forEach(t=>document.getElementById('tool-'+t).addEventListener('click',()=>setTool(t)));
 document.getElementById('tool-clear').addEventListener('click',()=>{
-  if(!currentSymbol)return;
-  drawings[currentSymbol]=[];selectedId=null;redrawAll();saveDrawings();
+  const dk=drawKey();
+  if(!dk)return;
+  drawings[dk]=[];selectedId=null;redrawAll();saveDrawings();
 });
 
 // ==============================================
@@ -2314,7 +2422,7 @@ function setupChartEvents(){
     }catch(e){}
     
     if (pendingP1 || measureStart) redrawAll();
-    if (drawTool === 'pan') {
+    if (drawTool === 'pan' && drawKey()) {
       const hit = hitTest(param.point.x, param.point.y);
       chartEl.style.cursor = hit != null ? (hit === selectedId ? 'move' : 'pointer') : '';
     }
@@ -2344,7 +2452,7 @@ function setupChartEvents(){
   }catch(e){}
 
   chart.subscribeClick(param=>{
-    if(!currentSymbol||drawTool==='pan')return;
+    if(!drawKey()||drawTool==='pan')return;
     if(!param.point)return;
     let price=priceSeries?.coordinateToPrice(param.point.y);
     if(price==null)return;
@@ -2404,7 +2512,7 @@ function setupChartEvents(){
   });
 
   chart.subscribeClick(param=>{
-    if(drawTool!=='pan'||!currentSymbol||!param.point)return;
+    if(drawTool!=='pan'||!drawKey()||!param.point)return;
     const x=param.point.x, y=param.point.y;
     const hit=hitTest(x,y);
     const newSel=(hit!=null&&hit!==selectedId)?hit:null;
@@ -2426,7 +2534,7 @@ function setupDrag(){
 
   let dragPart='whole';
   wrapEl.addEventListener('mousedown',e=>{
-    if(drawTool!=='pan'||e.button!==0||!currentSymbol)return;
+    if(drawTool!=='pan'||e.button!==0||!drawKey())return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
     let fullHit=hitTestFull(x,y);
@@ -2466,7 +2574,7 @@ function setupDrag(){
   });
 
   wrapEl.addEventListener('dblclick',e=>{
-    if(drawTool!=='pan'||!currentSymbol)return;
+    if(drawTool!=='pan'||!drawKey())return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
     const hit=hitTest(x,y);
@@ -2476,7 +2584,7 @@ function setupDrag(){
     e.preventDefault();
     e.stopPropagation();
     pushUndo();
-    drawings[currentSymbol]=drawings[currentSymbol].filter(dd=>dd.id!==hit);
+    drawings[drawKey()]=drawings[drawKey()].filter(dd=>dd.id!==hit);
     selectedId=null;
     chart.applyOptions({handleScroll:true,handleScale:true});
     redrawAll();
@@ -2514,8 +2622,9 @@ function setupDrag(){
 }
 
 function getDrawing(id){
-  if(!currentSymbol||!drawings[currentSymbol])return null;
-  return drawings[currentSymbol].find(d=>d.id===id)||null;
+  const dk=drawKey();
+  if(!dk||!drawings[dk])return null;
+  return drawings[dk].find(d=>d.id===id)||null;
 }
 
 function applyDrag(id,part,dx,dy){
@@ -2552,16 +2661,18 @@ const THRESH=8;
 const ENDPOINT_THRESH=10;
 
 function hitTest(mx,my){
-  if(!currentSymbol||!drawings[currentSymbol])return null;
-  for(const d of[...drawings[currentSymbol]].reverse()){
+  const dk=drawKey();
+  if(!dk||!drawings[dk])return null;
+  for(const d of[...drawings[dk]].reverse()){
     if(isHit(d,mx,my))return d.id;
   }
   return null;
 }
 
 function hitTestFull(mx,my){
-  if(!currentSymbol||!drawings[currentSymbol])return null;
-  for(const d of[...drawings[currentSymbol]].reverse()){
+  const dk=drawKey();
+  if(!dk||!drawings[dk])return null;
+  for(const d of[...drawings[dk]].reverse()){
     const part=getHitPart(d,mx,my);
     if(part)return{id:d.id,part};
   }
@@ -2639,17 +2750,19 @@ function distSeg(px,py,x1,y1,x2,y2){
 }
 
 function pushUndo(){
-  if(!currentSymbol)return;
-  const snapshot=JSON.parse(JSON.stringify(drawings[currentSymbol]||[]));
-  undoHistory.push({symbol:currentSymbol,snapshot});
+  const dk=drawKey();
+  if(!dk)return;
+  const snapshot=JSON.parse(JSON.stringify(drawings[dk]||[]));
+  undoHistory.push({symbol:dk,snapshot});
   if(undoHistory.length>50)undoHistory.shift();
 }
 
 function addDrawing(d){
-  if(!currentSymbol)return;
+  const dk=drawKey();
+  if(!dk)return;
   pushUndo();
-  if(!drawings[currentSymbol])drawings[currentSymbol]=[];
-  d.id=++drawIdCtr;drawings[currentSymbol].push(d);redrawAll();
+  if(!drawings[dk])drawings[dk]=[];
+  d.id=++drawIdCtr;drawings[dk].push(d);redrawAll();
 }
 
 // ==============================================
@@ -2728,11 +2841,13 @@ function showTextInput(px,py,price,time,initialText='',onConfirm){
 document.addEventListener('keydown',e=>{
   const inInput=document.activeElement===document.getElementById('txt-input')
     ||document.activeElement.tagName==='INPUT'
-    ||document.activeElement.tagName==='SELECT';
+    ||document.activeElement.tagName==='SELECT'
+    ||document.activeElement.tagName==='TEXTAREA';
   if((e.key==='Delete'||e.key==='Backspace')&&selectedId!=null&&!inInput){
-    if(!currentSymbol||!drawings[currentSymbol])return;
+    const dk=drawKey();
+    if(!dk||!drawings[dk])return;
     pushUndo();
-    drawings[currentSymbol]=drawings[currentSymbol].filter(d=>d.id!==selectedId);
+    drawings[dk]=drawings[dk].filter(d=>d.id!==selectedId);
     selectedId=null;
     chart.applyOptions({handleScroll:true,handleScale:true});
     redrawAll();saveDrawings();
@@ -2754,10 +2869,11 @@ document.addEventListener('keydown',e=>{
 
   if((e.key==='z'||e.key==='Z')&&(e.ctrlKey||e.metaKey)&&!inInput){
     e.preventDefault();
-    if(!currentSymbol||!undoHistory.length)return;
+    const dk=drawKey();
+    if(!dk||!undoHistory.length)return;
     for(let i=undoHistory.length-1;i>=0;i--){
-      if(undoHistory[i].symbol===currentSymbol){
-        drawings[currentSymbol]=JSON.parse(JSON.stringify(undoHistory[i].snapshot));
+      if(undoHistory[i].symbol===dk){
+        drawings[dk]=JSON.parse(JSON.stringify(undoHistory[i].snapshot));
         undoHistory.splice(i,1);
         selectedId=null;
         chart.applyOptions({handleScroll:true,handleScale:true});
@@ -3394,14 +3510,28 @@ async function loadResults(){
   try{allRows=await(await fetch('/api/results')).json();applyFilters();}
   catch(e){document.getElementById('table-body').innerHTML=`<div style="padding:20px;color:#ef5350;font-family:var(--mono);font-size:12px;">Error: ${e.message}</div>`;}
 }
+function populateTagFilter() {
+  const sel = document.getElementById('f-tag');
+  const val = sel.value;
+  const allTags = [...PRESET_TAGS, ...(metadata.customTags || [])];
+  sel.innerHTML = '<option value="">All</option>' + allTags.map(t => `<option value="${t}">${t}</option>`).join('');
+  sel.value = val; // preserve selection
+}
 function applyFilters(){
   const mg=parseFloat(document.getElementById('f-gain').value)||0;
   const sym=document.getElementById('f-sym').value.trim().toUpperCase();
   const yr=document.getElementById('f-year').value.trim();
+  const tagFilter=document.getElementById('f-tag').value;
+  const dirFilter=document.getElementById('f-dir').value;
+  const ratingFilter=document.getElementById('f-rating').value;
+
   filtered=allRows.filter(r=>{
     if(parseFloat(r.gain_pct)<mg)return false;
     if(sym&&!r.symbol.includes(sym))return false;
     if(yr&&String(r.year)!==yr)return false;
+    if(tagFilter){ const m=getMeta(r); if(!m.tags||!m.tags.includes(tagFilter))return false; }
+    if(dirFilter){ const m=getMeta(r); if(m.direction!==dirFilter)return false; }
+    if(ratingFilter){ const m=getMeta(r); if(!m.rating||m.rating>ratingFilter)return false; }
     return true;
   });
   applySort();
@@ -3414,8 +3544,24 @@ function applySort(){
   });
   document.getElementById('count').textContent=filtered.length;
   renderTable();
+  // Active-row reconciliation after filter/sort
+  if (currentMoveRow && filtered.length) {
+    const key = moveKey(currentMoveRow);
+    const newIdx = filtered.findIndex(r => moveKey(r) === key);
+    if (newIdx >= 0) { activeIdx = newIdx; renderTable(); }
+    else { selectRow(0); }
+  } else if (!filtered.length && currentMoveRow) {
+    document.getElementById('ct-sym').textContent = '—';
+    document.getElementById('ct-cond').textContent = '';
+    document.getElementById('ct-gain').textContent = '';
+    document.getElementById('ct-range').textContent = '';
+    document.getElementById('ct-vol').textContent = '';
+    currentMoveRow = null;
+    currentSymbol = '';
+  }
 }
 ['f-gain','f-sym','f-year'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
+['f-tag','f-dir','f-rating'].forEach(id=>document.getElementById(id).addEventListener('change',applyFilters));
 document.getElementById('table-header').addEventListener('click',e=>{
   const sp=e.target.closest('span[data-col]');if(!sp)return;
   const col=sp.dataset.col;
@@ -3424,6 +3570,20 @@ document.getElementById('table-header').addEventListener('click',e=>{
   sp.classList.add(sortDir===1?'sort-asc':'sort-desc');
   applySort();
 });
+function renderStudyCell(r) {
+  const m = getMeta(r);
+  let parts = [];
+  if (m.rating) parts.push(`<span class="study-badge" style="color:${RATING_COLORS[m.rating]||'var(--muted)'}">${m.rating}</span>`);
+  if (m.direction) parts.push(`<span class="${m.direction==='long'?'dir-long':'dir-short'}">${m.direction==='long'?'L':'S'}</span>`);
+  const TAG_ABBREV = {EP:'EP',VCP:'VCP',Parabolic:'PA',HTF:'HT',Breakout:'BK',Flag:'FL','Power Earnings Gap':'PEG','IPO Base':'IPO','Low Cheat':'LC',Other:'OT'};
+  if (m.tags && m.tags.length) {
+    const shown = m.tags.slice(0,2).map(t => `<span class="tag-mini">${TAG_ABBREV[t]||t.slice(0,3)}</span>`).join('');
+    const rest = m.tags.length > 2 ? `<span class="tag-mini">+${m.tags.length-2}</span>` : '';
+    parts.push(shown + rest);
+  }
+  if (m.notes) parts.push('<span style="color:var(--muted);font-size:8px">N</span>');
+  return parts.join(' ') || '<span style="color:var(--border)">—</span>';
+}
 function renderTable(){
   const body=document.getElementById('table-body');
   if(!filtered.length){body.innerHTML='<div style="padding:20px;color:var(--muted);font-family:var(--mono);font-size:12px;">No results.</div>';return;}
@@ -3431,6 +3591,7 @@ function renderTable(){
     <div class="row ${i===activeIdx?'active':''}" data-i="${i}">
       <span class="sym">${r.symbol}</span>
       <span class="date">${r.year}</span>
+      <span class="study-cell">${renderStudyCell(r)}</span>
       <span class="date">${r.low_date}</span>
       <span class="date">${r.high_date}</span>
       <span class="gain">+${parseFloat(r.gain_pct).toFixed(1)}%</span>
@@ -3460,6 +3621,7 @@ async function selectRow(i){
   document.getElementById('ct-gain').textContent=`+${parseFloat(r.gain_pct).toFixed(2)}%`;
   document.getElementById('ct-range').textContent=`${r.low_date} → ${r.high_date}`;
   document.getElementById('ct-vol').textContent=`$${r.avg_vol_b}B/mo`;
+  if (document.getElementById('study-panel').classList.contains('open')) updateStudyPanel();
   document.getElementById('placeholder').classList.add('hidden');
   document.getElementById('loading').classList.remove('hidden');
   try{
@@ -3507,6 +3669,112 @@ async function selectRow(i){
   }
 }
 
+// ============ STUDY PANEL ============
+function toggleStudyPanel() {
+  const panel = document.getElementById('study-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) updateStudyPanel();
+}
+
+function updateStudyPanel() {
+  const r = currentMoveRow;
+  if (!r) return;
+  const m = getMeta(r);
+
+  // Rating
+  const ratingSel = document.getElementById('study-rating');
+  ratingSel.value = m.rating || '';
+  ratingSel.style.color = RATING_COLORS[m.rating] || 'var(--text)';
+
+  // Direction
+  document.getElementById('study-direction').value = m.direction || '';
+
+  // Tags
+  renderStudyTags();
+
+  // Notes
+  document.getElementById('study-notes').value = m.notes || '';
+  document.getElementById('study-notes-count').textContent = (m.notes || '').length;
+
+  // TV link
+  document.getElementById('study-tv-link').href = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(r.symbol)}`;
+}
+
+function renderStudyTags() {
+  const r = currentMoveRow;
+  if (!r) return;
+  const m = getMeta(r);
+  const currentTags = m.tags || [];
+  const allTags = [...PRESET_TAGS, ...(metadata.customTags || [])];
+  const grid = document.getElementById('study-tags-grid');
+  grid.innerHTML = allTags.map(t =>
+    `<div class="study-tag-chip ${currentTags.includes(t)?'active':''}" data-tag="${t}">${t}</div>`
+  ).join('');
+  grid.querySelectorAll('.study-tag-chip').forEach(el => {
+    el.addEventListener('click', () => {
+      const tag = el.dataset.tag;
+      const m2 = getMeta(r);
+      let tags = [...(m2.tags || [])];
+      if (tags.includes(tag)) tags = tags.filter(t2 => t2 !== tag);
+      else tags.push(tag);
+      setMeta(r, { tags });
+      el.classList.toggle('active');
+      renderTable();
+    });
+  });
+}
+
+// Study panel event listeners
+document.getElementById('study-toggle-btn').addEventListener('click', toggleStudyPanel);
+
+document.getElementById('study-rating').addEventListener('change', function() {
+  if (!currentMoveRow) return;
+  this.style.color = RATING_COLORS[this.value] || 'var(--text)';
+  setMeta(currentMoveRow, { rating: this.value });
+  renderTable();
+});
+
+document.getElementById('study-direction').addEventListener('change', function() {
+  if (!currentMoveRow) return;
+  setMeta(currentMoveRow, { direction: this.value });
+  renderTable();
+});
+
+let notesDebounce = null;
+document.getElementById('study-notes').addEventListener('input', function() {
+  clearTimeout(notesDebounce);
+  document.getElementById('study-notes-count').textContent = this.value.length;
+  const r = currentMoveRow;
+  if (!r) return;
+  notesDebounce = setTimeout(() => {
+    setMeta(r, { notes: document.getElementById('study-notes').value });
+    renderTable();
+  }, 500);
+});
+
+document.getElementById('study-add-tag-btn').addEventListener('click', () => {
+  const input = document.getElementById('study-custom-tag');
+  const tag = input.value.trim();
+  if (!tag) return;
+  if (!metadata.customTags) metadata.customTags = [];
+  if (!metadata.customTags.includes(tag) && !PRESET_TAGS.includes(tag)) {
+    metadata.customTags.push(tag);
+    saveMetadata();
+    populateTagFilter();
+  }
+  input.value = '';
+  renderStudyTags();
+});
+
+// Close study panel on outside click
+document.addEventListener('click', e => {
+  const panel = document.getElementById('study-panel');
+  const btn = document.getElementById('study-toggle-btn');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) {
+    panel.classList.remove('open');
+  }
+});
+
 // ==============================================
 // BOOT
 // ==============================================
@@ -3519,6 +3787,8 @@ window.addEventListener('load',async()=>{
   }
   initChart();
   await loadDrawings();
+  await loadMetadata();
+  populateTagFilter();
   loadResults();
 });
 
