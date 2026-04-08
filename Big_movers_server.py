@@ -258,6 +258,15 @@ def api_ohlcv():
 
 
 DRAWINGS_FILE = os.path.join(SCRIPT_DIR, "drawings.json")
+METADATA_FILE = os.path.join(SCRIPT_DIR, "metadata.json")
+
+
+def _atomic_json_write(path, data):
+    """Write JSON to a temp file then rename (atomic on POSIX)."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
 
 
 @app.route("/api/drawings", methods=["GET", "POST"])
@@ -273,8 +282,26 @@ def api_drawings():
     else:
         try:
             data = request.get_json(silent=True) or {}
-            with open(DRAWINGS_FILE, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            _atomic_json_write(DRAWINGS_FILE, data)
+            return jsonify({"ok": True})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/metadata", methods=["GET", "POST"])
+def api_metadata():
+    if request.method == "GET":
+        if not os.path.exists(METADATA_FILE):
+            return jsonify({})
+        try:
+            with open(METADATA_FILE, "r", encoding="utf-8") as f:
+                return jsonify(json.load(f))
+        except Exception:
+            return jsonify({})
+    else:
+        try:
+            data = request.get_json(silent=True) or {}
+            _atomic_json_write(METADATA_FILE, data)
             return jsonify({"ok": True})
         except Exception as e:
             return jsonify({"error": str(e)}), 500
