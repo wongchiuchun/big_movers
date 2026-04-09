@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Big Movers — Qullamaggie Research</title>
+<title>Chart Studies</title>
 <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -39,19 +39,24 @@
     box-shadow: 0 6px 18px rgba(0,0,0,0.18);
   }
   html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--tv);overflow:hidden;}
-  .app{display:grid;grid-template-rows:48px 1fr;height:100vh;}
-  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 12px;flex-wrap:wrap;}
+  .app{display:grid;grid-template-rows:auto 1fr;height:100vh;}
+  .topbar{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:8px 16px;flex-wrap:wrap;min-height:48px;}
   .topbar .spacer{flex:1 1 auto;min-width:10px;}
-  .logo{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;}
-  .vsep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+  .logo{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+  .vsep{width:1px;height:22px;background:var(--border);flex-shrink:0;}
   .filters{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;}
-  .filters select,.filters input{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 7px;border-radius:3px;outline:none;}
-  .filters label{font-size:11px;color:var(--muted);font-family:var(--mono);}
-  .stat-badge{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:3px 10px;border-radius:3px;white-space:nowrap;}
-  .stat-badge span{color:var(--accent);}
-  .main{display:grid;grid-template-columns:clamp(320px,30vw,480px) 1fr;overflow:hidden;}
+  .filters select,.filters input{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:5px 8px;border-radius:5px;outline:none;transition:border-color 0.15s;}
+  .filters select:focus,.filters input:focus{border-color:var(--accent);}
+  .filters label{font-size:11px;color:var(--muted);font-family:var(--mono);font-weight:500;}
+  .filter-views{display:flex;align-items:center;gap:4px;}
+  .filter-views select{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 6px;border-radius:5px;outline:none;}
+  .filter-views button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:5px;cursor:pointer;outline:none;font-weight:600;transition:all 0.15s;}
+  .filter-views button:hover{color:var(--accent);border-color:var(--accent);}
+  .stat-badge{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:4px 12px;border-radius:5px;white-space:nowrap;}
+  .stat-badge span{color:var(--accent);font-weight:600;}
+  .main{display:grid;grid-template-columns:clamp(320px,30vw,500px) 1fr;overflow:hidden;}
   .table-panel{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-  .table-header{display:grid;grid-template-columns:14% 9% 18% 18% 13% 18% 10%;padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;user-select:none;}
+  .table-header{display:grid;grid-template-columns:16% 10% 20% 20% 14% 20%;padding:6px 14px;background:var(--bg3);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;user-select:none;}
   .table-header span{cursor:pointer;transition:color 0.15s;}
   .table-header span:hover{color:var(--accent);}
   .table-header span.sort-asc::after{content:' ▲';color:var(--accent);}
@@ -59,13 +64,12 @@
   .table-body{flex:1;overflow-y:auto;}
   .table-body::-webkit-scrollbar{width:4px;}
   .table-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-  .row{display:grid;grid-template-columns:14% 9% 18% 18% 13% 18% 10%;padding:7px 12px;border-bottom:1px solid var(--row-border);font-family:var(--mono);font-size:11px;cursor:pointer;transition:background 0.1s;align-items:center;}
+  .row{display:grid;grid-template-columns:16% 10% 20% 20% 14% 20%;padding:8px 14px;border-bottom:1px solid var(--row-border);font-family:var(--mono);font-size:12px;cursor:pointer;transition:background 0.1s;align-items:center;}
   .row:hover{background:var(--bg3);}
   .row.active{background:var(--row-active);border-left:2px solid var(--accent);}
   .sym{color:var(--text);font-weight:600;}
-  .date{color:var(--muted);font-size:10px;}
+  .date{color:var(--muted);font-size:11px;}
   .gain{font-weight:600;color:var(--green);}
-  .vol{color:var(--muted);font-size:10px;}
   .chart-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);position:relative;}
   .chart-topbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 10px;background:var(--bg2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:clamp(10px,0.8vw,12px);min-height:36px;}
   /* Make topbar controls consistent size (match schwab_chart) */
@@ -92,11 +96,11 @@
   .study-add-tag input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:6px;outline:none;}
   .study-add-tag button{background:var(--accent);color:var(--bg);border:none;font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;font-weight:700;}
   /* Study column in table */
-  .study-cell{font-family:var(--mono);font-size:9px;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:3px;}
-  .study-badge{display:inline-block;padding:1px 4px;border-radius:3px;font-weight:600;font-size:9px;letter-spacing:0.3px;}
-  .dir-long{color:#26a69a;}
-  .dir-short{color:#ef5350;}
-  .tag-mini{display:inline-block;padding:1px 3px;border-radius:2px;font-size:8px;background:var(--bg3);color:var(--muted);border:1px solid var(--border);}
+  .study-cell{font-family:var(--mono);font-size:10px;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:4px;}
+  .study-badge{display:inline-block;padding:2px 5px;border-radius:3px;font-weight:600;font-size:10px;letter-spacing:0.3px;}
+  .dir-long{color:#26a69a;font-weight:600;}
+  .dir-short{color:#ef5350;font-weight:600;}
+  .tag-mini{display:inline-block;padding:2px 4px;border-radius:3px;font-size:9px;background:var(--bg3);color:var(--muted);border:1px solid var(--border);}
 
   .chart-symbol{font-size:15px;font-weight:600;color:var(--text);}
   .chart-cond{font-size:10px;padding:2px 7px;border-radius:2px;border:1px solid var(--accent);color:var(--accent);}
@@ -906,12 +910,29 @@
   .save-flash.show {
     opacity: 1;
   }
+  /* Fetch ticker modal */
+  .fetch-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:none;align-items:center;justify-content:center;}
+  .fetch-modal-overlay.open{display:flex;}
+  .fetch-modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;width:360px;max-width:90vw;box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+  .fetch-modal h3{font-family:var(--mono);font-size:13px;color:var(--text);margin-bottom:14px;font-weight:600;}
+  .fetch-field{margin-bottom:10px;}
+  .fetch-field label{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;}
+  .fetch-field input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:6px;outline:none;}
+  .fetch-field input:focus{border-color:var(--accent);}
+  .fetch-actions{display:flex;gap:8px;margin-top:14px;}
+  .fetch-actions button{flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;outline:none;}
+  .fetch-btn-primary{background:var(--accent);color:var(--bg);border-color:var(--accent) !important;}
+  .fetch-btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+  .fetch-btn-cancel{background:var(--bg3);color:var(--text);}
+  .fetch-status{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;min-height:14px;}
+  .fetch-status.error{color:var(--red);}
+  .fetch-status.success{color:var(--green);}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="logo">Big Movers</div>
+    <div class="logo">Chart Studies</div>
     <div class="vsep"></div>
     <div class="filters">
       <label>Min%</label><input id="f-gain" type="number" placeholder="0" style="width:4em">
@@ -920,9 +941,17 @@
       <label>Tag</label><select id="f-tag" class="study-select" style="width:6.5em"><option value="">All</option></select>
       <label>Dir</label><select id="f-dir" class="study-select" style="width:5em"><option value="">All</option><option value="long">Long</option><option value="short">Short</option></select>
       <label>Min Rtg</label><select id="f-rating" class="study-select" style="width:4em"><option value="">All</option><option value="A">≥A</option><option value="B">≥B</option><option value="C">≥C</option><option value="D">≥D</option></select>
+      <div class="vsep" style="height:16px"></div>
+      <div class="filter-views">
+        <select id="fv-select" title="Saved filter views"><option value="">Views...</option></select>
+        <button id="fv-save-btn" title="Save current filters as a view">Save</button>
+        <button id="fv-default-btn" title="Set selected view as default">Default</button>
+        <button id="fv-delete-btn" title="Delete selected view">Del</button>
+      </div>
     </div>
     <div class="stat-badge">Showing <span id="count">0</span> stocks</div>
     <div class="spacer"></div>
+    <button id="add-ticker-btn" class="tb-btn" title="Fetch new ticker or extend existing" style="font-size:10px;padding:4px 12px;width:auto;border-radius:5px;">+ Add</button>
     <div class="vsep"></div>
     <button id="theme-toggle" class="tb-btn" title="Toggle theme">☀ Light</button>
   </div>
@@ -931,11 +960,10 @@
       <div class="table-header" id="table-header">
         <span data-col="symbol">Symbol</span>
         <span data-col="year">Year</span>
-        <span data-col="study">Study</span>
         <span data-col="low_date">Low</span>
         <span data-col="high_date">High</span>
         <span data-col="gain_pct">Gain%</span>
-        <span data-col="avg_vol_b">Vol$B</span>
+        <span data-col="study">Study</span>
       </div>
       <div class="table-body" id="table-body">
         <div style="padding:20px;color:var(--muted);font-family:var(--mono);font-size:12px;">Loading...</div>
@@ -1019,6 +1047,7 @@
         </button>
         <button id="spy-toggle" class="ma-toggle-btn text" title="Benchmark overlay (VS SPY): Off → Line → Candle → Bar" aria-label="Benchmark overlay">VS</button>
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
+        <button id="screenshot-btn" class="ma-toggle-btn text" title="Screenshot chart (Ctrl+Shift+S)" style="font-size:14px;margin-left:2px">📷</button>
         <div class="tb-sep"></div>
         <div class="tb-sep"></div>
       </div>
@@ -1066,8 +1095,52 @@
           <textarea id="study-notes" class="study-notes" rows="4" placeholder="Your observations..."></textarea>
           <div style="text-align:right;font-size:9px;color:var(--muted);margin-top:2px"><span id="study-notes-count">0</span> chars</div>
         </div>
-        <div class="study-section" style="display:flex;gap:6px">
-          <a id="study-tv-link" href="#" target="_blank" class="study-select" style="text-decoration:none;text-align:center;flex:1;display:block">Open TradingView</a>
+        <div class="study-section" style="display:flex;gap:6px;flex-wrap:wrap">
+          <button id="study-extend-btn" class="study-select" style="flex:1;cursor:pointer;text-align:center;font-weight:600" title="Fetch data up to today from Twelve Data API">Extend to Today</button>
+          <a id="study-tv-link" href="#" target="_blank" class="study-select" style="text-decoration:none;text-align:center;flex:1;display:block">TradingView</a>
+        </div>
+        <div id="study-extend-status" class="fetch-status" style="margin-top:4px"></div>
+        <div class="study-section" style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)">
+          <button id="study-remove-btn" style="width:100%;padding:6px;border:1px solid var(--red);border-radius:6px;background:transparent;color:var(--red);font-family:var(--mono);font-size:10px;cursor:pointer;font-weight:600;opacity:0.7;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">Remove Ticker</button>
+        </div>
+      </div>
+
+      <!-- Remove Ticker Confirm Modal -->
+      <div class="fetch-modal-overlay" id="remove-confirm-modal">
+        <div class="fetch-modal" style="width:320px">
+          <h3 style="color:var(--red)">Remove Ticker</h3>
+          <p style="font-family:var(--mono);font-size:11px;color:var(--text);margin-bottom:12px" id="remove-confirm-text"></p>
+          <label style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:14px;cursor:pointer">
+            <input type="checkbox" id="remove-delete-csv"> Also delete OHLCV data file
+          </label>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="remove-cancel-btn">Cancel</button>
+            <button class="fetch-btn-primary" id="remove-confirm-btn" style="background:var(--red);border-color:var(--red) !important">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fetch Ticker Modal -->
+      <div class="fetch-modal-overlay" id="fetch-modal">
+        <div class="fetch-modal">
+          <h3>Fetch Ticker Data</h3>
+          <div class="fetch-field">
+            <label>Symbol</label>
+            <input id="fetch-symbol" type="text" placeholder="AAPL" style="text-transform:uppercase" autocomplete="off">
+          </div>
+          <div class="fetch-field">
+            <label>Start Date</label>
+            <input id="fetch-start" type="date">
+          </div>
+          <div class="fetch-field">
+            <label>End Date (default: today)</label>
+            <input id="fetch-end" type="date">
+          </div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="fetch-cancel-btn">Cancel</button>
+            <button class="fetch-btn-primary" id="fetch-submit-btn">Fetch</button>
+          </div>
+          <div class="fetch-status" id="fetch-status"></div>
         </div>
       </div>
 
@@ -3591,12 +3664,11 @@ function renderTable(){
     <div class="row ${i===activeIdx?'active':''}" data-i="${i}">
       <span class="sym">${r.symbol}</span>
       <span class="date">${r.year}</span>
-      <span class="study-cell">${renderStudyCell(r)}</span>
       <span class="date">${r.low_date}</span>
       <span class="date">${r.high_date}</span>
       <span class="gain">+${parseFloat(r.gain_pct).toFixed(1)}%</span>
-      <span class="vol">${r.avg_vol_b}B</span>
-    </div>`).join('');
+      <span class="study-cell">${renderStudyCell(r)}</span>
+    </div>`).join('');  // Data sourced from server CSV - no user-supplied HTML
   body.querySelectorAll('.row').forEach(el=>el.addEventListener('click',()=>selectRow(parseInt(el.dataset.i))));
 }
 
@@ -3775,6 +3847,383 @@ document.addEventListener('click', e => {
   }
 });
 
+// ============ FETCH TICKER / EXTEND ============
+(function() {
+  const modal = document.getElementById('fetch-modal');
+  const symInput = document.getElementById('fetch-symbol');
+  const startInput = document.getElementById('fetch-start');
+  const endInput = document.getElementById('fetch-end');
+  const submitBtn = document.getElementById('fetch-submit-btn');
+  const cancelBtn = document.getElementById('fetch-cancel-btn');
+  const statusEl = document.getElementById('fetch-status');
+
+  function openFetchModal() {
+    symInput.value = '';
+    startInput.value = '';
+    endInput.value = '';
+    statusEl.textContent = '';
+    statusEl.className = 'fetch-status';
+    submitBtn.disabled = false;
+    modal.classList.add('open');
+    symInput.focus();
+  }
+  function closeFetchModal() {
+    modal.classList.remove('open');
+  }
+
+  document.getElementById('add-ticker-btn').addEventListener('click', openFetchModal);
+  cancelBtn.addEventListener('click', closeFetchModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeFetchModal(); });
+
+  submitBtn.addEventListener('click', async () => {
+    const symbol = symInput.value.trim().toUpperCase();
+    const start = startInput.value;
+    const end = endInput.value;
+    if (!symbol) { statusEl.textContent = 'Symbol required'; statusEl.className = 'fetch-status error'; return; }
+    if (!start) { statusEl.textContent = 'Start date required'; statusEl.className = 'fetch-status error'; return; }
+
+    submitBtn.disabled = true;
+    statusEl.textContent = 'Fetching from Twelve Data...';
+    statusEl.className = 'fetch-status';
+
+    try {
+      const resp = await fetch('/api/fetch-ticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol, start_date: start, end_date: end || undefined })
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) {
+        statusEl.textContent = data.error || 'Fetch failed';
+        statusEl.className = 'fetch-status error';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      statusEl.textContent = `Fetched ${data.bars_added} bars for ${symbol}`;
+      statusEl.className = 'fetch-status success';
+
+      // Add to results table if we got a result row
+      if (data.result_row) {
+        const row = data.result_row;
+        // POST to add-result endpoint to persist
+        await fetch('/api/add-result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(row)
+        });
+        // Add to local allRows and refresh
+        const existing = allRows.findIndex(r => r.symbol === row.symbol && String(r.year) === String(row.year));
+        if (existing >= 0) allRows[existing] = row;
+        else allRows.push(row);
+        applyFilters();
+        // Select the new ticker
+        const newIdx = filtered.findIndex(r => r.symbol === row.symbol && String(r.year) === String(row.year));
+        if (newIdx >= 0) selectRow(newIdx);
+      }
+
+      setTimeout(closeFetchModal, 1500);
+    } catch (e) {
+      statusEl.textContent = 'Network error: ' + e.message;
+      statusEl.className = 'fetch-status error';
+    }
+    submitBtn.disabled = false;
+  });
+
+  // Extend to Today button
+  document.getElementById('study-extend-btn').addEventListener('click', async () => {
+    if (!currentMoveRow) return;
+    const btn = document.getElementById('study-extend-btn');
+    const statusEl2 = document.getElementById('study-extend-status');
+    btn.disabled = true;
+    statusEl2.textContent = 'Extending...';
+    statusEl2.className = 'fetch-status';
+
+    try {
+      const resp = await fetch('/api/fetch-ticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: currentMoveRow.symbol, extend: true })
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) {
+        statusEl2.textContent = data.error || 'Extend failed';
+        statusEl2.className = 'fetch-status error';
+        btn.disabled = false;
+        return;
+      }
+
+      if (data.bars_added === 0) {
+        statusEl2.textContent = 'Already up to date';
+        statusEl2.className = 'fetch-status success';
+      } else {
+        statusEl2.textContent = `Added ${data.bars_added} bars`;
+        statusEl2.className = 'fetch-status success';
+        // Reload the current ticker's chart
+        selectRow(activeIdx);
+      }
+    } catch (e) {
+      statusEl2.textContent = 'Error: ' + e.message;
+      statusEl2.className = 'fetch-status error';
+    }
+    btn.disabled = false;
+  });
+})();
+
+// ============ SCREENSHOT ============
+(function() {
+  async function takeScreenshot() {
+    if (!chart || !currentMoveRow) { flash('No chart to capture'); return; }
+    try {
+      // 1. Get LWC chart screenshot
+      const chartCanvas = chart.takeScreenshot();
+      const w = chartCanvas.width;
+      const h = chartCanvas.height;
+
+      // 2. Create composite canvas with header
+      const headerH = 36;
+      const composite = document.createElement('canvas');
+      const dpr = window.devicePixelRatio || 1;
+      composite.width = w;
+      composite.height = h + headerH * dpr;
+      const cctx = composite.getContext('2d');
+
+      // Header background
+      cctx.fillStyle = '#0a0c0f';
+      cctx.fillRect(0, 0, w, headerH * dpr);
+
+      // Header text
+      cctx.font = `bold ${14 * dpr}px Inter, sans-serif`;
+      cctx.fillStyle = '#00d4aa';
+      const r = currentMoveRow;
+      const m = getMeta(r);
+      let headerText = `${r.symbol}  ${r.year}  +${parseFloat(r.gain_pct).toFixed(1)}%`;
+      if (m.rating) headerText += `  [${m.rating}]`;
+      if (m.direction) headerText += `  ${m.direction.toUpperCase()}`;
+      if (m.tags && m.tags.length) headerText += `  ${m.tags.join(', ')}`;
+      cctx.fillText(headerText, 10 * dpr, 24 * dpr);
+
+      // 3. Draw chart below header
+      cctx.drawImage(chartCanvas, 0, headerH * dpr);
+
+      // 4. Overlay draw-canvas (annotations)
+      const drawCanvas = document.getElementById('draw-canvas');
+      if (drawCanvas && drawCanvas.width > 0) {
+        cctx.drawImage(drawCanvas, 0, headerH * dpr, w, h);
+      }
+
+      // 5. Capture volume chart if enabled
+      if (typeof volChart !== 'undefined' && volChart && volPaneEnabled) {
+        try {
+          const volCanvas = volChart.takeScreenshot();
+          const newH = composite.height + volCanvas.height;
+          const expanded = document.createElement('canvas');
+          expanded.width = w;
+          expanded.height = newH;
+          const ectx = expanded.getContext('2d');
+          ectx.drawImage(composite, 0, 0);
+          ectx.drawImage(volCanvas, 0, composite.height);
+          composite.width = expanded.width;
+          composite.height = expanded.height;
+          cctx.drawImage(expanded, 0, 0);
+        } catch (e) { /* volume chart screenshot optional */ }
+      }
+
+      // 6. Footer with notes (if any)
+      if (m.notes) {
+        const footerH = 30 * dpr;
+        const withFooter = document.createElement('canvas');
+        withFooter.width = composite.width;
+        withFooter.height = composite.height + footerH;
+        const fctx = withFooter.getContext('2d');
+        fctx.drawImage(composite, 0, 0);
+        fctx.fillStyle = '#0a0c0f';
+        fctx.fillRect(0, composite.height, withFooter.width, footerH);
+        fctx.font = `${11 * dpr}px Inter, sans-serif`;
+        fctx.fillStyle = '#8899aa';
+        const noteText = m.notes.length > 120 ? m.notes.slice(0, 120) + '...' : m.notes;
+        fctx.fillText(noteText, 10 * dpr, composite.height + 20 * dpr);
+        composite.width = withFooter.width;
+        composite.height = withFooter.height;
+        cctx.drawImage(withFooter, 0, 0);
+      }
+
+      // 7. Download
+      composite.toBlob(blob => {
+        if (!blob) { flash('Screenshot failed'); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${r.symbol}_${r.year}_chart.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        flash('Screenshot saved');
+      }, 'image/png');
+    } catch (e) {
+      console.error('Screenshot error:', e);
+      flash('Screenshot error: ' + e.message);
+    }
+  }
+
+  document.getElementById('screenshot-btn').addEventListener('click', takeScreenshot);
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+      e.preventDefault();
+      takeScreenshot();
+    }
+  });
+})();
+
+// ============ FILTER VIEWS ============
+(function() {
+  const VIEWS_KEY = 'bm_filter_views';
+  const DEFAULT_KEY = 'bm_default_view';
+  const viewSelect = document.getElementById('fv-select');
+  const saveBtn = document.getElementById('fv-save-btn');
+  const defaultBtn = document.getElementById('fv-default-btn');
+  const deleteBtn = document.getElementById('fv-delete-btn');
+
+  function getViews() {
+    try { return JSON.parse(localStorage.getItem(VIEWS_KEY)) || {}; } catch(e) { return {}; }
+  }
+  function setViews(v) { localStorage.setItem(VIEWS_KEY, JSON.stringify(v)); }
+  function getDefaultView() { return localStorage.getItem(DEFAULT_KEY) || ''; }
+  function setDefaultView(name) { localStorage.setItem(DEFAULT_KEY, name); }
+
+  function getCurrentFilters() {
+    return {
+      gain: document.getElementById('f-gain').value,
+      sym: document.getElementById('f-sym').value,
+      year: document.getElementById('f-year').value,
+      tag: document.getElementById('f-tag').value,
+      dir: document.getElementById('f-dir').value,
+      rating: document.getElementById('f-rating').value,
+    };
+  }
+  function applyFilterValues(f) {
+    document.getElementById('f-gain').value = f.gain || '';
+    document.getElementById('f-sym').value = f.sym || '';
+    document.getElementById('f-year').value = f.year || '';
+    document.getElementById('f-tag').value = f.tag || '';
+    document.getElementById('f-dir').value = f.dir || '';
+    document.getElementById('f-rating').value = f.rating || '';
+    applyFilters();
+  }
+
+  function populateViewSelect() {
+    const views = getViews();
+    const def = getDefaultView();
+    const names = Object.keys(views).sort();
+    viewSelect.innerHTML = '<option value="">Views...</option>' +
+      names.map(n => `<option value="${n}">${n}${n === def ? ' *' : ''}</option>`).join('');  // Asterisk marks default view
+  }
+
+  viewSelect.addEventListener('change', () => {
+    const name = viewSelect.value;
+    if (!name) return;
+    const views = getViews();
+    if (views[name]) applyFilterValues(views[name]);
+  });
+
+  saveBtn.addEventListener('click', () => {
+    const name = prompt('Save current filters as:');
+    if (!name || !name.trim()) return;
+    const views = getViews();
+    views[name.trim()] = getCurrentFilters();
+    setViews(views);
+    populateViewSelect();
+    viewSelect.value = name.trim();
+    flash('View saved: ' + name.trim());
+  });
+
+  defaultBtn.addEventListener('click', () => {
+    const name = viewSelect.value;
+    if (!name) { flash('Select a view first'); return; }
+    setDefaultView(name);
+    populateViewSelect();
+    flash('Default set: ' + name);
+  });
+
+  deleteBtn.addEventListener('click', () => {
+    const name = viewSelect.value;
+    if (!name) return;
+    const views = getViews();
+    delete views[name];
+    setViews(views);
+    if (getDefaultView() === name) localStorage.removeItem(DEFAULT_KEY);
+    populateViewSelect();
+    flash('View deleted');
+  });
+
+  // Expose for boot sequence
+  window._filterViews = { populateViewSelect, getDefaultView, getViews, applyFilterValues };
+})();
+
+// ============ REMOVE TICKER ============
+(function() {
+  const modal = document.getElementById('remove-confirm-modal');
+  const confirmBtn = document.getElementById('remove-confirm-btn');
+  const cancelBtn = document.getElementById('remove-cancel-btn');
+  const textEl = document.getElementById('remove-confirm-text');
+  const deleteCsvCb = document.getElementById('remove-delete-csv');
+
+  document.getElementById('study-remove-btn').addEventListener('click', () => {
+    if (!currentMoveRow) return;
+    textEl.textContent = `Remove ${currentMoveRow.symbol} (${currentMoveRow.year}) from the results list?`;
+    deleteCsvCb.checked = false;
+    modal.classList.add('open');
+  });
+
+  cancelBtn.addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+  confirmBtn.addEventListener('click', async () => {
+    if (!currentMoveRow) return;
+    confirmBtn.disabled = true;
+    try {
+      const resp = await fetch('/api/remove-ticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol: currentMoveRow.symbol,
+          year: currentMoveRow.year,
+          delete_csv: deleteCsvCb.checked
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) {
+        flash(data.error || 'Remove failed');
+        confirmBtn.disabled = false;
+        return;
+      }
+      // Remove from local state
+      const key = moveKey(currentMoveRow);
+      allRows = allRows.filter(r => moveKey(r) !== key);
+      // Clean up metadata and drawings for this entry
+      if (metadata.items && metadata.items[key]) { delete metadata.items[key]; saveMetadata(); }
+      if (drawings[key]) { delete drawings[key]; saveDrawings(); }
+      // Close panels and refresh
+      modal.classList.remove('open');
+      document.getElementById('study-panel').classList.remove('open');
+      currentMoveRow = null;
+      currentSymbol = '';
+      applyFilters();
+      if (filtered.length) selectRow(0);
+      else {
+        document.getElementById('ct-sym').textContent = '—';
+        document.getElementById('ct-cond').textContent = '';
+        document.getElementById('ct-gain').textContent = '';
+        document.getElementById('ct-range').textContent = '';
+        document.getElementById('ct-vol').textContent = '';
+      }
+      flash('Ticker removed');
+    } catch (e) {
+      flash('Error: ' + e.message);
+    }
+    confirmBtn.disabled = false;
+  });
+})();
+
 // ==============================================
 // BOOT
 // ==============================================
@@ -3789,6 +4238,13 @@ window.addEventListener('load',async()=>{
   await loadDrawings();
   await loadMetadata();
   populateTagFilter();
+  // Load saved filter views and apply default if set
+  window._filterViews.populateViewSelect();
+  const defView = window._filterViews.getDefaultView();
+  if (defView) {
+    const views = window._filterViews.getViews();
+    if (views[defView]) window._filterViews.applyFilterValues(views[defView]);
+  }
   loadResults();
 });
 
