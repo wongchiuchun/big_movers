@@ -1121,8 +1121,9 @@
           </svg>
         </button>
         <button id="spy-toggle" class="ma-toggle-btn text" title="Benchmark overlay (VS SPY): Off → Line → Candle → Bar" aria-label="Benchmark overlay">VS</button>
-        <button id="ai-overlay-toggle" class="ma-toggle-btn text active" title="Toggle AI indicator overlays (SMAs + swings)" style="margin-left:4px">AI</button>
-        <button id="ai-pivot-toggle" class="ma-toggle-btn text active" title="Toggle detected pivot marker" style="margin-left:2px">Piv</button>
+        <button id="ai-overlay-toggle" class="ma-toggle-btn text active" title="Toggle MA overlays (SMA50/150/200, EMA10/20)" style="margin-left:4px">AI</button>
+        <button id="ai-swings-toggle" class="ma-toggle-btn text active" title="Toggle swing pivot arrow markers (fractal highs/lows)" style="margin-left:2px">Sw</button>
+        <button id="ai-pivot-toggle" class="ma-toggle-btn text active" title="Toggle detected breakout pivot marker" style="margin-left:2px">Piv</button>
         <button id="defs-btn" class="ma-toggle-btn text" title="Setup definitions reference" style="margin-left:2px">Defs</button>
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
         <button id="screenshot-btn" class="ma-toggle-btn text" title="Screenshot chart (Ctrl+Shift+S)" style="font-size:14px;margin-left:2px">📷</button>
@@ -1514,8 +1515,9 @@ let aiOverlayConfig = {
   ema10:  { show: false, color: '#ede4cf', width: 1 },
   ema20:  { show: false, color: '#b8b5ad', width: 1 },
 };
-let aiOverlayEnabled = true;
-let aiPivotVisible = true;
+let aiOverlayEnabled = true;   // MA lines (SMA50/150/200, EMA10/20)
+let aiSwingsVisible = true;    // swing arrow markers
+let aiPivotVisible = true;     // yellow PIVOT circle
 let aiPivotInfo = null;
 let aiClassByMoveKey = {};
 let setupDefinitions = null;  // loaded once from /api/setup-definitions
@@ -1711,27 +1713,29 @@ function clearIndicatorOverlays() {
 
 function applyIndicatorOverlays() {
   clearIndicatorOverlays();
-  if (!aiIndicators || !aiOverlayEnabled) {
-    // Keep the low/high range markers even when overlays are toggled off
-    const base = (extraCandleMarkers || []).slice().sort((a,b)=>a.time<b.time?-1:1);
-    candleSeries.setMarkers(base);
-    return;
+
+  // (1) MA lines — gated by aiOverlayEnabled
+  if (aiIndicators && aiOverlayEnabled) {
+    for (const [key, cfg] of Object.entries(aiOverlayConfig)) {
+      if (!cfg.show) continue;
+      const data = aiIndicators[key];
+      if (!data || !data.length) continue;
+      const series = chart.addLineSeries({
+        color: cfg.color, lineWidth: cfg.width,
+        priceLineVisible: false, lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+      series.setData(data.map(p => ({ time: p.time, value: p.value })));
+      aiSeries[key] = series;
+    }
   }
-  for (const [key, cfg] of Object.entries(aiOverlayConfig)) {
-    if (!cfg.show) continue;
-    const data = aiIndicators[key];
-    if (!data || !data.length) continue;
-    const series = chart.addLineSeries({
-      color: cfg.color, lineWidth: cfg.width,
-      priceLineVisible: false, lastValueVisible: false,
-      crosshairMarkerVisible: false,
-    });
-    series.setData(data.map(p => ({ time: p.time, value: p.value })));
-    aiSeries[key] = series;
-  }
-  // Swing markers + pivot marker on candle series
+
+  // (2) Candle markers — each type gated independently so the three
+  //     topbar toggles (AI / Sw / Piv) work in any combination.
   const markers = [];
-  if (aiIndicators.swings) {
+
+  // Swing pivot arrows
+  if (aiIndicators && aiIndicators.swings && aiSwingsVisible) {
     for (const s of aiIndicators.swings) {
       markers.push({
         time: s.time,
@@ -1742,6 +1746,8 @@ function applyIndicatorOverlays() {
       });
     }
   }
+
+  // Detected breakout pivot
   if (aiPivotInfo && aiPivotInfo.pivot_date && aiPivotVisible) {
     markers.push({
       time: aiPivotInfo.pivot_date,
@@ -1752,7 +1758,8 @@ function applyIndicatorOverlays() {
       text: 'PIVOT',
     });
   }
-  // Merge in the low/high range markers that selectRow draws
+
+  // Always merge in the low/high range markers from selectRow
   for (const m of (extraCandleMarkers || [])) markers.push(m);
   markers.sort((a, b) => a.time < b.time ? -1 : 1);
   candleSeries.setMarkers(markers);
@@ -4220,14 +4227,21 @@ function renderStudyTags() {
 // Study panel event listeners
 document.getElementById('study-toggle-btn').addEventListener('click', toggleStudyPanel);
 
-// AI overlay toggle (SMAs + swing markers)
+// AI overlay toggle (MA lines only — swings and pivot have their own)
 document.getElementById('ai-overlay-toggle').addEventListener('click', () => {
   aiOverlayEnabled = !aiOverlayEnabled;
   document.getElementById('ai-overlay-toggle').classList.toggle('active', aiOverlayEnabled);
   applyIndicatorOverlays();
 });
 
-// Pivot marker toggle (independent of AI overlays)
+// Swing pivot arrows toggle (independent)
+document.getElementById('ai-swings-toggle').addEventListener('click', () => {
+  aiSwingsVisible = !aiSwingsVisible;
+  document.getElementById('ai-swings-toggle').classList.toggle('active', aiSwingsVisible);
+  applyIndicatorOverlays();
+});
+
+// Breakout pivot marker toggle (independent)
 document.getElementById('ai-pivot-toggle').addEventListener('click', () => {
   aiPivotVisible = !aiPivotVisible;
   document.getElementById('ai-pivot-toggle').classList.toggle('active', aiPivotVisible);
