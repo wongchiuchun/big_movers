@@ -5,7 +5,9 @@
 
 import csv
 import os
+import sys
 import json
+import math
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -14,7 +16,11 @@ from datetime import date
 from flask import Flask, jsonify, send_from_directory, request, Response
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Make the local `classifier` package importable regardless of cwd
+sys.path.insert(0, SCRIPT_DIR)
 app = Flask(__name__, static_folder=SCRIPT_DIR, static_url_path="")
+
+AI_CLASSIFICATIONS_FILE = os.path.join(SCRIPT_DIR, "ai_classifications.json")
 
 # Path configuration
 RESULTS_CSV = os.path.join(SCRIPT_DIR, "big_movers_result.csv")
@@ -599,6 +605,196 @@ def api_add_result():
         writer.writerow({k: str(body[k]) for k in required})
 
     return jsonify({"ok": True, "action": "added"})
+
+
+# ---------- Classifier endpoints (indicators, pivot, AI classifications) ----------
+
+
+def _series_from_column(df, col):
+    """Return a list of {time, value} dicts for a dataframe column, skipping NaN."""
+    if col not in df.columns:
+        return []
+    out = []
+    series = df[col]
+    idx = df.index
+    for ts, val in zip(idx, series):
+        try:
+            if val is None:
+                continue
+            fv = float(val)
+        except (TypeError, ValueError):
+            continue
+        if math.isnan(fv) or math.isinf(fv):
+            continue
+        try:
+            tstr = ts.strftime("%Y-%m-%d")
+        except AttributeError:
+            tstr = str(ts)[:10]
+        out.append({"time": tstr, "value": fv})
+    return out
+
+
+@app.route("/api/indicators")
+def api_indicators():
+    symbol = (request.args.get("symbol") or "").strip().upper()
+    if not symbol:
+        return jsonify({"error": "symbol required"}), 400
+    try:
+        from classifier.indicators import (
+            load_ticker_bars,
+            load_spy_benchmark,
+            compute_all_indicators,
+        )
+        bars = load_ticker_bars(symbol, os.path.join(SCRIPT_DIR, "collected_stocks"))
+        try:
+            spy = load_spy_benchmark(SPY_HIST_CSV)
+        except Exception:
+            spy = None
+        indic = compute_all_indicators(bars, benchmark=spy)
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    cols = [
+        "sma50", "sma150", "sma200", "ema10", "ema20",
+        "avg_vol_50", "rel_vol", "adr_pct_20", "atr_20", "rs_vs_spy_63d",
+    ]
+    payload = {"symbol": symbol}
+    for c in cols:
+        payload[c] = _series_from_column(indic, c)
+
+    swings_out = []
+    for s in (indic.attrs.get("swings") or []):
+        d = s.get("date")
+        try:
+            tstr = d.strftime("%Y-%m-%d")
+        except AttributeError:
+            tstr = str(d)[:10]
+        swings_out.append({
+            "time": tstr,
+            "kind": s.get("kind"),
+            "price": float(s.get("price", 0.0)),
+        })
+    payload["swings"] = swings_out
+    return jsonify(payload)
+
+
+@app.route("/api/pivot")
+def api_pivot():
+    symbol = (request.args.get("symbol") or "").strip().upper()
+    year = (request.args.get("year") or "").strip()
+    if not symbol or not year:
+        return jsonify({"error": "symbol and year required"}), 400
+
+    # Look up the matching row in results CSV
+    match = None
+    if not os.path.exists(RESULTS_CSV):
+        return jsonify({"error": "big_movers_result.csv not found"}), 404
+    try:
+        with open(RESULTS_CSV, "r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row.get("symbol", "").strip().upper() == symbol and str(row.get("year", "")).strip() == year:
+                    match = row
+                    break
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    if match is None:
+        return jsonify({"pivot": None})
+
+    low_date = _normalize_date_maybe(match.get("low_date"))
+    high_date = _normalize_date_maybe(match.get("high_date"))
+    if not low_date or not high_date:
+        return jsonify({"pivot": None})
+
+    try:
+        import pandas as pd
+        from classifier.indicators import (
+            load_ticker_bars,
+            load_spy_benchmark,
+            compute_all_indicators,
+        )
+        from classifier.pivot import find_breakout_pivot
+
+        bars = load_ticker_bars(symbol, os.path.join(SCRIPT_DIR, "collected_stocks"))
+        try:
+            spy = load_spy_benchmark(SPY_HIST_CSV)
+        except Exception:
+            spy = None
+        indic = compute_all_indicators(bars, benchmark=spy)
+        ld = pd.to_datetime(low_date)
+        hd = pd.to_datetime(high_date)
+        pivot = find_breakout_pivot(indic, ld, hd)
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    if pivot is None:
+        return jsonify({"pivot": None})
+
+    def _date_str(v):
+        try:
+            return v.strftime("%Y-%m-%d")
+        except AttributeError:
+            return str(v)[:10]
+
+    out = {
+        "pivot_date": _date_str(pivot.get("pivot_date")),
+        "base_start": _date_str(pivot.get("base_start")),
+        "base_end": _date_str(pivot.get("base_end")),
+        "base_high": pivot.get("base_high"),
+        "base_low": pivot.get("base_low"),
+        "base_depth_pct": pivot.get("base_depth_pct"),
+        "breakout_rel_vol": pivot.get("breakout_rel_vol"),
+    }
+    return jsonify({"pivot": out})
+
+
+@app.route("/api/ai-classifications")
+def api_ai_classifications():
+    if not os.path.exists(AI_CLASSIFICATIONS_FILE):
+        return jsonify({})
+    try:
+        with open(AI_CLASSIFICATIONS_FILE, "r", encoding="utf-8") as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/ai-classifications/override", methods=["POST"])
+def api_ai_classifications_override():
+    body = request.get_json(silent=True) or {}
+    move_key = (body.get("move_key") or "").strip()
+    if not move_key:
+        return jsonify({"error": "move_key required"}), 400
+
+    data = {}
+    if os.path.exists(AI_CLASSIFICATIONS_FILE):
+        try:
+            with open(AI_CLASSIFICATIONS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f) or {}
+        except Exception:
+            data = {}
+
+    entry = data.get(move_key) or {}
+    entry["user_primary"] = body.get("user_primary")
+    if "user_secondary" in body:
+        entry["user_secondary"] = body.get("user_secondary")
+    entry["user_reviewed"] = True
+    entry["user_reviewed_at"] = str(date.today())
+    if "user_note" in body:
+        entry["user_note"] = body.get("user_note")
+    data[move_key] = entry
+
+    try:
+        _atomic_json_write(AI_CLASSIFICATIONS_FILE, data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"ok": True, "entry": entry})
 
 
 if __name__ == "__main__":
