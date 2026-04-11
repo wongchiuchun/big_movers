@@ -124,6 +124,33 @@
                      color:var(--text);font-size:11px;padding:6px;border-radius:6px;cursor:pointer;}
   .ai-actions button:hover{border-color:var(--accent);color:var(--accent);}
   .study-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin:4px 0;}
+  /* Setup definitions modal */
+  .defs-modal{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;display:none;align-items:center;justify-content:center;}
+  .defs-modal.open{display:flex;}
+  .defs-panel{background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);border:1px solid var(--border-bright);border-radius:16px;width:min(1000px, 92vw);height:min(780px, 88vh);display:flex;box-shadow:0 30px 80px rgba(0,0,0,0.6);overflow:hidden;}
+  .defs-sidebar{width:240px;border-right:1px solid var(--border);padding:20px 0;overflow-y:auto;background:var(--bg2);}
+  .defs-sidebar h3{font-family:var(--display,serif);font-style:italic;font-weight:500;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 20px;margin:18px 0 6px;}
+  .defs-sidebar h3:first-child{margin-top:0;}
+  .defs-item{display:block;padding:7px 20px;color:var(--text);font-family:var(--mono);font-size:11px;text-decoration:none;cursor:pointer;border-left:2px solid transparent;transition:all 0.12s;}
+  .defs-item:hover{background:var(--bg3);color:var(--accent);}
+  .defs-item.active{background:var(--bg3);color:var(--accent);border-left-color:var(--accent);}
+  .defs-item .tier{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;margin-right:6px;background:var(--bg4);color:var(--muted);}
+  .defs-item .tier.tier-A{background:#1a4d2e;color:#6ee7b7;}
+  .defs-item .tier.tier-B{background:#4a3a0e;color:#f0c674;}
+  .defs-item .tier.tier-C{background:#4a2815;color:#fb7185;}
+  .defs-body{flex:1;padding:28px 32px;overflow-y:auto;}
+  .defs-body h2{font-family:var(--display,serif);font-style:italic;font-weight:500;font-size:26px;color:var(--text);margin:0 0 4px;}
+  .defs-body .subtitle{color:var(--muted);font-size:12px;font-family:var(--mono);margin-bottom:16px;}
+  .defs-body .one-liner{background:var(--bg4);border-left:3px solid var(--accent);padding:12px 16px;margin:12px 0 22px;font-size:13px;line-height:1.6;color:var(--text);border-radius:0 6px 6px 0;}
+  .defs-body h4{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:22px 0 8px;font-weight:600;}
+  .defs-body table{width:100%;border-collapse:collapse;font-size:12px;}
+  .defs-body th, .defs-body td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+  .defs-body th{color:var(--muted);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;background:var(--bg4);width:38%;}
+  .defs-body ul{margin:4px 0 4px 18px;padding:0;font-size:12px;line-height:1.65;}
+  .defs-body li{margin:3px 0;}
+  .defs-body .canonical{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:12px;font-style:italic;}
+  .defs-close{position:absolute;top:18px;right:22px;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0;line-height:1;}
+  .defs-close:hover{color:var(--text);}
   .study-notes{width:100%;background:var(--bg4);border:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:12px;padding:10px 12px;border-radius:8px;resize:vertical;outline:none;min-height:70px;line-height:1.5;}
   .study-notes:focus{border-color:var(--accent);}
   .study-tags-grid{display:flex;flex-wrap:wrap;gap:5px;}
@@ -1094,7 +1121,9 @@
           </svg>
         </button>
         <button id="spy-toggle" class="ma-toggle-btn text" title="Benchmark overlay (VS SPY): Off → Line → Candle → Bar" aria-label="Benchmark overlay">VS</button>
-        <button id="ai-overlay-toggle" class="ma-toggle-btn text active" title="Toggle AI indicator overlays" style="margin-left:4px">AI</button>
+        <button id="ai-overlay-toggle" class="ma-toggle-btn text active" title="Toggle AI indicator overlays (SMAs + swings)" style="margin-left:4px">AI</button>
+        <button id="ai-pivot-toggle" class="ma-toggle-btn text active" title="Toggle detected pivot marker" style="margin-left:2px">Piv</button>
+        <button id="defs-btn" class="ma-toggle-btn text" title="Setup definitions reference" style="margin-left:2px">Defs</button>
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
         <button id="screenshot-btn" class="ma-toggle-btn text" title="Screenshot chart (Ctrl+Shift+S)" style="font-size:14px;margin-left:2px">📷</button>
         <div class="tb-sep"></div>
@@ -1104,6 +1133,14 @@
       <div class="ma-float" id="ma-panel" aria-hidden="true">
         <div class="ma-controls" id="ma-controls">
           <button class="tb-btn" id="ma-add-btn">+ MA</button>
+        </div>
+      </div>
+
+      <div class="defs-modal" id="defs-modal">
+        <div class="defs-panel" style="position:relative">
+          <button class="defs-close" id="defs-close" title="Close (Esc)">×</button>
+          <div class="defs-sidebar" id="defs-sidebar"></div>
+          <div class="defs-body" id="defs-body">Loading…</div>
         </div>
       </div>
 
@@ -1478,8 +1515,10 @@ let aiOverlayConfig = {
   ema20:  { show: false, color: '#b8b5ad', width: 1 },
 };
 let aiOverlayEnabled = true;
+let aiPivotVisible = true;
 let aiPivotInfo = null;
 let aiClassByMoveKey = {};
+let setupDefinitions = null;  // loaded once from /api/setup-definitions
 let extraCandleMarkers = []; // low/high arrows from selectRow preserved across applyIndicatorOverlays
 
 let metadata = { version: 1, customTags: [], items: {} };
@@ -1703,7 +1742,7 @@ function applyIndicatorOverlays() {
       });
     }
   }
-  if (aiPivotInfo && aiPivotInfo.pivot_date) {
+  if (aiPivotInfo && aiPivotInfo.pivot_date && aiPivotVisible) {
     markers.push({
       time: aiPivotInfo.pivot_date,
       position: 'aboveBar',
@@ -1734,6 +1773,112 @@ async function loadAIClassifications() {
     aiClassByMoveKey = await r.json() || {};
   } catch (e) { aiClassByMoveKey = {}; }
 }
+
+// ---- Setup definitions modal ----
+async function loadSetupDefinitions() {
+  if (setupDefinitions) return setupDefinitions;
+  try {
+    const r = await fetch('/api/setup-definitions');
+    setupDefinitions = await r.json();
+  } catch (e) { setupDefinitions = { setups: [] }; }
+  return setupDefinitions;
+}
+
+function _defsEsc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function renderDefsSidebar(setups, activeId) {
+  const container = document.getElementById('defs-sidebar');
+  if (!container) return;
+  // Group by family
+  const groups = {};
+  for (const s of setups) {
+    const fam = s.family || 'Other';
+    (groups[fam] ||= []).push(s);
+  }
+  const familyOrder = ['Base Breakout', 'Continuation / Re-entry', 'Catalyst-Driven', 'Short Setup', 'Other'];
+  let html = '';
+  for (const fam of familyOrder) {
+    if (!groups[fam]) continue;
+    html += `<h3>${_defsEsc(fam)}</h3>`;
+    for (const s of groups[fam]) {
+      const active = s.id === activeId ? ' active' : '';
+      html += `<a class="defs-item${active}" data-id="${_defsEsc(s.id)}">
+        <span class="tier tier-${_defsEsc(s.tier || 'A')}">${_defsEsc(s.tier || 'A')}</span>${_defsEsc(s.name)}
+      </a>`;
+    }
+  }
+  container.innerHTML = html;
+  container.querySelectorAll('.defs-item').forEach(el => {
+    el.addEventListener('click', () => renderDefsBody(el.getAttribute('data-id')));
+  });
+}
+
+function renderDefsBody(setupId) {
+  const container = document.getElementById('defs-body');
+  if (!container || !setupDefinitions) return;
+  const setup = setupDefinitions.setups.find(s => s.id === setupId);
+  if (!setup) { container.innerHTML = '<div>Setup not found.</div>'; return; }
+  renderDefsSidebar(setupDefinitions.setups, setupId);
+
+  const title = setup.full_name || setup.name;
+  const subtitle = `§${_defsEsc(setup.section || '')} · tier-${_defsEsc(setup.tier || '?')} · ${_defsEsc(setup.source || '')}`;
+  const criteriaRows = (setup.key_criteria || [])
+    .map(([k, v]) => `<tr><th>${_defsEsc(k)}</th><td>${_defsEsc(v)}</td></tr>`).join('');
+  const aplus = (setup.aplus_filters || [])
+    .map(s => `<li>${_defsEsc(s)}</li>`).join('');
+  const disq = (setup.disqualifiers || [])
+    .map(s => `<li>${_defsEsc(s)}</li>`).join('');
+  const mgmt = (setup.management || [])
+    .map(s => `<li>${_defsEsc(s)}</li>`).join('');
+  const examples = (setup.canonical_examples || []).join(', ');
+
+  container.innerHTML = `
+    <h2>${_defsEsc(title)}</h2>
+    <div class="subtitle">${subtitle}</div>
+    <div class="one-liner">${_defsEsc(setup.one_liner || '')}</div>
+
+    ${criteriaRows ? `<h4>Precise Definition</h4><table>${criteriaRows}</table>` : ''}
+    ${aplus ? `<h4>A+ Quality Filters</h4><ul>${aplus}</ul>` : ''}
+    ${disq ? `<h4>Disqualifiers</h4><ul>${disq}</ul>` : ''}
+    ${mgmt ? `<h4>Management Rules</h4><ul>${mgmt}</ul>` : ''}
+    ${examples ? `<div class="canonical">Canonical: ${_defsEsc(examples)}</div>` : ''}
+  `;
+  container.scrollTop = 0;
+}
+
+async function openDefsModal(focusSetupId) {
+  const modal = document.getElementById('defs-modal');
+  if (!modal) return;
+  await loadSetupDefinitions();
+  modal.classList.add('open');
+  const initial = focusSetupId ||
+    (setupDefinitions.setups && setupDefinitions.setups[0] && setupDefinitions.setups[0].id);
+  if (initial) renderDefsBody(initial);
+}
+
+function closeDefsModal() {
+  const modal = document.getElementById('defs-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+// Matches a classifier setup name (e.g. "Cup with Handle") to a definition id (e.g. "cup_handle").
+function setupNameToId(name) {
+  if (!setupDefinitions || !name) return null;
+  const normalized = String(name).trim().toLowerCase();
+  const hit = setupDefinitions.setups.find(s => {
+    if (!s.name) return false;
+    if (s.name.toLowerCase() === normalized) return true;
+    if ((s.full_name || '').toLowerCase() === normalized) return true;
+    return false;
+  });
+  return hit ? hit.id : null;
+}
+
 async function saveMetadata() {
   try {
     await fetch('/api/metadata', {
@@ -4000,7 +4145,7 @@ async function updateAISection() {
       const isPrimary = row.setup === entry.ai_primary;
       const critList = Array.isArray(row.criteria_met) ? row.criteria_met : [];
       const critCount = critList.length;
-      return `<button class="ai-chip ${isPrimary ? 'primary' : ''}" title="${_escHtml(critList.join(', '))}">${_escHtml(row.setup)} · ${_escHtml(row.score)} (${critCount})</button>`;
+      return `<button class="ai-chip ${isPrimary ? 'primary' : ''}" data-setup-name="${_escHtml(row.setup)}" title="Click for definition. Criteria met: ${_escHtml(critList.join(', '))}">${_escHtml(row.setup)} · ${_escHtml(row.score)} (${critCount})</button>`;
     }).join('');
   const userStatus = entry.user_reviewed
     ? `<div class="study-meta" style="color:var(--accent)">✓ Reviewed ${_escHtml(entry.user_reviewed_at || '')}: ${_escHtml(entry.user_primary || '(rejected)')}</div>`
@@ -4035,6 +4180,17 @@ async function updateAISection() {
     });
     updateStudyPanel();
   });
+  // Chip click → open definition modal for that setup
+  container.querySelectorAll('.ai-chip').forEach(chip => {
+    chip.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const name = chip.getAttribute('data-setup-name');
+      await loadSetupDefinitions();
+      const id = setupNameToId(name);
+      if (id) openDefsModal(id);
+      else openDefsModal();
+    });
+  });
 }
 
 function renderStudyTags() {
@@ -4064,11 +4220,30 @@ function renderStudyTags() {
 // Study panel event listeners
 document.getElementById('study-toggle-btn').addEventListener('click', toggleStudyPanel);
 
-// AI overlay toggle
+// AI overlay toggle (SMAs + swing markers)
 document.getElementById('ai-overlay-toggle').addEventListener('click', () => {
   aiOverlayEnabled = !aiOverlayEnabled;
   document.getElementById('ai-overlay-toggle').classList.toggle('active', aiOverlayEnabled);
   applyIndicatorOverlays();
+});
+
+// Pivot marker toggle (independent of AI overlays)
+document.getElementById('ai-pivot-toggle').addEventListener('click', () => {
+  aiPivotVisible = !aiPivotVisible;
+  document.getElementById('ai-pivot-toggle').classList.toggle('active', aiPivotVisible);
+  applyIndicatorOverlays();
+});
+
+// Setup definitions modal
+document.getElementById('defs-btn').addEventListener('click', () => openDefsModal());
+document.getElementById('defs-close').addEventListener('click', closeDefsModal);
+document.getElementById('defs-modal').addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'defs-modal') closeDefsModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('defs-modal').classList.contains('open')) {
+    closeDefsModal();
+  }
 });
 
 document.getElementById('study-rating').addEventListener('change', function() {

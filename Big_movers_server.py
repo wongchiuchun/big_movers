@@ -21,6 +21,7 @@ sys.path.insert(0, SCRIPT_DIR)
 app = Flask(__name__, static_folder=SCRIPT_DIR, static_url_path="")
 
 AI_CLASSIFICATIONS_FILE = os.path.join(SCRIPT_DIR, "ai_classifications.json")
+SETUP_DEFINITIONS_FILE = os.path.join(SCRIPT_DIR, "setup_definitions.json")
 
 # Path configuration
 RESULTS_CSV = os.path.join(SCRIPT_DIR, "big_movers_result.csv")
@@ -795,6 +796,17 @@ def api_ai_classifications_override():
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"ok": True, "entry": entry})
+
+
+@app.route("/api/setup-definitions")
+def api_setup_definitions():
+    if not os.path.exists(SETUP_DEFINITIONS_FILE):
+        return jsonify({"setups": []})
+    try:
+        with open(SETUP_DEFINITIONS_FILE, "r", encoding="utf-8") as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

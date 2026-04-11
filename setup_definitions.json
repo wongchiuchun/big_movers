@@ -1,0 +1,598 @@
+{
+  "version": 1,
+  "source": "trade-dashboard/doc/setup-classification-reference.html v1.0",
+  "setups": [
+    {
+      "id": "vcp",
+      "name": "VCP",
+      "full_name": "Volatility Contraction Pattern",
+      "section": "3.1",
+      "tier": "A",
+      "family": "Base Breakout",
+      "source": "Mark Minervini (SEPA), Qullamaggie",
+      "one_liner": "A multi-week base where each successive pullback is shallower than the last and volume dries up at the final contraction, ending in a breakout above the pivot on expanding volume.",
+      "key_criteria": [
+        ["Prior uptrend", "\u226520% gain in the 3 months before the base (ideally 30\u201350%+)"],
+        ["Base duration", "15\u201340 trading days typical (10\u201365 acceptable)"],
+        ["Contractions", "2\u20136 contractions (typically 3\u20134), each shallower than the last"],
+        ["Final contraction", "<10% baseline, <5% is A+ (\u201cgold standard\u201d)"],
+        ["Volume dry-up (VDU)", "Rightmost contraction volume noticeably below base average"],
+        ["Pivot point", "Highest high of the rightmost contraction"],
+        ["Breakout trigger", "Close above pivot on volume \u22651.5\u00d7 50-day avg"],
+        ["Overall compression", "Rightmost contraction \u226440% of leftmost"]
+      ],
+      "aplus_filters": [
+        "Final contraction weekly range <5% in last 1\u20132 weeks before breakout",
+        "Breakout day volume \u22652\u00d7 50-day avg (not just \u22651.5\u00d7)",
+        "Breakout close in upper 50% of the day's range",
+        "Within 5% of 52-week high at the pivot",
+        "RS line at a new high leading price into the pivot"
+      ],
+      "management": [
+        "Stop: 7\u20138% below pivot, or below rightmost-contraction low (tighter wins)",
+        "Max stop width \u2264 1\u00d7 ADR(20) at entry",
+        "Failure: close below pivot on expanding volume within 5 days",
+        "8-week hold rule: if +20% in \u22643 weeks, hold 8 weeks minimum",
+        "Never enter more than 5% above the pivot"
+      ],
+      "canonical_examples": ["NFLX 2013", "NVDA 2023", "MSTR 2024"]
+    },
+    {
+      "id": "cup_handle",
+      "name": "Cup with Handle",
+      "section": "3.2",
+      "tier": "A",
+      "family": "Base Breakout",
+      "source": "William O'Neil (CAN SLIM)",
+      "one_liner": "A smooth U-shaped cup (no sharp V) followed by a small downward-drifting handle in the upper half of the cup, with breakout above the handle's resistance on volume.",
+      "key_criteria": [
+        ["Cup shape", "Smooth rounded U (NOT a sharp V). Multiple weeks of sideways basing at the bottom."],
+        ["Cup depth", "\u226433% of the prior advance (up to 50% in bear-adjacent markets)"],
+        ["Cup duration", "Minimum 7 weeks (typical 3\u20136 months)"],
+        ["Handle depth", "\u226433% of the cup's rally off the low (ideally 10\u201315%)"],
+        ["Handle duration", "1\u20134 weeks"],
+        ["Handle drift", "Slight downward tilt preferred (shakes out weak hands)"],
+        ["Handle position", "MUST form in upper half of cup (lower half = Low Cheat, not C&H)"],
+        ["Pivot point", "Top of the handle's resistance"],
+        ["Breakout volume", "\u22651.5\u00d7 50-day average (1.4\u20131.5\u00d7 minimum)"]
+      ],
+      "aplus_filters": [
+        "Handle forms above the 50-day SMA at its low (stronger support)",
+        "Volume dries up inside the handle (weaker than cup's right side)",
+        "Cup duration 3\u20136 months (not the 7-week minimum)",
+        "Stock within 15% of 52-week high at the handle low",
+        "Base is 1st or 2nd stage (3rd/4th fail ~80%)",
+        "Breakout day closes in the top 25% of the day's range",
+        "Pre-breakout tightness: final week <4% weekly range"
+      ],
+      "management": [
+        "Stop: 7\u20138% below pivot, or below the handle low",
+        "Buy within 5% of the pivot \u2014 extended entries fail more often",
+        "Failure: close below the handle low within 10 days of breakout",
+        "8-week hold rule applies"
+      ],
+      "canonical_examples": ["AAPL 2004", "GOOG 2004", "NVDA 2016"]
+    },
+    {
+      "id": "flat_base",
+      "name": "Flat Base",
+      "section": "3.3",
+      "tier": "A",
+      "family": "Base Breakout",
+      "source": "William O'Neil, Minervini",
+      "one_liner": "A tight sideways consolidation \u226415% deep lasting 5+ weeks, following a \u226530% prior advance. Horizontal, not sloping. Institutions holding tight; minimal selling pressure.",
+      "key_criteria": [
+        ["Prior advance", "\u226530% from previous breakout (often a 2nd-stage base)"],
+        ["Base duration", "Minimum 5 weeks (25 trading days)"],
+        ["Depth", "\u226415% high-to-low range across entire base"],
+        ["Slope", "Horizontal or slight downward drift (NOT ascending)"],
+        ["Multiple touches", "Both top and bottom of range touched 2+ times each"],
+        ["Pivot point", "Top of the range resistance"],
+        ["Breakout volume", "\u226540\u201350% above 50-day average"]
+      ],
+      "aplus_filters": [
+        "Base depth \u226410% (not just \u226415%)",
+        "Volume dries up progressively during consolidation",
+        "50 SMA rising through the base",
+        "Strongest: stock doesn't even retest the range low before breakout",
+        "Darvas Box variant: \u22652 touches on each boundary"
+      ],
+      "management": [
+        "Stop: below the range low (which defines the base bottom)",
+        "Buy within 3% of the pivot \u2014 shallow bases, extended entries destroy R:R",
+        "Failure: close below 50 SMA within 5 days of breakout"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "double_bottom",
+      "name": "Double Bottom",
+      "full_name": "Double Bottom (\"W\")",
+      "section": "3.4",
+      "tier": "A",
+      "family": "Base Breakout",
+      "source": "William O'Neil, StockCharts ChartSchool",
+      "one_liner": "A W-shaped base with two distinct lows separated by a 10\u201320% intervening rally, where the second low ideally undercuts the first slightly (shakeout), followed by breakout above the middle peak on expanding volume.",
+      "key_criteria": [
+        ["Duration", "Minimum 7 weeks from left edge to pivot (4+ weeks between lows)"],
+        ["First low", "Initial trough after downtrend or shallow correction"],
+        ["Middle peak rally", "10\u201320% advance off first low"],
+        ["Second low", "Within 3% of first low (at, slightly above, or slightly below)"],
+        ["O'Neil variant", "Second low UNDERCUTS first slightly (1\u20135%) \u2014 shakeout is positive"],
+        ["Pivot point", "Break above the MIDDLE PEAK (not the second low) \u2014 critical distinction"],
+        ["Breakout volume", "\u22651.5\u00d7 50-day average; acceleration preferred"],
+        ["Volume profile", "1st low high vol \u2192 rally low vol \u2192 2nd low low vol \u2192 breakout high vol"]
+      ],
+      "aplus_filters": [
+        "Second low undercuts first by 1\u20133% then reverses within 1\u20133 days (Wyckoff Spring)",
+        "CMF/OBV/A-D improving through second decline (accumulation signal)",
+        "Time between lows: 4\u201312 weeks (shorter = stronger)",
+        "Middle peak rally \u226515% (stronger than 10% minimum)",
+        "Part of a sector rotation setup (peers also bottoming)",
+        "Breakout gaps up through middle peak resistance"
+      ],
+      "management": [
+        "Stop: 7\u20138% below pivot or below 2nd low (whichever tighter)",
+        "Re-entry: pullback to test middle-peak-turned-support",
+        "Target: distance from middle peak to lows, added to pivot",
+        "Failure: close below 2nd low after breakout = pattern invalidated"
+      ],
+      "canonical_examples": ["PFE 2000 (StockCharts reference)"]
+    },
+    {
+      "id": "htf",
+      "name": "HTF",
+      "full_name": "High Tight Flag / Power Play",
+      "section": "3.5",
+      "tier": "A",
+      "family": "Base Breakout",
+      "source": "William O'Neil, Mark Minervini",
+      "one_liner": "A stock that explodes \u2265100% in 4\u20138 weeks (the pole), then consolidates in a shallow flag \u226425% deep for 3\u20135 weeks with volume drying up, then breaks out. The rarest and most explosive bull pattern.",
+      "key_criteria": [
+        ["Pole move", "\u2265100% gain in 4\u20138 weeks (defining prerequisite)"],
+        ["Pole volume", "Massive volume on the advance (way above normal)"],
+        ["Flag depth", "\u226420% ideal, \u226425% max"],
+        ["Flag duration", "3\u20135 weeks (can be as short as 10\u201312 days)"],
+        ["Flag volume", "Must contract progressively \u2014 VCP-like dry-up within flag"],
+        ["Pivot", "Top of the flag resistance"],
+        ["Breakout volume", "\u22651.4\u00d7 50-day average (institutional, not retail)"]
+      ],
+      "aplus_filters": [
+        "Pole \u2265100% in \u22646 weeks (not full 8)",
+        "Flag \u226415% deep (not 20\u201325% max)",
+        "1\u20132 ultra-low-volume days before breakout (\u201csquat\u201d)",
+        "Flag stays entirely above 10 EMA / 21 EMA",
+        "Only pattern Minervini enters without fundamentals \u2014 doubling in 8 weeks on massive volume telegraphs something fundamental"
+      ],
+      "management": [
+        "Stop: below the flag low or just below pivot (typically tighter than standard 7\u20138%)",
+        "After +2R to +3R profit, move stop to breakeven",
+        "Hold aggressively \u2014 multi-bagger candidates",
+        "Failure: close below flag low after breakout"
+      ],
+      "canonical_examples": ["TASR 2003 (three HTFs in 2500% run)", "PCYC 2010", "QCOM Dec 1999", "GOOG Sep 2004"]
+    },
+    {
+      "id": "low_cheat",
+      "name": "Low Cheat",
+      "full_name": "Low Cheat / 3-C Cup Completion Cheat",
+      "section": "3.6",
+      "tier": "B",
+      "family": "Base Breakout",
+      "source": "Mark Minervini (Trade Like a Stock Market Wizard, p.243)",
+      "one_liner": "An earlier entry technique: a tight, low-volume consolidation forms in the LOWER-to-MIDDLE third of a base (not the upper third handle), creating a \u201cmini-pivot\u201d that triggers before the full base pivot.",
+      "key_criteria": [
+        ["Parent structure", "A forming base (typically a cup), not yet broken out"],
+        ["Cheat location", "Lower or middle third of base (upper third = regular handle)"],
+        ["Consolidation range", "5\u201310% high-to-low (tight)"],
+        ["Volume", "Near the LOWEST in the entire base (seller exhaustion)"],
+        ["Max distance from 50 SMA", "\u22648% below (exception for low cheats only)"],
+        ["Trend Template", "150 SMA > 200 SMA with 200 SMA rising"],
+        ["Mini-pivot", "Break above cheat consolidation's high"]
+      ],
+      "aplus_filters": [
+        "VCP characteristics inside the cheat zone",
+        "Cheat forms right at or just above 50 SMA",
+        "Cheat range \u22645% (not 10% max)",
+        "1\u20132 dry-up volume days before mini-pivot break",
+        "Surrounding base already shows VCP qualities"
+      ],
+      "management": [
+        "PILOT position, not a full entry. \u201cEntry at the earliest point, not your entire position.\u201d",
+        "Scaling: pilot at cheat \u2192 standard add at full base pivot \u2192 optional 3rd on confirmation",
+        "Stop: below the cheat consolidation low (very tight)",
+        "Each add at higher prices, never average down"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "ipo_base",
+      "name": "IPO Base",
+      "section": "3.7",
+      "tier": "A",
+      "family": "Base Breakout",
+      "source": "William O'Neil",
+      "one_liner": "The first proper base formed within 1\u20133 years of a stock going public. Unique rules: wider depth tolerance, shorter duration minimum.",
+      "key_criteria": [
+        ["Time since IPO", "Within first 1\u20133 years of listing"],
+        ["Prior advance", "Post-IPO rally (stock didn't go straight down)"],
+        ["Base duration", "Minimum 3 weeks (shorter than standard 7-week minimum)"],
+        ["Max depth", "\u226450% (IPO volatility is normal)"],
+        ["Right side tightening", "VCP-style contraction on right side"],
+        ["Volume dry-up", "Weak holders from IPO allocation finish selling"],
+        ["Pivot", "Top of right-side resistance"],
+        ["Breakout volume", "\u22651.5\u00d7 50-day average"]
+      ],
+      "aplus_filters": [
+        "FIRST base after IPO (not 2nd or 3rd)",
+        "IPO lockup expiration has passed (typically 90\u2013180 days post-IPO)",
+        "Institutional ownership appearing in quarterly filings",
+        "Revenue/earnings growth >25% YoY since IPO",
+        "Relative strength in top 20\u201330% of all stocks",
+        "Base depth \u226433% (not 50% max)",
+        "Sector-level strength"
+      ],
+      "management": [
+        "Stop: 7\u201310% below pivot (slightly wider for IPO volatility)",
+        "Size down \u2014 volatility is higher than standard bases",
+        "Failure: break of base low on volume"
+      ],
+      "canonical_examples": ["CROX 2006", "GMCR 2008", "NVDA 2001", "SHOP 2016"]
+    },
+    {
+      "id": "ascending_base",
+      "name": "Ascending Base",
+      "section": "3.8",
+      "tier": "B",
+      "family": "Base Breakout",
+      "source": "Mark Minervini, William O'Neil",
+      "one_liner": "A consolidation formed by three distinct 10\u201320% pullbacks, each with a HIGHER low than the previous. Stock is too strong to form a normal base.",
+      "key_criteria": [
+        ["Pattern", "Three pullbacks, each bottoming at a higher low"],
+        ["Pullback depth", "Each pullback 10\u201320% from interim high"],
+        ["Rising lows", "Each subsequent low measurably higher than previous"],
+        ["Rising highs", "Each subsequent high equals or exceeds previous"],
+        ["Duration", "9\u201316 weeks from left edge to pivot"],
+        ["Prior uptrend", "Stage 2 uptrend, stock already advancing"],
+        ["Pivot", "Break above 3rd (rightmost) high on expanding volume"],
+        ["Breakout volume", "\u22651.5\u00d7 50-day average"]
+      ],
+      "aplus_filters": [
+        "Each pullback shallower than last (10 \u2192 15 \u2192 12% with rising lows is fine)",
+        "Volume dries up on each pullback, expands on each rally",
+        "Stock stays above 50 SMA throughout",
+        "Tight action in final 1\u20132 weeks before breakout",
+        "Breakout from very tight final swing high"
+      ],
+      "management": [
+        "Stop: below the most recent (3rd) low \u2014 tight because lows rise",
+        "Continuation pattern \u2014 stock already strong, breakout runs fast",
+        "Failure: close below 3rd low"
+      ],
+      "canonical_examples": ["AAPL 2005", "NVDA 2024 (multiple during AI advance)"]
+    },
+    {
+      "id": "base_on_base",
+      "name": "Base-on-Base",
+      "section": "3.9",
+      "tier": "B",
+      "family": "Base Breakout",
+      "source": "William O'Neil",
+      "one_liner": "A stock breaks out from a first base, runs 15\u201325% (insufficient for a full cup), then consolidates into a SECOND base on top of the first. Staircase shape. Very bullish \u2014 institutions accumulating continuously.",
+      "key_criteria": [
+        ["First base", "Any valid base (cup/flat/VCP) that already produced a breakout"],
+        ["Run between bases", "15\u201325% gain (NOT 30%+ which would start a new cup)"],
+        ["Second base depth", "5\u201315% from the high of the run"],
+        ["Second base duration", "5+ weeks"],
+        ["Positional requirement", "Second base entirely ABOVE the first base's top"],
+        ["Pivot", "Breakout from the 2nd base's resistance"],
+        ["Breakout volume", "\u22651.5\u00d7 50-day average"]
+      ],
+      "aplus_filters": [
+        "Second base depth \u226410%",
+        "Very shallow pullback from inter-base high",
+        "Volume dry-up in the second base",
+        "Combined B-on-B duration >12 weeks (long consolidation = strong accumulation)",
+        "First base was already a high-quality pattern"
+      ],
+      "management": [
+        "Stop: below the SECOND base low (1st base low too far)",
+        "Treat as continuation of first breakout's advance",
+        "Failure: close below the first base's high"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "pocket_pivot",
+      "name": "Pocket Pivot",
+      "section": "4.1",
+      "tier": "B",
+      "family": "Continuation / Re-entry",
+      "source": "Chris Kacher & Gil Morales",
+      "one_liner": "An up-day where volume exceeds the highest down-day volume of the prior 10 sessions, occurring at/near a key moving average \u2014 detecting institutional accumulation BEFORE a standard breakout would trigger.",
+      "key_criteria": [
+        ["Day type", "Up day (close > prior close)"],
+        ["Volume rule", "That day's volume > highest volume on ANY down day in prior 10 sessions"],
+        ["MA context", "Stock \u201cup and off\u201d or \u201cup and through\u201d the 10-day or 50-day MA"],
+        ["Close position", "Upper 2/3 of daily range (NOT lower 1/3)"],
+        ["Trend context", "Stock has been respecting the 50 SMA during prior advance"]
+      ],
+      "aplus_filters": [
+        "Occurs inside a constructive base (pre-breakout PP)",
+        "2\u20133 pocket pivots within a few sessions \u2014 clustered institutional buying",
+        "Bounce is measured, not parabolic (no V-recovery)",
+        "Not extended from 10 SMA (<5% above)",
+        "Day closes in top 25% of range",
+        "RS line making new highs or at least flat"
+      ],
+      "disqualifiers": [
+        "5+ month downtrend \u2014 wait for rounding base",
+        "Below both 50 SMA and 200 SMA",
+        "V-shaped recovery (sharp selloff \u2192 straight back up through MAs)",
+        "Rising wedge pattern",
+        "Close in lower 1/3 of daily range",
+        "Extended from base AND from 10 SMA"
+      ],
+      "management": [
+        "Stop: below the MA being tested or below the PP day's low",
+        "Max stop 7\u20138% from entry",
+        "Seven-Week Rule: if stock holds above 10 SMA for \u22657 weeks after PP, use 10 SMA violation as sell signal; otherwise 50 SMA",
+        "Violation test (two-part): close below MA + next day breaks that day's intraday low"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "pullback_ma",
+      "name": "Pullback to MA",
+      "section": "4.2",
+      "tier": "C",
+      "family": "Continuation / Re-entry",
+      "source": "Qullamaggie, Minervini, O'Neil",
+      "one_liner": "Buying a constructive low-volume pullback to a rising key moving average (10 EMA / 20 EMA / 50 SMA) in a stock in a confirmed Stage 2 uptrend. Follow-on entry technique, not a standalone big-winner trigger.",
+      "key_criteria": [
+        ["Uptrend confirmed", "Above rising 50 SMA, Stage 2 intact, MAs stacked (10 EMA > 20 EMA > 50 SMA)"],
+        ["Pullback depth", "\u22648\u201310% from recent high"],
+        ["Target MA", "10 EMA (fastest), 20 EMA (standard), or 50 SMA (deeper pullback)"],
+        ["MA touch quality", "Price touches or slightly undercuts MA, then closes back above"],
+        ["Volume on pullback", "Drying up \u2014 expanding volume = distribution, skip"],
+        ["Entry trigger", "Close back above MA, ideally on a reversal candle"]
+      ],
+      "aplus_filters": [
+        "FIRST touch is best (O'Neil's Three Strikes rule: 1st=best, 2nd=OK, 3rd=often fails)",
+        "Pullback duration 1\u20133 weeks (quick and orderly)",
+        "MAs stay stacked (no convergence/crossing)",
+        "RS line holds up during pullback",
+        "Pullback depth <5% (very tight)",
+        "Prior advance \u226530%"
+      ],
+      "management": [
+        "Stop: below MA being tested or below pullback low",
+        "Follow-on add is 50\u201375% of a full initial position",
+        "Never average down",
+        "Failure: close below 50 SMA on volume"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "break_retest",
+      "name": "Break & Retest",
+      "section": "4.3",
+      "tier": "C",
+      "family": "Continuation / Re-entry",
+      "source": "Vincent Desiano",
+      "one_liner": "Instead of buying the breakout, wait for price to pull back and retest the former resistance (now support), then enter on the successful retest. Tighter stop, better R:R, avoids fakeouts.",
+      "key_criteria": [
+        ["Prior breakout", "Above a major level in the preceding 1\u201315 sessions"],
+        ["Level confluence", "\u22652 confirming factors (prior high, MA, round number, prior breakout level)"],
+        ["Retest behavior", "Price pulls back to within 1\u20133% of former resistance, holds, bounces"],
+        ["Retest volume", "Light volume on pullback (no heavy selling)"],
+        ["Entry trigger", "Reversal candle at/above the level, or break of retest consolidation high"],
+        ["Stop", "Below the former resistance level"]
+      ],
+      "aplus_filters": [
+        "Level has 3+ confluence factors",
+        "Retest within 5\u201310 days of original breakout (fresh, not stale)",
+        "Retest low barely undercuts level, or doesn't reach it",
+        "Broader market in uptrend",
+        "Low-volume inside day during retest = institutional accumulation"
+      ],
+      "management": [
+        "Target: recent swing high from initial breakout",
+        "Fail: close below retest level on expanding volume"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "undercut_rally",
+      "name": "Undercut & Rally",
+      "full_name": "Undercut & Rally (Wyckoff Spring)",
+      "section": "4.4",
+      "tier": "B",
+      "family": "Continuation / Re-entry",
+      "source": "Richard Wyckoff, refined by Minervini",
+      "one_liner": "A stock briefly breaks a well-defined support level (triggering stop losses), then quickly reclaims the level within 1\u20135 days. The failed breakdown becomes the entry \u2014 stops flushed, institutions absorb supply, stock rallies with less overhead.",
+      "key_criteria": [
+        ["Support level", "Clear, obvious level with 2+ prior touches"],
+        ["Undercut depth", "1\u20133% below level (ideal), up to 5% (acceptable)"],
+        ["Reclaim timing", "Stock recovers above broken level within 1\u20135 days"],
+        ["Volume on undercut", "Heavy (flush of stops)"],
+        ["Volume on reclaim", "Increasing"],
+        ["Broader trend", "Stage 2 intact (150 SMA > 200 SMA, 200 SMA rising)"],
+        ["Entry trigger", "Close above the reclaimed level, on volume"]
+      ],
+      "aplus_filters": [
+        "Undercut at the END of a base (final shakeout before breakout)",
+        "Reclaim within 1\u20132 days (not 5)",
+        "Volume on reclaim > volume on undercut",
+        "Undercut depth 1\u20132% (just enough to trigger stops)",
+        "Stock never closes materially below the level on a daily basis",
+        "RS line holds up through the undercut"
+      ],
+      "management": [
+        "Stop: below the undercut low (very tight \u2014 new line in the sand)",
+        "If undercut low breaks again, exit immediately",
+        "Failure: no recovery after 5+ days, or follow-through selling"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "episodic_pivot",
+      "name": "Episodic Pivot",
+      "full_name": "Episodic Pivot (EP)",
+      "section": "5.1",
+      "tier": "A",
+      "family": "Catalyst-Driven",
+      "source": "Qullamaggie (Kristjan Kullam\u00e4gi)",
+      "one_liner": "A stock gaps up \u22655% on a fundamental catalyst (earnings, FDA, contract, guidance) with \u22652.5\u00d7 average volume. Entry comes AFTER the gap, buying the first constructive pullback or the breakout of the 3\u201310 day post-gap consolidation.",
+      "key_criteria": [
+        ["Gap magnitude", "\u22655% (open vs prior close). Ideal \u226510%."],
+        ["Volume on gap day", "\u22652.5\u00d7 50-day average (ideally \u22653\u00d7)"],
+        ["Catalyst", "Identifiable fundamental event"],
+        ["Post-gap action", "Holds above gap day midpoint (stronger) or gap day low (acceptable)"],
+        ["Consolidation", "Tight 3\u201310 day consolidation after gap day"],
+        ["Entry timing", "Day 2\u201310 (NOT Day 1 \u2014 that's Gap & Go)"],
+        ["Entry trigger", "Buy first pullback holding above gap low, OR buy breakout of post-gap range"]
+      ],
+      "aplus_filters": [
+        "Gap \u226515% + volume \u22655\u00d7",
+        "Already in uptrend before the gap (not deep-value turnaround)",
+        "Post-gap range very tight (inside days)",
+        "Sector alignment \u2014 peers moving on same catalyst type",
+        "Gap fills <30% in first 2 days (strong hands holding)",
+        "ADR% \u22655% post-gap (enough range to trade)"
+      ],
+      "disqualifiers": [
+        "No identifiable catalyst",
+        "Gap fills below prior close within 2 days",
+        "Volume declining rapidly after gap day",
+        "Gap into prior resistance",
+        "Stock already extended before gap (exhaustion gap)"
+      ],
+      "management": [
+        "Stop: below gap day's low or post-gap consolidation low",
+        "Failure: gap fills below prior close = failed EP, exit"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "gap_go",
+      "name": "Gap & Go",
+      "full_name": "Gap & Go (Day 1)",
+      "section": "5.2",
+      "tier": "B",
+      "family": "Catalyst-Driven",
+      "source": "Qullamaggie",
+      "one_liner": "Same family as EP, but entry happens on Day 1 (the gap day itself), not after consolidation. Higher risk, higher reward. Requires \u226510% gap and \u22653\u00d7 volume.",
+      "key_criteria": [
+        ["Gap magnitude", "\u226510% (higher bar than EP's 5%)"],
+        ["Volume by midday", "\u22653\u00d7 50-day average"],
+        ["Catalyst", "Identifiable"],
+        ["Opening action", "Holds above open, or recovers quickly (not \u201cgap and crap\u201d)"],
+        ["Entry timing", "During/after opening range (first 60 min), on VWAP pullback with volume"]
+      ],
+      "aplus_filters": [
+        "Gap \u226520% (not just 10%)",
+        "Volume \u22655\u00d7",
+        "Prior basing in place (gap from consolidation)",
+        "Float <50M shares (smaller float = more explosive)",
+        "Tight post-open range (buyers absorbing, not dumping)",
+        "Sector in favor"
+      ],
+      "disqualifiers": [
+        "Gap fills below prior close within first hour",
+        "High volume selling immediately after open",
+        "No identifiable catalyst (possible manipulation)",
+        "Already extended before the gap",
+        "After-hours faded most of the gap before the open"
+      ],
+      "management": [
+        "Stop: below gap day low or below VWAP",
+        "Time-based: enter within first 60 minutes",
+        "Abnormal Gap Reversal (180\u00b0): gap DOWN on bad news that immediately engulfs + reclaims 10/20 MA"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "parabolic_short",
+      "name": "Parabolic Short",
+      "section": "6.1",
+      "tier": "B",
+      "family": "Short Setup",
+      "source": "Qullamaggie",
+      "one_liner": "A stock that has gone parabolic (extended \u226540% above 10 EMA, \u226560% above 20 EMA) and shows exhaustion signals (volume climax + doji/shooting star). Mean-reversion short.",
+      "key_criteria": [
+        ["Extension from 10 EMA", "\u226540% above"],
+        ["Extension from 20 EMA", "\u226560% above"],
+        ["Days extended", "5\u201315 days of parabolic move"],
+        ["Volume climax", "Recent day \u22653\u00d7 avg volume + doji/shooting star candle"],
+        ["Stop", "Above the recent high (non-negotiable \u2014 parabolics squeeze violently)"]
+      ],
+      "aplus_filters": [
+        "Momentum divergence: RSI making lower highs while price makes higher highs",
+        "Market in broad weakness",
+        "Stock has history of parabolic-then-crash"
+      ],
+      "disqualifiers": [
+        "Strong fundamental catalyst supporting the move",
+        "Broad market in strong uptrend",
+        "Short squeeze mechanics (high SI, low float, gamma exposure)"
+      ],
+      "management": [],
+      "canonical_examples": []
+    },
+    {
+      "id": "structural_short",
+      "name": "Structural Short",
+      "full_name": "Structural Short (Stage 4 Former Leader)",
+      "section": "6.2",
+      "tier": "B",
+      "family": "Short Setup",
+      "source": "Course framework",
+      "one_liner": "Shorting former bull market leaders transitioning from Stage 3 (topping) into Stage 4 (decline). Requires downward-trending 50 SMA, Stage 3 duration \u22651 month, and price breaking below 200 SMA.",
+      "key_criteria": [
+        ["50 SMA", "Trending DOWNWARD"],
+        ["Stage 3 duration", "Minimum 1 month, preferably 3\u20138 months"],
+        ["200 SMA", "Price breaking below or trading under"],
+        ["RS line", "Trending down for \u22651 month"],
+        ["Volume", "Spikes on breakdown preferred"],
+        ["Primary entry", "Decisive break below 200 SMA or key support"],
+        ["Secondary entry (superior)", "After breakdown, stock rallies to test underside of 50/200 MA and fails"]
+      ],
+      "aplus_filters": [],
+      "management": [
+        "Order: Buy Stop GTC only (never Buy Stop Limit)",
+        "Standard stop 8%, max 10%",
+        "Portfolio: max 25\u201333.3% total short exposure",
+        "Double Entry: 1/3\u20131/2 pilot at breakdown, add on failed-retest 2nd entry",
+        "Profit target: 18\u201325% for major stocks, cover at least half"
+      ],
+      "canonical_examples": []
+    },
+    {
+      "id": "retail_exhaustion",
+      "name": "Retail Exhaustion",
+      "full_name": "Retail Exhaustion / Trapped Trader Short",
+      "section": "6.3",
+      "tier": "C",
+      "family": "Short Setup",
+      "source": "Steven Dux",
+      "one_liner": "Small-cap short strategy: identify when retail buying power is mechanically exhausted by tracking total dollar volume against market-cap thresholds, or trap bag holders on a catalyst-driven bounce.",
+      "key_criteria": [
+        ["Daily performance", "Up >20%"],
+        ["Pre-market volume", ">1M shares"],
+        ["Price", ">$3.00"],
+        ["Market cap", "<$1B"],
+        ["Float", "<100M shares"]
+      ],
+      "aplus_filters": [
+        "First meaningful red day after a multi-day run = reversal beginning",
+        "Dux's data: average subsequent move -26.4%"
+      ],
+      "disqualifiers": [
+        "BLACKLISTED: Biotech. 10 years net-flat results. Irrational due to binary catalysts."
+      ],
+      "management": [],
+      "canonical_examples": []
+    }
+  ]
+}
