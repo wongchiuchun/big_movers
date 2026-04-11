@@ -115,6 +115,15 @@
   .study-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
   .study-select{background:var(--bg4);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:8px;outline:none;cursor:pointer;transition:border-color 0.15s;}
   .study-select:focus,.study-select:hover{border-color:var(--border-bright);}
+  .ai-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0;}
+  .ai-chip{background:var(--bg4);border:1px solid var(--border);color:var(--text);
+           font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:6px;cursor:pointer;}
+  .ai-chip.primary{border-color:var(--accent);color:var(--accent);}
+  .ai-actions{display:flex;gap:6px;margin-top:6px;}
+  .ai-actions button{flex:1;background:var(--bg4);border:1px solid var(--border);
+                     color:var(--text);font-size:11px;padding:6px;border-radius:6px;cursor:pointer;}
+  .ai-actions button:hover{border-color:var(--accent);color:var(--accent);}
+  .study-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin:4px 0;}
   .study-notes{width:100%;background:var(--bg4);border:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:12px;padding:10px 12px;border-radius:8px;resize:vertical;outline:none;min-height:70px;line-height:1.5;}
   .study-notes:focus{border-color:var(--accent);}
   .study-tags-grid{display:flex;flex-wrap:wrap;gap:5px;}
@@ -977,6 +986,7 @@
       <label>Tag</label><select id="f-tag" class="study-select" style="width:6.5em"><option value="">All</option></select>
       <label>Dir</label><select id="f-dir" class="study-select" style="width:5em"><option value="">All</option><option value="long">Long</option><option value="short">Short</option></select>
       <label>Min Rtg</label><select id="f-rating" class="study-select" style="width:4em"><option value="">All</option><option value="A">≥A</option><option value="B">≥B</option><option value="C">≥C</option><option value="D">≥D</option></select>
+      <label>AI</label><select id="f-ai" class="study-select" style="width:8em"><option value="">Any</option></select>
       <div class="vsep" style="height:16px"></div>
       <div class="filter-views">
         <select id="fv-select" title="Saved filter views"><option value="">Views...</option></select>
@@ -1084,6 +1094,7 @@
           </svg>
         </button>
         <button id="spy-toggle" class="ma-toggle-btn text" title="Benchmark overlay (VS SPY): Off → Line → Candle → Bar" aria-label="Benchmark overlay">VS</button>
+        <button id="ai-overlay-toggle" class="ma-toggle-btn text active" title="Toggle AI indicator overlays" style="margin-left:4px">AI</button>
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
         <button id="screenshot-btn" class="ma-toggle-btn text" title="Screenshot chart (Ctrl+Shift+S)" style="font-size:14px;margin-left:2px">📷</button>
         <div class="tb-sep"></div>
@@ -1127,6 +1138,10 @@
             <input id="study-custom-tag" type="text" placeholder="Custom tag...">
             <button id="study-add-tag-btn">+</button>
           </div>
+        </div>
+        <div class="study-section">
+          <div class="study-label">AI Suggested</div>
+          <div id="ai-suggested-box" style="font-size:11px">Loading...</div>
         </div>
         <div class="study-section">
           <div class="study-label">Notes</div>
@@ -1452,6 +1467,21 @@ let priceColors = { up: '#26a69a', down: '#ef5350' };
 let drawings={};      // {symbol:[{id,type,...}]}
 let drawIdCtr=0;
 
+// AI indicator overlay state
+let aiIndicators = null;
+let aiSeries = {};
+let aiOverlayConfig = {
+  sma50:  { show: true,  color: '#d4a574', width: 2 },
+  sma150: { show: true,  color: '#6ee7b7', width: 2 },
+  sma200: { show: true,  color: '#fb7185', width: 2 },
+  ema10:  { show: false, color: '#ede4cf', width: 1 },
+  ema20:  { show: false, color: '#b8b5ad', width: 1 },
+};
+let aiOverlayEnabled = true;
+let aiPivotInfo = null;
+let aiClassByMoveKey = {};
+let extraCandleMarkers = []; // low/high arrows from selectRow preserved across applyIndicatorOverlays
+
 let metadata = { version: 1, customTags: [], items: {} };
 const PRESET_TAGS = ['EP','VCP','Parabolic','HTF','Breakout','Flag','Power Earnings Gap','IPO Base','Low Cheat','Other'];
 const RATING_COLORS = { A:'#26a69a', B:'#5cb85c', C:'#f5c842', D:'#ff8c00', E:'#ef5350' };
@@ -1622,6 +1652,87 @@ async function saveDrawings(){
 }
 async function loadDrawings(){
   try{const r=await fetch('/api/drawings');drawings=await r.json();}catch(e){drawings={};}
+}
+
+// ============ AI INDICATOR OVERLAYS ============
+async function loadIndicators(symbol) {
+  try {
+    const r = await fetch(`/api/indicators?symbol=${encodeURIComponent(symbol)}`);
+    if (!r.ok) { aiIndicators = null; return; }
+    aiIndicators = await r.json();
+  } catch (e) { console.warn('loadIndicators failed', e); aiIndicators = null; }
+}
+
+function clearIndicatorOverlays() {
+  for (const k of Object.keys(aiSeries)) {
+    try { chart.removeSeries(aiSeries[k]); } catch (e) {}
+  }
+  aiSeries = {};
+}
+
+function applyIndicatorOverlays() {
+  clearIndicatorOverlays();
+  if (!aiIndicators || !aiOverlayEnabled) {
+    // Keep the low/high range markers even when overlays are toggled off
+    const base = (extraCandleMarkers || []).slice().sort((a,b)=>a.time<b.time?-1:1);
+    candleSeries.setMarkers(base);
+    return;
+  }
+  for (const [key, cfg] of Object.entries(aiOverlayConfig)) {
+    if (!cfg.show) continue;
+    const data = aiIndicators[key];
+    if (!data || !data.length) continue;
+    const series = chart.addLineSeries({
+      color: cfg.color, lineWidth: cfg.width,
+      priceLineVisible: false, lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    });
+    series.setData(data.map(p => ({ time: p.time, value: p.value })));
+    aiSeries[key] = series;
+  }
+  // Swing markers + pivot marker on candle series
+  const markers = [];
+  if (aiIndicators.swings) {
+    for (const s of aiIndicators.swings) {
+      markers.push({
+        time: s.time,
+        position: s.kind === 'high' ? 'aboveBar' : 'belowBar',
+        color: s.kind === 'high' ? '#fb7185' : '#6ee7b7',
+        shape: s.kind === 'high' ? 'arrowDown' : 'arrowUp',
+        size: 0.6,
+      });
+    }
+  }
+  if (aiPivotInfo && aiPivotInfo.pivot_date) {
+    markers.push({
+      time: aiPivotInfo.pivot_date,
+      position: 'aboveBar',
+      color: '#f0c674',
+      shape: 'circle',
+      size: 1.6,
+      text: 'PIVOT',
+    });
+  }
+  // Merge in the low/high range markers that selectRow draws
+  for (const m of (extraCandleMarkers || [])) markers.push(m);
+  markers.sort((a, b) => a.time < b.time ? -1 : 1);
+  candleSeries.setMarkers(markers);
+}
+
+async function loadPivotInfo(symbol, year) {
+  try {
+    const r = await fetch(`/api/pivot?symbol=${encodeURIComponent(symbol)}&year=${encodeURIComponent(year)}`);
+    if (!r.ok) { aiPivotInfo = null; return; }
+    const data = await r.json();
+    aiPivotInfo = data.pivot || null;
+  } catch (e) { aiPivotInfo = null; }
+}
+
+async function loadAIClassifications() {
+  try {
+    const r = await fetch('/api/ai-classifications');
+    aiClassByMoveKey = await r.json() || {};
+  } catch (e) { aiClassByMoveKey = {}; }
 }
 async function saveMetadata() {
   try {
@@ -3635,6 +3746,7 @@ function applyFilters(){
   const tagFilter=document.getElementById('f-tag').value;
   const dirFilter=document.getElementById('f-dir').value;
   const ratingFilter=document.getElementById('f-rating').value;
+  const aiFilterVal=document.getElementById('f-ai').value;
 
   filtered=allRows.filter(r=>{
     if(parseFloat(r.gain_pct)<mg)return false;
@@ -3643,9 +3755,25 @@ function applyFilters(){
     if(tagFilter){ const m=getMeta(r); if(!m.tags||!m.tags.includes(tagFilter))return false; }
     if(dirFilter){ const m=getMeta(r); if(m.direction!==dirFilter)return false; }
     if(ratingFilter){ const m=getMeta(r); if(!m.rating||m.rating>ratingFilter)return false; }
+    if(aiFilterVal){
+      const k=moveKey(r);
+      if(aiClassByMoveKey[k]?.ai_primary !== aiFilterVal) return false;
+    }
     return true;
   });
   applySort();
+}
+
+function populateAIFilter() {
+  const sel = document.getElementById('f-ai');
+  if (!sel) return;
+  const set = new Set();
+  for (const v of Object.values(aiClassByMoveKey)) {
+    if (v && v.ai_primary) set.add(v.ai_primary);
+  }
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Any</option>' +
+    [...set].sort().map(s => `<option value="${_escHtml(s)}"${s === current ? ' selected' : ''}>${_escHtml(s)}</option>`).join('');
 }
 function applySort(){
   filtered.sort((a,b)=>{
@@ -3672,7 +3800,7 @@ function applySort(){
   }
 }
 ['f-gain','f-sym','f-year'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
-['f-tag','f-dir','f-rating'].forEach(id=>document.getElementById(id).addEventListener('change',applyFilters));
+['f-tag','f-dir','f-rating','f-ai'].forEach(id=>document.getElementById(id).addEventListener('change',applyFilters));
 document.getElementById('table-header').addEventListener('click',e=>{
   const sp=e.target.closest('span[data-col]');if(!sp)return;
   const col=sp.dataset.col;
@@ -3764,10 +3892,19 @@ async function selectRow(i){
     const tfBars=resampleBars(currentBars,currentTF);
     const findBar=t=>tfBars.find(b=>b.time===t)||tfBars.reduce((best,b)=>b.time.localeCompare(t)<0?b:best,tfBars[0]);
     const sb=findBar(r.low_date),eb=findBar(r.high_date);
-    (priceSeries || candleSeries).setMarkers([
+    extraCandleMarkers = [
       {time:sb.time,position:'belowBar',color:'#00d4aa',shape:'arrowUp',  text:`▶ Low ${r.low_date} $${r.low_price}`},
       {time:eb.time,position:'aboveBar',color:'#ff6b35',shape:'arrowDown',text:`◀ High ${r.high_date} +${parseFloat(r.gain_pct).toFixed(0)}%`},
-    ]);
+    ];
+    (priceSeries || candleSeries).setMarkers(extraCandleMarkers);
+    // Load AI indicators + pivot then render the overlays (will merge with extraCandleMarkers)
+    await loadIndicators(currentSymbol);
+    if (currentMoveRow) {
+      await loadPivotInfo(currentSymbol, currentMoveRow.year);
+    } else {
+      aiPivotInfo = null;
+    }
+    applyIndicatorOverlays();
     const times=tfBars.map(b=>b.time),si=times.indexOf(sb.time),ei=times.indexOf(eb.time);
     const pad=Math.max(5,Math.round((ei-si)*0.2));
     chart.timeScale().setVisibleRange({from:tfBars[Math.max(0,si-pad)].time,to:tfBars[Math.min(tfBars.length-1,ei+pad)].time});
@@ -3819,6 +3956,85 @@ function updateStudyPanel() {
 
   // TV link
   document.getElementById('study-tv-link').href = `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(r.symbol)}`;
+
+  // AI Suggested section
+  updateAISection();
+}
+
+function _escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function updateAISection() {
+  if (!currentMoveRow) return;
+  const container = document.getElementById('ai-suggested-box');
+  if (!container) return;
+  // Always refetch in case the classifier just ran
+  await loadAIClassifications();
+  const key = moveKey(currentMoveRow);
+  const entry = aiClassByMoveKey[key];
+  if (!entry) {
+    container.textContent = '';
+    const d = document.createElement('div');
+    d.style.color = 'var(--muted)';
+    d.textContent = 'Not yet classified';
+    container.appendChild(d);
+    return;
+  }
+  const pivot = entry.pivot || {};
+  const depthNum = (typeof pivot.base_depth_pct === 'number') ? pivot.base_depth_pct.toFixed(1) : '?';
+  const pivotLine = pivot.pivot_date
+    ? `<div class="study-meta">Pivot: ${_escHtml(pivot.pivot_date)} · Base: ${_escHtml(pivot.base_start)}→${_escHtml(pivot.base_end)} (${_escHtml(depthNum)}% deep)</div>`
+    : '<div class="study-meta">No pivot detected</div>';
+  const classifications = entry.ai_classifications || [];
+  if (!classifications.length) {
+    container.innerHTML = `${pivotLine}<div style="color:var(--muted);margin-top:6px">No setups matched</div>`;
+    return;
+  }
+  const chips = classifications
+    .slice()
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .map(row => {
+      const isPrimary = row.setup === entry.ai_primary;
+      const critList = Array.isArray(row.criteria_met) ? row.criteria_met : [];
+      const critCount = critList.length;
+      return `<button class="ai-chip ${isPrimary ? 'primary' : ''}" title="${_escHtml(critList.join(', '))}">${_escHtml(row.setup)} · ${_escHtml(row.score)} (${critCount})</button>`;
+    }).join('');
+  const userStatus = entry.user_reviewed
+    ? `<div class="study-meta" style="color:var(--accent)">✓ Reviewed ${_escHtml(entry.user_reviewed_at || '')}: ${_escHtml(entry.user_primary || '(rejected)')}</div>`
+    : '';
+  container.innerHTML = `
+    ${pivotLine}
+    <div style="margin-top:4px">Primary: <strong style="color:var(--accent)">${_escHtml(entry.ai_primary || '—')}</strong></div>
+    <div class="ai-chip-row">${chips}</div>
+    ${userStatus}
+    <div class="ai-actions">
+      <button class="ai-accept">Accept primary</button>
+      <button class="ai-reject">Reject</button>
+    </div>
+  `;
+  container.querySelector('.ai-accept')?.addEventListener('click', async () => {
+    await fetch('/api/ai-classifications/override', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({move_key: key, user_primary: entry.ai_primary}),
+    });
+    // Also add to user tag list
+    const mm = getMeta(currentMoveRow);
+    const tags = new Set(mm.tags || []);
+    if (entry.ai_primary) tags.add(entry.ai_primary);
+    setMeta(currentMoveRow, { tags: [...tags] });
+    await saveMetadata();
+    updateStudyPanel();
+  });
+  container.querySelector('.ai-reject')?.addEventListener('click', async () => {
+    await fetch('/api/ai-classifications/override', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({move_key: key, user_primary: null, user_note: 'rejected'}),
+    });
+    updateStudyPanel();
+  });
 }
 
 function renderStudyTags() {
@@ -3847,6 +4063,13 @@ function renderStudyTags() {
 
 // Study panel event listeners
 document.getElementById('study-toggle-btn').addEventListener('click', toggleStudyPanel);
+
+// AI overlay toggle
+document.getElementById('ai-overlay-toggle').addEventListener('click', () => {
+  aiOverlayEnabled = !aiOverlayEnabled;
+  document.getElementById('ai-overlay-toggle').classList.toggle('active', aiOverlayEnabled);
+  applyIndicatorOverlays();
+});
 
 document.getElementById('study-rating').addEventListener('change', function() {
   if (!currentMoveRow) return;
@@ -4147,6 +4370,7 @@ document.addEventListener('click', e => {
       tag: document.getElementById('f-tag').value,
       dir: document.getElementById('f-dir').value,
       rating: document.getElementById('f-rating').value,
+      ai: document.getElementById('f-ai')?.value || '',
     };
   }
   function applyFilterValues(f) {
@@ -4156,6 +4380,8 @@ document.addEventListener('click', e => {
     document.getElementById('f-tag').value = f.tag || '';
     document.getElementById('f-dir').value = f.dir || '';
     document.getElementById('f-rating').value = f.rating || '';
+    const aiSel = document.getElementById('f-ai');
+    if (aiSel) aiSel.value = f.ai || '';
     applyFilters();
   }
 
@@ -4287,6 +4513,8 @@ window.addEventListener('load',async()=>{
   await loadDrawings();
   await loadMetadata();
   populateTagFilter();
+  await loadAIClassifications();
+  populateAIFilter();
   // Load saved filter views and apply default if set
   window._filterViews.populateViewSelect();
   const defView = window._filterViews.getDefaultView();
