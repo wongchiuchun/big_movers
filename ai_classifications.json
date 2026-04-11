@@ -12,22 +12,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-65.0%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (13d)",
+          "breakout_vol_surge (1.76x)",
+          "breakout_close_upper_half (0.85)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-65.0%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (18.6%)",
+          "vdu_right_side",
+          "near_52w_high (59.0% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1862
+          ],
+          "base_len": 13,
+          "prior_gain_pct": -65.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-65.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.76x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-65.0%)",
+          "duration_5w (13d)",
+          "depth_under_15 (25.2%)",
+          "horizontal_slope (0.01678)"
+        ],
+        "extra": {
+          "base_len": 13,
+          "depth_pct": 25.24303305249514,
+          "prior_gain_pct": -65.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -119,22 +143,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-8.5%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (13d)",
+          "breakout_vol_surge (1.75x)",
+          "breakout_close_upper_half (0.64)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-8.5%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (56.8% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 13,
+          "prior_gain_pct": -8.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-8.5%)"
+        "score": 30,
+        "criteria_met": [
+          "depth_under_15 (11.8%)",
+          "breakout_vol_14x (1.75x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-8.5%)",
+          "duration_5w (13d)",
+          "horizontal_slope (0.00271)"
+        ],
+        "extra": {
+          "base_len": 13,
+          "depth_pct": 11.829652996845425,
+          "prior_gain_pct": -8.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -227,22 +273,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-33.4%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (14d)",
+          "breakout_vol_surge (3.32x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-33.4%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (11.9%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.20)",
+          "near_52w_high (27.9% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1194
+          ],
+          "base_len": 14,
+          "prior_gain_pct": -33.4
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-33.4%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.32x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-33.4%)",
+          "duration_5w (14d)",
+          "depth_under_15 (21.9%)",
+          "horizontal_slope (0.00870)"
+        ],
+        "extra": {
+          "base_len": 14,
+          "depth_pct": 21.907854050711205,
+          "prior_gain_pct": -33.4
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -344,22 +415,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-62.6%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (23d)",
+          "breakout_vol_surge (1.64x)",
+          "breakout_close_upper_half (0.79)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-62.6%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (18.9%)",
+          "vdu_right_side",
+          "near_52w_high (45.5% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1886
+          ],
+          "base_len": 23,
+          "prior_gain_pct": -62.6
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-62.6%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.64x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-62.6%)",
+          "duration_5w (23d)",
+          "depth_under_15 (29.5%)",
+          "horizontal_slope (0.01176)"
+        ],
+        "extra": {
+          "base_len": 23,
+          "depth_pct": 29.548841620376642,
+          "prior_gain_pct": -62.6
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -462,22 +557,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-57.7%)"
+        "score": 20,
+        "criteria_met": [
+          "duration_ok (15d)",
+          "breakout_vol_surge (1.73x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-57.7%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.42)",
+          "near_52w_high (52.1% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 15,
+          "prior_gain_pct": -57.7
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-57.7%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.73x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-57.7%)",
+          "duration_5w (15d)",
+          "depth_under_15 (29.5%)",
+          "horizontal_slope (0.01825)"
+        ],
+        "extra": {
+          "base_len": 15,
+          "depth_pct": 29.493891797556728,
+          "prior_gain_pct": -57.7
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -569,22 +686,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-36.2%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (21d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (2.46x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-36.2%)",
+          "final_contraction_tight (16.9%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.25)",
+          "near_52w_high (49.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1551,
+            0.169
+          ],
+          "base_len": 21,
+          "prior_gain_pct": -36.2
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-36.2%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.46x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-36.2%)",
+          "duration_5w (21d)",
+          "depth_under_15 (28.2%)",
+          "horizontal_slope (0.00760)"
+        ],
+        "extra": {
+          "base_len": 21,
+          "depth_pct": 28.189712758851037,
+          "prior_gain_pct": -36.2
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -697,22 +840,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (13.9%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (18d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (2.50x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.94)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (13.9%)",
+          "final_contraction_tight (25.8%)",
+          "vdu_right_side",
+          "near_52w_high (13.5% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1796,
+            0.2581
+          ],
+          "base_len": 18,
+          "prior_gain_pct": 13.9
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (13.9%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (2.50x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (13.9%)",
+          "duration_5w (18d)",
+          "depth_under_15 (25.8%)",
+          "horizontal_slope (0.00435)"
+        ],
+        "extra": {
+          "base_len": 18,
+          "depth_pct": 25.812220566318917,
+          "prior_gain_pct": 13.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -816,22 +986,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-4.0%)"
+        "score": 20,
+        "criteria_met": [
+          "duration_ok (47d)",
+          "breakout_close_upper_half (0.90)",
+          "near_52w_high (0.3% away)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-4.0%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (15.8%)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.46x)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1576
+          ],
+          "base_len": 47,
+          "prior_gain_pct": -4.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-4.0%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_5w (47d)",
+          "breakout_vol_14x (1.46x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-4.0%)",
+          "depth_under_15 (29.2%)",
+          "horizontal_slope (0.00419)"
+        ],
+        "extra": {
+          "base_len": 47,
+          "depth_pct": 29.179856115107917,
+          "prior_gain_pct": -4.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -921,22 +1116,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-15.0%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_ok (39d)",
+          "final_contraction_tight (6.9%)",
+          "breakout_vol_surge (2.40x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-15.0%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.21)",
+          "near_52w_high (19.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0688
+          ],
+          "base_len": 39,
+          "prior_gain_pct": -15.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-15.0%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_5w (39d)",
+          "breakout_vol_14x (2.40x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-15.0%)",
+          "depth_under_15 (29.2%)",
+          "horizontal_slope (0.00699)"
+        ],
+        "extra": {
+          "base_len": 39,
+          "depth_pct": 29.19147143985259,
+          "prior_gain_pct": -15.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1060,22 +1281,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-52.0%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (12d)",
+          "breakout_vol_surge (2.93x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.92)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-52.0%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (21.3%)",
+          "vdu_right_side",
+          "near_52w_high (56.7% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.2128
+          ],
+          "base_len": 12,
+          "prior_gain_pct": -52.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-52.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.93x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-52.0%)",
+          "duration_5w (12d)",
+          "depth_under_15 (29.5%)",
+          "horizontal_slope (0.01284)"
+        ],
+        "extra": {
+          "base_len": 12,
+          "depth_pct": 29.51945080091533,
+          "prior_gain_pct": -52.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1178,22 +1424,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-31.9%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (36d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "final_contraction_tight (9.0%)",
+          "breakout_vol_surge (2.09x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-31.9%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.27)",
+          "near_52w_high (19.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1614,
+            0.0917,
+            0.09
+          ],
+          "base_len": 36,
+          "prior_gain_pct": -31.9
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-31.9%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (36d)",
+          "breakout_vol_14x (2.09x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-31.9%)",
+          "depth_under_15 (29.9%)",
+          "horizontal_slope (0.00700)"
+        ],
+        "extra": {
+          "base_len": 36,
+          "depth_pct": 29.86562635457304,
+          "prior_gain_pct": -31.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1295,22 +1568,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-50.3%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (16d)",
+          "breakout_vol_surge (1.78x)",
+          "breakout_close_upper_half (0.73)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-50.3%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (13.6%)",
+          "vdu_right_side",
+          "near_52w_high (64.6% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1358
+          ],
+          "base_len": 16,
+          "prior_gain_pct": -50.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-50.3%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.78x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-50.3%)",
+          "duration_5w (16d)",
+          "depth_under_15 (27.7%)",
+          "horizontal_slope (0.00844)"
+        ],
+        "extra": {
+          "base_len": 16,
+          "depth_pct": 27.699999999999992,
+          "prior_gain_pct": -50.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1402,22 +1699,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-52.1%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (11d)",
+          "breakout_vol_surge (1.87x)",
+          "breakout_close_upper_half (0.86)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-52.1%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (16.0%)",
+          "vdu_right_side",
+          "near_52w_high (49.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.16
+          ],
+          "base_len": 11,
+          "prior_gain_pct": -52.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-52.1%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.87x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-52.1%)",
+          "duration_5w (11d)",
+          "depth_under_15 (20.2%)",
+          "horizontal_slope (0.00968)"
+        ],
+        "extra": {
+          "base_len": 11,
+          "depth_pct": 20.175824175824175,
+          "prior_gain_pct": -52.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1527,22 +1848,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-45.8%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (10d)",
+          "breakout_vol_surge (5.90x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.73)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-45.8%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (43.9% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 10,
+          "prior_gain_pct": -45.8
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-45.8%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (5.90x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-45.8%)",
+          "duration_5w (10d)",
+          "depth_under_15 (16.3%)",
+          "horizontal_slope (0.00503)"
+        ],
+        "extra": {
+          "base_len": 10,
+          "depth_pct": 16.336327036234124,
+          "prior_gain_pct": -45.8
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1621,22 +1965,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-16.4%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (22d)",
+          "breakout_vol_surge (1.82x)",
+          "breakout_close_upper_half (0.91)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-16.4%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (20.0%)",
+          "vdu_right_side",
+          "near_52w_high (9.7% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1997
+          ],
+          "base_len": 22,
+          "prior_gain_pct": -16.4
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-16.4%)"
+        "score": 30,
+        "criteria_met": [
+          "horizontal_slope (0.00041)",
+          "breakout_vol_14x (1.82x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-16.4%)",
+          "duration_5w (22d)",
+          "depth_under_15 (29.6%)"
+        ],
+        "extra": {
+          "base_len": 22,
+          "depth_pct": 29.64669738863287,
+          "prior_gain_pct": -16.4
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1739,22 +2107,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-32.9%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (30d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (6.0%)",
+          "breakout_vol_surge (2.12x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-32.9%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.22)",
+          "near_52w_high (17.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0533,
+            0.0604
+          ],
+          "base_len": 30,
+          "prior_gain_pct": -32.9
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-32.9%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_5w (30d)",
+          "breakout_vol_14x (2.12x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-32.9%)",
+          "depth_under_15 (29.8%)",
+          "horizontal_slope (0.00972)"
+        ],
+        "extra": {
+          "base_len": 30,
+          "depth_pct": 29.764043598035688,
+          "prior_gain_pct": -32.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1856,22 +2251,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-56.5%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (11d)",
+          "breakout_vol_surge (1.65x)",
+          "breakout_close_upper_half (0.83)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-56.5%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (65.7% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 11,
+          "prior_gain_pct": -56.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-56.5%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.65x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-56.5%)",
+          "duration_5w (11d)",
+          "depth_under_15 (27.9%)",
+          "horizontal_slope (0.00926)"
+        ],
+        "extra": {
+          "base_len": 11,
+          "depth_pct": 27.906976744186046,
+          "prior_gain_pct": -56.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -1965,7 +2382,7 @@
         "matched": false,
         "score": 75,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (42.5%)",
           "duration_ok (32d)",
           "final_contraction_tight (7.7%)",
           "breakout_vol_surge (4.09x)",
@@ -1989,7 +2406,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 55,
+        "score": 65,
         "criteria_met": [
           "prior_advance_30 (42.5%)",
           "duration_5w (32d)",
@@ -2094,22 +2511,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-45.0%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (14d)",
+          "final_contraction_tight (8.7%)",
+          "breakout_vol_surge (1.52x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-45.0%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.50)",
+          "near_52w_high (30.5% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0868
+          ],
+          "base_len": 14,
+          "prior_gain_pct": -45.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-45.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.52x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-45.0%)",
+          "duration_5w (14d)",
+          "depth_under_15 (25.1%)",
+          "horizontal_slope (0.01465)"
+        ],
+        "extra": {
+          "base_len": 14,
+          "depth_pct": 25.070063694267514,
+          "prior_gain_pct": -45.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -2208,22 +2649,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-35.5%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (17d)",
+          "breakout_vol_surge (5.04x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-35.5%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.06)",
+          "near_52w_high (17.0% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 17,
+          "prior_gain_pct": -35.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-35.5%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (5.04x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-35.5%)",
+          "duration_5w (17d)",
+          "depth_under_15 (26.1%)",
+          "horizontal_slope (0.01036)"
+        ],
+        "extra": {
+          "base_len": 17,
+          "depth_pct": 26.10737254086692,
+          "prior_gain_pct": -35.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -2326,22 +2791,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-75.3%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (23d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (4.66x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.85)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-75.3%)",
+          "final_contraction_tight (14.8%)",
+          "vdu_right_side",
+          "near_52w_high (83.1% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.189,
+            0.1484
+          ],
+          "base_len": 23,
+          "prior_gain_pct": -75.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-75.3%)"
+        "score": 30,
+        "criteria_met": [
+          "horizontal_slope (0.00121)",
+          "breakout_vol_14x (4.66x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-75.3%)",
+          "duration_5w (23d)",
+          "depth_under_15 (24.5%)"
+        ],
+        "extra": {
+          "base_len": 23,
+          "depth_pct": 24.50877192982456,
+          "prior_gain_pct": -75.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -2436,7 +2927,7 @@
         "matched": false,
         "score": 55,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (276.2%)",
           "duration_ok (10d)",
           "breakout_vol_surge (1.55x)",
           "breakout_close_upper_half (0.82)"
@@ -2456,7 +2947,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 40,
+        "score": 45,
         "criteria_met": [
           "prior_advance_30 (276.2%)",
           "breakout_vol_14x (1.55x)"
@@ -2540,22 +3031,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-3.2%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_ok (19d)",
+          "breakout_vol_surge (5.59x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.98)",
+          "near_52w_high (0.4% away)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-3.2%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 19,
+          "prior_gain_pct": -3.2
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-3.2%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (5.59x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-3.2%)",
+          "duration_5w (19d)",
+          "depth_under_15 (28.3%)",
+          "horizontal_slope (0.01675)"
+        ],
+        "extra": {
+          "base_len": 19,
+          "depth_pct": 28.342637503431867,
+          "prior_gain_pct": -3.2
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -2680,22 +3194,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-11.0%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (16d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (6.27x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.86)",
+          "near_52w_high (3.2% away)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-11.0%)",
+          "final_contraction_tight (12.9%)",
+          "vdu_right_side"
+        ],
+        "extra": {
+          "contractions": [
+            0.1527,
+            0.1288
+          ],
+          "base_len": 16,
+          "prior_gain_pct": -11.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-11.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (6.27x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-11.0%)",
+          "duration_5w (16d)",
+          "depth_under_15 (26.3%)",
+          "horizontal_slope (0.00939)"
+        ],
+        "extra": {
+          "base_len": 16,
+          "depth_pct": 26.325129510459433,
+          "prior_gain_pct": -11.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -2798,22 +3338,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-75.0%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (13d)",
+          "breakout_vol_surge (3.21x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.92)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-75.0%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (81.5% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 13,
+          "prior_gain_pct": -75.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-75.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.21x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-75.0%)",
+          "duration_5w (13d)",
+          "depth_under_15 (23.7%)",
+          "horizontal_slope (0.01570)"
+        ],
+        "extra": {
+          "base_len": 13,
+          "depth_pct": 23.704520396912905,
+          "prior_gain_pct": -75.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -2940,7 +3503,7 @@
         "matched": false,
         "score": 60,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (44.8%)",
           "duration_ok (22d)",
           "breakout_vol_surge (2.80x)",
           "aplus_breakout_2x",
@@ -2964,7 +3527,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 55,
+        "score": 65,
         "criteria_met": [
           "prior_advance_30 (44.8%)",
           "horizontal_slope (0.00010)",
@@ -3119,7 +3682,7 @@
         "matched": false,
         "score": 60,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (89.5%)",
           "duration_ok (11d)",
           "breakout_vol_surge (1.63x)",
           "breakout_close_upper_half (0.97)",
@@ -3140,7 +3703,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 45,
+        "score": 50,
         "criteria_met": [
           "prior_advance_30 (89.5%)",
           "breakout_vol_14x (1.63x)",
@@ -3236,22 +3799,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-54.2%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (22d)",
+          "breakout_vol_surge (2.37x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.77)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-54.2%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (10.2%)",
+          "vdu_right_side",
+          "near_52w_high (64.6% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1022
+          ],
+          "base_len": 22,
+          "prior_gain_pct": -54.2
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-54.2%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.37x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-54.2%)",
+          "duration_5w (22d)",
+          "depth_under_15 (28.4%)",
+          "horizontal_slope (0.01216)"
+        ],
+        "extra": {
+          "base_len": 22,
+          "depth_pct": 28.35051546391753,
+          "prior_gain_pct": -54.2
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -3343,22 +3931,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-6.3%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (41d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "breakout_vol_surge (2.49x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-6.3%)",
+          "final_contraction_tight (10.5%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.26)",
+          "near_52w_high (16.0% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1224,
+            0.2433,
+            0.1052
+          ],
+          "base_len": 41,
+          "prior_gain_pct": -6.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-6.3%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_5w (41d)",
+          "horizontal_slope (0.00175)",
+          "breakout_vol_14x (2.49x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-6.3%)",
+          "depth_under_15 (28.2%)"
+        ],
+        "extra": {
+          "base_len": 41,
+          "depth_pct": 28.180354267310786,
+          "prior_gain_pct": -6.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -3460,22 +4075,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (9.6%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (27d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (2.54x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.93)",
+          "near_52w_high (0.6% away)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (9.6%)",
+          "final_contraction_tight (11.9%)",
+          "vdu_right_side"
+        ],
+        "extra": {
+          "contractions": [
+            0.0627,
+            0.1188
+          ],
+          "base_len": 27,
+          "prior_gain_pct": 9.6
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (9.6%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_5w (27d)",
+          "breakout_vol_14x (2.54x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (9.6%)",
+          "depth_under_15 (26.8%)",
+          "horizontal_slope (0.01073)"
+        ],
+        "extra": {
+          "base_len": 27,
+          "depth_pct": 26.78924605493863,
+          "prior_gain_pct": 9.6
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -3566,22 +4208,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-58.5%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (23d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (2.21x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-58.5%)",
+          "final_contraction_tight (14.3%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.41)",
+          "near_52w_high (51.4% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1406,
+            0.143
+          ],
+          "base_len": 23,
+          "prior_gain_pct": -58.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-58.5%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.21x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-58.5%)",
+          "duration_5w (23d)",
+          "depth_under_15 (29.1%)",
+          "horizontal_slope (0.00844)"
+        ],
+        "extra": {
+          "base_len": 23,
+          "depth_pct": 29.119031607262947,
+          "prior_gain_pct": -58.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -3673,22 +4341,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-36.3%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (21d)",
+          "breakout_vol_surge (5.02x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.79)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-36.3%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (17.3%)",
+          "vdu_right_side",
+          "near_52w_high (16.4% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1733
+          ],
+          "base_len": 21,
+          "prior_gain_pct": -36.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-36.3%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (5.02x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-36.3%)",
+          "duration_5w (21d)",
+          "depth_under_15 (28.2%)",
+          "horizontal_slope (0.01320)"
+        ],
+        "extra": {
+          "base_len": 21,
+          "depth_pct": 28.243649276154052,
+          "prior_gain_pct": -36.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -3792,22 +4486,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-48.2%)"
+        "score": 20,
+        "criteria_met": [
+          "duration_ok (22d)",
+          "breakout_vol_surge (1.57x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-48.2%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (13.8%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.47)",
+          "near_52w_high (52.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1378
+          ],
+          "base_len": 22,
+          "prior_gain_pct": -48.2
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-48.2%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.57x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-48.2%)",
+          "duration_5w (22d)",
+          "depth_under_15 (29.3%)",
+          "horizontal_slope (0.01037)"
+        ],
+        "extra": {
+          "base_len": 22,
+          "depth_pct": 29.310344827586203,
+          "prior_gain_pct": -48.2
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -3899,22 +4617,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-45.8%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (24d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "final_contraction_tight (9.9%)",
+          "breakout_vol_surge (1.76x)",
+          "breakout_close_upper_half (0.58)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-45.8%)",
+          "vdu_right_side",
+          "near_52w_high (32.9% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1208,
+            0.0753,
+            0.0991
+          ],
+          "base_len": 24,
+          "prior_gain_pct": -45.8
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-45.8%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.76x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-45.8%)",
+          "duration_5w (24d)",
+          "depth_under_15 (26.7%)",
+          "horizontal_slope (0.00727)"
+        ],
+        "extra": {
+          "base_len": 24,
+          "depth_pct": 26.740947075208915,
+          "prior_gain_pct": -45.8
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4016,22 +4760,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (6.2%)"
+        "score": 15,
+        "criteria_met": [
+          "duration_ok (12d)",
+          "breakout_close_upper_half (0.62)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (6.2%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.41x)",
+          "near_52w_high (61.8% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 12,
+          "prior_gain_pct": 6.2
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (6.2%)"
+        "score": 35,
+        "criteria_met": [
+          "depth_under_15 (11.6%)",
+          "breakout_vol_14x (1.41x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (6.2%)",
+          "duration_5w (12d)",
+          "horizontal_slope (0.00259)"
+        ],
+        "extra": {
+          "base_len": 12,
+          "depth_pct": 11.594202898550735,
+          "prior_gain_pct": 6.2
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4144,22 +4911,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-0.1%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (10d)",
+          "breakout_vol_surge (3.24x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.67)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-0.1%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (18.2% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 10,
+          "prior_gain_pct": -0.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-0.1%)"
+        "score": 30,
+        "criteria_met": [
+          "depth_under_15 (14.4%)",
+          "breakout_vol_14x (3.24x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-0.1%)",
+          "duration_5w (10d)",
+          "horizontal_slope (0.01221)"
+        ],
+        "extra": {
+          "base_len": 10,
+          "depth_pct": 14.398280802292273,
+          "prior_gain_pct": -0.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4261,22 +5051,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-5.7%)"
+        "score": 40,
+        "criteria_met": [
+          "duration_ok (18d)",
+          "final_contraction_tight (9.9%)",
+          "breakout_vol_surge (3.23x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.77)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-5.7%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "vdu_right_side",
+          "near_52w_high (45.2% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0993
+          ],
+          "base_len": 18,
+          "prior_gain_pct": -5.7
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-5.7%)"
+        "score": 45,
+        "criteria_met": [
+          "depth_under_15 (12.4%)",
+          "horizontal_slope (0.00157)",
+          "breakout_vol_14x (3.23x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-5.7%)",
+          "duration_5w (18d)"
+        ],
+        "extra": {
+          "base_len": 18,
+          "depth_pct": 12.411347517730485,
+          "prior_gain_pct": -5.7
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4368,22 +5183,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-70.1%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (29d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (3.64x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.99)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-70.1%)",
+          "final_contraction_tight (24.8%)",
+          "vdu_right_side",
+          "near_52w_high (71.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.2158,
+            0.2483
+          ],
+          "base_len": 29,
+          "prior_gain_pct": -70.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-70.1%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_5w (29d)",
+          "horizontal_slope (0.00078)",
+          "breakout_vol_14x (3.64x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-70.1%)",
+          "depth_under_15 (26.9%)"
+        ],
+        "extra": {
+          "base_len": 29,
+          "depth_pct": 26.896551724137925,
+          "prior_gain_pct": -70.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4488,27 +5329,81 @@
       "base_depth_pct": 29.276315789473685,
       "breakout_rel_vol": 3.123172472380219
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "VCP",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "duration_ok (21d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (8.5%)",
+          "breakout_vol_surge (3.12x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.85)"
+        ],
+        "criteria_failed": [
+          "prior_uptrend_20 (-32.0%)",
+          "vdu_right_side",
+          "near_52w_high (28.0% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1149,
+            0.0848
+          ],
+          "base_len": 21,
+          "prior_gain_pct": -32.0
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
-        "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-32.0%)"
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "duration_ok (21d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (8.5%)",
+          "breakout_vol_surge (3.12x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.85)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-32.0%)",
+          "vdu_right_side",
+          "near_52w_high (28.0% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1149,
+            0.0848
+          ],
+          "base_len": 21,
+          "prior_gain_pct": -32.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-32.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.12x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-32.0%)",
+          "duration_5w (21d)",
+          "depth_under_15 (29.3%)",
+          "horizontal_slope (0.01025)"
+        ],
+        "extra": {
+          "base_len": 21,
+          "depth_pct": 29.276315789473685,
+          "prior_gain_pct": -32.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4595,8 +5490,8 @@
         }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "VCP",
+    "needs_review": false
   },
   "LITE_2025": {
     "pivot": {
@@ -4611,22 +5506,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-42.1%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (22d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (7.0%)",
+          "breakout_vol_surge (1.97x)",
+          "breakout_close_upper_half (0.88)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-42.1%)",
+          "vdu_right_side",
+          "near_52w_high (36.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.2187,
+            0.0704
+          ],
+          "base_len": 22,
+          "prior_gain_pct": -42.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-42.1%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.97x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-42.1%)",
+          "duration_5w (22d)",
+          "depth_under_15 (29.3%)",
+          "horizontal_slope (0.01091)"
+        ],
+        "extra": {
+          "base_len": 22,
+          "depth_pct": 29.334365325077393,
+          "prior_gain_pct": -42.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4718,22 +5638,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-7.5%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (30d)",
+          "breakout_vol_surge (3.82x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.87)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-7.5%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (11.8%)",
+          "vdu_right_side",
+          "near_52w_high (56.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1185
+          ],
+          "base_len": 30,
+          "prior_gain_pct": -7.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-7.5%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_5w (30d)",
+          "horizontal_slope (0.00191)",
+          "breakout_vol_14x (3.82x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-7.5%)",
+          "depth_under_15 (17.7%)"
+        ],
+        "extra": {
+          "base_len": 30,
+          "depth_pct": 17.713004484304935,
+          "prior_gain_pct": -7.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4845,22 +5790,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-16.9%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (45d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "breakout_vol_surge (1.77x)",
+          "breakout_close_upper_half (0.73)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-16.9%)",
+          "final_contraction_tight (15.6%)",
+          "vdu_right_side",
+          "near_52w_high (29.1% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0894,
+            0.2121,
+            0.1562
+          ],
+          "base_len": 45,
+          "prior_gain_pct": -16.9
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-16.9%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_5w (45d)",
+          "horizontal_slope (0.00136)",
+          "breakout_vol_14x (1.77x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-16.9%)",
+          "depth_under_15 (30.0%)"
+        ],
+        "extra": {
+          "base_len": 45,
+          "depth_pct": 29.97145575642245,
+          "prior_gain_pct": -16.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -4969,7 +5941,7 @@
         "matched": true,
         "score": 95,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (20.6%)",
           "duration_ok (19d)",
           "has_contractions (2)",
           "contractions_decreasing",
@@ -5029,7 +6001,7 @@
         "matched": true,
         "score": 95,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (20.6%)",
           "duration_ok (19d)",
           "has_contractions (2)",
           "contractions_decreasing",
@@ -5054,12 +6026,22 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (20.6%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (2.99x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (20.6%)",
+          "duration_5w (19d)",
+          "depth_under_15 (20.6%)",
+          "horizontal_slope (0.00569)"
+        ],
+        "extra": {
+          "base_len": 19,
+          "depth_pct": 20.574566962399665,
+          "prior_gain_pct": 20.6
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -5166,7 +6148,7 @@
         "matched": false,
         "score": 55,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (69.3%)",
           "duration_ok (20d)",
           "breakout_vol_surge (1.51x)",
           "near_52w_high (4.7% away)"
@@ -5189,7 +6171,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 55,
+        "score": 65,
         "criteria_met": [
           "prior_advance_30 (69.3%)",
           "depth_under_15 (14.8%)",
@@ -5308,22 +6290,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-32.5%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (21d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "final_contraction_tight (9.6%)",
+          "breakout_vol_surge (1.64x)",
+          "breakout_close_upper_half (0.74)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-32.5%)",
+          "vdu_right_side",
+          "near_52w_high (46.0% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1561,
+            0.1447,
+            0.0957
+          ],
+          "base_len": 21,
+          "prior_gain_pct": -32.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-32.5%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.64x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-32.5%)",
+          "duration_5w (21d)",
+          "depth_under_15 (28.8%)",
+          "horizontal_slope (0.00928)"
+        ],
+        "extra": {
+          "base_len": 21,
+          "depth_pct": 28.78257487359005,
+          "prior_gain_pct": -32.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -5415,22 +6423,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-9.0%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_ok (18d)",
+          "final_contraction_tight (7.8%)",
+          "breakout_vol_surge (1.51x)",
+          "breakout_close_upper_half (0.83)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-9.0%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "vdu_right_side",
+          "near_52w_high (6.5% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0777
+          ],
+          "base_len": 18,
+          "prior_gain_pct": -9.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-9.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.51x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-9.0%)",
+          "duration_5w (18d)",
+          "depth_under_15 (15.2%)",
+          "horizontal_slope (0.00671)"
+        ],
+        "extra": {
+          "base_len": 18,
+          "depth_pct": 15.202702702702709,
+          "prior_gain_pct": -9.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -5533,22 +6565,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-11.5%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (10d)",
+          "breakout_vol_surge (1.70x)",
+          "breakout_close_upper_half (0.84)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-11.5%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (14.3%)",
+          "vdu_right_side",
+          "near_52w_high (67.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1429
+          ],
+          "base_len": 10,
+          "prior_gain_pct": -11.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-11.5%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.70x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-11.5%)",
+          "duration_5w (10d)",
+          "depth_under_15 (18.9%)",
+          "horizontal_slope (0.00737)"
+        ],
+        "extra": {
+          "base_len": 10,
+          "depth_pct": 18.897637795275596,
+          "prior_gain_pct": -11.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -5647,22 +6703,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-56.1%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (32d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "breakout_vol_surge (27.48x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.84)",
+          "near_52w_high (3.8% away)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-56.1%)",
+          "final_contraction_tight (14.0%)",
+          "vdu_right_side"
+        ],
+        "extra": {
+          "contractions": [
+            0.1087,
+            0.1429,
+            0.1396
+          ],
+          "base_len": 32,
+          "prior_gain_pct": -56.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-56.1%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (32d)",
+          "breakout_vol_14x (27.48x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-56.1%)",
+          "depth_under_15 (29.1%)",
+          "horizontal_slope (0.00554)"
+        ],
+        "extra": {
+          "base_len": 32,
+          "depth_pct": 29.05720823798627,
+          "prior_gain_pct": -56.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -5765,22 +6848,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-32.6%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (19d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (1.57x)",
+          "breakout_close_upper_half (0.93)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-32.6%)",
+          "final_contraction_tight (10.9%)",
+          "vdu_right_side",
+          "near_52w_high (51.5% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1931,
+            0.1088
+          ],
+          "base_len": 19,
+          "prior_gain_pct": -32.6
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-32.6%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.57x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-32.6%)",
+          "duration_5w (19d)",
+          "depth_under_15 (27.4%)",
+          "horizontal_slope (0.00953)"
+        ],
+        "extra": {
+          "base_len": 19,
+          "depth_pct": 27.408759124087585,
+          "prior_gain_pct": -32.6
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -5883,22 +6991,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-59.9%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (12d)",
+          "breakout_vol_surge (1.75x)",
+          "breakout_close_upper_half (0.63)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-59.9%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (21.2%)",
+          "vdu_right_side",
+          "near_52w_high (68.5% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.2118
+          ],
+          "base_len": 12,
+          "prior_gain_pct": -59.9
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-59.9%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (1.75x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-59.9%)",
+          "duration_5w (12d)",
+          "depth_under_15 (27.6%)",
+          "horizontal_slope (0.01333)"
+        ],
+        "extra": {
+          "base_len": 12,
+          "depth_pct": 27.61904761904762,
+          "prior_gain_pct": -59.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -5997,22 +7130,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-49.3%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (21d)",
+          "breakout_vol_surge (3.33x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.70)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-49.3%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (15.9%)",
+          "vdu_right_side",
+          "near_52w_high (37.1% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1587
+          ],
+          "base_len": 21,
+          "prior_gain_pct": -49.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-49.3%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.33x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-49.3%)",
+          "duration_5w (21d)",
+          "depth_under_15 (29.1%)",
+          "horizontal_slope (0.00961)"
+        ],
+        "extra": {
+          "base_len": 21,
+          "depth_pct": 29.082774049216997,
+          "prior_gain_pct": -49.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -6114,22 +7272,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-15.1%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (17d)",
+          "breakout_vol_surge (2.75x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-15.1%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (11.9%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.30)",
+          "near_52w_high (44.6% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1189
+          ],
+          "base_len": 17,
+          "prior_gain_pct": -15.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-15.1%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.75x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-15.1%)",
+          "duration_5w (17d)",
+          "depth_under_15 (23.0%)",
+          "horizontal_slope (0.00915)"
+        ],
+        "extra": {
+          "base_len": 17,
+          "depth_pct": 22.998137802607083,
+          "prior_gain_pct": -15.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -6221,22 +7404,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-58.9%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (11d)",
+          "breakout_vol_surge (3.43x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.56)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-58.9%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (62.6% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 11,
+          "prior_gain_pct": -58.9
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-58.9%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.43x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-58.9%)",
+          "duration_5w (11d)",
+          "depth_under_15 (24.5%)",
+          "horizontal_slope (0.00969)"
+        ],
+        "extra": {
+          "base_len": 11,
+          "depth_pct": 24.531811980652357,
+          "prior_gain_pct": -58.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -6328,22 +7534,50 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-30.3%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (40d)",
+          "has_contractions (4)",
+          "contractions_decreasing",
+          "breakout_vol_surge (13.68x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.66)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-30.3%)",
+          "final_contraction_tight (11.2%)",
+          "vdu_right_side",
+          "near_52w_high (11.2% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.2151,
+            0.0994,
+            0.1237,
+            0.1115
+          ],
+          "base_len": 40,
+          "prior_gain_pct": -30.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-30.3%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (40d)",
+          "breakout_vol_14x (13.68x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-30.3%)",
+          "depth_under_15 (29.1%)",
+          "horizontal_slope (0.00637)"
+        ],
+        "extra": {
+          "base_len": 40,
+          "depth_pct": 29.11589066368888,
+          "prior_gain_pct": -30.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -6445,22 +7679,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-21.2%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (11d)",
+          "breakout_vol_surge (1.89x)",
+          "breakout_close_upper_half (0.76)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-21.2%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (55.4% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 11,
+          "prior_gain_pct": -21.2
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-21.2%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (1.89x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-21.2%)",
+          "duration_5w (11d)",
+          "depth_under_15 (29.9%)",
+          "horizontal_slope (0.01196)"
+        ],
+        "extra": {
+          "base_len": 11,
+          "depth_pct": 29.93197278911564,
+          "prior_gain_pct": -21.2
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -6553,22 +7810,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-13.6%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (15d)",
+          "breakout_vol_surge (1.85x)",
+          "breakout_close_upper_half (0.71)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-13.6%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (25.5%)",
+          "vdu_right_side",
+          "near_52w_high (38.9% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.2546
+          ],
+          "base_len": 15,
+          "prior_gain_pct": -13.6
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-13.6%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (1.85x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-13.6%)",
+          "duration_5w (15d)",
+          "depth_under_15 (25.5%)",
+          "horizontal_slope (0.00699)"
+        ],
+        "extra": {
+          "base_len": 15,
+          "depth_pct": 25.464556090846518,
+          "prior_gain_pct": -13.6
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -6671,22 +7953,51 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-54.0%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_ok (53d)",
+          "has_contractions (5)",
+          "breakout_vol_surge (2.47x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-54.0%)",
+          "contractions_decreasing (2 violations)",
+          "final_contraction_tight (12.9%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.47)",
+          "near_52w_high (45.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0822,
+            0.1467,
+            0.115,
+            0.114,
+            0.1293
+          ],
+          "base_len": 53,
+          "prior_gain_pct": -54.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-54.0%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (53d)",
+          "breakout_vol_14x (2.47x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-54.0%)",
+          "depth_under_15 (28.2%)",
+          "horizontal_slope (0.00488)"
+        ],
+        "extra": {
+          "base_len": 53,
+          "depth_pct": 28.20354346930366,
+          "prior_gain_pct": -54.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -6780,7 +8091,7 @@
         "matched": false,
         "score": 55,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (232.9%)",
           "duration_ok (10d)",
           "breakout_vol_surge (1.74x)",
           "breakout_close_upper_half (0.81)"
@@ -6801,7 +8112,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 50,
+        "score": 60,
         "criteria_met": [
           "prior_advance_30 (232.9%)",
           "horizontal_slope (0.00057)",
@@ -6914,27 +8225,83 @@
       "base_depth_pct": 22.727272727272734,
       "breakout_rel_vol": 3.4504932526192604
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "VCP",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "duration_ok (27d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "final_contraction_tight (8.5%)",
+          "breakout_vol_surge (3.45x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.81)"
+        ],
+        "criteria_failed": [
+          "prior_uptrend_20 (-47.3%)",
+          "vdu_right_side",
+          "near_52w_high (50.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1262,
+            0.1176,
+            0.085
+          ],
+          "base_len": 27,
+          "prior_gain_pct": -47.3
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
-        "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-47.3%)"
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "duration_ok (27d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "final_contraction_tight (8.5%)",
+          "breakout_vol_surge (3.45x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.81)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-47.3%)",
+          "vdu_right_side",
+          "near_52w_high (50.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1262,
+            0.1176,
+            0.085
+          ],
+          "base_len": 27,
+          "prior_gain_pct": -47.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-47.3%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (27d)",
+          "breakout_vol_14x (3.45x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-47.3%)",
+          "depth_under_15 (22.7%)",
+          "horizontal_slope (0.00478)"
+        ],
+        "extra": {
+          "base_len": 27,
+          "depth_pct": 22.727272727272734,
+          "prior_gain_pct": -47.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -7010,8 +8377,8 @@
         "extra": {}
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "VCP",
+    "needs_review": false
   },
   "QUBT_2025": {
     "pivot": {
@@ -7048,22 +8415,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-54.3%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (24d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "breakout_vol_surge (1.62x)",
+          "breakout_close_upper_half (0.93)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-54.3%)",
+          "final_contraction_tight (14.9%)",
+          "vdu_right_side",
+          "near_52w_high (68.9% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.2396,
+            0.1426,
+            0.1494
+          ],
+          "base_len": 24,
+          "prior_gain_pct": -54.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-54.3%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.62x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-54.3%)",
+          "duration_5w (24d)",
+          "depth_under_15 (28.3%)",
+          "horizontal_slope (0.00317)"
+        ],
+        "extra": {
+          "base_len": 24,
+          "depth_pct": 28.26899128268991,
+          "prior_gain_pct": -54.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -7217,22 +8610,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (2.0%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_ok (18d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_close_upper_half (0.54)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (2.0%)",
+          "final_contraction_tight (10.6%)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.40x)",
+          "near_52w_high (20.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0816,
+            0.1062
+          ],
+          "base_len": 18,
+          "prior_gain_pct": 2.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (2.0%)"
+        "score": 50,
+        "criteria_met": [
+          "depth_under_15 (10.9%)",
+          "horizontal_slope (0.00183)",
+          "breakout_vol_14x (1.40x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (2.0%)",
+          "duration_5w (18d)"
+        ],
+        "extra": {
+          "base_len": 18,
+          "depth_pct": 10.883905013192614,
+          "prior_gain_pct": 2.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -7356,22 +8775,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-60.4%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (17d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (1.56x)",
+          "breakout_close_upper_half (0.83)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-60.4%)",
+          "final_contraction_tight (16.9%)",
+          "vdu_right_side",
+          "near_52w_high (50.4% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1981,
+            0.1692
+          ],
+          "base_len": 17,
+          "prior_gain_pct": -60.4
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-60.4%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.56x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-60.4%)",
+          "duration_5w (17d)",
+          "depth_under_15 (25.2%)",
+          "horizontal_slope (0.00305)"
+        ],
+        "extra": {
+          "base_len": 17,
+          "depth_pct": 25.174129353233845,
+          "prior_gain_pct": -60.4
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -7474,22 +8918,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-51.4%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (10d)",
+          "breakout_vol_surge (1.97x)",
+          "breakout_close_upper_half (0.55)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-51.4%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (13.5%)",
+          "vdu_right_side",
+          "near_52w_high (47.1% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1354
+          ],
+          "base_len": 10,
+          "prior_gain_pct": -51.4
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-51.4%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.97x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-51.4%)",
+          "duration_5w (10d)",
+          "depth_under_15 (23.1%)",
+          "horizontal_slope (0.01686)"
+        ],
+        "extra": {
+          "base_len": 10,
+          "depth_pct": 23.1055900621118,
+          "prior_gain_pct": -51.4
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -7603,22 +9071,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-40.3%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (25d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "breakout_vol_surge (2.36x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.85)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-40.3%)",
+          "final_contraction_tight (13.6%)",
+          "vdu_right_side",
+          "near_52w_high (27.6% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.176,
+            0.1279,
+            0.1361
+          ],
+          "base_len": 25,
+          "prior_gain_pct": -40.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-40.3%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (25d)",
+          "breakout_vol_14x (2.36x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-40.3%)",
+          "depth_under_15 (29.6%)",
+          "horizontal_slope (0.00718)"
+        ],
+        "extra": {
+          "base_len": 25,
+          "depth_pct": 29.617164493058475,
+          "prior_gain_pct": -40.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -7722,22 +9217,49 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (11.7%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (33d)",
+          "has_contractions (3)",
+          "contractions_decreasing",
+          "breakout_vol_surge (2.01x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (11.7%)",
+          "final_contraction_tight (19.2%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.43)",
+          "near_52w_high (53.7% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1889,
+            0.188,
+            0.1917
+          ],
+          "base_len": 33,
+          "prior_gain_pct": 11.7
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (11.7%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (33d)",
+          "breakout_vol_14x (2.01x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (11.7%)",
+          "depth_under_15 (29.6%)",
+          "horizontal_slope (0.00317)"
+        ],
+        "extra": {
+          "base_len": 33,
+          "depth_pct": 29.583333333333332,
+          "prior_gain_pct": 11.7
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -7841,7 +9363,7 @@
         "matched": false,
         "score": 85,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (38.5%)",
           "duration_ok (25d)",
           "has_contractions (2)",
           "contractions_decreasing",
@@ -7866,7 +9388,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 65,
+        "score": 80,
         "criteria_met": [
           "prior_advance_30 (38.5%)",
           "duration_5w (25d)",
@@ -7988,7 +9510,7 @@
         "matched": false,
         "score": 60,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (53.6%)",
           "duration_ok (14d)",
           "breakout_vol_surge (1.62x)",
           "breakout_close_upper_half (0.71)",
@@ -8009,7 +9531,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 55,
+        "score": 65,
         "criteria_met": [
           "prior_advance_30 (53.6%)",
           "depth_under_15 (14.7%)",
@@ -8134,22 +9656,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-25.3%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (12d)",
+          "breakout_vol_surge (1.71x)",
+          "breakout_close_upper_half (0.60)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-25.3%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (27.2% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 12,
+          "prior_gain_pct": -25.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-25.3%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (1.71x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-25.3%)",
+          "duration_5w (12d)",
+          "depth_under_15 (26.2%)",
+          "horizontal_slope (0.02084)"
+        ],
+        "extra": {
+          "base_len": 12,
+          "depth_pct": 26.150121065375302,
+          "prior_gain_pct": -25.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -8251,22 +9796,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-13.3%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (16d)",
+          "breakout_vol_surge (4.24x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-13.3%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (17.5%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.11)",
+          "near_52w_high (77.6% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1751
+          ],
+          "base_len": 16,
+          "prior_gain_pct": -13.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-13.3%)"
+        "score": 30,
+        "criteria_met": [
+          "horizontal_slope (0.00110)",
+          "breakout_vol_14x (4.24x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-13.3%)",
+          "duration_5w (16d)",
+          "depth_under_15 (22.4%)"
+        ],
+        "extra": {
+          "base_len": 16,
+          "depth_pct": 22.399683955076473,
+          "prior_gain_pct": -13.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -8380,22 +9950,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-39.6%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (27d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (9.9%)",
+          "breakout_vol_surge (1.57x)",
+          "breakout_close_upper_half (0.90)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-39.6%)",
+          "vdu_right_side",
+          "near_52w_high (34.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1188,
+            0.0987
+          ],
+          "base_len": 27,
+          "prior_gain_pct": -39.6
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-39.6%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (27d)",
+          "breakout_vol_14x (1.57x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-39.6%)",
+          "depth_under_15 (29.5%)",
+          "horizontal_slope (0.00929)"
+        ],
+        "extra": {
+          "base_len": 27,
+          "depth_pct": 29.52380952380952,
+          "prior_gain_pct": -39.6
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -8499,22 +10094,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-72.8%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (13d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (3.15x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.52)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-72.8%)",
+          "final_contraction_tight (20.1%)",
+          "vdu_right_side",
+          "near_52w_high (69.4% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1662,
+            0.2014
+          ],
+          "base_len": 13,
+          "prior_gain_pct": -72.8
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-72.8%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.15x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-72.8%)",
+          "duration_5w (13d)",
+          "depth_under_15 (29.5%)",
+          "horizontal_slope (0.00580)"
+        ],
+        "extra": {
+          "base_len": 13,
+          "depth_pct": 29.51700680272108,
+          "prior_gain_pct": -72.8
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -8607,22 +10228,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (12.0%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (11d)",
+          "breakout_vol_surge (6.61x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.60)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (12.0%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (8.4% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 11,
+          "prior_gain_pct": 12.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (12.0%)"
+        "score": 20,
+        "criteria_met": [
+          "breakout_vol_14x (6.61x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (12.0%)",
+          "duration_5w (11d)",
+          "depth_under_15 (25.6%)",
+          "horizontal_slope (0.02082)"
+        ],
+        "extra": {
+          "base_len": 11,
+          "depth_pct": 25.59842411760778,
+          "prior_gain_pct": 12.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -8725,22 +10370,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-41.2%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (24d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (3.56x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.78)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-41.2%)",
+          "final_contraction_tight (11.2%)",
+          "vdu_right_side",
+          "near_52w_high (33.0% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1941,
+            0.1124
+          ],
+          "base_len": 24,
+          "prior_gain_pct": -41.2
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-41.2%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.56x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-41.2%)",
+          "duration_5w (24d)",
+          "depth_under_15 (28.5%)",
+          "horizontal_slope (0.00895)"
+        ],
+        "extra": {
+          "base_len": 24,
+          "depth_pct": 28.487124463519315,
+          "prior_gain_pct": -41.2
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -8843,22 +10514,46 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-17.7%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (14d)",
+          "final_contraction_tight (7.1%)",
+          "breakout_close_upper_half (0.57)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-17.7%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.49x)",
+          "near_52w_high (29.3% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0707
+          ],
+          "base_len": 14,
+          "prior_gain_pct": -17.7
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-17.7%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.49x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-17.7%)",
+          "duration_5w (14d)",
+          "depth_under_15 (24.4%)",
+          "horizontal_slope (0.01465)"
+        ],
+        "extra": {
+          "base_len": 14,
+          "depth_pct": 24.426398556328945,
+          "prior_gain_pct": -17.7
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -8950,7 +10645,7 @@
         "matched": true,
         "score": 90,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (58.8%)",
           "duration_ok (42d)",
           "has_contractions (4)",
           "contractions_decreasing",
@@ -9000,7 +10695,7 @@
         "matched": true,
         "score": 90,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (58.8%)",
           "duration_ok (42d)",
           "has_contractions (4)",
           "contractions_decreasing",
@@ -9026,7 +10721,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 55,
+        "score": 65,
         "criteria_met": [
           "prior_advance_30 (58.8%)",
           "duration_5w (42d)",
@@ -9131,22 +10826,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-17.1%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (14d)",
+          "breakout_vol_surge (2.94x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.92)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-17.1%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (21.1% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 14,
+          "prior_gain_pct": -17.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-17.1%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.94x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-17.1%)",
+          "duration_5w (14d)",
+          "depth_under_15 (24.6%)",
+          "horizontal_slope (0.01311)"
+        ],
+        "extra": {
+          "base_len": 14,
+          "depth_pct": 24.603269299606257,
+          "prior_gain_pct": -17.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -9239,22 +10957,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-33.0%)"
+        "score": 55,
+        "criteria_met": [
+          "duration_ok (21d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (9.5%)",
+          "breakout_vol_surge (2.41x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-33.0%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.10)",
+          "near_52w_high (51.1% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1374,
+            0.0949
+          ],
+          "base_len": 21,
+          "prior_gain_pct": -33.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-33.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.41x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-33.0%)",
+          "duration_5w (21d)",
+          "depth_under_15 (26.4%)",
+          "horizontal_slope (0.00809)"
+        ],
+        "extra": {
+          "base_len": 21,
+          "depth_pct": 26.363544029522302,
+          "prior_gain_pct": -33.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -9348,7 +11092,7 @@
         "matched": false,
         "score": 55,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (66.0%)",
           "duration_ok (13d)",
           "breakout_vol_surge (3.49x)",
           "aplus_breakout_2x"
@@ -9372,7 +11116,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 45,
+        "score": 50,
         "criteria_met": [
           "prior_advance_30 (66.0%)",
           "breakout_vol_14x (3.49x)",
@@ -9482,27 +11226,81 @@
       "base_depth_pct": 29.179030662710183,
       "breakout_rel_vol": 2.7965590688408466
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "VCP",
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "duration_ok (27d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (5.9%)",
+          "vdu_right_side",
+          "breakout_vol_surge (2.80x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.81)"
+        ],
+        "criteria_failed": [
+          "prior_uptrend_20 (-42.5%)",
+          "near_52w_high (23.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0743,
+            0.0591
+          ],
+          "base_len": 27,
+          "prior_gain_pct": -42.5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
-        "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-42.5%)"
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "duration_ok (27d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (5.9%)",
+          "vdu_right_side",
+          "breakout_vol_surge (2.80x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.81)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-42.5%)",
+          "near_52w_high (23.8% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.0743,
+            0.0591
+          ],
+          "base_len": 27,
+          "prior_gain_pct": -42.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-42.5%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_5w (27d)",
+          "breakout_vol_14x (2.80x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-42.5%)",
+          "depth_under_15 (29.2%)",
+          "horizontal_slope (0.00702)"
+        ],
+        "extra": {
+          "base_len": 27,
+          "depth_pct": 29.179030662710183,
+          "prior_gain_pct": -42.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -9578,8 +11376,8 @@
         "extra": {}
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "VCP",
+    "needs_review": false
   },
   "TTMI_2025": {
     "pivot": {
@@ -9594,22 +11392,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-27.9%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (17d)",
+          "breakout_vol_surge (3.22x)",
+          "aplus_breakout_2x"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-27.9%)",
+          "has_contractions (1)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (10.3%)",
+          "vdu_right_side",
+          "breakout_close_upper_half (0.42)",
+          "near_52w_high (23.2% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1031
+          ],
+          "base_len": 17,
+          "prior_gain_pct": -27.9
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-27.9%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (3.22x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-27.9%)",
+          "duration_5w (17d)",
+          "depth_under_15 (23.6%)",
+          "horizontal_slope (0.00677)"
+        ],
+        "extra": {
+          "base_len": 17,
+          "depth_pct": 23.591184306127392,
+          "prior_gain_pct": -27.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -9746,7 +11569,7 @@
         "matched": false,
         "score": 55,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (35.1%)",
           "duration_ok (16d)",
           "breakout_vol_surge (2.69x)",
           "aplus_breakout_2x"
@@ -9770,7 +11593,7 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 55,
+        "score": 65,
         "criteria_met": [
           "prior_advance_30 (35.1%)",
           "horizontal_slope (0.00055)",
@@ -9889,22 +11712,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-46.3%)"
+        "score": 15,
+        "criteria_met": [
+          "duration_ok (11d)",
+          "breakout_close_upper_half (0.84)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-46.3%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.40x)",
+          "near_52w_high (42.0% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 11,
+          "prior_gain_pct": -46.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-46.3%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.40x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-46.3%)",
+          "duration_5w (11d)",
+          "depth_under_15 (25.4%)",
+          "horizontal_slope (0.01873)"
+        ],
+        "extra": {
+          "base_len": 11,
+          "depth_pct": 25.387596899224807,
+          "prior_gain_pct": -46.3
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -9996,22 +11841,45 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-14.8%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (10d)",
+          "breakout_vol_surge (2.17x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.75)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-14.8%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (48.3% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 10,
+          "prior_gain_pct": -14.8
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-14.8%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (2.17x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-14.8%)",
+          "duration_5w (10d)",
+          "depth_under_15 (21.3%)",
+          "horizontal_slope (0.00412)"
+        ],
+        "extra": {
+          "base_len": 10,
+          "depth_pct": 21.25984251968504,
+          "prior_gain_pct": -14.8
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -10125,22 +11993,48 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-29.8%)"
+        "score": 50,
+        "criteria_met": [
+          "duration_ok (30d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "breakout_vol_surge (4.02x)",
+          "aplus_breakout_2x",
+          "breakout_close_upper_half (0.94)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-29.8%)",
+          "final_contraction_tight (13.4%)",
+          "vdu_right_side",
+          "near_52w_high (27.7% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.168,
+            0.134
+          ],
+          "base_len": 30,
+          "prior_gain_pct": -29.8
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-29.8%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_5w (30d)",
+          "horizontal_slope (0.00191)",
+          "breakout_vol_14x (4.02x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-29.8%)",
+          "depth_under_15 (28.9%)"
+        ],
+        "extra": {
+          "base_len": 30,
+          "depth_pct": 28.90625,
+          "prior_gain_pct": -29.8
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -10243,22 +12137,47 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-8.1%)"
+        "score": 45,
+        "criteria_met": [
+          "duration_ok (24d)",
+          "has_contractions (2)",
+          "contractions_decreasing",
+          "final_contraction_tight (7.6%)",
+          "breakout_close_upper_half (0.79)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-8.1%)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.44x)",
+          "near_52w_high (57.5% away)"
+        ],
+        "extra": {
+          "contractions": [
+            0.1013,
+            0.0763
+          ],
+          "base_len": 24,
+          "prior_gain_pct": -8.1
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-8.1%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.44x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-8.1%)",
+          "duration_5w (24d)",
+          "depth_under_15 (25.7%)",
+          "horizontal_slope (0.00984)"
+        ],
+        "extra": {
+          "base_len": 24,
+          "depth_pct": 25.70387669313405,
+          "prior_gain_pct": -8.1
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -10362,7 +12281,7 @@
         "matched": true,
         "score": 85,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (21.9%)",
           "duration_ok (33d)",
           "has_contractions (2)",
           "contractions_decreasing",
@@ -10390,7 +12309,7 @@
         "matched": true,
         "score": 85,
         "criteria_met": [
-          "prior_uptrend_20",
+          "prior_uptrend_20 (21.9%)",
           "duration_ok (33d)",
           "has_contractions (2)",
           "contractions_decreasing",
@@ -10414,12 +12333,22 @@
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (21.9%)"
+        "score": 35,
+        "criteria_met": [
+          "duration_5w (33d)",
+          "breakout_vol_14x (1.66x)",
+          "aplus_sma50_rising"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (21.9%)",
+          "depth_under_15 (29.2%)",
+          "horizontal_slope (0.00451)"
+        ],
+        "extra": {
+          "base_len": 33,
+          "depth_pct": 29.17157440125638,
+          "prior_gain_pct": 21.9
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -10511,22 +12440,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-42.0%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (15d)",
+          "breakout_vol_surge (1.59x)",
+          "breakout_close_upper_half (0.80)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-42.0%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (55.8% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 15,
+          "prior_gain_pct": -42.0
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-42.0%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.59x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-42.0%)",
+          "duration_5w (15d)",
+          "depth_under_15 (25.4%)",
+          "horizontal_slope (0.01418)"
+        ],
+        "extra": {
+          "base_len": 15,
+          "depth_pct": 25.442577886377528,
+          "prior_gain_pct": -42.0
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -10618,22 +12569,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-19.5%)"
+        "score": 25,
+        "criteria_met": [
+          "duration_ok (19d)",
+          "breakout_vol_surge (1.57x)",
+          "breakout_close_upper_half (0.77)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-19.5%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "near_52w_high (29.1% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 19,
+          "prior_gain_pct": -19.5
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-19.5%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.57x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-19.5%)",
+          "duration_5w (19d)",
+          "depth_under_15 (15.1%)",
+          "horizontal_slope (0.00444)"
+        ],
+        "extra": {
+          "base_len": 19,
+          "depth_pct": 15.06696428571429,
+          "prior_gain_pct": -19.5
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -10725,22 +12698,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-36.4%)"
+        "score": 30,
+        "criteria_met": [
+          "duration_ok (15d)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.82x)",
+          "breakout_close_upper_half (0.91)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-36.4%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "near_52w_high (28.8% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 15,
+          "prior_gain_pct": -36.4
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-36.4%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.82x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-36.4%)",
+          "duration_5w (15d)",
+          "depth_under_15 (25.9%)",
+          "horizontal_slope (0.01463)"
+        ],
+        "extra": {
+          "base_len": 15,
+          "depth_pct": 25.89090909090909,
+          "prior_gain_pct": -36.4
+        }
       },
       {
         "setup": "Cup with Handle",
@@ -10832,22 +12827,44 @@
       {
         "setup": "VCP",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_uptrend_20 (-35.3%)"
+        "score": 15,
+        "criteria_met": [
+          "duration_ok (12d)",
+          "breakout_close_upper_half (0.93)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_uptrend_20 (-35.3%)",
+          "has_contractions (0)",
+          "contractions_decreasing (not enough data)",
+          "final_contraction_tight (no contractions)",
+          "vdu_right_side",
+          "breakout_vol_surge (1.41x)",
+          "near_52w_high (57.0% away)"
+        ],
+        "extra": {
+          "contractions": [],
+          "base_len": 12,
+          "prior_gain_pct": -35.3
+        }
       },
       {
         "setup": "Flat Base",
         "matched": false,
-        "score": 0,
-        "criteria_met": [],
-        "criteria_failed": [
-          "prior_advance_30 (-35.3%)"
+        "score": 15,
+        "criteria_met": [
+          "breakout_vol_14x (1.41x)"
         ],
-        "extra": {}
+        "criteria_failed": [
+          "prior_advance_30 (-35.3%)",
+          "duration_5w (12d)",
+          "depth_under_15 (26.5%)",
+          "horizontal_slope (0.01997)"
+        ],
+        "extra": {
+          "base_len": 12,
+          "depth_pct": 26.463104325699742,
+          "prior_gain_pct": -35.3
+        }
       },
       {
         "setup": "Cup with Handle",

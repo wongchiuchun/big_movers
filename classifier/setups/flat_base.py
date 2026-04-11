@@ -28,42 +28,44 @@ def detect_flat_base(indic: pd.DataFrame, pivot: dict) -> DetectorResult:
         r.criteria_failed.append("empty_base")
         return r
 
-    # ---- Prior advance gate (+30 prereq) ----
+    # ---- Prior advance (+30 if met, but now OPTIONAL — not a hard gate) ----
+    # Rationale: flat bases forming at the start of a first-leg rally are
+    # still flat bases. We score prior advance when present but don't require it.
     prior_window = indic.loc[:base_start].iloc[-64:-1]
-    if len(prior_window) < 5:
-        r.criteria_failed.append("prior_advance_30 (insufficient history)")
-        return r
-    start_close = prior_window["close"].iloc[0]
-    base_start_close = base["close"].iloc[0]
-    if pd.isna(start_close) or start_close <= 0:
-        r.criteria_failed.append("prior_advance_30 (nan)")
-        return r
-    prior_gain = (base_start_close / start_close) - 1.0
-    if prior_gain >= 0.30:
-        r.score += 30
-        r.criteria_met.append(f"prior_advance_30 ({prior_gain*100:.1f}%)")
+    prior_gain = 0.0
+    if len(prior_window) >= 5:
+        start_close = prior_window["close"].iloc[0]
+        base_start_close = base["close"].iloc[0]
+        if pd.notna(start_close) and start_close > 0:
+            prior_gain = (base_start_close / start_close) - 1.0
+            if prior_gain >= 0.30:
+                r.score += 30
+                r.criteria_met.append(f"prior_advance_30 ({prior_gain*100:.1f}%)")
+            else:
+                r.criteria_failed.append(f"prior_advance_30 ({prior_gain*100:.1f}%)")
+        else:
+            r.criteria_failed.append("prior_advance_30 (nan)")
     else:
-        r.criteria_failed.append(f"prior_advance_30 ({prior_gain*100:.1f}%)")
-        return r  # hard fail
+        r.criteria_failed.append("prior_advance_30 (insufficient history)")
 
-    # ---- Core: duration_5w (len >= 25) ----
+    # ---- Core: duration_5w (len >= 25) — +15 since this is the defining trait ----
     base_len = len(base)
     if base_len >= 25:
-        r.score += 10
+        r.score += 15
         r.criteria_met.append(f"duration_5w ({base_len}d)")
     else:
         r.criteria_failed.append(f"duration_5w ({base_len}d)")
 
-    # ---- Core/critical: depth_under_15 (hard req) ----
+    # ---- Core/critical: depth_under_15 — +15 (critical) ----
     depth_pct = pivot.get("base_depth_pct", 100.0)
     depth_under_15 = depth_pct <= 15.0
     if depth_under_15:
-        r.score += 10
+        r.score += 15
         r.criteria_met.append(f"depth_under_15 ({depth_pct:.1f}%)")
     else:
         r.criteria_failed.append(f"depth_under_15 ({depth_pct:.1f}%)")
 
-    # ---- Core/critical: horizontal_slope ----
+    # ---- Core/critical: horizontal_slope — +15 (critical) ----
     horizontal = False
     if len(base) >= 5:
         closes = base["close"].dropna().to_numpy()
@@ -76,7 +78,7 @@ def detect_flat_base(indic: pd.DataFrame, pivot: dict) -> DetectorResult:
                     normalized = abs(slope) / mean_close
                     if normalized < 0.002:
                         horizontal = True
-                        r.score += 10
+                        r.score += 15
                         r.criteria_met.append(f"horizontal_slope ({normalized:.5f})")
                     else:
                         r.criteria_failed.append(f"horizontal_slope ({normalized:.5f})")
@@ -89,10 +91,10 @@ def detect_flat_base(indic: pd.DataFrame, pivot: dict) -> DetectorResult:
     else:
         r.criteria_failed.append("horizontal_slope (base too short)")
 
-    # ---- Core: breakout_vol_14x ----
+    # ---- Core: breakout_vol_14x — +15 (confirms institutional demand) ----
     breakout_vol = pivot.get("breakout_rel_vol", 0.0) or 0.0
     if breakout_vol >= 1.4:
-        r.score += 10
+        r.score += 15
         r.criteria_met.append(f"breakout_vol_14x ({breakout_vol:.2f}x)")
     else:
         r.criteria_failed.append(f"breakout_vol_14x ({breakout_vol:.2f}x)")

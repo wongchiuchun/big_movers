@@ -71,23 +71,26 @@ def detect_vcp(indic: pd.DataFrame, pivot: dict) -> DetectorResult:
         r.criteria_failed.append("empty_base")
         return r
 
-    # ---- Prior uptrend (+30 gate, hard fail if absent) ----
-    prior_window = indic.loc[:base_start].iloc[-64:-1]  # up to ~63 bars before base_start
-    if len(prior_window) < 5:
-        r.criteria_failed.append("prior_uptrend_20 (insufficient history)")
-        return r
-    start_close = prior_window["close"].iloc[0]
-    base_start_close = base["close"].iloc[0]
-    if start_close <= 0 or pd.isna(start_close):
-        r.criteria_failed.append("prior_uptrend_20 (nan)")
-        return r
-    prior_gain = (base_start_close / start_close) - 1.0
-    if prior_gain >= 0.20:
-        r.score += 30
-        r.criteria_met.append("prior_uptrend_20")
+    # ---- Prior uptrend (+30 if met, but now OPTIONAL — not a hard gate) ----
+    # Rationale: many big winners break out of accumulation at/near the low
+    # (first-leg rallies) and never satisfy Minervini's ≥20% prior advance.
+    # We still score it when present, but no longer hard-fail without it.
+    prior_window = indic.loc[:base_start].iloc[-64:-1]
+    prior_gain = 0.0
+    if len(prior_window) >= 5:
+        start_close = prior_window["close"].iloc[0]
+        base_start_close = base["close"].iloc[0]
+        if pd.notna(start_close) and start_close > 0:
+            prior_gain = (base_start_close / start_close) - 1.0
+            if prior_gain >= 0.20:
+                r.score += 30
+                r.criteria_met.append(f"prior_uptrend_20 ({prior_gain*100:.1f}%)")
+            else:
+                r.criteria_failed.append(f"prior_uptrend_20 ({prior_gain*100:.1f}%)")
+        else:
+            r.criteria_failed.append("prior_uptrend_20 (nan)")
     else:
-        r.criteria_failed.append(f"prior_uptrend_20 ({prior_gain*100:.1f}%)")
-        return r  # hard fail
+        r.criteria_failed.append("prior_uptrend_20 (insufficient history)")
 
     # ---- Core: duration 10..65 ----
     base_len = len(base)
