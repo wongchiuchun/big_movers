@@ -138,6 +138,12 @@
   .review-style-fit{background:var(--bg4);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:11px;}
   .review-style-fit strong{color:var(--text);}
   .review-myth{font-size:10px;color:var(--muted);font-style:italic;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);}
+  .notes-popup{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;display:none;align-items:center;justify-content:center;}
+  .notes-popup.open{display:flex;}
+  .notes-popup-panel{background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);border:1px solid var(--border-bright);border-radius:16px;width:min(700px,90vw);max-height:80vh;overflow-y:auto;padding:28px 32px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.6);}
+  .notes-popup-panel h3{font-family:var(--display,serif);font-style:italic;font-size:20px;margin:0 0 16px;}
+  .notes-popup-panel pre{white-space:pre-wrap;word-wrap:break-word;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text);background:var(--bg4);padding:16px 20px;border-radius:8px;margin:0;}
+  .notes-popup-close{position:absolute;top:16px;right:20px;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;}
   /* Setup definitions modal */
   .defs-modal{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;display:none;align-items:center;justify-content:center;}
   .defs-modal.open{display:flex;}
@@ -1236,6 +1242,14 @@
         <div class="st-row"><label>Max Iterations</label><input id="st-max-iter" type="number" min="10" max="200" value="50"></div>
       </div>
 
+      <div class="notes-popup" id="notes-popup">
+        <div class="notes-popup-panel">
+          <button class="notes-popup-close" id="notes-popup-close" title="Close">×</button>
+          <h3 id="notes-popup-title">Notes</h3>
+          <pre id="notes-popup-content"></pre>
+        </div>
+      </div>
+
       <div class="defs-modal" id="defs-modal">
         <div class="defs-panel" style="position:relative">
           <button class="defs-close" id="defs-close" title="Close (Esc)">×</button>
@@ -1288,7 +1302,10 @@
           <div id="review-box" style="display:none"></div>
         </div>
         <div class="study-section">
-          <div class="study-label">Notes</div>
+          <div class="study-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Notes</span>
+            <button id="notes-view-btn" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:10px;font-family:var(--mono)" title="View notes in readable popup">view</button>
+          </div>
           <textarea id="study-notes" class="study-notes" rows="4" placeholder="Your observations..."></textarea>
           <div style="text-align:right;font-size:9px;color:var(--muted);margin-top:2px"><span id="study-notes-count">0</span> chars</div>
         </div>
@@ -1633,8 +1650,7 @@ let textNotesVisible = true;
 
 // ===== SuperTrend overlay state =====
 let stEnabled = false;
-let stBullSeries = null;
-let stBearSeries = null;
+let stSegmentSeries = [];
 let stConfig = {
   atrLen: 10,
   factHigh: 2.0,
@@ -1966,8 +1982,6 @@ function computeSuperTrend(bars, cfg) {
   const stDir = new Array(n).fill(1);
   const stUpper = new Array(n).fill(NaN);
   const stLower = new Array(n).fill(NaN);
-  const bull = [];
-  const bear = [];
   const markers = [];
 
   for (let i = 0; i < n; i++) {
@@ -2081,28 +2095,16 @@ function computeSuperTrend(bars, cfg) {
     }
   }
 
-  // Build bull/bear line data — include overlap at transitions for continuity
-  let prevDir = 0;
+  // Build flat line array with bull/bear flag per point.
+  // Pine: green when close > ST, red when close < ST.
+  const line = [];
   for (let i = 0; i < n; i++) {
     if (isNaN(stLine[i])) continue;
-    const dir = stDir[i];
-    if (prevDir !== 0 && dir !== prevDir) {
-      // Transition point: close the old segment AND start the new one
-      if (dir === -1) {
-        bear.push({ time: bars[i].time, value: stLine[i] });
-        bull.push({ time: bars[i].time, value: stLine[i] });
-      } else {
-        bull.push({ time: bars[i].time, value: stLine[i] });
-        bear.push({ time: bars[i].time, value: stLine[i] });
-      }
-    } else {
-      if (dir === -1) bull.push({ time: bars[i].time, value: stLine[i] });
-      else bear.push({ time: bars[i].time, value: stLine[i] });
-    }
-    prevDir = dir;
+    const isBull = closes[i] > stLine[i] || (closes[i] === stLine[i] && stDir[i] === -1);
+    line.push({ time: bars[i].time, value: stLine[i], isBull });
   }
 
-  return { bull, bear, markers };
+  return { line, markers };
 }
 
 function setStEnabled(v, skipSave = false) {
@@ -2113,31 +2115,52 @@ function setStEnabled(v, skipSave = false) {
   if (!skipSave) saveSettings();
 }
 
+function clearStSeries() {
+  for (const s of stSegmentSeries) {
+    try { chart.removeSeries(s); } catch (e) {}
+  }
+  stSegmentSeries = [];
+}
+
 function updateSuperTrend() {
   if (!chart) return;
-  if (!stBullSeries) {
-    stBullSeries = chart.addLineSeries({
-      color: '#00ffbb', lineWidth: 2, lineType: 1,
-      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
-    });
-  }
-  if (!stBearSeries) {
-    stBearSeries = chart.addLineSeries({
-      color: '#ff1100', lineWidth: 2, lineType: 1,
-      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
-    });
-  }
+  clearStSeries();
 
-  if (!stEnabled || !currentBars || !currentBars.length) {
-    stBullSeries.setData([]);
-    stBearSeries.setData([]);
-    return;
-  }
+  if (!stEnabled || !currentBars || !currentBars.length) return;
 
   const bars = resampleBars(currentBars, currentTF);
   const result = computeSuperTrend(bars, stConfig);
-  stBullSeries.setData(result.bull);
-  stBearSeries.setData(result.bear);
+  const pts = result.line;
+  if (!pts.length) return;
+
+  // Split into segments by color — one series per continuous bull/bear run
+  let segColor = pts[0].isBull;
+  let segData = [{ time: pts[0].time, value: pts[0].value }];
+
+  const flushSegment = () => {
+    if (segData.length < 1) return;
+    const color = segColor ? '#00ffbb' : '#ff1100';
+    const s = chart.addLineSeries({
+      color, lineWidth: 2, lineType: 1,
+      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+    });
+    s.setData(segData);
+    stSegmentSeries.push(s);
+  };
+
+  for (let i = 1; i < pts.length; i++) {
+    if (pts[i].isBull !== segColor) {
+      // Include transition point in old segment for continuity
+      segData.push({ time: pts[i].time, value: pts[i].value });
+      flushSegment();
+      // Start new segment from transition point
+      segColor = pts[i].isBull;
+      segData = [{ time: pts[i].time, value: pts[i].value }];
+    } else {
+      segData.push({ time: pts[i].time, value: pts[i].value });
+    }
+  }
+  flushSegment();
 }
 
 function positionStPanel() {
@@ -4658,22 +4681,25 @@ async function updateAISection() {
   const userStatus = entry.user_reviewed
     ? `<div class="study-meta" style="color:var(--accent)">✓ Reviewed ${_escHtml(entry.user_reviewed_at || '')}: ${_escHtml(entry.user_primary || '(rejected)')}</div>`
     : '';
+  const allSetupNames = classifications.map(c => c.setup);
+  const matchCount = classifications.length;
   container.innerHTML = `
     ${pivotLine}
     <div style="margin-top:4px">Primary: <strong style="color:var(--accent)">${_escHtml(entry.ai_primary || '—')}</strong></div>
     <div class="ai-chip-row">${chips}</div>
     ${userStatus}
     <div class="ai-actions">
-      <button class="ai-accept">Accept primary</button>
-      <button class="ai-reject">Reject</button>
+      <button class="ai-accept-primary" title="Add '${_escHtml(entry.ai_primary)}' to tags">Accept ${_escHtml(entry.ai_primary || 'primary')}</button>
+      ${matchCount > 1 ? `<button class="ai-accept-all" title="Add all ${matchCount} matched setups to tags">Accept all (${matchCount})</button>` : ''}
+      <button class="ai-reject" title="Mark as rejected — no setups apply">Reject all</button>
     </div>
   `;
-  container.querySelector('.ai-accept')?.addEventListener('click', async () => {
+  // Accept primary only
+  container.querySelector('.ai-accept-primary')?.addEventListener('click', async () => {
     await fetch('/api/ai-classifications/override', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({move_key: key, user_primary: entry.ai_primary}),
     });
-    // Also add to user tag list
     const mm = getMeta(currentMoveRow);
     const tags = new Set(mm.tags || []);
     if (entry.ai_primary) tags.add(entry.ai_primary);
@@ -4681,6 +4707,20 @@ async function updateAISection() {
     await saveMetadata();
     updateStudyPanel();
   });
+  // Accept all matched setups
+  container.querySelector('.ai-accept-all')?.addEventListener('click', async () => {
+    await fetch('/api/ai-classifications/override', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({move_key: key, user_primary: entry.ai_primary, user_secondary: allSetupNames}),
+    });
+    const mm = getMeta(currentMoveRow);
+    const tags = new Set(mm.tags || []);
+    for (const s of allSetupNames) tags.add(s);
+    setMeta(currentMoveRow, { tags: [...tags] });
+    await saveMetadata();
+    updateStudyPanel();
+  });
+  // Reject all
   container.querySelector('.ai-reject')?.addEventListener('click', async () => {
     await fetch('/api/ai-classifications/override', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -4723,13 +4763,16 @@ async function updateReviewSection() {
   const review = reviewsCache[key];
 
   if (!review) {
-    box.innerHTML = '<div style="color:var(--muted);padding:4px 0">Not yet reviewed. Say "Review ' + _escHtml(currentMoveRow.symbol) + ' ' + _escHtml(currentMoveRow.year) + '" in chat.</div>';
+    box.style.display = 'none';
+    box.innerHTML = '';
     toggle.textContent = 'no review';
     toggle.style.color = 'var(--muted)';
     return;
   }
 
-  toggle.textContent = box.style.display === 'none' ? 'expand' : 'collapse';
+  // Auto-expand when review exists
+  box.style.display = 'block';
+  toggle.textContent = 'collapse';
   toggle.style.color = 'var(--accent)';
 
   // Snapshot
@@ -4785,6 +4828,22 @@ document.getElementById('review-toggle-btn').addEventListener('click', () => {
     box.style.display = 'none';
     btn.textContent = 'expand';
   }
+});
+
+// Notes view popup
+document.getElementById('notes-view-btn').addEventListener('click', () => {
+  const notes = document.getElementById('study-notes').value || '';
+  if (!notes.trim()) return;
+  const title = currentMoveRow ? `${currentMoveRow.symbol} ${currentMoveRow.year} — Notes` : 'Notes';
+  document.getElementById('notes-popup-title').textContent = title;
+  document.getElementById('notes-popup-content').textContent = notes;
+  document.getElementById('notes-popup').classList.add('open');
+});
+document.getElementById('notes-popup-close').addEventListener('click', () => {
+  document.getElementById('notes-popup').classList.remove('open');
+});
+document.getElementById('notes-popup').addEventListener('click', (e) => {
+  if (e.target.id === 'notes-popup') document.getElementById('notes-popup').classList.remove('open');
 });
 
 function renderStudyTags() {
