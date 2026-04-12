@@ -6,10 +6,11 @@
 
 A retrospective study tool for classifying historical big-winner stock moves against known trading setup patterns (VCP, EP, Flat Base, etc.). The ultimate goal is to build a **personalized trading playbook** through structured chart review — not a predictor.
 
-The system has three layers:
+The system has four layers:
 1. **Automated hints** — Python detectors that scan OHLCV data and suggest which setup a move might be. These are rough suggestions, not ground truth.
 2. **Chart overlays** — SMA/EMA lines, swing-pivot markers, and detected breakout-pivot marker rendered on a Lightweight Charts frontend for visual verification.
-3. **Manual review** — the human reviews charts, annotates them with their own analysis (setup classification, entry/stop levels, tradability assessment, style fit notes), and the accumulated library becomes the playbook.
+3. **Structured reviews** — per-move analysis stored in `reviews.json`, breaking each move into legs with setup classification, entry/stop levels, tradability assessment, style fit, and myth-bust notes. Reviews appear in a collapsible panel in the Study drawer, side-by-side with user notes. Trigger with "Review [TICKER] [YEAR]" in conversation.
+4. **Manual annotation** — the human reviews charts, adds their own notes (using the convention format in the Notes textarea), and the accumulated library becomes the playbook.
 
 ## Branch and repo state
 
