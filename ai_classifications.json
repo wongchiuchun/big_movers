@@ -137,6 +137,38 @@
           "max_down_vol_10d": 4959930,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 40,
+        "criteria_met": [
+          "qualifying_gap (8.1% gap, 4.7x vol)",
+          "rel_vol_gte_3x (4.7x)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (8.1%)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (45.4%)",
+          "aplus_gap_fill_lt_30pct (177%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-12",
+          "gap_pct": 8.1,
+          "gap_rel_vol": 4.7,
+          "post_gap_range_pct": 45.4,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -279,6 +311,39 @@
           "max_down_vol_10d": 1778221,
           "num_down_days_10d": 6
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 50,
+        "criteria_met": [
+          "qualifying_gap (6.1% gap, 2.6x vol)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (13.8%)",
+          "aplus_close_top_25pct (78%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (6.1%)",
+          "rel_vol_gte_3x (2.6x)",
+          "aplus_gap_fill_lt_30pct (79%)"
+        ],
+        "extra": {
+          "gap_date": "2025-10-06",
+          "gap_pct": 6.1,
+          "gap_rel_vol": 2.6,
+          "post_gap_range_pct": 13.8,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -408,6 +473,48 @@
           "today_vol": 1030877,
           "max_down_vol_10d": 543230,
           "num_down_days_10d": 4
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (19.8% gap, 3.3x vol)",
+          "gap_gte_10pct (19.8%)",
+          "rel_vol_gte_3x (3.3x)",
+          "aplus_gap_gte_15pct (19.8%)",
+          "aplus_close_top_25pct (90%)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (25.5%)",
+          "aplus_gap_fill_lt_30pct (64%)"
+        ],
+        "extra": {
+          "gap_date": "2025-03-28",
+          "gap_pct": 19.8,
+          "gap_rel_vol": 3.3,
+          "post_gap_range_pct": 25.5,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 30,
+        "criteria_met": [
+          "gate_passed (20% gap, 3.3x vol, close>open=True, low>prior=True)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (20%)",
+          "vol_gte_5x (3.3x)",
+          "close_top_50pct (20%)"
+        ],
+        "extra": {
+          "gap_date": "2025-03-28",
+          "gap_pct": 19.8,
+          "gap_rel_vol": 3.3
         }
       }
     ],
@@ -591,6 +698,39 @@
           "max_down_vol_10d": 6411664,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 35,
+        "criteria_met": [
+          "qualifying_gap (8.5% gap, 2.9x vol)",
+          "aplus_close_top_25pct (89%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (8.5%)",
+          "rel_vol_gte_3x (2.9x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (16.9%)",
+          "aplus_gap_fill_lt_30pct (36%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-21",
+          "gap_pct": 8.5,
+          "gap_rel_vol": 2.9,
+          "post_gap_range_pct": 16.9,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -795,6 +935,26 @@
           "max_down_vol_10d": 3833275,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -941,6 +1101,26 @@
           "max_down_vol_10d": 10835169,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -1135,6 +1315,26 @@
           "max_down_vol_10d": 3103115,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "VCP",
@@ -1316,6 +1516,26 @@
           "max_down_vol_10d": 1991932,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -1446,6 +1666,39 @@
           "max_down_vol_10d": 49355952,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 55,
+        "criteria_met": [
+          "qualifying_gap (10.9% gap, 2.6x vol)",
+          "gap_gte_10pct (10.9%)",
+          "post_gap_held_above_gap_low",
+          "aplus_close_top_25pct (92%)"
+        ],
+        "criteria_failed": [
+          "rel_vol_gte_3x (2.6x)",
+          "tight_consolidation (44.6%)",
+          "aplus_gap_fill_lt_30pct (170%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-25",
+          "gap_pct": 10.9,
+          "gap_rel_vol": 2.6,
+          "post_gap_range_pct": 44.6,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -1591,6 +1844,26 @@
           "max_down_vol_10d": 5082265,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -1634,6 +1907,29 @@
             "price": 1.4288
           },
           "rally_pct": 22.1
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (13.5% gap, 4.8x vol)",
+          "gap_gte_10pct (13.5%)",
+          "rel_vol_gte_3x (4.8x)",
+          "post_gap_held_above_gap_low",
+          "aplus_close_top_25pct (97%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (19.9%)",
+          "aplus_gap_fill_lt_30pct (67%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-15",
+          "gap_pct": 13.5,
+          "gap_rel_vol": 4.8,
+          "post_gap_range_pct": 19.9,
+          "days_to_entry": 1
         }
       }
     ],
@@ -1771,6 +2067,39 @@
           "max_down_vol_10d": 33839907,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (13.5% gap, 4.8x vol)",
+          "gap_gte_10pct (13.5%)",
+          "rel_vol_gte_3x (4.8x)",
+          "post_gap_held_above_gap_low",
+          "aplus_close_top_25pct (97%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (19.9%)",
+          "aplus_gap_fill_lt_30pct (67%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-15",
+          "gap_pct": 13.5,
+          "gap_rel_vol": 4.8,
+          "post_gap_range_pct": 19.9,
+          "days_to_entry": 1
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -1939,6 +2268,26 @@
           "max_down_vol_10d": 4719716,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -2105,6 +2454,40 @@
           "max_down_vol_10d": 963590,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 55,
+        "criteria_met": [
+          "qualifying_gap (5.4% gap, 5.9x vol)",
+          "rel_vol_gte_3x (5.9x)",
+          "aplus_vol_gte_5x (5.9x)",
+          "aplus_gap_fill_lt_30pct (-193%)",
+          "aplus_close_top_25pct (86%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (5.4%)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (21.3%)"
+        ],
+        "extra": {
+          "gap_date": "2025-03-27",
+          "gap_pct": 5.4,
+          "gap_rel_vol": 5.9,
+          "post_gap_range_pct": 21.3,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "VCP",
@@ -2274,6 +2657,26 @@
           "max_down_vol_10d": 11969658,
           "num_down_days_10d": 6
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -2315,6 +2718,48 @@
           ],
           "base_len": 48,
           "prior_gain_pct": 24.0
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (21.3% gap, 5.2x vol)",
+          "gap_gte_10pct (21.3%)",
+          "rel_vol_gte_3x (5.2x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (21.3%)",
+          "aplus_vol_gte_5x (5.2x)",
+          "aplus_gap_fill_lt_30pct (7%)",
+          "aplus_close_top_25pct (89%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (15.4%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-04",
+          "gap_pct": 21.3,
+          "gap_rel_vol": 5.2,
+          "post_gap_range_pct": 15.4,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 60,
+        "criteria_met": [
+          "gate_passed (21% gap, 5.2x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (21%)",
+          "vol_gte_5x (5.2x)",
+          "close_top_50pct (54%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-09-04",
+          "gap_pct": 21.3,
+          "gap_rel_vol": 5.2
         }
       }
     ],
@@ -2437,6 +2882,48 @@
           "today_vol": 11296480,
           "max_down_vol_10d": 2702432,
           "num_down_days_10d": 3
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (21.3% gap, 5.2x vol)",
+          "gap_gte_10pct (21.3%)",
+          "rel_vol_gte_3x (5.2x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (21.3%)",
+          "aplus_vol_gte_5x (5.2x)",
+          "aplus_gap_fill_lt_30pct (7%)",
+          "aplus_close_top_25pct (89%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (15.4%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-04",
+          "gap_pct": 21.3,
+          "gap_rel_vol": 5.2,
+          "post_gap_range_pct": 15.4,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 60,
+        "criteria_met": [
+          "gate_passed (21% gap, 5.2x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (21%)",
+          "vol_gte_5x (5.2x)",
+          "close_top_50pct (54%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-09-04",
+          "gap_pct": 21.3,
+          "gap_rel_vol": 5.2
         }
       }
     ],
@@ -2572,6 +3059,38 @@
           "above_sma200"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 55,
+        "criteria_met": [
+          "qualifying_gap (9.4% gap, 3.5x vol)",
+          "rel_vol_gte_3x (3.5x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (20%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (9.4%)",
+          "tight_consolidation (18.3%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-02",
+          "gap_pct": 9.4,
+          "gap_rel_vol": 3.5,
+          "post_gap_range_pct": 18.3,
+          "days_to_entry": 2
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -2585,7 +3104,30 @@
       "base_depth_pct": 12.250302227851016,
       "breakout_rel_vol": 4.086860491168938
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (7.6% gap, 4.1x vol)",
+          "rel_vol_gte_3x (4.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.0%)",
+          "aplus_gap_fill_lt_30pct (-92%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (7.6%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-29",
+          "gap_pct": 7.6,
+          "gap_rel_vol": 4.1,
+          "post_gap_range_pct": 12.0,
+          "days_to_entry": 5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -2703,10 +3245,42 @@
           "max_down_vol_10d": 4164710,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (7.6% gap, 4.1x vol)",
+          "rel_vol_gte_3x (4.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.0%)",
+          "aplus_gap_fill_lt_30pct (-92%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (7.6%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-29",
+          "gap_pct": 7.6,
+          "gap_rel_vol": 4.1,
+          "post_gap_range_pct": 12.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "COHR_2025": {
     "pivot": {
@@ -2892,6 +3466,26 @@
           "max_down_vol_10d": 2852053,
           "num_down_days_10d": 6
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Flat Base",
@@ -3041,6 +3635,52 @@
           "max_down_vol_10d": 4681451,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 70,
+        "criteria_met": [
+          "qualifying_gap (19.6% gap, 5.0x vol)",
+          "gap_gte_10pct (19.6%)",
+          "rel_vol_gte_3x (5.0x)",
+          "moderate_consolidation (14.2%)",
+          "aplus_gap_gte_15pct (19.6%)",
+          "aplus_vol_gte_5x (5.0x)",
+          "aplus_close_top_25pct (89%)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (41%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-03",
+          "gap_pct": 19.6,
+          "gap_rel_vol": 5.0,
+          "post_gap_range_pct": 14.2,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 10,
+        "criteria_met": [
+          "gap_gte_10pct (20%)",
+          "vol_gte_3x (5.0x)",
+          "low_above_prior_close",
+          "vol_gte_5x (5.0x)"
+        ],
+        "criteria_failed": [
+          "close_above_open (gap-and-crap)",
+          "gap_gte_20pct (20%)",
+          "close_top_50pct (6%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-03",
+          "gap_pct": 19.6,
+          "gap_rel_vol": 5.0
+        }
       }
     ],
     "ai_primary": null,
@@ -3054,7 +3694,31 @@
       "base_depth_pct": 21.286585365853657,
       "breakout_rel_vol": 4.660366267595557
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (13.3% gap, 12.1x vol)",
+          "gap_gte_10pct (13.3%)",
+          "rel_vol_gte_3x (12.1x)",
+          "post_gap_held_above_gap_low",
+          "aplus_vol_gte_5x (12.1x)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (29.5%)",
+          "aplus_gap_fill_lt_30pct (74%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-16",
+          "gap_pct": 13.3,
+          "gap_rel_vol": 12.1,
+          "post_gap_range_pct": 29.5,
+          "days_to_entry": 4
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -3175,10 +3839,55 @@
           "above_sma200"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (13.3% gap, 12.1x vol)",
+          "gap_gte_10pct (13.3%)",
+          "rel_vol_gte_3x (12.1x)",
+          "post_gap_held_above_gap_low",
+          "aplus_vol_gte_5x (12.1x)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (29.5%)",
+          "aplus_gap_fill_lt_30pct (74%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-16",
+          "gap_pct": 13.3,
+          "gap_rel_vol": 12.1,
+          "post_gap_range_pct": 29.5,
+          "days_to_entry": 4
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 25,
+        "criteria_met": [
+          "gap_gte_10pct (12%)",
+          "vol_gte_3x (11.1x)",
+          "close_above_open",
+          "vol_gte_5x (11.1x)",
+          "close_top_50pct (63%)",
+          "aplus_vol_gte_8x (11.1x)"
+        ],
+        "criteria_failed": [
+          "low_above_prior_close (gap filled)",
+          "gap_gte_20pct (12%)"
+        ],
+        "extra": {
+          "gap_date": "2025-04-14",
+          "gap_pct": 11.6,
+          "gap_rel_vol": 11.1
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "CRWV_2025": {
     "pivot": null,
@@ -3226,6 +3935,48 @@
             "price": 243.2499
           },
           "rally_pct": 24.7
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (24.9% gap, 5.6x vol)",
+          "gap_gte_10pct (24.9%)",
+          "rel_vol_gte_3x (5.6x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (24.9%)",
+          "aplus_vol_gte_5x (5.6x)",
+          "aplus_gap_fill_lt_30pct (-54%)",
+          "aplus_close_top_25pct (100%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (25.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-08",
+          "gap_pct": 24.9,
+          "gap_rel_vol": 5.6,
+          "post_gap_range_pct": 25.8,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 60,
+        "criteria_met": [
+          "gate_passed (25% gap, 5.6x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (25%)",
+          "vol_gte_5x (5.6x)",
+          "close_top_50pct (98%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-08",
+          "gap_pct": 24.9,
+          "gap_rel_vol": 5.6
         }
       }
     ],
@@ -3358,9 +4109,51 @@
           "max_down_vol_10d": 1112746,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (24.9% gap, 5.6x vol)",
+          "gap_gte_10pct (24.9%)",
+          "rel_vol_gte_3x (5.6x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (24.9%)",
+          "aplus_vol_gte_5x (5.6x)",
+          "aplus_gap_fill_lt_30pct (-54%)",
+          "aplus_close_top_25pct (100%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (25.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-08",
+          "gap_pct": 24.9,
+          "gap_rel_vol": 5.6,
+          "post_gap_range_pct": 25.8,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 60,
+        "criteria_met": [
+          "gate_passed (25% gap, 5.6x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (25%)",
+          "vol_gte_5x (5.6x)",
+          "close_top_50pct (98%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-08",
+          "gap_pct": 24.9,
+          "gap_rel_vol": 5.6
+        }
       }
     ],
-    "ai_primary": "Double Bottom",
+    "ai_primary": "Episodic Pivot",
     "needs_review": false
   },
   "EOSE_2025": {
@@ -3391,6 +4184,29 @@
           "today_vol": 37215206,
           "max_down_vol_10d": 7155536,
           "num_down_days_10d": 5
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (6.3% gap, 6.3x vol)",
+          "rel_vol_gte_3x (6.3x)",
+          "post_gap_held_above_gap_low",
+          "aplus_vol_gte_5x (6.3x)",
+          "aplus_gap_fill_lt_30pct (-134%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (6.3%)",
+          "tight_consolidation (18.0%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-07",
+          "gap_pct": 6.3,
+          "gap_rel_vol": 6.3,
+          "post_gap_range_pct": 18.0,
+          "days_to_entry": 5
         }
       }
     ],
@@ -3525,9 +4341,42 @@
           "max_down_vol_10d": 7155536,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (6.3% gap, 6.3x vol)",
+          "rel_vol_gte_3x (6.3x)",
+          "post_gap_held_above_gap_low",
+          "aplus_vol_gte_5x (6.3x)",
+          "aplus_gap_fill_lt_30pct (-134%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (6.3%)",
+          "tight_consolidation (18.0%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-07",
+          "gap_pct": 6.3,
+          "gap_rel_vol": 6.3,
+          "post_gap_range_pct": 18.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
-    "ai_primary": "Pocket Pivot",
+    "ai_primary": "Episodic Pivot",
     "needs_review": false
   },
   "FLNC_2025": {
@@ -3656,6 +4505,38 @@
         "criteria_met": [],
         "criteria_failed": [
           "above_sma200"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 45,
+        "criteria_met": [
+          "qualifying_gap (10.3% gap, 3.0x vol)",
+          "gap_gte_10pct (10.3%)",
+          "aplus_gap_fill_lt_30pct (-68%)"
+        ],
+        "criteria_failed": [
+          "rel_vol_gte_3x (3.0x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (29.5%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-12",
+          "gap_pct": 10.3,
+          "gap_rel_vol": 3.0,
+          "post_gap_range_pct": 29.5,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
         ],
         "extra": {}
       }
@@ -3824,6 +4705,50 @@
           "today_vol": 14157924,
           "max_down_vol_10d": 7332534,
           "num_down_days_10d": 5
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 45,
+        "criteria_met": [
+          "qualifying_gap (7.3% gap, 15.6x vol)",
+          "rel_vol_gte_3x (15.6x)",
+          "aplus_vol_gte_5x (15.6x)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (7.3%)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (32.4%)",
+          "aplus_gap_fill_lt_30pct (126%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-16",
+          "gap_pct": 7.3,
+          "gap_rel_vol": 15.6,
+          "post_gap_range_pct": 32.4,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [
+          "gap_gte_10pct (14%)",
+          "vol_gte_3x (3.5x)"
+        ],
+        "criteria_failed": [
+          "close_above_open (gap-and-crap)",
+          "low_above_prior_close (gap filled)",
+          "gap_gte_20pct (14%)",
+          "vol_gte_5x (3.5x)",
+          "close_top_50pct (46%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-12",
+          "gap_pct": 14.0,
+          "gap_rel_vol": 3.5
         }
       }
     ],
@@ -4005,6 +4930,26 @@
           "max_down_vol_10d": 2102187,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -4167,6 +5112,38 @@
           "above_sma200"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 35,
+        "criteria_met": [
+          "qualifying_gap (5.0% gap, 2.8x vol)",
+          "moderate_consolidation (14.6%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (5.0%)",
+          "rel_vol_gte_3x (2.8x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (210%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-22",
+          "gap_pct": 5.0,
+          "gap_rel_vol": 2.8,
+          "post_gap_range_pct": 14.6,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -4180,7 +5157,30 @@
       "base_depth_pct": 15.574402467232085,
       "breakout_rel_vol": 3.0893956055425713
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (13.9% gap, 3.1x vol)",
+          "gap_gte_10pct (13.9%)",
+          "rel_vol_gte_3x (3.1x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (8.6%)",
+          "aplus_gap_fill_lt_30pct (-27%)",
+          "aplus_close_top_25pct (87%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-08-07",
+          "gap_pct": 13.9,
+          "gap_rel_vol": 3.1,
+          "post_gap_range_pct": 8.6,
+          "days_to_entry": 5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -4314,10 +5314,50 @@
           "max_down_vol_10d": 21875536,
           "num_down_days_10d": 7
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (13.9% gap, 3.1x vol)",
+          "gap_gte_10pct (13.9%)",
+          "rel_vol_gte_3x (3.1x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (8.6%)",
+          "aplus_gap_fill_lt_30pct (-27%)",
+          "aplus_close_top_25pct (87%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-08-07",
+          "gap_pct": 13.9,
+          "gap_rel_vol": 3.1,
+          "post_gap_range_pct": 8.6,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 40,
+        "criteria_met": [
+          "gate_passed (14% gap, 3.1x vol, close>open=True, low>prior=True)",
+          "close_top_50pct (60%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (14%)",
+          "vol_gte_5x (3.1x)"
+        ],
+        "extra": {
+          "gap_date": "2025-08-07",
+          "gap_pct": 13.9,
+          "gap_rel_vol": 3.1
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "HOOD_2025": {
     "pivot": {
@@ -4481,6 +5521,26 @@
           "max_down_vol_10d": 62538423,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "VCP",
@@ -4680,6 +5740,26 @@
           "max_down_vol_10d": 5940385,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -4825,6 +5905,26 @@
           "max_down_vol_10d": 14429958,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -4971,6 +6071,26 @@
           "max_down_vol_10d": 29464245,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -4984,7 +6104,26 @@
       "base_depth_pct": 20.174603174603174,
       "breakout_rel_vol": 7.334594516362511
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (17% gap, 7.3x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (7.3x)",
+          "close_top_50pct (81%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (17%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-28",
+          "gap_pct": 16.6,
+          "gap_rel_vol": 7.3
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -5116,10 +6255,52 @@
           "max_down_vol_10d": 12842384,
           "num_down_days_10d": 6
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (16.6% gap, 7.3x vol)",
+          "gap_gte_10pct (16.6%)",
+          "rel_vol_gte_3x (7.3x)",
+          "aplus_gap_gte_15pct (16.6%)",
+          "aplus_vol_gte_5x (7.3x)",
+          "aplus_gap_fill_lt_30pct (28%)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (20.1%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-28",
+          "gap_pct": 16.6,
+          "gap_rel_vol": 7.3,
+          "post_gap_range_pct": 20.1,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (17% gap, 7.3x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (7.3x)",
+          "close_top_50pct (81%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (17%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-28",
+          "gap_pct": 16.6,
+          "gap_rel_vol": 7.3
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Gap & Go",
+    "needs_review": false
   },
   "KSS_2025": {
     "pivot": {
@@ -5160,6 +6341,46 @@
             "price": 18.75
           },
           "rally_pct": 21.0
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (23.9% gap, 6.7x vol)",
+          "gap_gte_10pct (23.9%)",
+          "rel_vol_gte_3x (6.7x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (11.8%)",
+          "aplus_gap_gte_15pct (23.9%)",
+          "aplus_vol_gte_5x (6.7x)",
+          "aplus_gap_fill_lt_30pct (-73%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-11-25",
+          "gap_pct": 23.9,
+          "gap_rel_vol": 6.7,
+          "post_gap_range_pct": 11.8,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 60,
+        "criteria_met": [
+          "gate_passed (24% gap, 6.7x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (24%)",
+          "vol_gte_5x (6.7x)",
+          "close_top_50pct (99%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-11-25",
+          "gap_pct": 23.9,
+          "gap_rel_vol": 6.7
         }
       }
     ],
@@ -5282,6 +6503,46 @@
           "today_vol": 35526948,
           "max_down_vol_10d": 4263198,
           "num_down_days_10d": 6
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (23.9% gap, 6.7x vol)",
+          "gap_gte_10pct (23.9%)",
+          "rel_vol_gte_3x (6.7x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (11.8%)",
+          "aplus_gap_gte_15pct (23.9%)",
+          "aplus_vol_gte_5x (6.7x)",
+          "aplus_gap_fill_lt_30pct (-73%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-11-25",
+          "gap_pct": 23.9,
+          "gap_rel_vol": 6.7,
+          "post_gap_range_pct": 11.8,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 60,
+        "criteria_met": [
+          "gate_passed (24% gap, 6.7x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (24%)",
+          "vol_gte_5x (6.7x)",
+          "close_top_50pct (99%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-11-25",
+          "gap_pct": 23.9,
+          "gap_rel_vol": 6.7
         }
       }
     ],
@@ -5448,6 +6709,26 @@
           "max_down_vol_10d": 13916943,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -5641,6 +6922,26 @@
           "max_down_vol_10d": 5125495,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "VCP",
@@ -5807,6 +7108,39 @@
           "max_down_vol_10d": 7736955,
           "num_down_days_10d": 6
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 45,
+        "criteria_met": [
+          "qualifying_gap (6.7% gap, 2.9x vol)",
+          "post_gap_held_above_gap_low",
+          "aplus_close_top_25pct (94%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (6.7%)",
+          "rel_vol_gte_3x (2.9x)",
+          "tight_consolidation (18.0%)",
+          "aplus_gap_fill_lt_30pct (149%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-18",
+          "gap_pct": 6.7,
+          "gap_rel_vol": 2.9,
+          "post_gap_range_pct": 18.0,
+          "days_to_entry": 1
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -5853,6 +7187,28 @@
           ],
           "base_len": 18,
           "prior_gain_pct": -9.2
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (11.4% gap, 3.1x vol)",
+          "gap_gte_10pct (11.4%)",
+          "rel_vol_gte_3x (3.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.9%)",
+          "aplus_gap_fill_lt_30pct (-94%)",
+          "aplus_close_top_25pct (92%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-08",
+          "gap_pct": 11.4,
+          "gap_rel_vol": 3.1,
+          "post_gap_range_pct": 12.9,
+          "days_to_entry": 5
         }
       }
     ],
@@ -5986,9 +7342,49 @@
           "max_down_vol_10d": 700966,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (11.4% gap, 3.1x vol)",
+          "gap_gte_10pct (11.4%)",
+          "rel_vol_gte_3x (3.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.9%)",
+          "aplus_gap_fill_lt_30pct (-94%)",
+          "aplus_close_top_25pct (92%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-08",
+          "gap_pct": 11.4,
+          "gap_rel_vol": 3.1,
+          "post_gap_range_pct": 12.9,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 40,
+        "criteria_met": [
+          "gate_passed (11% gap, 3.1x vol, close>open=True, low>prior=True)",
+          "close_top_50pct (85%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (11%)",
+          "vol_gte_5x (3.1x)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-08",
+          "gap_pct": 11.4,
+          "gap_rel_vol": 3.1
+        }
       }
     ],
-    "ai_primary": "VCP",
+    "ai_primary": "Episodic Pivot",
     "needs_review": false
   },
   "LITE_2025": {
@@ -6150,6 +7546,26 @@
           "max_down_vol_10d": 2675005,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -6280,6 +7696,26 @@
         "criteria_met": [],
         "criteria_failed": [
           "above_sma200"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
         ],
         "extra": {}
       }
@@ -6445,6 +7881,26 @@
           "max_down_vol_10d": 732377,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -6484,6 +7940,24 @@
           "today_vol": 23482550,
           "max_down_vol_10d": 9023539,
           "num_down_days_10d": 7
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (11% gap, 5.8x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (5.8x)",
+          "close_top_50pct (79%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (11%)"
+        ],
+        "extra": {
+          "gap_date": "2025-04-14",
+          "gap_pct": 11.1,
+          "gap_rel_vol": 5.8
         }
       }
     ],
@@ -6608,6 +8082,47 @@
           "today_vol": 23482550,
           "max_down_vol_10d": 9023539,
           "num_down_days_10d": 7
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (11.1% gap, 5.8x vol)",
+          "gap_gte_10pct (11.1%)",
+          "rel_vol_gte_3x (5.8x)",
+          "aplus_vol_gte_5x (5.8x)",
+          "aplus_gap_fill_lt_30pct (14%)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (26.5%)"
+        ],
+        "extra": {
+          "gap_date": "2025-04-14",
+          "gap_pct": 11.1,
+          "gap_rel_vol": 5.8,
+          "post_gap_range_pct": 26.5,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (11% gap, 5.8x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (5.8x)",
+          "close_top_50pct (79%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (11%)"
+        ],
+        "extra": {
+          "gap_date": "2025-04-14",
+          "gap_pct": 11.1,
+          "gap_rel_vol": 5.8
         }
       }
     ],
@@ -6774,6 +8289,26 @@
           "max_down_vol_10d": 29224343,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Flat Base",
@@ -6787,7 +8322,30 @@
       "base_depth_pct": 24.541342369804152,
       "breakout_rel_vol": 3.1226032561322956
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (16.8% gap, 3.1x vol)",
+          "gap_gte_10pct (16.8%)",
+          "rel_vol_gte_3x (3.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.5%)",
+          "aplus_gap_gte_15pct (16.8%)",
+          "aplus_gap_fill_lt_30pct (-22%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-08-07",
+          "gap_pct": 16.8,
+          "gap_rel_vol": 3.1,
+          "post_gap_range_pct": 12.5,
+          "days_to_entry": 5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -6907,10 +8465,50 @@
           "above_sma200 (nan)"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (16.8% gap, 3.1x vol)",
+          "gap_gte_10pct (16.8%)",
+          "rel_vol_gte_3x (3.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.5%)",
+          "aplus_gap_gte_15pct (16.8%)",
+          "aplus_gap_fill_lt_30pct (-22%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-08-07",
+          "gap_pct": 16.8,
+          "gap_rel_vol": 3.1,
+          "post_gap_range_pct": 12.5,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 30,
+        "criteria_met": [
+          "gate_passed (17% gap, 3.1x vol, close>open=True, low>prior=True)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (17%)",
+          "vol_gte_5x (3.1x)",
+          "close_top_50pct (27%)"
+        ],
+        "extra": {
+          "gap_date": "2025-08-07",
+          "gap_pct": 16.8,
+          "gap_rel_vol": 3.1
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "NGD_2025": {
     "pivot": {
@@ -7050,6 +8648,26 @@
           "max_down_vol_10d": 28923214,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -7195,6 +8813,38 @@
           "max_down_vol_10d": 6417490,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 55,
+        "criteria_met": [
+          "qualifying_gap (5.9% gap, 3.5x vol)",
+          "rel_vol_gte_3x (3.5x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-227%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (5.9%)",
+          "tight_consolidation (20.3%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-18",
+          "gap_pct": 5.9,
+          "gap_rel_vol": 3.5,
+          "post_gap_range_pct": 20.3,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -7215,7 +8865,51 @@
       "base_depth_pct": 17.620137299771166,
       "breakout_rel_vol": 27.48023747691837
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (156.8% gap, 27.5x vol)",
+          "gap_gte_10pct (156.8%)",
+          "rel_vol_gte_3x (27.5x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (156.8%)",
+          "aplus_vol_gte_5x (27.5x)",
+          "aplus_gap_fill_lt_30pct (23%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (44.0%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-22",
+          "gap_pct": 156.8,
+          "gap_rel_vol": 27.5,
+          "post_gap_range_pct": 44.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 70,
+        "criteria_met": [
+          "gate_passed (157% gap, 27.5x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (157%)",
+          "vol_gte_5x (27.5x)",
+          "close_top_50pct (84%)",
+          "aplus_gap_gte_30pct (157%)",
+          "aplus_vol_gte_8x (27.5x)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-22",
+          "gap_pct": 156.8,
+          "gap_rel_vol": 27.5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -7347,10 +9041,53 @@
           "max_down_vol_10d": 50130698,
           "num_down_days_10d": 7
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (156.8% gap, 27.5x vol)",
+          "gap_gte_10pct (156.8%)",
+          "rel_vol_gte_3x (27.5x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (156.8%)",
+          "aplus_vol_gte_5x (27.5x)",
+          "aplus_gap_fill_lt_30pct (23%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (44.0%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-22",
+          "gap_pct": 156.8,
+          "gap_rel_vol": 27.5,
+          "post_gap_range_pct": 44.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 70,
+        "criteria_met": [
+          "gate_passed (157% gap, 27.5x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (157%)",
+          "vol_gte_5x (27.5x)",
+          "close_top_50pct (84%)",
+          "aplus_gap_gte_30pct (157%)",
+          "aplus_vol_gte_8x (27.5x)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-22",
+          "gap_pct": 156.8,
+          "gap_rel_vol": 27.5
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "OKLO_2025": {
     "pivot": {
@@ -7491,6 +9228,26 @@
           "max_down_vol_10d": 13628853,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -7703,6 +9460,26 @@
           "max_down_vol_10d": 4221915,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -7835,6 +9612,39 @@
           "above_sma200"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 45,
+        "criteria_met": [
+          "qualifying_gap (9.8% gap, 3.2x vol)",
+          "rel_vol_gte_3x (3.2x)",
+          "aplus_close_top_25pct (82%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (9.8%)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (29.7%)",
+          "aplus_gap_fill_lt_30pct (121%)"
+        ],
+        "extra": {
+          "gap_date": "2025-02-07",
+          "gap_pct": 9.8,
+          "gap_rel_vol": 3.2,
+          "post_gap_range_pct": 29.7,
+          "days_to_entry": 4
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -7848,7 +9658,49 @@
       "base_depth_pct": 21.151905612046892,
       "breakout_rel_vol": 5.73313864440875
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (18.6% gap, 5.7x vol)",
+          "gap_gte_10pct (18.6%)",
+          "rel_vol_gte_3x (5.7x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.7%)",
+          "aplus_gap_gte_15pct (18.6%)",
+          "aplus_vol_gte_5x (5.7x)",
+          "aplus_gap_fill_lt_30pct (-0%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-07-31",
+          "gap_pct": 18.6,
+          "gap_rel_vol": 5.7,
+          "post_gap_range_pct": 12.7,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (19% gap, 5.7x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (5.7x)",
+          "close_top_50pct (56%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (19%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-31",
+          "gap_pct": 18.6,
+          "gap_rel_vol": 5.7
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -7982,10 +9834,51 @@
           "max_down_vol_10d": 927385,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (18.6% gap, 5.7x vol)",
+          "gap_gte_10pct (18.6%)",
+          "rel_vol_gte_3x (5.7x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (12.7%)",
+          "aplus_gap_gte_15pct (18.6%)",
+          "aplus_vol_gte_5x (5.7x)",
+          "aplus_gap_fill_lt_30pct (-0%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-07-31",
+          "gap_pct": 18.6,
+          "gap_rel_vol": 5.7,
+          "post_gap_range_pct": 12.7,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (19% gap, 5.7x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (5.7x)",
+          "close_top_50pct (56%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (19%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-31",
+          "gap_pct": 18.6,
+          "gap_rel_vol": 5.7
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "PL_2025": {
     "pivot": {
@@ -8045,6 +9938,48 @@
           "today_vol": 64247924,
           "max_down_vol_10d": 9985502,
           "num_down_days_10d": 4
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (18.0% gap, 6.9x vol)",
+          "gap_gte_10pct (18.0%)",
+          "rel_vol_gte_3x (6.9x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (18.0%)",
+          "aplus_vol_gte_5x (6.9x)",
+          "aplus_gap_fill_lt_30pct (-69%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (15.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-08",
+          "gap_pct": 18.0,
+          "gap_rel_vol": 6.9,
+          "post_gap_range_pct": 15.8,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (18% gap, 6.9x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (6.9x)",
+          "close_top_50pct (98%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (18%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-08",
+          "gap_pct": 18.0,
+          "gap_rel_vol": 6.9
         }
       }
     ],
@@ -8168,6 +10103,48 @@
           "today_vol": 64247924,
           "max_down_vol_10d": 9985502,
           "num_down_days_10d": 4
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (18.0% gap, 6.9x vol)",
+          "gap_gte_10pct (18.0%)",
+          "rel_vol_gte_3x (6.9x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (18.0%)",
+          "aplus_vol_gte_5x (6.9x)",
+          "aplus_gap_fill_lt_30pct (-69%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (15.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-08",
+          "gap_pct": 18.0,
+          "gap_rel_vol": 6.9,
+          "post_gap_range_pct": 15.8,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (18% gap, 6.9x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (6.9x)",
+          "close_top_50pct (98%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (18%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-08",
+          "gap_pct": 18.0,
+          "gap_rel_vol": 6.9
         }
       }
     ],
@@ -8315,6 +10292,39 @@
           "max_down_vol_10d": 33974339,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (10.6% gap, 5.8x vol)",
+          "gap_gte_10pct (10.6%)",
+          "rel_vol_gte_3x (5.8x)",
+          "moderate_consolidation (10.3%)",
+          "aplus_vol_gte_5x (5.8x)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (211%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-23",
+          "gap_pct": 10.6,
+          "gap_rel_vol": 5.8,
+          "post_gap_range_pct": 10.3,
+          "days_to_entry": 1
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -8449,6 +10459,26 @@
           "above_sma200 (nan)"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -8567,6 +10597,26 @@
         "criteria_met": [],
         "criteria_failed": [
           "above_sma200"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
         ],
         "extra": {}
       }
@@ -8734,6 +10784,26 @@
           "max_down_vol_10d": 32107960,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -8747,7 +10817,33 @@
       "base_depth_pct": 22.680412371134015,
       "breakout_rel_vol": 12.134198743364404
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (38.8% gap, 12.1x vol)",
+          "gap_gte_10pct (38.8%)",
+          "rel_vol_gte_3x (12.1x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (38.8%)",
+          "aplus_vol_gte_5x (12.1x)",
+          "aplus_gap_fill_lt_30pct (24%)",
+          "aplus_close_top_25pct (97%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (27.5%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-25",
+          "gap_pct": 38.8,
+          "gap_rel_vol": 12.1,
+          "post_gap_range_pct": 27.5,
+          "days_to_entry": 5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -8879,10 +10975,58 @@
           "max_down_vol_10d": 10826293,
           "num_down_days_10d": 6
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (38.8% gap, 12.1x vol)",
+          "gap_gte_10pct (38.8%)",
+          "rel_vol_gte_3x (12.1x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (38.8%)",
+          "aplus_vol_gte_5x (12.1x)",
+          "aplus_gap_fill_lt_30pct (24%)",
+          "aplus_close_top_25pct (97%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (27.5%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-25",
+          "gap_pct": 38.8,
+          "gap_rel_vol": 12.1,
+          "post_gap_range_pct": 27.5,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 30,
+        "criteria_met": [
+          "gap_gte_10pct (39%)",
+          "vol_gte_3x (12.1x)",
+          "low_above_prior_close",
+          "gap_gte_20pct (39%)",
+          "vol_gte_5x (12.1x)",
+          "aplus_gap_gte_30pct (39%)",
+          "aplus_vol_gte_8x (12.1x)"
+        ],
+        "criteria_failed": [
+          "close_above_open (gap-and-crap)",
+          "close_top_50pct (35%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-25",
+          "gap_pct": 38.8,
+          "gap_rel_vol": 12.1
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "QUBT_2025": {
     "pivot": {
@@ -9078,6 +11222,26 @@
           "max_down_vol_10d": 19579740,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -9272,6 +11436,26 @@
           "max_down_vol_10d": 1093609,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -9334,6 +11518,29 @@
           "today_vol": 112179003,
           "max_down_vol_10d": 64148937,
           "num_down_days_10d": 5
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (8.5% gap, 3.4x vol)",
+          "rel_vol_gte_3x (3.4x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-179%)",
+          "aplus_close_top_25pct (98%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (8.5%)",
+          "tight_consolidation (19.4%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-16",
+          "gap_pct": 8.5,
+          "gap_rel_vol": 3.4,
+          "post_gap_range_pct": 19.4,
+          "days_to_entry": 10
         }
       }
     ],
@@ -9469,6 +11676,39 @@
           "max_down_vol_10d": 64148937,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (8.5% gap, 3.4x vol)",
+          "rel_vol_gte_3x (3.4x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-179%)",
+          "aplus_close_top_25pct (98%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (8.5%)",
+          "tight_consolidation (19.4%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-16",
+          "gap_pct": 8.5,
+          "gap_rel_vol": 3.4,
+          "post_gap_range_pct": 19.4,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -9612,6 +11852,26 @@
           "max_down_vol_10d": 46330051,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -9779,6 +12039,26 @@
           "max_down_vol_10d": 30278984,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -9944,6 +12224,38 @@
           "max_down_vol_10d": 5971060,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 35,
+        "criteria_met": [
+          "qualifying_gap (5.8% gap, 2.5x vol)",
+          "moderate_consolidation (12.7%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (5.8%)",
+          "rel_vol_gte_3x (2.5x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (258%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-27",
+          "gap_pct": 5.8,
+          "gap_rel_vol": 2.5,
+          "post_gap_range_pct": 12.7,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -10107,6 +12419,26 @@
           "max_down_vol_10d": 10487052,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -10302,6 +12634,26 @@
           "max_down_vol_10d": 2548371,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "HTF",
@@ -10487,6 +12839,38 @@
           "max_down_vol_10d": 10764879,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 45,
+        "criteria_met": [
+          "qualifying_gap (7.5% gap, 2.6x vol)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-114%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (7.5%)",
+          "rel_vol_gte_3x (2.6x)",
+          "tight_consolidation (28.7%)"
+        ],
+        "extra": {
+          "gap_date": "2025-04-09",
+          "gap_pct": 7.5,
+          "gap_rel_vol": 2.6,
+          "post_gap_range_pct": 28.7,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -10619,6 +13003,52 @@
           "above_sma200"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (34.5% gap, 6.6x vol)",
+          "gap_gte_10pct (34.5%)",
+          "rel_vol_gte_3x (6.6x)",
+          "aplus_gap_gte_15pct (34.5%)",
+          "aplus_vol_gte_5x (6.6x)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (30.7%)",
+          "aplus_gap_fill_lt_30pct (99%)"
+        ],
+        "extra": {
+          "gap_date": "2025-02-19",
+          "gap_pct": 34.5,
+          "gap_rel_vol": 6.6,
+          "post_gap_range_pct": 30.7,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 25,
+        "criteria_met": [
+          "gap_gte_10pct (34%)",
+          "vol_gte_3x (6.6x)",
+          "low_above_prior_close",
+          "gap_gte_20pct (34%)",
+          "vol_gte_5x (6.6x)",
+          "aplus_gap_gte_30pct (34%)"
+        ],
+        "criteria_failed": [
+          "close_above_open (gap-and-crap)",
+          "close_top_50pct (3%)"
+        ],
+        "extra": {
+          "gap_date": "2025-02-19",
+          "gap_pct": 34.5,
+          "gap_rel_vol": 6.6
+        }
       }
     ],
     "ai_primary": null,
@@ -10767,6 +13197,50 @@
           "today_vol": 4581139,
           "max_down_vol_10d": 1497901,
           "num_down_days_10d": 6
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (15.4% gap, 3.1x vol)",
+          "gap_gte_10pct (15.4%)",
+          "rel_vol_gte_3x (3.1x)",
+          "moderate_consolidation (12.5%)",
+          "aplus_gap_gte_15pct (15.4%)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (37%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-24",
+          "gap_pct": 15.4,
+          "gap_rel_vol": 3.1,
+          "post_gap_range_pct": 12.5,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [
+          "gap_gte_10pct (15%)",
+          "vol_gte_3x (3.1x)",
+          "low_above_prior_close"
+        ],
+        "criteria_failed": [
+          "close_above_open (gap-and-crap)",
+          "gap_gte_20pct (15%)",
+          "vol_gte_5x (3.1x)",
+          "close_top_50pct (37%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-24",
+          "gap_pct": 15.4,
+          "gap_rel_vol": 3.1
         }
       }
     ],
@@ -10932,6 +13406,39 @@
           "max_down_vol_10d": 8039805,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 45,
+        "criteria_met": [
+          "qualifying_gap (6.3% gap, 5.5x vol)",
+          "rel_vol_gte_3x (5.5x)",
+          "aplus_vol_gte_5x (5.5x)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (6.3%)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (19.9%)",
+          "aplus_gap_fill_lt_30pct (46%)"
+        ],
+        "extra": {
+          "gap_date": "2025-08-27",
+          "gap_pct": 6.3,
+          "gap_rel_vol": 5.5,
+          "post_gap_range_pct": 19.9,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -11106,6 +13613,38 @@
           "max_down_vol_10d": 16497194,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 30,
+        "criteria_met": [
+          "qualifying_gap (5.5% gap, 2.5x vol)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (5.5%)",
+          "rel_vol_gte_3x (2.5x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (17.7%)",
+          "aplus_gap_fill_lt_30pct (235%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-03",
+          "gap_pct": 5.5,
+          "gap_rel_vol": 2.5,
+          "post_gap_range_pct": 17.7,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -11119,7 +13658,31 @@
       "base_depth_pct": 24.659468294974168,
       "breakout_rel_vol": 4.020772742878114
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (5.0% gap, 4.0x vol)",
+          "rel_vol_gte_3x (4.0x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-303%)",
+          "aplus_close_top_25pct (98%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (5.0%)",
+          "tight_consolidation (25.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-04",
+          "gap_pct": 5.0,
+          "gap_rel_vol": 4.0,
+          "post_gap_range_pct": 25.8,
+          "days_to_entry": 5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -11244,10 +13807,43 @@
           "above_sma200 (nan)"
         ],
         "extra": {}
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (5.0% gap, 4.0x vol)",
+          "rel_vol_gte_3x (4.0x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-303%)",
+          "aplus_close_top_25pct (98%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (5.0%)",
+          "tight_consolidation (25.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-04",
+          "gap_pct": 5.0,
+          "gap_rel_vol": 4.0,
+          "post_gap_range_pct": 25.8,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Episodic Pivot",
+    "needs_review": false
   },
   "STRL_2025": {
     "pivot": {
@@ -11406,6 +14002,26 @@
           "max_down_vol_10d": 815787,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "VCP",
@@ -11571,6 +14187,26 @@
           "max_down_vol_10d": 2798631,
           "num_down_days_10d": 2
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "VCP",
@@ -11716,6 +14352,26 @@
           "max_down_vol_10d": 2152702,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -11729,7 +14385,26 @@
       "base_depth_pct": 23.81029810298103,
       "breakout_rel_vol": 2.8176952292401927
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 65,
+        "criteria_met": [
+          "gate_passed (23% gap, 8.5x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (23%)",
+          "vol_gte_5x (8.5x)",
+          "close_top_50pct (94%)",
+          "aplus_vol_gte_8x (8.5x)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-04-14",
+          "gap_pct": 23.1,
+          "gap_rel_vol": 8.5
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -11846,10 +14521,52 @@
           "max_down_vol_10d": 7042327,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (26.0% gap, 9.8x vol)",
+          "gap_gte_10pct (26.0%)",
+          "rel_vol_gte_3x (9.8x)",
+          "aplus_gap_gte_15pct (26.0%)",
+          "aplus_vol_gte_5x (9.8x)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (41.6%)",
+          "aplus_gap_fill_lt_30pct (122%)"
+        ],
+        "extra": {
+          "gap_date": "2025-04-15",
+          "gap_pct": 26.0,
+          "gap_rel_vol": 9.8,
+          "post_gap_range_pct": 41.6,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 65,
+        "criteria_met": [
+          "gate_passed (23% gap, 8.5x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (23%)",
+          "vol_gte_5x (8.5x)",
+          "close_top_50pct (94%)",
+          "aplus_vol_gte_8x (8.5x)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-04-14",
+          "gap_pct": 23.1,
+          "gap_rel_vol": 8.5
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Gap & Go",
+    "needs_review": false
   },
   "TSEM_2025": {
     "pivot": {
@@ -12012,6 +14729,26 @@
           "max_down_vol_10d": 1380922,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Pocket Pivot",
@@ -12071,6 +14808,30 @@
           "today_vol": 2500243,
           "max_down_vol_10d": 838966,
           "num_down_days_10d": 6
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (22.0% gap, 3.2x vol)",
+          "gap_gte_10pct (22.0%)",
+          "rel_vol_gte_3x (3.2x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (22.0%)",
+          "aplus_gap_fill_lt_30pct (19%)",
+          "aplus_close_top_25pct (86%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (21.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-01",
+          "gap_pct": 22.0,
+          "gap_rel_vol": 3.2,
+          "post_gap_range_pct": 21.8,
+          "days_to_entry": 10
         }
       }
     ],
@@ -12208,9 +14969,54 @@
           "max_down_vol_10d": 838966,
           "num_down_days_10d": 6
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (22.0% gap, 3.2x vol)",
+          "gap_gte_10pct (22.0%)",
+          "rel_vol_gte_3x (3.2x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (22.0%)",
+          "aplus_gap_fill_lt_30pct (19%)",
+          "aplus_close_top_25pct (86%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (21.8%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-01",
+          "gap_pct": 22.0,
+          "gap_rel_vol": 3.2,
+          "post_gap_range_pct": 21.8,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 10,
+        "criteria_met": [
+          "gap_gte_10pct (22%)",
+          "vol_gte_3x (3.2x)",
+          "low_above_prior_close",
+          "gap_gte_20pct (22%)"
+        ],
+        "criteria_failed": [
+          "close_above_open (gap-and-crap)",
+          "vol_gte_5x (3.2x)",
+          "close_top_50pct (42%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-01",
+          "gap_pct": 22.0,
+          "gap_rel_vol": 3.2
+        }
       }
     ],
-    "ai_primary": "VCP",
+    "ai_primary": "Episodic Pivot",
     "needs_review": false
   },
   "UAMY_2025": {
@@ -12386,6 +15192,39 @@
           "max_down_vol_10d": 2762491,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 45,
+        "criteria_met": [
+          "qualifying_gap (19.3% gap, 2.7x vol)",
+          "gap_gte_10pct (19.3%)",
+          "aplus_gap_gte_15pct (19.3%)"
+        ],
+        "criteria_failed": [
+          "rel_vol_gte_3x (2.7x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (21.3%)",
+          "aplus_gap_fill_lt_30pct (71%)"
+        ],
+        "extra": {
+          "gap_date": "2025-06-05",
+          "gap_pct": 19.3,
+          "gap_rel_vol": 2.7,
+          "post_gap_range_pct": 21.3,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -12399,7 +15238,26 @@
       "base_depth_pct": 16.168963331220176,
       "breakout_rel_vol": 6.655650149631
     },
-    "ai_classifications": [],
+    "ai_classifications": [
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (16% gap, 6.7x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (6.7x)",
+          "close_top_50pct (90%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (16%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-23",
+          "gap_pct": 16.3,
+          "gap_rel_vol": 6.7
+        }
+      }
+    ],
     "ai_all_detector_results": [
       {
         "setup": "VCP",
@@ -12531,10 +15389,52 @@
           "max_down_vol_10d": 11762661,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (16.3% gap, 6.7x vol)",
+          "gap_gte_10pct (16.3%)",
+          "rel_vol_gte_3x (6.7x)",
+          "aplus_gap_gte_15pct (16.3%)",
+          "aplus_vol_gte_5x (6.7x)",
+          "aplus_gap_fill_lt_30pct (-35%)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (21.0%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-23",
+          "gap_pct": 16.3,
+          "gap_rel_vol": 6.7,
+          "post_gap_range_pct": 21.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 50,
+        "criteria_met": [
+          "gate_passed (16% gap, 6.7x vol, close>open=True, low>prior=True)",
+          "vol_gte_5x (6.7x)",
+          "close_top_50pct (90%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (16%)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-23",
+          "gap_pct": 16.3,
+          "gap_rel_vol": 6.7
+        }
       }
     ],
-    "ai_primary": null,
-    "needs_review": true
+    "ai_primary": "Gap & Go",
+    "needs_review": false
   },
   "USAR_2025": {
     "pivot": {
@@ -12710,6 +15610,50 @@
           "max_down_vol_10d": 10718834,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 55,
+        "criteria_met": [
+          "qualifying_gap (18.9% gap, 4.2x vol)",
+          "gap_gte_10pct (18.9%)",
+          "rel_vol_gte_3x (4.2x)",
+          "aplus_gap_gte_15pct (18.9%)"
+        ],
+        "criteria_failed": [
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (36.2%)",
+          "aplus_gap_fill_lt_30pct (62%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-10",
+          "gap_pct": 18.9,
+          "gap_rel_vol": 4.2,
+          "post_gap_range_pct": 36.2,
+          "days_to_entry": 10
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [
+          "gap_gte_10pct (19%)",
+          "vol_gte_3x (4.2x)",
+          "low_above_prior_close"
+        ],
+        "criteria_failed": [
+          "close_above_open (gap-and-crap)",
+          "gap_gte_20pct (19%)",
+          "vol_gte_5x (4.2x)",
+          "close_top_50pct (21%)"
+        ],
+        "extra": {
+          "gap_date": "2025-07-10",
+          "gap_pct": 18.9,
+          "gap_rel_vol": 4.2
+        }
       }
     ],
     "ai_primary": "Double Bottom",
@@ -12742,6 +15686,27 @@
           "today_vol": 33142462,
           "max_down_vol_10d": 7760628,
           "num_down_days_10d": 5
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 70,
+        "criteria_met": [
+          "qualifying_gap (11.1% gap, 4.0x vol)",
+          "gap_gte_10pct (11.1%)",
+          "rel_vol_gte_3x (4.0x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (13.9%)",
+          "aplus_gap_fill_lt_30pct (-58%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-23",
+          "gap_pct": 11.1,
+          "gap_rel_vol": 4.0,
+          "post_gap_range_pct": 13.9,
+          "days_to_entry": 5
         }
       }
     ],
@@ -12875,9 +15840,48 @@
           "max_down_vol_10d": 7760628,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 70,
+        "criteria_met": [
+          "qualifying_gap (11.1% gap, 4.0x vol)",
+          "gap_gte_10pct (11.1%)",
+          "rel_vol_gte_3x (4.0x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (13.9%)",
+          "aplus_gap_fill_lt_30pct (-58%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-05-23",
+          "gap_pct": 11.1,
+          "gap_rel_vol": 4.0,
+          "post_gap_range_pct": 13.9,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 40,
+        "criteria_met": [
+          "gate_passed (11% gap, 4.0x vol, close>open=True, low>prior=True)",
+          "close_top_50pct (94%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (11%)",
+          "vol_gte_5x (4.0x)"
+        ],
+        "extra": {
+          "gap_date": "2025-05-23",
+          "gap_pct": 11.1,
+          "gap_rel_vol": 4.0
+        }
       }
     ],
-    "ai_primary": "Pocket Pivot",
+    "ai_primary": "Episodic Pivot",
     "needs_review": false
   },
   "VSAT_2025": {
@@ -12919,6 +15923,29 @@
             "price": 16.99
           },
           "rally_pct": 18.6
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (10.9% gap, 2.7x vol)",
+          "gap_gte_10pct (10.9%)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-74%)",
+          "aplus_close_top_25pct (92%)"
+        ],
+        "criteria_failed": [
+          "rel_vol_gte_3x (2.7x)",
+          "tight_consolidation (31.1%)"
+        ],
+        "extra": {
+          "gap_date": "2025-08-04",
+          "gap_pct": 10.9,
+          "gap_rel_vol": 2.7,
+          "post_gap_range_pct": 31.1,
+          "days_to_entry": 5
         }
       }
     ],
@@ -13042,6 +16069,39 @@
           "max_down_vol_10d": 2379635,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 60,
+        "criteria_met": [
+          "qualifying_gap (10.9% gap, 2.7x vol)",
+          "gap_gte_10pct (10.9%)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_fill_lt_30pct (-74%)",
+          "aplus_close_top_25pct (92%)"
+        ],
+        "criteria_failed": [
+          "rel_vol_gte_3x (2.7x)",
+          "tight_consolidation (31.1%)"
+        ],
+        "extra": {
+          "gap_date": "2025-08-04",
+          "gap_pct": 10.9,
+          "gap_rel_vol": 2.7,
+          "post_gap_range_pct": 31.1,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "Double Bottom",
@@ -13081,6 +16141,29 @@
           ],
           "base_len": 24,
           "prior_gain_pct": 75.1
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 85,
+        "criteria_met": [
+          "qualifying_gap (16.8% gap, 4.9x vol)",
+          "gap_gte_10pct (16.8%)",
+          "rel_vol_gte_3x (4.9x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (9.7%)",
+          "aplus_gap_gte_15pct (16.8%)",
+          "aplus_gap_fill_lt_30pct (27%)",
+          "aplus_close_top_25pct (80%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-12-05",
+          "gap_pct": 16.8,
+          "gap_rel_vol": 4.9,
+          "post_gap_range_pct": 9.7,
+          "days_to_entry": 1
         }
       }
     ],
@@ -13204,6 +16287,39 @@
           "max_down_vol_10d": 2256237,
           "num_down_days_10d": 4
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 85,
+        "criteria_met": [
+          "qualifying_gap (16.8% gap, 4.9x vol)",
+          "gap_gte_10pct (16.8%)",
+          "rel_vol_gte_3x (4.9x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (9.7%)",
+          "aplus_gap_gte_15pct (16.8%)",
+          "aplus_gap_fill_lt_30pct (27%)",
+          "aplus_close_top_25pct (80%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-12-05",
+          "gap_pct": 16.8,
+          "gap_rel_vol": 4.9,
+          "post_gap_range_pct": 9.7,
+          "days_to_entry": 1
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": "VCP",
@@ -13248,6 +16364,27 @@
             "price": 90.77
           },
           "rally_pct": 12.3
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (13.9% gap, 4.4x vol)",
+          "gap_gte_10pct (13.9%)",
+          "rel_vol_gte_3x (4.4x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (9.0%)",
+          "aplus_gap_fill_lt_30pct (-32%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-10-28",
+          "gap_pct": 13.9,
+          "gap_rel_vol": 4.4,
+          "post_gap_range_pct": 9.0,
+          "days_to_entry": 5
         }
       }
     ],
@@ -13373,6 +16510,45 @@
           "max_down_vol_10d": 3049661,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 75,
+        "criteria_met": [
+          "qualifying_gap (13.9% gap, 4.4x vol)",
+          "gap_gte_10pct (13.9%)",
+          "rel_vol_gte_3x (4.4x)",
+          "post_gap_held_above_gap_low",
+          "tight_consolidation (9.0%)",
+          "aplus_gap_fill_lt_30pct (-32%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-10-28",
+          "gap_pct": 13.9,
+          "gap_rel_vol": 4.4,
+          "post_gap_range_pct": 9.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 40,
+        "criteria_met": [
+          "gate_passed (14% gap, 4.4x vol, close>open=True, low>prior=True)",
+          "close_top_50pct (84%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_20pct (14%)",
+          "vol_gte_5x (4.4x)"
+        ],
+        "extra": {
+          "gap_date": "2025-10-28",
+          "gap_pct": 13.9,
+          "gap_rel_vol": 4.4
+        }
       }
     ],
     "ai_primary": "Double Bottom",
@@ -13433,6 +16609,29 @@
           "today_vol": 298443335,
           "max_down_vol_10d": 66231277,
           "num_down_days_10d": 5
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (8.4% gap, 4.1x vol)",
+          "rel_vol_gte_3x (4.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (10.3%)",
+          "aplus_gap_fill_lt_30pct (-6%)",
+          "aplus_close_top_25pct (89%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (8.4%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-12",
+          "gap_pct": 8.4,
+          "gap_rel_vol": 4.1,
+          "post_gap_range_pct": 10.3,
+          "days_to_entry": 4
         }
       }
     ],
@@ -13556,9 +16755,42 @@
           "max_down_vol_10d": 66231277,
           "num_down_days_10d": 5
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 65,
+        "criteria_met": [
+          "qualifying_gap (8.4% gap, 4.1x vol)",
+          "rel_vol_gte_3x (4.1x)",
+          "post_gap_held_above_gap_low",
+          "moderate_consolidation (10.3%)",
+          "aplus_gap_fill_lt_30pct (-6%)",
+          "aplus_close_top_25pct (89%)"
+        ],
+        "criteria_failed": [
+          "gap_gte_10pct (8.4%)"
+        ],
+        "extra": {
+          "gap_date": "2025-09-12",
+          "gap_pct": 8.4,
+          "gap_rel_vol": 4.1,
+          "post_gap_range_pct": 10.3,
+          "days_to_entry": 4
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
-    "ai_primary": "VCP",
+    "ai_primary": "Episodic Pivot",
     "needs_review": false
   },
   "WDC_2025": {
@@ -13689,6 +16921,26 @@
           "max_down_vol_10d": 8074682,
           "num_down_days_10d": 3
         }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=5% gap + >=2.5x vol)"
+        ],
+        "extra": {}
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": false,
+        "score": 0,
+        "criteria_met": [],
+        "criteria_failed": [
+          "no_qualifying_gap (>=10% gap + >=3x vol)"
+        ],
+        "extra": {}
       }
     ],
     "ai_primary": null,
@@ -13733,6 +16985,49 @@
             "price": 5.465
           },
           "rally_pct": 13.0
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (31.9% gap, 5.6x vol)",
+          "gap_gte_10pct (31.9%)",
+          "rel_vol_gte_3x (5.6x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (31.9%)",
+          "aplus_vol_gte_5x (5.6x)",
+          "aplus_gap_fill_lt_30pct (-54%)",
+          "aplus_close_top_25pct (76%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (24.0%)"
+        ],
+        "extra": {
+          "gap_date": "2025-08-14",
+          "gap_pct": 31.9,
+          "gap_rel_vol": 5.6,
+          "post_gap_range_pct": 24.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 65,
+        "criteria_met": [
+          "gate_passed (32% gap, 5.6x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (32%)",
+          "vol_gte_5x (5.6x)",
+          "close_top_50pct (98%)",
+          "aplus_gap_gte_30pct (32%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-08-14",
+          "gap_pct": 31.9,
+          "gap_rel_vol": 5.6
         }
       }
     ],
@@ -13869,6 +17164,49 @@
           "today_vol": 289277452,
           "max_down_vol_10d": 35252910,
           "num_down_days_10d": 3
+        }
+      },
+      {
+        "setup": "Episodic Pivot",
+        "matched": true,
+        "score": 80,
+        "criteria_met": [
+          "qualifying_gap (31.9% gap, 5.6x vol)",
+          "gap_gte_10pct (31.9%)",
+          "rel_vol_gte_3x (5.6x)",
+          "post_gap_held_above_gap_low",
+          "aplus_gap_gte_15pct (31.9%)",
+          "aplus_vol_gte_5x (5.6x)",
+          "aplus_gap_fill_lt_30pct (-54%)",
+          "aplus_close_top_25pct (76%)"
+        ],
+        "criteria_failed": [
+          "tight_consolidation (24.0%)"
+        ],
+        "extra": {
+          "gap_date": "2025-08-14",
+          "gap_pct": 31.9,
+          "gap_rel_vol": 5.6,
+          "post_gap_range_pct": 24.0,
+          "days_to_entry": 5
+        }
+      },
+      {
+        "setup": "Gap & Go",
+        "matched": "True",
+        "score": 65,
+        "criteria_met": [
+          "gate_passed (32% gap, 5.6x vol, close>open=True, low>prior=True)",
+          "gap_gte_20pct (32%)",
+          "vol_gte_5x (5.6x)",
+          "close_top_50pct (98%)",
+          "aplus_gap_gte_30pct (32%)"
+        ],
+        "criteria_failed": [],
+        "extra": {
+          "gap_date": "2025-08-14",
+          "gap_pct": 31.9,
+          "gap_rel_vol": 5.6
         }
       }
     ],

@@ -9,10 +9,14 @@ TIEBREAKERS: list[tuple[str, str]] = [
     ("HTF", "Cup with Handle"),
     ("Cup with Handle", "VCP"),
     ("Flat Base", "VCP"),
+    # EP vs Gap & Go: determined by entry day. If the gap day IS the pivot -> Gap & Go.
+    # If pivot is 2+ days later -> EP. For scoring purposes, EP wins if both match
+    # because it's a more structured entry.
+    ("Episodic Pivot", "Gap & Go"),
     # Pocket Pivot is almost always secondary — demote it unless it's the only match
 ]
 
-PRIMARY_DEMOTE: set[str] = {"Pocket Pivot"}
+PRIMARY_DEMOTE: set[str] = {"Pocket Pivot", "Gap & Go"}
 
 
 def resolve_primary_setup(results: list[DetectorResult]) -> str | None:

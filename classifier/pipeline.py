@@ -18,6 +18,8 @@ from classifier.setups.cup_handle import detect_cup_handle
 from classifier.setups.double_bottom import detect_double_bottom
 from classifier.setups.htf import detect_htf
 from classifier.setups.pocket_pivot import detect_pocket_pivot
+from classifier.setups.episodic_pivot import detect_ep
+from classifier.setups.gap_go import detect_gap_go
 
 DETECTORS = [
     ("VCP", detect_vcp),
@@ -26,6 +28,8 @@ DETECTORS = [
     ("Double Bottom", detect_double_bottom),
     ("HTF", detect_htf),
     ("Pocket Pivot", detect_pocket_pivot),
+    ("Episodic Pivot", detect_ep),
+    ("Gap & Go", detect_gap_go),
 ]
 
 
