@@ -1,0 +1,185 @@
+{
+  "IREN_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 1399.9,
+    "period": "2025-04-09 to 2025-11-05",
+    "snapshot": {
+      "price_range": "$5.30 -> $76.41",
+      "ema10_adherence_pct": 61,
+      "worst_drawdown_pct": -55.8,
+      "days_over_10pct_underwater": 100,
+      "trend_slope_per_day": "$0.28/day (1.07%/day)",
+      "big_gaps": [
+        "2025-04-23: 6.9% gap, 1.4x vol",
+        "2025-05-12: 5.8% gap, 1.6x vol",
+        "2025-05-22: 5.2% gap, 1.5x vol",
+        "2025-06-09: 5.4% gap, 1.3x vol",
+        "2025-08-29: 19.4% gap, 2.7x vol"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-09 to 2025-06-15",
+        "pct_gain": "~90%",
+        "setup": "NO SETUP",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Low-float grind from $5 to $10. Several small 5-7% gap-ups in April-May on only 1.3-1.6x volume — not decisively institutional. No identifiable base or breakout pivot. No single catalyst event says 'enter here.' This is the initial impulse that you'd only catch if you were already watching the name."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-06-15 to 2025-08-28",
+        "pct_gain": "~50%",
+        "setup": "NO SETUP",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Choppy consolidation and grind. Stock oscillates between $10-$22 with deep pullbacks. No clean VCP contraction, no tight flat base, no identifiable structure. MAs are catching up but price keeps whipsawing through them."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-08-29 to 2025-11-05",
+        "pct_gain": "~250%",
+        "setup": "Episodic Pivot (potential)",
+        "entry": "Post Aug 29 gap consolidation (~$26-28 area)",
+        "stop": "Below Aug 29 gap-day low",
+        "tradable": true,
+        "rationale": "Aug 29: 19.4% gap on 2.7x volume — the only EP-caliber event in the entire run. This is where the stock transitions from a grind to a real move. If the post-gap consolidation was tight (need to verify on lower timeframe), this is a tradable EP entry. By this point the stock is already at $26 (5x from the low), so you're entering mid-move, but the catalyst changes the character."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Leg 3 (Aug 29 EP) — the only structured entry, but already a 5-bagger from the low",
+      "concern": "Only above 10EMA 61% of the time. Worst drawdown -55.8%. 100 days spent >10% underwater. Would've been shaken out multiple times in legs 1-2."
+    },
+    "textbook_comparison": "No textbook setup matches the initial move (legs 1-2). The Aug 29 gap qualifies as an EP by volume/gap criteria but the stock was already extended. This is a 'wish I caught it' chart, not a repeatable setup.",
+    "myth_bust_notes": "Challenges the assumption that every big winner has a clean initial entry. IREN's first 5x happened without any identifiable tradable structure."
+  },
+  "LEU_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 839.78,
+    "period": "2025-04-04 to 2025-10-16",
+    "snapshot": {
+      "price_range": "$54.43 -> $436.00",
+      "ema10_adherence_pct": 59,
+      "worst_drawdown_pct": -49.3,
+      "days_over_10pct_underwater": 129,
+      "trend_slope_per_day": "$1.36/day (0.69%/day)",
+      "big_gaps": [
+        "2025-04-08: 8.7% gap, 0.9x vol (weak — no institutional confirmation)",
+        "2025-05-08: 11.4% gap, 3.1x vol — EP #1",
+        "2025-05-12: 6.7% gap, 1.7x vol",
+        "2025-05-23: 19.9% gap, 5.9x vol — EP #2",
+        "2025-06-03: 8.7% gap, 2.2x vol"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-04 to 2025-05-07",
+        "pct_gain": "~30%",
+        "setup": "NO SETUP",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Initial recovery from $54 to ~$75. The Apr 8 gap (8.7%) was on only 0.9x volume — no institutional confirmation, looks like a weak gap. Base is forming but no clean structure yet. This is pre-move accumulation."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-05-08 to 2025-06-15",
+        "pct_gain": "~80%",
+        "setup": "Episodic Pivot",
+        "entry": "$88 area (May 8 gap-day close or post-gap consolidation break)",
+        "stop": "Below May 8 gap-day low (~$78)",
+        "tradable": true,
+        "rationale": "May 8: 11.4% gap on 3.1x volume — first real EP. Followed by May 23: 19.9% gap on 5.9x volume — second EP layered on top. Two catalyst gaps in 2 weeks = very strong institutional demand signal. The post-May-8 consolidation (if it held above gap low) is the primary entry. May 23 is a follow-through add."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-06-15 to 2025-10-16",
+        "pct_gain": "~200%",
+        "setup": "Continuation (pullback-to-MA entries)",
+        "entry": "Various MA bounces during the trend",
+        "stop": "Below the MA being tested",
+        "tradable": "Partially — but deep pullbacks make it hard to hold",
+        "rationale": "After the May catalyst legs, the stock grinds from $130 to $436 over 4 months. But it's choppy: -49.3% worst drawdown, 129 days >10% underwater. The continuation is real but the volatility is punishing. Multiple pullback-to-MA entries possible but you'd need a very wide trailing stop (50 SMA or even 150 SMA) to survive."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 2 (May EP cluster) — the May 8 + May 23 double-EP is the cleanest entry with defined risk",
+      "concern": "Only above 10EMA 59% of the time. The continuation after the EPs is extremely volatile (-49% drawdown). Would likely be stopped out during leg 3 if using tight trailing stops."
+    },
+    "textbook_comparison": "May 8 gap meets EP criteria cleanly: 11.4% gap, 3.1x volume. May 23 is an even stronger EP (19.9%, 5.9x). The AI classifier correctly identified May 8 as the EP with score 75. The VCP classification (score 60) was the wrong label for the right base — the Apr 11-May 7 consolidation is real, but the breakout was a gap event, not a VCP contraction break.",
+    "myth_bust_notes": "Two EPs in quick succession (May 8 + May 23) — the textbook discusses EP as a single event, but LEU shows that clustered catalysts can compound. Worth tracking whether multi-EP stocks outperform single-EP stocks."
+  },
+  "CIEN_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 403.96,
+    "period": "2025-04-04 to 2025-12-11",
+    "snapshot": {
+      "price_range": "$53.50 -> $242.37",
+      "ema10_adherence_pct": 69,
+      "worst_drawdown_pct": -28.9,
+      "days_over_10pct_underwater": 55,
+      "trend_slope_per_day": "$0.85/day (0.72%/day)",
+      "big_gaps": [
+        "2025-03-24: 5.4% gap, 0.6x vol (weak)",
+        "2025-04-08: 5.3% gap, 0.8x vol (weak — market bounce, not stock-specific)",
+        "2025-04-23: 7.2% gap, 1.1x vol (moderate)",
+        "2025-05-12: 5.1% gap, 0.7x vol (weak)",
+        "2025-09-04: 21.3% gap, 5.2x vol — THE catalyst"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-04 to 2025-09-03",
+        "pct_gain": "~80%",
+        "setup": "NO SETUP (slow grind)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "5-month slow grind from $53 to $95. Several small gap-ups but all on weak volume (0.6-1.1x) — not institutional. No base structure, no pivot, no contraction. This is the pre-catalyst accumulation phase. The AI classified this as a VCP base (Jun-Sep window) but the contraction pattern is marginal and the real move hadn't started yet."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-09-04 to 2025-10-15",
+        "pct_gain": "~50%",
+        "setup": "Episodic Pivot",
+        "entry": "$117 area (Sep 4 gap-day close or post-gap consolidation break)",
+        "stop": "Below Sep 4 gap-day low (~$98)",
+        "tradable": true,
+        "rationale": "Sep 4: 21.3% gap on 5.2x volume — textbook EP. This is THE event that changed CIEN from a slow grind to a real mover. The gap emerged from a 5-month base, giving it massive context. Post-gap action needs to be checked: did it consolidate tightly and hold above the gap-day low? If yes, classic EP entry on Day 2-5."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-10-15 to 2025-12-11",
+        "pct_gain": "~40%",
+        "setup": "Continuation (likely pullback-to-MA or VCP within the post-EP trend)",
+        "entry": "MA bounce entries during orderly trend",
+        "stop": "Below the 20 EMA or 50 SMA depending on pullback depth",
+        "tradable": true,
+        "rationale": "After the EP, CIEN trends from $170 to $242 over 2 months. The trend is orderly — 69% above 10EMA (best of the three reviewed), worst drawdown only -28.9%, only 55 days >10% underwater. This is holdable. Pullback-to-10EMA entries likely work well here. May also have a mini-VCP or flat base forming during consolidation pauses."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE — best of the three reviewed",
+      "best_leg": "Leg 2 (Sep 4 EP) — decisive catalyst with clear entry and defined risk. Leg 3 continuation is also tradable due to orderly trend.",
+      "concern": "Leg 1 (5-month grind) is not tradable — you'd need patience or a screener to catch the Sep 4 gap. But once you're in, the trend character is clean and holdable."
+    },
+    "textbook_comparison": "Sep 4 gap meets EP criteria with flying colors: 21.3% gap, 5.2x volume. The AI's VCP classification (score 85) is technically correct — the Jun-Sep base has contraction characteristics — but the EP label (score 80) better describes the *entry mechanism*. The gap was the defining event, not the contraction. Both labels are valid: VCP describes the base shape, EP describes how you'd actually enter.",
+    "myth_bust_notes": "CIEN demonstrates that a slow grind (no tradable setup) can precede a textbook EP. The 5-month accumulation phase had no structure but set up the supply/demand imbalance that the Sep 4 catalyst released. Challenges the idea that you need to identify a pattern *before* the catalyst — sometimes the catalyst IS the pattern."
+  }
+}

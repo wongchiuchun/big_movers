@@ -124,6 +124,20 @@
                      color:var(--text);font-size:11px;padding:6px;border-radius:6px;cursor:pointer;}
   .ai-actions button:hover{border-color:var(--accent);color:var(--accent);}
   .study-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin:4px 0;}
+  /* Review panel */
+  #review-box{font-size:11px;line-height:1.6;color:var(--text-2);max-height:400px;overflow-y:auto;padding-right:4px;}
+  .review-snapshot{background:var(--bg4);padding:8px 10px;border-radius:6px;margin:6px 0;font-family:var(--mono);font-size:10px;line-height:1.5;}
+  .review-leg{border-left:2px solid var(--border-bright);padding:8px 0 8px 12px;margin:10px 0;}
+  .review-leg.tradable{border-left-color:var(--accent);}
+  .review-leg-header{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text);margin-bottom:4px;}
+  .review-leg-header .setup-tag{display:inline-block;padding:1px 6px;border-radius:3px;margin-left:6px;font-size:9px;font-weight:500;}
+  .review-leg-header .setup-tag.tradable{background:#1a4d2e;color:#6ee7b7;}
+  .review-leg-header .setup-tag.no-setup{background:var(--bg4);color:var(--muted);}
+  .review-leg p{margin:3px 0;font-size:11px;}
+  .review-leg .entry-stop{font-family:var(--mono);font-size:10px;color:var(--accent);}
+  .review-style-fit{background:var(--bg4);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:11px;}
+  .review-style-fit strong{color:var(--text);}
+  .review-myth{font-size:10px;color:var(--muted);font-style:italic;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);}
   /* Setup definitions modal */
   .defs-modal{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;display:none;align-items:center;justify-content:center;}
   .defs-modal.open{display:flex;}
@@ -456,7 +470,72 @@
   .ma-float .ma-row input.ma-period{width: 56px!important;}
   .ma-float .ma-row input[type=color]{width: 20px;height: 18px;}
   .ma-float .ma-del{font-size: 12px;}
-  
+
+  .st-float{
+    position:absolute;
+    z-index: 30;
+    width: 260px;
+    padding: 10px 12px;
+    background: rgba(10,12,15,0.92);
+    border: 1px solid rgba(31,40,51,0.9);
+    border-radius: 10px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    font-family: var(--ui);
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .st-float.open{display:block;}
+  .st-float .st-title{
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .st-float .st-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+  .st-float .st-row label{
+    flex: 1;
+    white-space: nowrap;
+    font-size: 10px;
+    color: var(--text-2);
+  }
+  .st-float .st-row input{
+    width: 56px;
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 5px;
+    text-align: right;
+  }
+  .st-float .st-row input:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+  .st-float .st-section{
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin: 8px 0 4px;
+  }
+  [data-theme="light"] .st-float{
+    background: rgba(255,255,255,0.95);
+    border-color: var(--border);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  }
+
   /* Icon button styles */
   .ma-toggle-btn, #toolbar-toggle {
     background: transparent;
@@ -903,14 +982,16 @@
     font-size: 12px;
     padding: 8px 10px;
     outline: none;
-    min-width: 180px;
-    width: 100%;
-    line-height: 1.4;
+    min-width: 120px;
+    width: 220px;
+    max-width: 720px;
+    line-height: 1.15;
     caret-color: var(--accent);
-    resize: none;
+    resize: horizontal;
     overflow: hidden;
     min-height: 44px;
     border-radius: 8px;
+    box-sizing: border-box;
   }
   #txt-input:focus{
     border-color: var(--accent);
@@ -1124,6 +1205,9 @@
         <button id="ai-overlay-toggle" class="ma-toggle-btn text active" title="Toggle MA overlays (SMA50/150/200, EMA10/20)" style="margin-left:4px">AI</button>
         <button id="ai-swings-toggle" class="ma-toggle-btn text active" title="Toggle swing pivot arrow markers (fractal highs/lows)" style="margin-left:2px">Sw</button>
         <button id="ai-pivot-toggle" class="ma-toggle-btn text active" title="Toggle detected breakout pivot marker" style="margin-left:2px">Piv</button>
+        <button id="st-toggle" class="ma-toggle-btn text" title="ML Adaptive SuperTrend overlay" style="margin-left:4px">ST</button>
+        <button id="st-cfg-btn" class="ma-toggle-btn text" title="SuperTrend settings" style="margin-left:1px;font-size:9px">⚙</button>
+        <button id="txt-notes-toggle" class="ma-toggle-btn text active" title="Toggle text & note annotations" style="margin-left:4px">Txt</button>
         <button id="defs-btn" class="ma-toggle-btn text" title="Setup definitions reference" style="margin-left:2px">Defs</button>
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
         <button id="screenshot-btn" class="ma-toggle-btn text" title="Screenshot chart (Ctrl+Shift+S)" style="font-size:14px;margin-left:2px">📷</button>
@@ -1135,6 +1219,21 @@
         <div class="ma-controls" id="ma-controls">
           <button class="tb-btn" id="ma-add-btn">+ MA</button>
         </div>
+      </div>
+
+      <div class="st-float" id="st-panel" aria-hidden="true">
+        <div class="st-title">SuperTrend Settings</div>
+        <div class="st-section">SuperTrend</div>
+        <div class="st-row"><label>ATR Length</label><input id="st-atr-len" type="number" min="1" max="200" value="10"></div>
+        <div class="st-row"><label>High Vol Factor</label><input id="st-fact-high" type="number" min="0.1" max="10" step="0.05" value="2.0"></div>
+        <div class="st-row"><label>Med Vol Factor</label><input id="st-fact-med" type="number" min="0.1" max="10" step="0.05" value="1.75"></div>
+        <div class="st-row"><label>Low Vol Factor</label><input id="st-fact-low" type="number" min="0.1" max="10" step="0.05" value="1.5"></div>
+        <div class="st-row"><label>Sell/Buy Ratio</label><input id="st-sell-ratio" type="number" min="0.3" max="2" step="0.05" value="0.85"></div>
+        <div class="st-section">K-Means</div>
+        <div class="st-row"><label>Training Length</label><input id="st-train-len" type="number" min="20" max="500" value="100"></div>
+        <div class="st-row"><label>Recency Weight</label><input id="st-recency" type="number" min="0" max="0.99" step="0.05" value="0.7"></div>
+        <div class="st-row"><label>Volume Weight</label><input id="st-vol-weight" type="number" min="0" max="1" step="0.1" value="0.5"></div>
+        <div class="st-row"><label>Max Iterations</label><input id="st-max-iter" type="number" min="10" max="200" value="50"></div>
       </div>
 
       <div class="defs-modal" id="defs-modal">
@@ -1180,6 +1279,13 @@
         <div class="study-section">
           <div class="study-label">AI Suggested</div>
           <div id="ai-suggested-box" style="font-size:11px">Loading...</div>
+        </div>
+        <div class="study-section">
+          <div class="study-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Review</span>
+            <button id="review-toggle-btn" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:10px;font-family:var(--mono)">expand</button>
+          </div>
+          <div id="review-box" style="display:none"></div>
         </div>
         <div class="study-section">
           <div class="study-label">Notes</div>
@@ -1455,7 +1561,7 @@
           <div id="chart"></div>
           <canvas id="draw-canvas"></canvas>
           <div id="txt-wrap">
-            <div id="txt-hint">Shift+Enter: new line &nbsp;|&nbsp; Enter: confirm &nbsp;|&nbsp; Esc: cancel</div>
+            <div id="txt-hint">Drag corner to resize width &nbsp;|&nbsp; Shift+Enter: new line &nbsp;|&nbsp; Enter: confirm &nbsp;|&nbsp; Esc: cancel</div>
             <textarea id="txt-input" rows="1"></textarea>
           </div>
           <div class="hint hidden" id="hint">Click second point to finish</div>
@@ -1522,6 +1628,24 @@ let aiPivotInfo = null;
 let aiClassByMoveKey = {};
 let setupDefinitions = null;  // loaded once from /api/setup-definitions
 let extraCandleMarkers = []; // low/high arrows from selectRow preserved across applyIndicatorOverlays
+
+let textNotesVisible = true;
+
+// ===== SuperTrend overlay state =====
+let stEnabled = false;
+let stBullSeries = null;
+let stBearSeries = null;
+let stConfig = {
+  atrLen: 10,
+  factHigh: 2.0,
+  factMed: 1.75,
+  factLow: 1.5,
+  sellRatio: 0.85,
+  trainLen: 100,
+  recency: 0.7,
+  volWeight: 0.5,
+  maxIter: 50,
+};
 
 let metadata = { version: 1, customTags: [], items: {} };
 const PRESET_TAGS = ['EP','VCP','Parabolic','HTF','Breakout','Flag','Power Earnings Gap','IPO Base','Low Cheat','Other'];
@@ -1680,6 +1804,8 @@ function saveSettings(){
     volumePaneEnabled: !!volPaneEnabled,
     volumePaneHeight: (typeof volPaneHeight === 'number' && Number.isFinite(volPaneHeight)) ? volPaneHeight : 140,
     rightOffsetBars: persistedRightOffset,
+    stEnabled, stConfig,
+    aiOverlayEnabled, aiSwingsVisible, aiPivotVisible, textNotesVisible,
     maList:maList.map(m=>({type:m.type,period:m.period,color:m.color,enabled:m.enabled}))
   }));
   flash('Settings saved');
@@ -1779,6 +1905,307 @@ async function loadAIClassifications() {
     const r = await fetch('/api/ai-classifications');
     aiClassByMoveKey = await r.json() || {};
   } catch (e) { aiClassByMoveKey = {}; }
+}
+
+// ===== ML Adaptive SuperTrend =====
+function calcATR(bars, len) {
+  const atr = new Array(bars.length).fill(0);
+  for (let i = 0; i < bars.length; i++) {
+    const tr = i === 0
+      ? bars[i].high - bars[i].low
+      : Math.max(bars[i].high - bars[i].low, Math.abs(bars[i].high - bars[i-1].close), Math.abs(bars[i].low - bars[i-1].close));
+    if (i < len) {
+      atr[i] = tr;
+      if (i === len - 1) {
+        let s = 0; for (let j = 0; j < len; j++) s += atr[j];
+        atr[i] = s / len;
+      }
+    } else {
+      atr[i] = (atr[i-1] * (len - 1) + tr) / len;
+    }
+  }
+  return atr;
+}
+
+function rollingMax(arr, len) {
+  const out = new Array(arr.length);
+  for (let i = 0; i < arr.length; i++) {
+    let mx = -Infinity;
+    for (let j = Math.max(0, i - len + 1); j <= i; j++) mx = Math.max(mx, arr[j]);
+    out[i] = mx;
+  }
+  return out;
+}
+
+function rollingMin(arr, len) {
+  const out = new Array(arr.length);
+  for (let i = 0; i < arr.length; i++) {
+    let mn = Infinity;
+    for (let j = Math.max(0, i - len + 1); j <= i; j++) mn = Math.min(mn, arr[j]);
+    out[i] = mn;
+  }
+  return out;
+}
+
+function computeSuperTrend(bars, cfg) {
+  const n = bars.length;
+  if (n < 2) return { bull: [], bear: [], markers: [] };
+
+  const { atrLen, factHigh, factMed, factLow, sellRatio, trainLen, recency, volWeight, maxIter } = cfg;
+  const atr = calcATR(bars, atrLen);
+  const volumes = bars.map(b => b.volume || 0);
+  const closes = bars.map(b => b.close);
+  const hl2 = bars.map(b => (b.high + b.low) / 2);
+
+  const atrUpper = rollingMax(atr, trainLen);
+  const atrLower = rollingMin(atr, trainLen);
+  const volUpper = rollingMax(volumes, trainLen);
+  const volLower = rollingMin(volumes, trainLen);
+
+  const stLine = new Array(n).fill(NaN);
+  const stDir = new Array(n).fill(1);
+  const stUpper = new Array(n).fill(NaN);
+  const stLower = new Array(n).fill(NaN);
+  const bull = [];
+  const bear = [];
+  const markers = [];
+
+  for (let i = 0; i < n; i++) {
+    if (i < atrLen - 1 || atr[i] <= 0) continue;
+
+    const aRange = atrUpper[i] - atrLower[i];
+    const vRange = volUpper[i] - volLower[i];
+
+    // K-Means clustering (3 clusters: high/med/low volatility)
+    let cA = atrLower[i] + aRange * 0.75;
+    let cB = atrLower[i] + aRange * 0.5;
+    let cC = atrLower[i] + aRange * 0.25;
+    let vA = volLower[i] + vRange * 0.75;
+    let vB = volLower[i] + vRange * 0.5;
+    let vC = volLower[i] + vRange * 0.25;
+
+    const start = Math.max(0, i - trainLen + 1);
+    const tLen = i - start + 1;
+
+    for (let it = 0; it < maxIter; it++) {
+      const nCA = aRange > 0 ? (cA - atrLower[i]) / aRange : 0.5;
+      const nCB = aRange > 0 ? (cB - atrLower[i]) / aRange : 0.5;
+      const nCC = aRange > 0 ? (cC - atrLower[i]) / aRange : 0.5;
+      const nVA = vRange > 0 ? (vA - volLower[i]) / vRange : 0.5;
+      const nVB = vRange > 0 ? (vB - volLower[i]) / vRange : 0.5;
+      const nVC = vRange > 0 ? (vC - volLower[i]) / vRange : 0.5;
+
+      let swA=0, saA=0, svA=0, cntA=0;
+      let swB=0, saB=0, svB=0, cntB=0;
+      let swC=0, saC=0, svC=0, cntC=0;
+
+      for (let j = start; j <= i; j++) {
+        const age = i - j;
+        const w = 1.0 - recency * (age / Math.max(tLen - 1, 1));
+        const aN = aRange > 0 ? (atr[j] - atrLower[i]) / aRange : 0.5;
+        const vN = vRange > 0 ? (volumes[j] - volLower[i]) / vRange : 0.5;
+        const d1 = Math.sqrt((aN - nCA)**2 + volWeight * (vN - nVA)**2);
+        const d2 = Math.sqrt((aN - nCB)**2 + volWeight * (vN - nVB)**2);
+        const d3 = Math.sqrt((aN - nCC)**2 + volWeight * (vN - nVC)**2);
+        if (d1 <= d2 && d1 <= d3)      { swA += w; saA += w * atr[j]; svA += w * volumes[j]; cntA++; }
+        else if (d2 <= d1 && d2 <= d3)  { swB += w; saB += w * atr[j]; svB += w * volumes[j]; cntB++; }
+        else                            { swC += w; saC += w * atr[j]; svC += w * volumes[j]; cntC++; }
+      }
+
+      const nA = cntA > 0 ? saA / swA : cA;
+      const nB = cntB > 0 ? saB / swB : cB;
+      const nC = cntC > 0 ? saC / swC : cC;
+      const nVAn = cntA > 0 ? svA / swA : vA;
+      const nVBn = cntB > 0 ? svB / swB : vB;
+      const nVCn = cntC > 0 ? svC / swC : vC;
+
+      if (Math.abs(nA - cA) < 1e-10 && Math.abs(nB - cB) < 1e-10 && Math.abs(nC - cC) < 1e-10) {
+        cA = nA; cB = nB; cC = nC; vA = nVAn; vB = nVBn; vC = nVCn;
+        break;
+      }
+      cA = nA; cB = nB; cC = nC; vA = nVAn; vB = nVBn; vC = nVCn;
+    }
+
+    // Assign current bar to nearest cluster
+    const curAN = aRange > 0 ? (atr[i] - atrLower[i]) / aRange : 0.5;
+    const curVN = vRange > 0 ? (volumes[i] - volLower[i]) / vRange : 0.5;
+    const cAN = aRange > 0 ? (cA - atrLower[i]) / aRange : 0.5;
+    const cBN = aRange > 0 ? (cB - atrLower[i]) / aRange : 0.5;
+    const cCN = aRange > 0 ? (cC - atrLower[i]) / aRange : 0.5;
+    const vAN = vRange > 0 ? (vA - volLower[i]) / vRange : 0.5;
+    const vBN = vRange > 0 ? (vB - volLower[i]) / vRange : 0.5;
+    const vCN = vRange > 0 ? (vC - volLower[i]) / vRange : 0.5;
+
+    const dA = Math.sqrt((curAN - cAN)**2 + volWeight * (curVN - vAN)**2);
+    const dB = Math.sqrt((curAN - cBN)**2 + volWeight * (curVN - vBN)**2);
+    const dC = Math.sqrt((curAN - cCN)**2 + volWeight * (curVN - vCN)**2);
+
+    let centroid, buyFactor;
+    if (dA <= dB && dA <= dC)      { centroid = cA; buyFactor = factHigh; }
+    else if (dB <= dA && dB <= dC) { centroid = cB; buyFactor = factMed; }
+    else                           { centroid = cC; buyFactor = factLow; }
+    const sellFactor = buyFactor * sellRatio;
+
+    // SuperTrend calculation with independent band tracking
+    const src = hl2[i];
+    let upperBand = src + sellFactor * centroid;
+    let lowerBand = src - buyFactor * centroid;
+
+    // Band clamping (Pine: lowerBand stays if rising AND price above; upperBand stays if falling AND price below)
+    if (!isNaN(stLower[i-1])) {
+      if (lowerBand < stLower[i-1] && closes[i-1] > stLower[i-1]) lowerBand = stLower[i-1];
+    }
+    if (!isNaN(stUpper[i-1])) {
+      if (upperBand > stUpper[i-1] && closes[i-1] < stUpper[i-1]) upperBand = stUpper[i-1];
+    }
+    stUpper[i] = upperBand;
+    stLower[i] = lowerBand;
+
+    // Direction
+    if (isNaN(stLine[i-1])) {
+      stDir[i] = -1;
+    } else if (stLine[i-1] === stUpper[i-1]) {
+      stDir[i] = closes[i] > upperBand ? -1 : 1;
+    } else {
+      stDir[i] = closes[i] < lowerBand ? 1 : -1;
+    }
+    stLine[i] = stDir[i] === -1 ? lowerBand : upperBand;
+
+    // Trend flip markers
+    if (i > 0 && !isNaN(stLine[i-1]) && stDir[i] !== stDir[i-1]) {
+      if (stDir[i] === -1) {
+        markers.push({ time: bars[i].time, position: 'belowBar', color: '#00ffbb', shape: 'arrowUp', text: '▲', size: 0.8 });
+      } else {
+        markers.push({ time: bars[i].time, position: 'aboveBar', color: '#ff1100', shape: 'arrowDown', text: '▼', size: 0.8 });
+      }
+    }
+  }
+
+  // Build bull/bear line data — include overlap at transitions for continuity
+  let prevDir = 0;
+  for (let i = 0; i < n; i++) {
+    if (isNaN(stLine[i])) continue;
+    const dir = stDir[i];
+    if (prevDir !== 0 && dir !== prevDir) {
+      // Transition point: close the old segment AND start the new one
+      if (dir === -1) {
+        bear.push({ time: bars[i].time, value: stLine[i] });
+        bull.push({ time: bars[i].time, value: stLine[i] });
+      } else {
+        bull.push({ time: bars[i].time, value: stLine[i] });
+        bear.push({ time: bars[i].time, value: stLine[i] });
+      }
+    } else {
+      if (dir === -1) bull.push({ time: bars[i].time, value: stLine[i] });
+      else bear.push({ time: bars[i].time, value: stLine[i] });
+    }
+    prevDir = dir;
+  }
+
+  return { bull, bear, markers };
+}
+
+function setStEnabled(v, skipSave = false) {
+  stEnabled = !!v;
+  const btn = document.getElementById('st-toggle');
+  if (btn) btn.classList.toggle('active', stEnabled);
+  try { updateSuperTrend(); } catch (e) { console.warn('ST update error', e); }
+  if (!skipSave) saveSettings();
+}
+
+function updateSuperTrend() {
+  if (!chart) return;
+  if (!stBullSeries) {
+    stBullSeries = chart.addLineSeries({
+      color: '#00ffbb', lineWidth: 2, lineType: 1,
+      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+    });
+  }
+  if (!stBearSeries) {
+    stBearSeries = chart.addLineSeries({
+      color: '#ff1100', lineWidth: 2, lineType: 1,
+      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+    });
+  }
+
+  if (!stEnabled || !currentBars || !currentBars.length) {
+    stBullSeries.setData([]);
+    stBearSeries.setData([]);
+    return;
+  }
+
+  const bars = resampleBars(currentBars, currentTF);
+  const result = computeSuperTrend(bars, stConfig);
+  stBullSeries.setData(result.bull);
+  stBearSeries.setData(result.bear);
+}
+
+function positionStPanel() {
+  const btn = document.getElementById('st-cfg-btn');
+  const panel = document.getElementById('st-panel');
+  if (!btn || !panel) return;
+  const r = btn.getBoundingClientRect();
+  const cp = btn.closest('.chart-panel');
+  if (!cp) return;
+  const cr = cp.getBoundingClientRect();
+  panel.style.top = (r.bottom - cr.top + 4) + 'px';
+  panel.style.right = (cr.right - r.right) + 'px';
+  panel.style.left = 'auto';
+}
+
+function syncStInputs() {
+  const map = {
+    'st-atr-len': 'atrLen', 'st-fact-high': 'factHigh', 'st-fact-med': 'factMed',
+    'st-fact-low': 'factLow', 'st-sell-ratio': 'sellRatio', 'st-train-len': 'trainLen',
+    'st-recency': 'recency', 'st-vol-weight': 'volWeight', 'st-max-iter': 'maxIter',
+  };
+  for (const [id, key] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if (el) el.value = stConfig[key];
+  }
+}
+
+function setupStPanel() {
+  const toggle = document.getElementById('st-toggle');
+  const cfgBtn = document.getElementById('st-cfg-btn');
+  const panel = document.getElementById('st-panel');
+  if (!toggle || !cfgBtn || !panel) return;
+
+  toggle.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    setStEnabled(!stEnabled);
+  });
+
+  cfgBtn.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    if (!isOpen) { positionStPanel(); syncStInputs(); }
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#st-panel') && !e.target.closest('#st-cfg-btn')) {
+      panel.classList.remove('open');
+    }
+  });
+
+  const inputMap = {
+    'st-atr-len': ['atrLen', true], 'st-fact-high': ['factHigh', false], 'st-fact-med': ['factMed', false],
+    'st-fact-low': ['factLow', false], 'st-sell-ratio': ['sellRatio', false], 'st-train-len': ['trainLen', true],
+    'st-recency': ['recency', false], 'st-vol-weight': ['volWeight', false], 'st-max-iter': ['maxIter', true],
+  };
+  for (const [id, [key, isInt]] of Object.entries(inputMap)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.addEventListener('change', () => {
+      const v = isInt ? parseInt(el.value) : parseFloat(el.value);
+      if (Number.isFinite(v)) {
+        stConfig[key] = v;
+        if (stEnabled) updateSuperTrend();
+        saveSettings();
+      }
+    });
+  }
 }
 
 // ---- Setup definitions modal ----
@@ -2467,6 +2894,7 @@ function applyTimeframe(){
   });
   applyMoveMarkers();
   try { updateSpyOverlay(); } catch (e) {}
+  try { updateSuperTrend(); } catch (e) {}
   redrawAll();
 }
 
@@ -2565,10 +2993,47 @@ function getCanvasTextLineHeight(fontSize){
     const lh = parseFloat(cs.lineHeight || '');
     if (Number.isFinite(lh) && lh > 0) return lh;
   }catch(e){}
-  return fs * 1.4;
+  return fs * 1.15;
+}
+
+function getInputContentWidth(){
+  const inp = document.getElementById('txt-input');
+  if(!inp) return 200;
+  try{
+    const cs = window.getComputedStyle(inp);
+    const padL = parseFloat(cs.paddingLeft)||0;
+    const padR = parseFloat(cs.paddingRight)||0;
+    const w = inp.clientWidth - padL - padR;
+    return Math.max(20, w);
+  }catch(e){ return inp.clientWidth || 200; }
+}
+
+function wrapCanvasText(ctx, text, maxWidth){
+  const src = (text==null?'':String(text));
+  if(!maxWidth || maxWidth<=0) return src.split('\n');
+  const out = [];
+  const paragraphs = src.split('\n');
+  for(const para of paragraphs){
+    if(para === ''){ out.push(''); continue; }
+    const tokens = para.split(/(\s+)/);
+    let line = '';
+    for(const tok of tokens){
+      if(tok === '') continue;
+      const test = line + tok;
+      if(line === '' || ctx.measureText(test).width <= maxWidth){
+        line = test;
+      } else {
+        out.push(line.replace(/\s+$/,''));
+        line = tok.replace(/^\s+/,'');
+      }
+    }
+    out.push(line.replace(/\s+$/,''));
+  }
+  return out;
 }
 
 function drawOne(d,sel=false){
+  if(!textNotesVisible && (d.type==='text'||d.type==='note')) return;
   const col=d.color||'#ffffff';
   const c=sel?'#ffdd00':col;
   ctx2.save();ctx2.globalAlpha=sel?1:0.88;
@@ -2613,11 +3078,11 @@ function drawOne(d,sel=false){
     const x=time2p(d.time),y=price2p(d.price);if(x==null||y==null){ctx2.restore();return;}
     const fs=d.fontSize||12;
     const ff='Arial';
-    ctx2.font=`${fs}px ${ff},monospace`;
+    ctx2.font=`${fs}px ${ff},sans-serif`;
     ctx2.textBaseline='top';
     ctx2.textAlign='left';
     ctx2.fillStyle=c;
-    const lines=d.text.split('\n');
+    const lines = d.wrapWidth ? wrapCanvasText(ctx2, d.text||'', d.wrapWidth) : (d.text||'').split('\n');
     const lh = getCanvasTextLineHeight(fs);
     lines.forEach((line,i)=>ctx2.fillText(line, Math.round(x), Math.round(y+i*lh)));
   }
@@ -2991,7 +3456,7 @@ function setupDrag(){
     toolSettings.text.color=d.color||toolSettings.text.color;
     toolSettings.text.fontSize=d.fontSize||12;
     syncDrawVars();
-    showTextInput(px,py,d.price,d.time,d.text);
+    showTextInput(px,py,d.price,d.time,d.text,undefined,d.boxWidth||null);
   });
 }
 
@@ -3099,15 +3564,15 @@ function getHitPart(d,mx,my){
     const fs=d.fontSize||12;
     const ff='Arial';
     ctx2.save();
-    ctx2.font=`${fs}px ${ff},monospace`;
-    const lines=(d.text||'').split('\n');
+    ctx2.font=`${fs}px ${ff},sans-serif`;
+    const lines = d.wrapWidth ? wrapCanvasText(ctx2, d.text||'', d.wrapWidth) : (d.text||'').split('\n');
     let maxW=0;
     for(const line of lines){
       const w=ctx2.measureText(line).width;
       if(w>maxW) maxW=w;
     }
     ctx2.restore();
-    const h=getCanvasTextLineHeight(fs)*lines.length;
+    const h=getCanvasTextLineHeight(fs)*Math.max(1,lines.length);
     const pad=4;
     const left=x-pad, top=y-pad, right=x+maxW+pad, bottom=y+h+pad;
     return (mx>=left && mx<=right && my>=top && my<=bottom)?'whole':null;
@@ -3142,29 +3607,48 @@ function addDrawing(d){
 // ==============================================
 // TEXT INPUT
 // ==============================================
-function showTextInput(px,py,price,time,initialText='',onConfirm){
+function showTextInput(px,py,price,time,initialText='',onConfirm,initialBoxWidth=null){
   const wrap=document.getElementById('txt-wrap'),inp=document.getElementById('txt-input');
   const fs=(drawFontSize||toolSettings.text.fontSize||12);
   inp.style.fontSize=fs+'px';
   inp.style.fontFamily='Arial, sans-serif';
+  if(initialBoxWidth && initialBoxWidth>0){
+    inp.style.width = Math.round(initialBoxWidth) + 'px';
+  } else {
+    inp.style.width = '';
+  }
+  inp.style.height = '';
   wrap.style.display='block';wrap.style.left=Math.round(px)+'px';wrap.style.top=Math.round(py)+'px';
   inp.value='';
   setTimeout(()=>inp.focus(),30);
   inp.value=initialText;
-  inp.oninput=()=>{
+  const fitHeight = () => {
     inp.style.height='auto';
     inp.style.height=inp.scrollHeight+'px';
   };
-  setTimeout(()=>{inp.style.height='auto';inp.style.height=inp.scrollHeight+'px';},10);
+  inp.oninput=fitHeight;
+  setTimeout(fitHeight,10);
+  let txtRO = null;
+  if(typeof ResizeObserver !== 'undefined'){
+    txtRO = new ResizeObserver(fitHeight);
+    txtRO.observe(inp);
+  }
+  const stopObserve = () => { if(txtRO){ txtRO.disconnect(); txtRO=null; } };
+  const captureWidths = () => ({
+    boxWidth: inp.offsetWidth,
+    wrapWidth: getInputContentWidth()
+  });
   const closeIfEmpty = () => {
     if (wrap.style.display === 'none') return;
     const txt = (inp.value || '').trim();
+    const widths = captureWidths();
     wrap.style.display = 'none';
+    stopObserve();
     if (txt) {
       if(typeof onConfirm === 'function'){
-        onConfirm(txt, { price, time });
+        onConfirm(txt, { price, time, boxWidth: widths.boxWidth, wrapWidth: widths.wrapWidth });
       } else {
-        addDrawing({type:'text',price,time,text:txt,color:toolSettings.text.color,fontSize:toolSettings.text.fontSize||12,fontFamily:'Arial'});
+        addDrawing({type:'text',price,time,text:txt,color:toolSettings.text.color,fontSize:toolSettings.text.fontSize||12,fontFamily:'Arial',wrapWidth:widths.wrapWidth,boxWidth:widths.boxWidth});
         saveDrawings();
       }
     }
@@ -3187,12 +3671,14 @@ function showTextInput(px,py,price,time,initialText='',onConfirm){
     if(ev.key==='Enter'&&!ev.shiftKey){
       ev.preventDefault();
       const txt=inp.value.trim();
+      const widths = captureWidths();
       wrap.style.display='none';
+      stopObserve();
       if(txt){
         if(typeof onConfirm === 'function'){
-          onConfirm(txt, { price, time });
+          onConfirm(txt, { price, time, boxWidth: widths.boxWidth, wrapWidth: widths.wrapWidth });
         } else {
-          addDrawing({type:'text',price,time,text:txt,color:toolSettings.text.color,fontSize:toolSettings.text.fontSize||12,fontFamily:'Arial'});
+          addDrawing({type:'text',price,time,text:txt,color:toolSettings.text.color,fontSize:toolSettings.text.fontSize||12,fontFamily:'Arial',wrapWidth:widths.wrapWidth,boxWidth:widths.boxWidth});
           saveDrawings();
         }
       }
@@ -3202,6 +3688,7 @@ function showTextInput(px,py,price,time,initialText='',onConfirm){
     if(ev.key==='Escape'){
       ev.preventDefault();
       wrap.style.display='none';
+      stopObserve();
       setTool('pan');
       chart?.applyOptions({handleScroll:true,handleScale:true});
       document.removeEventListener('pointerdown', onDocPointerDown, true);
@@ -3326,7 +3813,7 @@ function initChart(){
       : Math.round(wPx / 2);
 
     // Thin dashed white lines (vertical + horizontal)
-    ctx.strokeStyle = 'rgba(255,255,255,0.70)';
+    ctx.strokeStyle = isLightTheme ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.70)';
     ctx.lineWidth = 1 * crosshairOverlayDpr;
     ctx.setLineDash([6 * crosshairOverlayDpr, 6 * crosshairOverlayDpr]);
 
@@ -3719,6 +4206,18 @@ function initChart(){
     persistedRightOffset = Math.max(0, Math.min(30, Math.round(saved.rightOffsetBars)));
     try { chart.timeScale().applyOptions({ rightOffset: persistedRightOffset }); } catch(e) {}
   }
+  if (typeof saved?.stEnabled === 'boolean') stEnabled = saved.stEnabled;
+  if (saved?.stConfig && typeof saved.stConfig === 'object') Object.assign(stConfig, saved.stConfig);
+  if (typeof saved?.aiOverlayEnabled === 'boolean') aiOverlayEnabled = saved.aiOverlayEnabled;
+  if (typeof saved?.aiSwingsVisible === 'boolean') aiSwingsVisible = saved.aiSwingsVisible;
+  if (typeof saved?.aiPivotVisible === 'boolean') aiPivotVisible = saved.aiPivotVisible;
+  if (typeof saved?.textNotesVisible === 'boolean') textNotesVisible = saved.textNotesVisible;
+  document.getElementById('ai-overlay-toggle')?.classList.toggle('active', aiOverlayEnabled);
+  document.getElementById('ai-swings-toggle')?.classList.toggle('active', aiSwingsVisible);
+  document.getElementById('ai-pivot-toggle')?.classList.toggle('active', aiPivotVisible);
+  document.getElementById('txt-notes-toggle')?.classList.toggle('active', textNotesVisible);
+  setStEnabled(stEnabled, true);
+  setupStPanel();
   // Persisted MA list: treat empty array as "user wants no MAs".
   // Only fall back to defaults when there is no saved maList at all (first run).
   if (saved && Array.isArray(saved.maList)) {
@@ -4111,6 +4610,8 @@ function updateStudyPanel() {
 
   // AI Suggested section
   updateAISection();
+  // Review section
+  updateReviewSection();
 }
 
 function _escHtml(s) {
@@ -4200,6 +4701,92 @@ async function updateAISection() {
   });
 }
 
+// ---- Review panel ----
+let reviewsCache = null;
+
+async function loadReviews() {
+  try {
+    const r = await fetch('/api/reviews');
+    reviewsCache = await r.json() || {};
+  } catch (e) { reviewsCache = {}; }
+  return reviewsCache;
+}
+
+async function updateReviewSection() {
+  if (!currentMoveRow) return;
+  const box = document.getElementById('review-box');
+  const toggle = document.getElementById('review-toggle-btn');
+  if (!box || !toggle) return;
+
+  if (!reviewsCache) await loadReviews();
+  const key = moveKey(currentMoveRow);
+  const review = reviewsCache[key];
+
+  if (!review) {
+    box.innerHTML = '<div style="color:var(--muted);padding:4px 0">Not yet reviewed. Say "Review ' + _escHtml(currentMoveRow.symbol) + ' ' + _escHtml(currentMoveRow.year) + '" in chat.</div>';
+    toggle.textContent = 'no review';
+    toggle.style.color = 'var(--muted)';
+    return;
+  }
+
+  toggle.textContent = box.style.display === 'none' ? 'expand' : 'collapse';
+  toggle.style.color = 'var(--accent)';
+
+  // Snapshot
+  const snap = review.snapshot || {};
+  const snapHtml = `<div class="review-snapshot">
+    <strong>${_escHtml(review.period || '')}</strong> · ${_escHtml(review.gain_pct || '')}% gain<br>
+    10EMA adherence: ${_escHtml(snap.ema10_adherence_pct || '?')}% · Worst DD: ${_escHtml(snap.worst_drawdown_pct || '?')}%<br>
+    Days &gt;10% underwater: ${_escHtml(snap.days_over_10pct_underwater || '?')} · Slope: ${_escHtml(snap.trend_slope_per_day || '?')}
+  </div>`;
+
+  // Legs
+  const legs = review.legs || [];
+  const legsHtml = legs.map(leg => {
+    const isTradable = leg.tradable === true || leg.tradable === 'true';
+    const setupTag = leg.setup === 'NO SETUP' || !leg.setup
+      ? '<span class="setup-tag no-setup">NO SETUP</span>'
+      : `<span class="setup-tag ${isTradable ? 'tradable' : 'no-setup'}">${_escHtml(leg.setup)}</span>`;
+    const entryStop = leg.entry
+      ? `<div class="entry-stop">Entry: ${_escHtml(leg.entry)}${leg.stop ? ' · Stop: ' + _escHtml(leg.stop) : ''}</div>`
+      : '';
+    return `<div class="review-leg ${isTradable ? 'tradable' : ''}">
+      <div class="review-leg-header">Leg ${_escHtml(leg.leg)} of ${_escHtml(leg.of)} · ${_escHtml(leg.period || '')} · ${_escHtml(leg.pct_gain || '')}${setupTag}</div>
+      ${entryStop}
+      <p>${_escHtml(leg.rationale || '')}</p>
+    </div>`;
+  }).join('');
+
+  // Style fit
+  const sf = review.style_fit || {};
+  const styleHtml = sf.overall ? `<div class="review-style-fit">
+    <strong>Style fit: ${_escHtml(sf.overall)}</strong><br>
+    Best leg: ${_escHtml(sf.best_leg || '—')}<br>
+    Concern: ${_escHtml(sf.concern || '—')}
+  </div>` : '';
+
+  // Myth bust
+  const mythHtml = review.myth_bust_notes
+    ? `<div class="review-myth">${_escHtml(review.myth_bust_notes)}</div>`
+    : '';
+
+  box.innerHTML = snapHtml + legsHtml + styleHtml + mythHtml;
+}
+
+// Toggle review expand/collapse
+document.getElementById('review-toggle-btn').addEventListener('click', () => {
+  const box = document.getElementById('review-box');
+  const btn = document.getElementById('review-toggle-btn');
+  if (!box) return;
+  if (box.style.display === 'none') {
+    box.style.display = 'block';
+    btn.textContent = 'collapse';
+  } else {
+    box.style.display = 'none';
+    btn.textContent = 'expand';
+  }
+});
+
 function renderStudyTags() {
   const r = currentMoveRow;
   if (!r) return;
@@ -4232,6 +4819,7 @@ document.getElementById('ai-overlay-toggle').addEventListener('click', () => {
   aiOverlayEnabled = !aiOverlayEnabled;
   document.getElementById('ai-overlay-toggle').classList.toggle('active', aiOverlayEnabled);
   applyIndicatorOverlays();
+  saveSettings();
 });
 
 // Swing pivot arrows toggle (independent)
@@ -4239,6 +4827,7 @@ document.getElementById('ai-swings-toggle').addEventListener('click', () => {
   aiSwingsVisible = !aiSwingsVisible;
   document.getElementById('ai-swings-toggle').classList.toggle('active', aiSwingsVisible);
   applyIndicatorOverlays();
+  saveSettings();
 });
 
 // Breakout pivot marker toggle (independent)
@@ -4246,6 +4835,15 @@ document.getElementById('ai-pivot-toggle').addEventListener('click', () => {
   aiPivotVisible = !aiPivotVisible;
   document.getElementById('ai-pivot-toggle').classList.toggle('active', aiPivotVisible);
   applyIndicatorOverlays();
+  saveSettings();
+});
+
+// Text/note annotations toggle
+document.getElementById('txt-notes-toggle').addEventListener('click', () => {
+  textNotesVisible = !textNotesVisible;
+  document.getElementById('txt-notes-toggle').classList.toggle('active', textNotesVisible);
+  redrawAll();
+  saveSettings();
 });
 
 // Setup definitions modal

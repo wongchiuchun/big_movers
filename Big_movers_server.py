@@ -22,6 +22,7 @@ app = Flask(__name__, static_folder=SCRIPT_DIR, static_url_path="")
 
 AI_CLASSIFICATIONS_FILE = os.path.join(SCRIPT_DIR, "ai_classifications.json")
 SETUP_DEFINITIONS_FILE = os.path.join(SCRIPT_DIR, "setup_definitions.json")
+REVIEWS_FILE = os.path.join(SCRIPT_DIR, "reviews.json")
 
 # Path configuration
 RESULTS_CSV = os.path.join(SCRIPT_DIR, "big_movers_result.csv")
@@ -807,6 +808,50 @@ def api_setup_definitions():
             return jsonify(json.load(f))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/reviews")
+def api_reviews_get():
+    if not os.path.exists(REVIEWS_FILE):
+        return jsonify({})
+    try:
+        with open(REVIEWS_FILE, "r", encoding="utf-8") as f:
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/reviews/<move_key>")
+def api_review_get_one(move_key):
+    if not os.path.exists(REVIEWS_FILE):
+        return jsonify({"error": "no reviews"}), 404
+    try:
+        with open(REVIEWS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        entry = data.get(move_key)
+        if entry is None:
+            return jsonify({"error": f"{move_key} not reviewed"}), 404
+        return jsonify(entry)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/reviews/<move_key>", methods=["POST"])
+def api_review_save(move_key):
+    body = request.get_json(silent=True) or {}
+    data = {}
+    if os.path.exists(REVIEWS_FILE):
+        try:
+            with open(REVIEWS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f) or {}
+        except Exception:
+            data = {}
+    data[move_key] = body
+    try:
+        _atomic_json_write(REVIEWS_FILE, data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":
