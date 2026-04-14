@@ -144,6 +144,26 @@
   .notes-popup-panel h3{font-family:var(--display,serif);font-style:italic;font-size:20px;margin:0 0 16px;}
   .notes-popup-panel pre{white-space:pre-wrap;word-wrap:break-word;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text);background:var(--bg4);padding:16px 20px;border-radius:8px;margin:0;}
   .notes-popup-close{position:absolute;top:16px;right:20px;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;}
+  /* Compare side-by-side popup */
+  .compare-popup{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:450;width:min(1100px,92vw);max-height:80vh;background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);border:1px solid var(--border-bright);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,0.6);display:none;flex-direction:column;}
+  .compare-popup.open{display:flex;}
+  .compare-header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;cursor:grab;border-bottom:1px solid var(--border);user-select:none;flex-shrink:0;}
+  .compare-title{font-family:var(--display,serif);font-style:italic;font-size:18px;color:var(--text);}
+  .compare-close{background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0;line-height:1;}
+  .compare-close:hover{color:var(--text);}
+  .compare-body{display:flex;flex:1;overflow:hidden;min-height:0;}
+  .compare-col{flex:1;padding:16px 20px;overflow-y:auto;}
+  .compare-col-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin:0 0 12px;font-weight:600;}
+  .compare-divider{width:1px;background:var(--border);flex-shrink:0;}
+  .compare-notes-text{white-space:pre-wrap;word-wrap:break-word;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--text);background:var(--bg4);padding:16px 20px;border-radius:8px;}
+  .compare-notes-edit{width:100%;min-height:300px;background:var(--bg4);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.7;padding:16px 20px;border-radius:8px;resize:vertical;outline:none;}
+  .compare-notes-edit:focus{border-color:var(--accent);}
+  .compare-empty{color:var(--muted);font-style:italic;font-size:12px;}
+  .compare-review-wrap{font-size:11px;line-height:1.6;color:var(--text-2);}
+  /* Leg highlight overlay */
+  #leg-highlight{position:absolute;top:0;height:100%;pointer-events:none;z-index:150;background:rgba(212,165,116,0.15);border-left:2px solid rgba(212,165,116,0.5);border-right:2px solid rgba(212,165,116,0.5);display:none;}
+  .review-leg{cursor:pointer;transition:background 0.12s;}
+  .review-leg:hover{background:rgba(212,165,116,0.08);border-radius:4px;}
   /* Setup definitions modal */
   .defs-modal{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;display:none;align-items:center;justify-content:center;}
   .defs-modal.open{display:flex;}
@@ -1214,6 +1234,7 @@
         <button id="st-toggle" class="ma-toggle-btn text" title="ML Adaptive SuperTrend overlay" style="margin-left:4px">ST</button>
         <button id="st-cfg-btn" class="ma-toggle-btn text" title="SuperTrend settings" style="margin-left:1px;font-size:9px">⚙</button>
         <button id="txt-notes-toggle" class="ma-toggle-btn text active" title="Toggle text & note annotations" style="margin-left:4px">Txt</button>
+        <button id="draw-lock-toggle" class="ma-toggle-btn text" title="Lock drawings (prevent select/edit/drag)" style="margin-left:2px">🔓</button>
         <button id="defs-btn" class="ma-toggle-btn text" title="Setup definitions reference" style="margin-left:2px">Defs</button>
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
         <button id="screenshot-btn" class="ma-toggle-btn text" title="Screenshot chart (Ctrl+Shift+S)" style="font-size:14px;margin-left:2px">📷</button>
@@ -1250,6 +1271,24 @@
         </div>
       </div>
 
+      <div class="compare-popup" id="compare-popup">
+        <div class="compare-header" id="compare-drag-handle">
+          <span class="compare-title" id="compare-title"></span>
+          <button class="compare-close" id="compare-close" title="Close">×</button>
+        </div>
+        <div class="compare-body">
+          <div class="compare-col">
+            <div class="compare-col-label">My Notes</div>
+            <div id="compare-notes"></div>
+          </div>
+          <div class="compare-divider"></div>
+          <div class="compare-col">
+            <div class="compare-col-label">AI Review</div>
+            <div id="compare-review" class="compare-review-wrap"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="defs-modal" id="defs-modal">
         <div class="defs-panel" style="position:relative">
           <button class="defs-close" id="defs-close" title="Close (Esc)">×</button>
@@ -1283,11 +1322,19 @@
           </div>
         </div>
         <div class="study-section">
-          <div class="study-label">Tags</div>
+          <div class="study-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Tags</span>
+            <button id="tag-manage-btn" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:10px;font-family:var(--mono)">manage</button>
+          </div>
           <div class="study-tags-grid" id="study-tags-grid"></div>
           <div class="study-add-tag">
             <input id="study-custom-tag" type="text" placeholder="Custom tag...">
             <button id="study-add-tag-btn">+</button>
+          </div>
+          <div id="tag-manage-panel" style="display:none;margin-top:6px;padding:6px;background:var(--bg3);border-radius:6px;font-size:10px">
+            <div style="color:var(--muted);margin-bottom:4px;font-family:var(--mono);letter-spacing:0.5px">CUSTOM TAGS</div>
+            <div id="tag-manage-list"></div>
+            <div style="color:var(--muted);margin-top:6px;font-style:italic">Preset tags cannot be removed.</div>
           </div>
         </div>
         <div class="study-section">
@@ -1300,6 +1347,9 @@
             <button id="review-toggle-btn" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:10px;font-family:var(--mono)">expand</button>
           </div>
           <div id="review-box" style="display:none"></div>
+        </div>
+        <div class="study-section" style="margin-bottom:10px">
+          <button id="compare-btn" style="width:100%;padding:8px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-family:var(--mono);font-size:11px;cursor:pointer;font-weight:600;transition:all 0.15s;">Compare Side-by-Side</button>
         </div>
         <div class="study-section">
           <div class="study-label" style="display:flex;justify-content:space-between;align-items:center">
@@ -1577,6 +1627,7 @@
           <div class="loading hidden" id="loading">Loading chart data...</div>
           <div id="chart"></div>
           <canvas id="draw-canvas"></canvas>
+          <div id="leg-highlight"></div>
           <div id="txt-wrap">
             <div id="txt-hint">Drag corner to resize width &nbsp;|&nbsp; Shift+Enter: new line &nbsp;|&nbsp; Enter: confirm &nbsp;|&nbsp; Esc: cancel</div>
             <textarea id="txt-input" rows="1"></textarea>
@@ -1647,6 +1698,7 @@ let setupDefinitions = null;  // loaded once from /api/setup-definitions
 let extraCandleMarkers = []; // low/high arrows from selectRow preserved across applyIndicatorOverlays
 
 let textNotesVisible = true;
+let drawingsLocked = false;
 
 // ===== SuperTrend overlay state =====
 let stEnabled = false;
@@ -1821,7 +1873,7 @@ function saveSettings(){
     volumePaneHeight: (typeof volPaneHeight === 'number' && Number.isFinite(volPaneHeight)) ? volPaneHeight : 140,
     rightOffsetBars: persistedRightOffset,
     stEnabled, stConfig,
-    aiOverlayEnabled, aiSwingsVisible, aiPivotVisible, textNotesVisible,
+    aiOverlayEnabled, aiSwingsVisible, aiPivotVisible, textNotesVisible, drawingsLocked,
     maList:maList.map(m=>({type:m.type,period:m.period,color:m.color,enabled:m.enabled}))
   }));
   flash('Settings saved');
@@ -1835,6 +1887,12 @@ async function saveDrawings(){
 }
 async function loadDrawings(){
   try{const r=await fetch('/api/drawings');drawings=await r.json();}catch(e){drawings={};}
+  let maxId=0;
+  for(const k in drawings){
+    const arr=drawings[k];if(!Array.isArray(arr))continue;
+    for(const d of arr){const n=Number(d&&d.id);if(Number.isFinite(n)&&n>maxId)maxId=n;}
+  }
+  drawIdCtr=maxId;
 }
 
 // ============ AI INDICATOR OVERLAYS ============
@@ -3374,7 +3432,7 @@ function setupChartEvents(){
   });
 
   chart.subscribeClick(param=>{
-    if(drawTool!=='pan'||!drawKey()||!param.point)return;
+    if(drawTool!=='pan'||!drawKey()||!param.point||drawingsLocked)return;
     const x=param.point.x, y=param.point.y;
     const hit=hitTest(x,y);
     const newSel=(hit!=null&&hit!==selectedId)?hit:null;
@@ -3396,7 +3454,7 @@ function setupDrag(){
 
   let dragPart='whole';
   wrapEl.addEventListener('mousedown',e=>{
-    if(drawTool!=='pan'||e.button!==0||!drawKey())return;
+    if(drawTool!=='pan'||e.button!==0||!drawKey()||drawingsLocked)return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
     let fullHit=hitTestFull(x,y);
@@ -3436,7 +3494,7 @@ function setupDrag(){
   });
 
   wrapEl.addEventListener('dblclick',e=>{
-    if(drawTool!=='pan'||!drawKey())return;
+    if(drawTool!=='pan'||!drawKey()||drawingsLocked)return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
     const hit=hitTest(x,y);
@@ -3727,7 +3785,7 @@ document.addEventListener('keydown',e=>{
     ||document.activeElement.tagName==='INPUT'
     ||document.activeElement.tagName==='SELECT'
     ||document.activeElement.tagName==='TEXTAREA';
-  if((e.key==='Delete'||e.key==='Backspace')&&selectedId!=null&&!inInput){
+  if((e.key==='Delete'||e.key==='Backspace')&&selectedId!=null&&!inInput&&!drawingsLocked){
     const dk=drawKey();
     if(!dk||!drawings[dk])return;
     pushUndo();
@@ -4235,6 +4293,9 @@ function initChart(){
   if (typeof saved?.aiSwingsVisible === 'boolean') aiSwingsVisible = saved.aiSwingsVisible;
   if (typeof saved?.aiPivotVisible === 'boolean') aiPivotVisible = saved.aiPivotVisible;
   if (typeof saved?.textNotesVisible === 'boolean') textNotesVisible = saved.textNotesVisible;
+  if (typeof saved?.drawingsLocked === 'boolean') drawingsLocked = saved.drawingsLocked;
+  const lockBtn = document.getElementById('draw-lock-toggle');
+  if (lockBtn) { lockBtn.classList.toggle('active', drawingsLocked); lockBtn.textContent = drawingsLocked ? '🔒' : '🔓'; }
   document.getElementById('ai-overlay-toggle')?.classList.toggle('active', aiOverlayEnabled);
   document.getElementById('ai-swings-toggle')?.classList.toggle('active', aiSwingsVisible);
   document.getElementById('ai-pivot-toggle')?.classList.toggle('active', aiPivotVisible);
@@ -4548,7 +4609,7 @@ async function selectRow(i){
   document.getElementById('placeholder').classList.add('hidden');
   document.getElementById('loading').classList.remove('hidden');
   try{
-    const resp = await fetch(`/api/ohlcv?symbol=${encodeURIComponent(r.symbol)}`, { signal: reqController.signal });
+    const resp = await fetch(`/api/ohlcv?symbol=${encodeURIComponent(r.symbol)}&_=${Date.now()}`, { signal: reqController.signal });
     if(!resp.ok){
       throw new Error(`HTTP ${resp.status}`);
     }
@@ -4793,7 +4854,10 @@ async function updateReviewSection() {
     const entryStop = leg.entry
       ? `<div class="entry-stop">Entry: ${_escHtml(leg.entry)}${leg.stop ? ' · Stop: ' + _escHtml(leg.stop) : ''}</div>`
       : '';
-    return `<div class="review-leg ${isTradable ? 'tradable' : ''}">
+    const periodParts = (leg.period || '').split(' to ');
+    const dStart = (periodParts[0] || '').trim();
+    const dEnd = (periodParts[1] || '').trim();
+    return `<div class="review-leg ${isTradable ? 'tradable' : ''}" data-start="${_escHtml(dStart)}" data-end="${_escHtml(dEnd)}">
       <div class="review-leg-header">Leg ${_escHtml(leg.leg)} of ${_escHtml(leg.of)} · ${_escHtml(leg.period || '')} · ${_escHtml(leg.pct_gain || '')}${setupTag}</div>
       ${entryStop}
       <p>${_escHtml(leg.rationale || '')}</p>
@@ -4846,6 +4910,114 @@ document.getElementById('notes-popup').addEventListener('click', (e) => {
   if (e.target.id === 'notes-popup') document.getElementById('notes-popup').classList.remove('open');
 });
 
+// Compare side-by-side popup
+document.getElementById('compare-btn').addEventListener('click', openComparePopup);
+document.getElementById('compare-btn').addEventListener('mouseover', function() { this.style.background='var(--accent)'; this.style.color='var(--bg)'; });
+document.getElementById('compare-btn').addEventListener('mouseout', function() { this.style.background='transparent'; this.style.color='var(--accent)'; });
+
+function openComparePopup() {
+  if (!currentMoveRow) return;
+  const popup = document.getElementById('compare-popup');
+  document.getElementById('compare-title').textContent = currentMoveRow.symbol + ' ' + currentMoveRow.year;
+  const notes = document.getElementById('study-notes').value || '';
+  const notesEl = document.getElementById('compare-notes');
+  notesEl.innerHTML = '<textarea class="compare-notes-edit" placeholder="Your observations...">' + _escHtml(notes) + '</textarea>';
+  const reviewBox = document.getElementById('review-box');
+  const reviewEl = document.getElementById('compare-review');
+  if (reviewBox && reviewBox.innerHTML.trim()) {
+    reviewEl.innerHTML = reviewBox.innerHTML;
+  } else {
+    reviewEl.innerHTML = '<div class="compare-empty">No review yet. Request one with "Review ' + _escHtml(currentMoveRow.symbol) + ' ' + _escHtml(currentMoveRow.year) + '"</div>';
+  }
+  popup.style.left = '50%';
+  popup.style.top = '80px';
+  popup.style.transform = 'translateX(-50%)';
+  popup.classList.add('open');
+}
+
+document.getElementById('compare-notes').addEventListener('input', (e) => {
+  if (!e.target.classList.contains('compare-notes-edit') || !currentMoveRow) return;
+  const val = e.target.value;
+  document.getElementById('study-notes').value = val;
+  document.getElementById('study-notes-count').textContent = val.length;
+  setMeta(currentMoveRow, { notes: val });
+  clearTimeout(window._compareNotesSaveTimer);
+  window._compareNotesSaveTimer = setTimeout(() => saveMetadata(), 500);
+});
+
+document.getElementById('compare-close').addEventListener('click', () => {
+  document.getElementById('compare-popup').classList.remove('open');
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('compare-popup').classList.contains('open')) {
+    document.getElementById('compare-popup').classList.remove('open');
+  }
+});
+
+(function() {
+  const popup = document.getElementById('compare-popup');
+  const handle = document.getElementById('compare-drag-handle');
+  let dragging = false, sx, sy, sl, st;
+  handle.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.compare-close')) return;
+    dragging = true;
+    const rect = popup.getBoundingClientRect();
+    popup.style.transform = 'none';
+    popup.style.left = rect.left + 'px';
+    popup.style.top = rect.top + 'px';
+    sx = e.clientX; sy = e.clientY;
+    sl = rect.left; st = rect.top;
+    handle.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    popup.style.left = (sl + e.clientX - sx) + 'px';
+    popup.style.top = (st + e.clientY - sy) + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.style.cursor = 'grab';
+  });
+})();
+
+// Leg highlight on chart when hovering review legs
+function showLegHighlight(legEl) {
+  const hl = document.getElementById('leg-highlight');
+  if (!hl || !chart) return;
+  const start = legEl.getAttribute('data-start');
+  const end = legEl.getAttribute('data-end');
+  if (!start || !end) { hl.style.display = 'none'; return; }
+  const x1 = time2p(start);
+  const x2 = time2p(end);
+  if (x1 == null || x2 == null) { hl.style.display = 'none'; return; }
+  const left = Math.min(x1, x2);
+  const width = Math.abs(x2 - x1) || 4;
+  hl.style.left = left + 'px';
+  hl.style.width = width + 'px';
+  hl.style.display = 'block';
+}
+
+function hideLegHighlight() {
+  const hl = document.getElementById('leg-highlight');
+  if (hl) hl.style.display = 'none';
+}
+
+['review-box', 'compare-review'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('mouseover', (e) => {
+    const leg = e.target.closest('.review-leg');
+    if (leg) showLegHighlight(leg);
+  });
+  el.addEventListener('mouseout', (e) => {
+    const leg = e.target.closest('.review-leg');
+    if (leg) hideLegHighlight();
+  });
+});
+
 function renderStudyTags() {
   const r = currentMoveRow;
   if (!r) return;
@@ -4869,6 +5041,97 @@ function renderStudyTags() {
     });
   });
 }
+
+function renderTagManageList() {
+  const list = document.getElementById('tag-manage-list');
+  if (!list) return;
+  list.textContent = '';
+  const custom = metadata.customTags || [];
+  if (!custom.length) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'color:var(--muted);padding:2px 0';
+    empty.textContent = 'No custom tags yet.';
+    list.appendChild(empty);
+    return;
+  }
+  custom.forEach(tag => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)';
+    const nameEl = document.createElement('span');
+    nameEl.className = 'tag-edit-name';
+    nameEl.style.cssText = 'color:var(--text);flex:1;padding:1px 4px;border-radius:3px';
+    nameEl.textContent = tag;
+    const btns = document.createElement('span');
+    btns.style.cssText = 'display:flex;gap:4px;margin-left:6px';
+    const renameBtn = document.createElement('button');
+    renameBtn.style.cssText = 'background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:10px;font-family:var(--mono)';
+    renameBtn.textContent = 'rename';
+    const delBtn = document.createElement('button');
+    delBtn.style.cssText = 'background:transparent;border:none;color:var(--red);cursor:pointer;font-size:10px;font-family:var(--mono)';
+    delBtn.textContent = 'delete';
+    btns.appendChild(renameBtn);
+    btns.appendChild(delBtn);
+    row.appendChild(nameEl);
+    row.appendChild(btns);
+    list.appendChild(row);
+
+    renameBtn.addEventListener('click', () => {
+      nameEl.contentEditable = 'true';
+      nameEl.focus();
+      const sel = window.getSelection();
+      sel.selectAllChildren(nameEl);
+      const commit = () => {
+        nameEl.contentEditable = 'false';
+        const newName = (nameEl.textContent || '').trim();
+        if (!newName || newName === tag) { nameEl.textContent = tag; return; }
+        if (PRESET_TAGS.includes(newName) || metadata.customTags.includes(newName)) {
+          nameEl.textContent = tag;
+          flash('Tag name already exists');
+          return;
+        }
+        const idx = metadata.customTags.indexOf(tag);
+        if (idx >= 0) metadata.customTags[idx] = newName;
+        for (const k of Object.keys(metadata.items)) {
+          const item = metadata.items[k];
+          if (item.tags && item.tags.includes(tag)) {
+            item.tags = item.tags.map(t2 => t2 === tag ? newName : t2);
+          }
+        }
+        saveMetadata();
+        renderStudyTags();
+        renderTagManageList();
+        populateTagFilter();
+        renderTable();
+      };
+      nameEl.addEventListener('blur', commit, { once: true });
+      nameEl.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { ev.preventDefault(); nameEl.blur(); }
+        if (ev.key === 'Escape') { nameEl.textContent = tag; nameEl.blur(); }
+      });
+    });
+    delBtn.addEventListener('click', () => {
+      if (!confirm('Delete custom tag "' + tag + '"? It will be removed from all moves.')) return;
+      metadata.customTags = metadata.customTags.filter(t2 => t2 !== tag);
+      for (const k of Object.keys(metadata.items)) {
+        const item = metadata.items[k];
+        if (item.tags) item.tags = item.tags.filter(t2 => t2 !== tag);
+      }
+      saveMetadata();
+      renderStudyTags();
+      renderTagManageList();
+      populateTagFilter();
+      renderTable();
+    });
+  });
+}
+
+document.getElementById('tag-manage-btn').addEventListener('click', () => {
+  const panel = document.getElementById('tag-manage-panel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  document.getElementById('tag-manage-btn').textContent = isOpen ? 'manage' : 'close';
+  if (!isOpen) renderTagManageList();
+});
 
 // Study panel event listeners
 document.getElementById('study-toggle-btn').addEventListener('click', toggleStudyPanel);
@@ -4894,6 +5157,20 @@ document.getElementById('ai-pivot-toggle').addEventListener('click', () => {
   aiPivotVisible = !aiPivotVisible;
   document.getElementById('ai-pivot-toggle').classList.toggle('active', aiPivotVisible);
   applyIndicatorOverlays();
+  saveSettings();
+});
+
+// Drawings lock toggle
+document.getElementById('draw-lock-toggle').addEventListener('click', () => {
+  drawingsLocked = !drawingsLocked;
+  const btn = document.getElementById('draw-lock-toggle');
+  btn.classList.toggle('active', drawingsLocked);
+  btn.textContent = drawingsLocked ? '🔒' : '🔓';
+  if (drawingsLocked && selectedId !== null) {
+    selectedId = null;
+    setChartInteraction(true);
+    redrawAll();
+  }
   saveSettings();
 });
 

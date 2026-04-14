@@ -734,7 +734,11 @@
       }
     ],
     "ai_primary": "Double Bottom",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": null,
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-12",
+    "user_note": "rejected"
   },
   "APLD_2025": {
     "pivot": null,
@@ -958,7 +962,10 @@
       }
     ],
     "ai_primary": "Double Bottom",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "Double Bottom",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-14"
   },
   "ASTS_2025": {
     "pivot": {
@@ -1338,7 +1345,10 @@
       }
     ],
     "ai_primary": "VCP",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "VCP",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-12"
   },
   "AVAV_2025": {
     "pivot": {
@@ -5544,7 +5554,10 @@
       }
     ],
     "ai_primary": "VCP",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "VCP",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-12"
   },
   "HUT_2025": {
     "pivot": {
@@ -8127,7 +8140,11 @@
       }
     ],
     "ai_primary": "Pocket Pivot",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": null,
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-12",
+    "user_note": "rejected"
   },
   "MU_2025": {
     "pivot": {
@@ -8312,7 +8329,10 @@
       }
     ],
     "ai_primary": "Flat Base",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "Flat Base",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-12"
   },
   "NBIS_2025": {
     "pivot": {
@@ -8508,7 +8528,10 @@
       }
     ],
     "ai_primary": "Episodic Pivot",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "Episodic Pivot",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-12"
   },
   "NGD_2025": {
     "pivot": {

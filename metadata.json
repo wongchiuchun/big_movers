@@ -1,0 +1,441 @@
+{
+  "customTags": [
+    "Cup and Handle Breakout",
+    "Round Bottom Breakout",
+    "Flat Base",
+    "Gap and Go",
+    "Double Bottom"
+  ],
+  "items": {
+    "AAOI_2025": {
+      "direction": "long",
+      "notes": "No setup in 2025 basically until it broke out of the cup and handle in 2026. This is one that traded like shit the entire year and started getting interesting in Nov 2025 when the EMAs started slopping up in the right alignments. However there were at least 4-5 deep round trips if you enter at 10 EMA and use that as a stop. Acceleration happened only around Feb 2026",
+      "rating": "",
+      "tags": [
+        "Cup and Handle Breakout"
+      ]
+    },
+    "ABVX_2025": {
+      "direction": "long",
+      "notes": "Probably a Gap and Go given how big the gap was. To me basically a EP type of setup. It traded cleanly. Not a fast mover but with patience that was definitely tradable. The real test was only in Dec It was a good 4 month hold",
+      "rating": "",
+      "tags": [
+        "Gap and Go"
+      ]
+    },
+    "AGX_2025": {
+      "direction": "long",
+      "notes": "[AI] NOT TRADABLE. 69% 10EMA, 21 50SMA touches (2nd worst). AU-type slow grinder. Mar 28 EP trap (close@20%). Looks smooth zoomed out but shakes you out.\n\nHuman - totally agree with the assessment here. The only tradable leg was the move from May to Jun. Rest of the move was way too choppy for my style",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Flat Base"
+      ]
+    },
+    "ALAB_2025": {
+      "direction": "long",
+      "notes": "Setup not bad, kinda tradable. The 2 gap ups both held and went",
+      "rating": "",
+      "tags": [
+        "VCP",
+        "Flat Base"
+      ]
+    },
+    "APLD_2025": {
+      "direction": "long",
+      "notes": "No clear pattern. More just a breakout from a downtrend with 200EMA reclaim. Very typical but the momentum was weak between May and Mid Sept - this is what I said about names that would be hard to trade for me because the strong pull back from each high into the 50 EMA was enough to shake me out a few times and in between the entries showed a lof of pullbacks into the 50 EMA. Only the final move after 9 Sept was something I could have considered. The rest would have been very difficult",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "ARWR_2025": {
+      "direction": "long",
+      "notes": "[AI] Borderline tradable. 77% 10EMA but 13 50SMA touches. Would need wider stops.\n\n[Human] I disagree. I think bulk of the leg was tradable. Entry 1 in Aug ran all the way till late Oct this leg was perfectly tradable and easy to hold through. The consolidation into Nov ws difficult but the reversal on 24 (undercut and rally) was a clear entry which allowed you to ride up to mid Dec. Also tradable",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Double Bottom"
+      ]
+    },
+    "ASTS_2025": {
+      "direction": "long",
+      "notes": "This did not have any particular pattern but a simple breakout. The tradable legs were not easy but there were times when it just worked.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "AU_2025": {
+      "direction": "long",
+      "notes": "I think this is arguably a VCP and breakout play but this is also one of thos names that I would not be able to hold. This is the kind of slow moving stock with great trend and when you zoom out you see the smooth trend up but just look that how often it revisits the 50EMA. I would have been stopped out a million times and made no money. Not a setup i would chase",
+      "rating": "",
+      "tags": [
+        "VCP",
+        "Breakout"
+      ]
+    },
+    "AVAV_2025": {
+      "direction": "",
+      "notes": "Not a double bottom. I believe it was a simple breakout from downtrend. This is not my tradable setup. The entire move took too long to shape up. Only the final leg was reasonably tradable based on my style. The rest. Not so much",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "BE_2025": {
+      "direction": "long",
+      "notes": "Actually closed to a flat base breakout and multiple EP setup. I think the leg on 24 Jul EP was quite tradable all the way until Sept. After which the price action was very loose and it would have been hard to hold through the move",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Flat Base",
+        "EP"
+      ]
+    },
+    "CAR_2025": {
+      "direction": "long",
+      "notes": "[AI] Clean short move. 81% 10EMA, 2 50SMA touches. Proof that shorter moves can be very tradable.\n\n[Human] - Agree mostly. The move was quite tradable after the broke of 200MA. The gap down was also a clean signal for short",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "CIEN_2025": {
+      "direction": "long",
+      "notes": "I think it is not wrong to see this as a VCP setup primarily but I think it seems more like a Cup and handle breakout. Before the EP gap up this one would be a difficult one for me as between Jun and Oct 25 the stock basically tested 50 EMA 3 times. The Aud one was a big shakeout. Knowing myself this period would be very difficult to trade for me most likely will end with a small loss and give up on the name. The best entry from a trading point of view is actually Sep 25 on the EP day (or D+2 when you see no weakness). That move up was so power ful and relatively easy to hold if you work with 10EMA/ 20EMA. you would be able to hold till end Nov before you are stopped out",
+      "rating": "",
+      "tags": [
+        "EP",
+        "VCP",
+        "Cup and Handle Breakout"
+      ]
+    },
+    "CIFR_2025": {
+      "direction": "long",
+      "notes": "I think it is a round bottom breakout. The entire move is quite tradable with the bulk of the move respecting 10MA. A very tradable setup for me",
+      "rating": "",
+      "tags": [
+        "Round Bottom Breakout"
+      ]
+    },
+    "CLS_2025": {
+      "direction": "long",
+      "notes": "[AI] CIFR-quality chart. 85% 10EMA, 0 50SMA touches during trend. Clean 10EMA tracking May-Jul (12 weeks). Aug+Sep EPs accelerated the move. One of the best charts in the 2025 library.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "COHR_2025": {
+      "direction": "long",
+      "notes": "[AI] Tradable May-Aug 10EMA trend, then Aug 18 -32% weekly shakeout destroyed it. Recovery in Sep-Dec with Nov EP. The shakeout is the defining event — ends most positions.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "CRDO_2025": {
+      "direction": "long",
+      "notes": "[AI] CRDO is the worst EP stock in library — 0 good, 4 traps. Proves that EP close quality filter is essential.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "CRWV_2025": {
+      "direction": "",
+      "notes": "In hindsight this was a fantastic trade with the entire move right above 10MA strong moves up almost non-stop. The challenge was in the huge pullback that happened above 10MA - I would have felt so uncomfortable to hodl onto the name and there would be a good chance I exit in late May instead",
+      "rating": "",
+      "tags": [
+        "IPO Base"
+      ]
+    },
+    "DAVE_2025": {
+      "direction": "long",
+      "notes": "[AI] May 8 EP is a textbook example — +25% gap, 5.6x vol, close at 98% of range. Validates EP close quality filter. 8-week 10EMA run after. But Jul collapse (-31% in one week) ended the move violently.",
+      "rating": "",
+      "tags": [
+        "EP"
+      ]
+    },
+    "FLNC_2025": {
+      "direction": "long",
+      "notes": "[AI] NOT TRADABLE. 64% 10EMA, 81% underwater, 8.9% ADR (highest in library). Extreme daily volatility makes holding impossible.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "GLXY_2025": {
+      "direction": "long",
+      "notes": "This is more like a Cup and Handle breakout. The move was not very clean until the general market sentiment became very strong in September. the only tradable leg was then. In reality this was one I traded and failed to profit much from it given how difficult it is to hold. Not my kind of trade",
+      "rating": "",
+      "tags": [
+        "Cup and Handle Breakout",
+        "Breakout"
+      ]
+    },
+    "HOOD_2025": {
+      "direction": "long",
+      "notes": "Very Classic VCP setup all the way through Apr May and Jun. Like the fact that it was above 10 EMA most of the time during the move with nice price action along the way",
+      "rating": "",
+      "tags": [
+        "VCP"
+      ]
+    },
+    "IONQ_2025": {
+      "direction": "long",
+      "notes": "[AI] Quantum computing narrative stock. All metrics fail. Sector-driven, not setup-driven.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "IREN_2025": {
+      "direction": "long",
+      "notes": "This is a round bottom breakout with the stock breaking out of a long 5-6 month base towards the upside. There were a few min EP s here and there which were trabale",
+      "rating": "",
+      "tags": [
+        "Round Bottom Breakout",
+        "VCP"
+      ]
+    },
+    "JOBY_2025": {
+      "direction": "long",
+      "notes": "[AI] Mixed EP quality — May 28 (close@81%) and Jun 9 (close@80%) were real. Jun 3 (close@9%) was a trap. 80% 10EMA in the move window. Decent May-Jul 10EMA trend.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "KSS_2025": {
+      "direction": "long",
+      "notes": "[AI] -52% DD is 2nd worst in library. 87% underwater. Untradable.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "KTOS_2025": {
+      "direction": "long",
+      "notes": "[AI] KTOS is a 20EMA stock (87% adherence). 10EMA trader would struggle but 20EMA approach works.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "LEU_2025": {
+      "direction": "long",
+      "notes": "The pivot was nicely identified. (not sure if it was backward looking, if it was identifiable on a forward looking this would be valuable). The setup is a weak VCP because there is only on contraction. I would see this more of a EP kind of setup. This entire move is quite tradable for my style athough I would likely be giving back quite a bit in the August pullback. The Sep setup requires not giving up on the stock in watchlsit",
+      "rating": "",
+      "tags": [
+        "VCP",
+        "EP"
+      ]
+    },
+    "LITE_2025": {
+      "direction": "long",
+      "notes": "[AI] CLS-quality 10EMA trend. 83% adherence, 3 50SMA touches, 15-week clean grind.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "MP_2025": {
+      "direction": "long",
+      "notes": "I think this was kinda like EP and breakout but honestly the price action was too difficult. I actually traded this name at the time and the intraday selloffs were brutal. This in hindsight was not a very tradable setup. You need to be spot on to make money.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "MU_2025": {
+      "direction": "long",
+      "notes": "Again an interesting one that I missed last year. There were multiple entry points for this one but the tempo and swing are not my best trade candidate. Jul would have gotten me very disappointed",
+      "rating": "",
+      "tags": [
+        "Flat Base"
+      ]
+    },
+    "NBIS_2025": {
+      "direction": "long",
+      "notes": "Actually I traded this name a few times the key challenge was the movements were not clean. Many times it would test your faith by moving just below major EMAs and followed by a gap up. The move from Sep onwards was the most tradable one but even then the selloff in Oct was brutal. This is not a name to chase on strong move up",
+      "rating": "",
+      "tags": [
+        "Episodic Pivot",
+        "EP"
+      ]
+    },
+    "OKLO_2025": {
+      "direction": "long",
+      "notes": "To be honest, not the easiest trade here. The chops were real for a long time and the real pullup happened at around Sept when the valuation was already very stretched. Not a trade I could handle well",
+      "rating": "",
+      "tags": [
+        "Cup and Handle Breakout",
+        "Breakout"
+      ]
+    },
+    "OUST_2025": {
+      "direction": "long",
+      "notes": "[AI] 8.2% ADR. Too volatile to hold.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "PI_2025": {
+      "direction": "long",
+      "notes": "[AI] PI respects 20EMA, not 10EMA. A 20EMA-style trade.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "PL_2025": {
+      "direction": "long",
+      "notes": "PL was a clear EP and Gap and Go setup. The challenge has always been the long consolidation before the EP. Price action tended to be so strong on EP day and moved up relentlessly until a point when you chase it started moving against you and sideway. Another one that I do not trade well but nice EP setup here I suppose",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Gap and Go"
+      ]
+    },
+    "PONY_2025": {
+      "direction": "long",
+      "notes": "[AI] 10.5% ADR is new library record. 95% underwater. The most extreme untradable chart.",
+      "rating": "",
+      "tags": [
+        "EP"
+      ]
+    },
+    "PRAX_2025": {
+      "direction": "long",
+      "notes": "[AI] +1090% but untradable. Confirms gain size has zero correlation with tradability.",
+      "rating": "",
+      "tags": [
+        "EP"
+      ]
+    },
+    "QURE_2025": {
+      "direction": "long",
+      "notes": "[AI] NOT TRADABLE. Apr 17 +38% gap was a TRAP (close@28%). 25 50SMA touches (worst in library). Biotech gap-and-fade pattern.",
+      "rating": "",
+      "tags": [
+        "EP"
+      ]
+    },
+    "RKLB_2025": {
+      "direction": "long",
+      "notes": "[AI] NOT TRADABLE. 63% 10EMA, -49% DD, 76% underwater, 15 50SMA touches, 7.3% ADR. AU-type on steroids.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "SATS_2025": {
+      "direction": "long",
+      "notes": "[AI] Below threshold on all key metrics.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "SCON_2000": {
+      "direction": "",
+      "notes": "",
+      "rating": "",
+      "tags": []
+    },
+    "SEDG_2025": {
+      "direction": "long",
+      "notes": "[AI] NOT TRADABLE. Worst metrics in library: 61% 10EMA, -44% DD. Two trap EPs in May (close@11-12%). Solar macro-driven, no clean setups.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "SEZL_2025": {
+      "direction": "long",
+      "notes": "[AI] Highest 10EMA in library (92%) but CRWV paradox — 8.6% ADR makes holding uncomfortable. Perfect on paper, scary in practice.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "SNDK_2025": {
+      "direction": "long",
+      "notes": "[AI] 33 50SMA touches — new record. 50SMA metric alone disqualifies this despite otherwise decent stats.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "STRL_2025": {
+      "direction": "long",
+      "notes": "[AI] Potentially the BEST chart in the library. 84% 10EMA, ZERO 50SMA touches, 24% underwater, 4.7% ADR. 16 weeks of steady 10EMA grind. Low volatility = easy hold. The anti-AU.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "STX_2025": {
+      "direction": "long",
+      "notes": "[AI] STX rivals STRL as best chart. 4.0% ADR = easiest hold in library. 23-week clean grind with zero trap EPs.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "TSEM_2025": {
+      "direction": "long",
+      "notes": "[AI] TSEM has the shallowest drawdown (-18%) and low ADR. Borderline on 50SMA touches (10). A 20EMA-style trader could trade this well.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "TTMI_2025": {
+      "direction": "long",
+      "notes": "[AI] Steady grinder with no catalysts. Low ADR = easy hold but might be too slow for this style.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "VSAT_2025": {
+      "direction": "long",
+      "notes": "[AI] Another 20EMA stock (77%) misclassified as 10EMA candidate. Below threshold.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "VSCO_2025": {
+      "direction": "long",
+      "notes": "[AI] 20 50SMA touches. Retail sector AU-type.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "W_2025": {
+      "direction": "long",
+      "notes": "[AI] 4 good EPs, 0 traps — best EP hit rate in library. But 11 50SMA touches = EP trading stock, not a hold stock.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    }
+  },
+  "version": 1
+}

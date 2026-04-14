@@ -27,7 +27,7 @@
         "entry": null,
         "stop": null,
         "tradable": false,
-        "rationale": "Low-float grind from $5 to $10. Several small 5-7% gap-ups in April-May on only 1.3-1.6x volume — not decisively institutional. No identifiable base or breakout pivot. No single catalyst event says 'enter here.' This is the initial impulse that you'd only catch if you were already watching the name."
+        "rationale": "Low-float grind from $5 to $10. Several small 5-7% gap-ups in April-May on only 1.3-1.6x volume \u2014 not decisively institutional. No identifiable base or breakout pivot. No single catalyst event says 'enter here.' This is the initial impulse that you'd only catch if you were already watching the name."
       },
       {
         "leg": 2,
@@ -49,12 +49,12 @@
         "entry": "Post Aug 29 gap consolidation (~$26-28 area)",
         "stop": "Below Aug 29 gap-day low",
         "tradable": true,
-        "rationale": "Aug 29: 19.4% gap on 2.7x volume — the only EP-caliber event in the entire run. This is where the stock transitions from a grind to a real move. If the post-gap consolidation was tight (need to verify on lower timeframe), this is a tradable EP entry. By this point the stock is already at $26 (5x from the low), so you're entering mid-move, but the catalyst changes the character."
+        "rationale": "Aug 29: 19.4% gap on 2.7x volume \u2014 the only EP-caliber event in the entire run. This is where the stock transitions from a grind to a real move. If the post-gap consolidation was tight (need to verify on lower timeframe), this is a tradable EP entry. By this point the stock is already at $26 (5x from the low), so you're entering mid-move, but the catalyst changes the character."
       }
     ],
     "style_fit": {
       "overall": "NOT TO MY STYLE",
-      "best_leg": "Leg 3 (Aug 29 EP) — the only structured entry, but already a 5-bagger from the low",
+      "best_leg": "Leg 3 (Aug 29 EP) \u2014 the only structured entry, but already a 5-bagger from the low",
       "concern": "Only above 10EMA 61% of the time. Worst drawdown -55.8%. 100 days spent >10% underwater. Would've been shaken out multiple times in legs 1-2."
     },
     "textbook_comparison": "No textbook setup matches the initial move (legs 1-2). The Aug 29 gap qualifies as an EP by volume/gap criteria but the stock was already extended. This is a 'wish I caught it' chart, not a repeatable setup.",
@@ -71,10 +71,10 @@
       "days_over_10pct_underwater": 129,
       "trend_slope_per_day": "$1.36/day (0.69%/day)",
       "big_gaps": [
-        "2025-04-08: 8.7% gap, 0.9x vol (weak — no institutional confirmation)",
-        "2025-05-08: 11.4% gap, 3.1x vol — EP #1",
+        "2025-04-08: 8.7% gap, 0.9x vol (weak \u2014 no institutional confirmation)",
+        "2025-05-08: 11.4% gap, 3.1x vol \u2014 EP #1",
         "2025-05-12: 6.7% gap, 1.7x vol",
-        "2025-05-23: 19.9% gap, 5.9x vol — EP #2",
+        "2025-05-23: 19.9% gap, 5.9x vol \u2014 EP #2",
         "2025-06-03: 8.7% gap, 2.2x vol"
       ]
     },
@@ -88,7 +88,7 @@
         "entry": null,
         "stop": null,
         "tradable": false,
-        "rationale": "Initial recovery from $54 to ~$75. The Apr 8 gap (8.7%) was on only 0.9x volume — no institutional confirmation, looks like a weak gap. Base is forming but no clean structure yet. This is pre-move accumulation."
+        "rationale": "Initial recovery from $54 to ~$75. The Apr 8 gap (8.7%) was on only 0.9x volume \u2014 no institutional confirmation, looks like a weak gap. Base is forming but no clean structure yet. This is pre-move accumulation."
       },
       {
         "leg": 2,
@@ -99,7 +99,7 @@
         "entry": "$88 area (May 8 gap-day close or post-gap consolidation break)",
         "stop": "Below May 8 gap-day low (~$78)",
         "tradable": true,
-        "rationale": "May 8: 11.4% gap on 3.1x volume — first real EP. Followed by May 23: 19.9% gap on 5.9x volume — second EP layered on top. Two catalyst gaps in 2 weeks = very strong institutional demand signal. The post-May-8 consolidation (if it held above gap low) is the primary entry. May 23 is a follow-through add."
+        "rationale": "May 8: 11.4% gap on 3.1x volume \u2014 first real EP. Followed by May 23: 19.9% gap on 5.9x volume \u2014 second EP layered on top. Two catalyst gaps in 2 weeks = very strong institutional demand signal. The post-May-8 consolidation (if it held above gap low) is the primary entry. May 23 is a follow-through add."
       },
       {
         "leg": 3,
@@ -109,17 +109,17 @@
         "setup": "Continuation (pullback-to-MA entries)",
         "entry": "Various MA bounces during the trend",
         "stop": "Below the MA being tested",
-        "tradable": "Partially — but deep pullbacks make it hard to hold",
+        "tradable": "Partially \u2014 but deep pullbacks make it hard to hold",
         "rationale": "After the May catalyst legs, the stock grinds from $130 to $436 over 4 months. But it's choppy: -49.3% worst drawdown, 129 days >10% underwater. The continuation is real but the volatility is punishing. Multiple pullback-to-MA entries possible but you'd need a very wide trailing stop (50 SMA or even 150 SMA) to survive."
       }
     ],
     "style_fit": {
       "overall": "PARTIALLY TRADABLE",
-      "best_leg": "Leg 2 (May EP cluster) — the May 8 + May 23 double-EP is the cleanest entry with defined risk",
+      "best_leg": "Leg 2 (May EP cluster) \u2014 the May 8 + May 23 double-EP is the cleanest entry with defined risk",
       "concern": "Only above 10EMA 59% of the time. The continuation after the EPs is extremely volatile (-49% drawdown). Would likely be stopped out during leg 3 if using tight trailing stops."
     },
-    "textbook_comparison": "May 8 gap meets EP criteria cleanly: 11.4% gap, 3.1x volume. May 23 is an even stronger EP (19.9%, 5.9x). The AI classifier correctly identified May 8 as the EP with score 75. The VCP classification (score 60) was the wrong label for the right base — the Apr 11-May 7 consolidation is real, but the breakout was a gap event, not a VCP contraction break.",
-    "myth_bust_notes": "Two EPs in quick succession (May 8 + May 23) — the textbook discusses EP as a single event, but LEU shows that clustered catalysts can compound. Worth tracking whether multi-EP stocks outperform single-EP stocks."
+    "textbook_comparison": "May 8 gap meets EP criteria cleanly: 11.4% gap, 3.1x volume. May 23 is an even stronger EP (19.9%, 5.9x). The AI classifier correctly identified May 8 as the EP with score 75. The VCP classification (score 60) was the wrong label for the right base \u2014 the Apr 11-May 7 consolidation is real, but the breakout was a gap event, not a VCP contraction break.",
+    "myth_bust_notes": "Two EPs in quick succession (May 8 + May 23) \u2014 the textbook discusses EP as a single event, but LEU shows that clustered catalysts can compound. Worth tracking whether multi-EP stocks outperform single-EP stocks."
   },
   "CIEN_2025": {
     "reviewed_at": "2026-04-12",
@@ -133,10 +133,10 @@
       "trend_slope_per_day": "$0.85/day (0.72%/day)",
       "big_gaps": [
         "2025-03-24: 5.4% gap, 0.6x vol (weak)",
-        "2025-04-08: 5.3% gap, 0.8x vol (weak — market bounce, not stock-specific)",
+        "2025-04-08: 5.3% gap, 0.8x vol (weak \u2014 market bounce, not stock-specific)",
         "2025-04-23: 7.2% gap, 1.1x vol (moderate)",
         "2025-05-12: 5.1% gap, 0.7x vol (weak)",
-        "2025-09-04: 21.3% gap, 5.2x vol — THE catalyst"
+        "2025-09-04: 21.3% gap, 5.2x vol \u2014 THE catalyst"
       ]
     },
     "legs": [
@@ -149,7 +149,7 @@
         "entry": null,
         "stop": null,
         "tradable": false,
-        "rationale": "5-month slow grind from $53 to $95. Several small gap-ups but all on weak volume (0.6-1.1x) — not institutional. No base structure, no pivot, no contraction. This is the pre-catalyst accumulation phase. The AI classified this as a VCP base (Jun-Sep window) but the contraction pattern is marginal and the real move hadn't started yet."
+        "rationale": "5-month slow grind from $53 to $95. Several small gap-ups but all on weak volume (0.6-1.1x) \u2014 not institutional. No base structure, no pivot, no contraction. This is the pre-catalyst accumulation phase. The AI classified this as a VCP base (Jun-Sep window) but the contraction pattern is marginal and the real move hadn't started yet."
       },
       {
         "leg": 2,
@@ -160,7 +160,7 @@
         "entry": "$117 area (Sep 4 gap-day close or post-gap consolidation break)",
         "stop": "Below Sep 4 gap-day low (~$98)",
         "tradable": true,
-        "rationale": "Sep 4: 21.3% gap on 5.2x volume — textbook EP. This is THE event that changed CIEN from a slow grind to a real mover. The gap emerged from a 5-month base, giving it massive context. Post-gap action needs to be checked: did it consolidate tightly and hold above the gap-day low? If yes, classic EP entry on Day 2-5."
+        "rationale": "Sep 4: 21.3% gap on 5.2x volume \u2014 textbook EP. This is THE event that changed CIEN from a slow grind to a real mover. The gap emerged from a 5-month base, giving it massive context. Post-gap action needs to be checked: did it consolidate tightly and hold above the gap-day low? If yes, classic EP entry on Day 2-5."
       },
       {
         "leg": 3,
@@ -171,15 +171,2855 @@
         "entry": "MA bounce entries during orderly trend",
         "stop": "Below the 20 EMA or 50 SMA depending on pullback depth",
         "tradable": true,
-        "rationale": "After the EP, CIEN trends from $170 to $242 over 2 months. The trend is orderly — 69% above 10EMA (best of the three reviewed), worst drawdown only -28.9%, only 55 days >10% underwater. This is holdable. Pullback-to-10EMA entries likely work well here. May also have a mini-VCP or flat base forming during consolidation pauses."
+        "rationale": "After the EP, CIEN trends from $170 to $242 over 2 months. The trend is orderly \u2014 69% above 10EMA (best of the three reviewed), worst drawdown only -28.9%, only 55 days >10% underwater. This is holdable. Pullback-to-10EMA entries likely work well here. May also have a mini-VCP or flat base forming during consolidation pauses."
       }
     ],
     "style_fit": {
-      "overall": "TRADABLE — best of the three reviewed",
-      "best_leg": "Leg 2 (Sep 4 EP) — decisive catalyst with clear entry and defined risk. Leg 3 continuation is also tradable due to orderly trend.",
-      "concern": "Leg 1 (5-month grind) is not tradable — you'd need patience or a screener to catch the Sep 4 gap. But once you're in, the trend character is clean and holdable."
+      "overall": "TRADABLE \u2014 best of the three reviewed",
+      "best_leg": "Leg 2 (Sep 4 EP) \u2014 decisive catalyst with clear entry and defined risk. Leg 3 continuation is also tradable due to orderly trend.",
+      "concern": "Leg 1 (5-month grind) is not tradable \u2014 you'd need patience or a screener to catch the Sep 4 gap. But once you're in, the trend character is clean and holdable."
     },
-    "textbook_comparison": "Sep 4 gap meets EP criteria with flying colors: 21.3% gap, 5.2x volume. The AI's VCP classification (score 85) is technically correct — the Jun-Sep base has contraction characteristics — but the EP label (score 80) better describes the *entry mechanism*. The gap was the defining event, not the contraction. Both labels are valid: VCP describes the base shape, EP describes how you'd actually enter.",
-    "myth_bust_notes": "CIEN demonstrates that a slow grind (no tradable setup) can precede a textbook EP. The 5-month accumulation phase had no structure but set up the supply/demand imbalance that the Sep 4 catalyst released. Challenges the idea that you need to identify a pattern *before* the catalyst — sometimes the catalyst IS the pattern."
+    "textbook_comparison": "Sep 4 gap meets EP criteria with flying colors: 21.3% gap, 5.2x volume. The AI's VCP classification (score 85) is technically correct \u2014 the Jun-Sep base has contraction characteristics \u2014 but the EP label (score 80) better describes the *entry mechanism*. The gap was the defining event, not the contraction. Both labels are valid: VCP describes the base shape, EP describes how you'd actually enter.",
+    "myth_bust_notes": "CIEN demonstrates that a slow grind (no tradable setup) can precede a textbook EP. The 5-month accumulation phase had no structure but set up the supply/demand imbalance that the Sep 4 catalyst released. Challenges the idea that you need to identify a pattern *before* the catalyst \u2014 sometimes the catalyst IS the pattern."
+  },
+  "ASTS_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 487.37,
+    "period": "2025-01-29 to 2025-10-16",
+    "snapshot": {
+      "price_range": "$17.50 -> $102.79",
+      "ema10_adherence_pct": 53,
+      "worst_drawdown_pct": -48.7,
+      "days_over_10pct_underwater": 133,
+      "trend_slope_per_day": "$0.40/day (2.24%/day)",
+      "big_gaps": [
+        "2025-01-31: +5.7% gap, 3.1x vol",
+        "2025-02-26: +9.2% gap, 1.6x vol",
+        "2025-03-03: +7.3% gap, 1.4x vol",
+        "2025-03-04: +14.2% gap, 0.3x vol (low vol \u2014 likely pre-market move)",
+        "2025-05-02: +5.8% gap, 2.0x vol",
+        "2025-08-12: +11.6% gap, 1.5x vol",
+        "2025-09-08: -13.0% gap, 2.0x vol (shakeout)",
+        "2025-10-01: +9.0% gap, 2.0x vol",
+        "2025-10-08: +13.5% gap, 3.7x vol \u2014 THE catalyst"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-01-29 to 2025-03-05",
+        "pct_gain": "~70%",
+        "setup": "NO SETUP",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Initial gap-driven surge from $17.50 to ~$30. Multiple gap-ups in quick succession (Jan 31 +5.7%, Feb 26 +9.2%, Mar 3-5 cluster of three consecutive gaps). But the gaps are news-driven and the volume on Mar 4 (+14.2% gap) was only 0.3x \u2014 not institutional. No base, no pivot, no structure. You'd need to be already watching the name or chasing gap-ups to catch this. Not a repeatable entry."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-03-05 to 2025-04-07",
+        "pct_gain": "~-45%",
+        "setup": "NO SETUP",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Brutal shakeout. Stock gives back all of Leg 1 and more, falling from ~$30 to $22. Three gap-downs (Mar 31 -5.1%, Apr 3 -10.4%, Apr 7 -7.8%). Anyone who chased the Leg 1 gaps is deeply underwater. This is the phase that separates conviction holders from momentum traders \u2014 and momentum traders would be stopped out."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-04-07 to 2025-09-25",
+        "pct_gain": "~70%",
+        "setup": "NO SETUP (grinding recovery)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Five-month recovery grind from $22 to ~$37. Some gap-ups along the way (Apr 23, May 2, May 12, Aug 12) but also gap-downs (Jun 25, Jul 25, Sep 8 -13.0%). The stock makes new highs in July ($45-47) but then gives it back again with a -13% gap on Sep 8. 10EMA is unreliable \u2014 stock whipsaws through it repeatedly. No identifiable base or consolidation pattern. This is accumulation territory but not tradable with defined risk."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-25 to 2025-10-16",
+        "pct_gain": "~175%",
+        "setup": "Episodic Pivot",
+        "entry": "Post Oct 8 gap consolidation (~$80-85 area)",
+        "stop": "Below Oct 8 gap-day low (~$72)",
+        "tradable": true,
+        "rationale": "Oct 1: +9.0% gap on 2.0x vol starts the move. Then Oct 8: +13.5% gap on 3.7x vol \u2014 this is the defining EP event. Strongest volume confirmation in the entire move. Stock goes from ~$37 to $103 in 3 weeks. If the post-Oct-8 consolidation was tight (need to verify on lower timeframe), this is a textbook EP entry. By this point the stock is already at $80+ (nearly 5x from the low), so you're entering very late \u2014 but the Oct 8 catalyst changes the character completely."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Leg 4 (Oct 8 EP) \u2014 the only structured entry with institutional volume confirmation, but you're entering at $80+ after a $17\u2192$80 run",
+      "concern": "Only 53% above 10EMA. Worst drawdown -48.7%. 133 days >10% underwater (73% of the move!). 21 gap events (>5%) in 181 days \u2014 one every 8-9 days. This stock trades on news, not structure. Would be shaken out multiple times in legs 1-3."
+    },
+    "textbook_comparison": "Oct 8 gap meets EP criteria cleanly: 13.5% gap on 3.7x volume from an extended base. But the overall move defies textbook structure \u2014 it's a news-driven, gap-heavy path with no identifiable base pattern. The 'simple breakout' the user identifies is accurate: there's no VCP/Cup/Flat Base, just a long choppy accumulation followed by an explosive catalyst.",
+    "myth_bust_notes": "Challenges the assumption that big winners have clean tradable structures from the start. ASTS is a 487% winner where 73% of the time you'd be >10% underwater. The only clean entry (Oct 8 EP) comes after the stock has already 5x'd. Sometimes big winners are simply not your trade."
+  },
+  "CIFR_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 1272.04,
+    "period": "2025-04-04 to 2025-11-05",
+    "snapshot": {
+      "price_range": "$1.86 -> $25.52",
+      "ema10_adherence_pct": 75,
+      "worst_drawdown_pct": -35.9,
+      "days_over_10pct_underwater": 57,
+      "trend_slope_per_day": "$0.15/day (7.23%/day)",
+      "big_gaps": [
+        "2025-05-12: +6.7% gap, 2.0x vol",
+        "2025-05-21: -7.7% gap, 4.0x vol (heavy selling)",
+        "2025-07-02: +9.4% gap, 3.5x vol \u2014 EP #1",
+        "2025-09-09: +5.7% gap, 2.0x vol",
+        "2025-11-03: +23.0% gap, 2.7x vol \u2014 EP #2"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-04 to 2025-06-30",
+        "pct_gain": "~85%",
+        "setup": "Round Bottom / NO SETUP",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Classic round bottom accumulation from $1.86 to ~$3.85. Stock starts 50-56% below all major MAs \u2014 completely washed out. Slow grind upward over 3 months. May 21 has a -7.7% gap on 4.0x volume \u2014 heavy shakeout that tests the low but holds. No identifiable breakout pivot, no contraction pattern. This is the base-building phase. The user correctly identifies this as a 'round bottom breakout' \u2014 the rounding shape is visible but there's no defined entry with risk."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-07-01 to 2025-08-14",
+        "pct_gain": "~40% (then gives back most)",
+        "setup": "Episodic Pivot",
+        "entry": "$5.50-6.00 area (post Jul 2 gap consolidation)",
+        "stop": "Below Jul 2 gap-day low (~$4.50)",
+        "tradable": true,
+        "rationale": "Jul 2: +9.4% gap on 3.5x volume \u2014 first real EP event. Stock doubles from $3.85 to $6.84 in weeks. This is the institutional arrival signal. But then a sharp pullback follows: Jul 23 -7.2%, Aug 1 -7.8% gaps pull stock back to $5.32 (-35% from peak). If you entered the EP and used a tight stop, you'd survive \u2014 gap-day low at ~$4.50 holds. But the pullback tests your conviction hard."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-08-14 to 2025-11-05",
+        "pct_gain": "~380%",
+        "setup": "Continuation (10EMA pullback entries) + Episodic Pivot",
+        "entry": "Various 10EMA bounces; Nov 3 EP for adds",
+        "stop": "Below 10EMA or 20EMA depending on position size",
+        "tradable": true,
+        "rationale": "The main trending leg. Stock goes from $5.32 to $25.52 \u2014 nearly 5x in under 3 months. 10EMA adherence is strong at 75% for the overall move, and likely higher during this leg specifically. Sep 9 +5.7% gap on 2.0x vol provides follow-through. Nov 3: +23.0% gap on 2.7x vol \u2014 explosive final EP. The user's assessment that 'the entire move is quite tradable with the bulk of the move respecting 10MA' is spot on \u2014 this leg respects 10EMA well and offers multiple pullback entries."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE \u2014 user confirms this matches their style",
+      "best_leg": "Leg 3 (Aug-Nov trend) \u2014 respects 10EMA, multiple clean pullback entries, strong volume confirmation. Leg 2 EP is the initial entry if you catch it.",
+      "concern": "The Jul-Aug pullback (-35.9%) after the Leg 2 EP tests conviction. Also, stock starts at $1.86 \u2014 very low-priced, which adds slippage risk and may have wider spreads. The 19 gap events (>5%) make this volatile overall."
+    },
+    "textbook_comparison": "Jul 2 gap meets EP criteria: 9.4% gap on 3.5x volume. Nov 3 is a monster EP: 23% gap on 2.7x volume. The user's 'round bottom breakout' classification is accurate \u2014 the rounding base from Apr-Jun is textbook accumulation. This combines a round bottom (base shape) with EP (entry mechanism) \u2014 the base is the shape, the gap is how you enter. Both labels are valid.",
+    "myth_bust_notes": "CIFR shows that a stock starting 56% below its 200 SMA can still be a 1200%+ winner. Traditional Stage Analysis would skip this as Stage 1/4 \u2014 but the round bottom + EP combination works here. Also validates the user's style preference: when the 10EMA holds, this user can sit through the move. The 75% adherence rate appears to be the threshold for 'tradable' in their style."
+  },
+  "MU_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 385.59,
+    "period": "2025-04-07 to 2025-12-30",
+    "snapshot": {
+      "price_range": "$61.54 -> $298.83",
+      "ema10_adherence_pct": 69,
+      "worst_drawdown_pct": -26.1,
+      "days_over_10pct_underwater": 38,
+      "trend_slope_per_day": "$1.21/day (1.77%/day)",
+      "big_gaps": [
+        "2025-04-08: +5.8% gap, 1.4x vol",
+        "2025-04-14: +7.4% gap, 1.5x vol",
+        "2025-05-12: +8.1% gap, 1.2x vol",
+        "2025-09-11: +5.5% gap, 2.6x vol",
+        "2025-12-18: +13.8% gap, 2.6x vol \u2014 earnings EP"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-07 to 2025-06-12",
+        "pct_gain": "~70%",
+        "setup": "Breakout from tariff low",
+        "entry": "$72-75 area (Apr 8-14 gap cluster recovery)",
+        "stop": "Below Apr 7 low ($61.54)",
+        "tradable": "Partially \u2014 aggressive entry at the tariff bounce",
+        "rationale": "MU bottoms at $61.54 on Apr 7 (tariff panic), then gaps up Apr 8 (+5.8%), pulls back Apr 10 (-6.9%), then gaps up again Apr 14 (+7.4%). This is a V-shaped recovery from a market-wide event, not a stock-specific base. Entry is possible if you recognize the tariff overreaction and buy the recovery, but there's no traditional base structure. Stock was 26-33% below all MAs at the start \u2014 deep value territory but scary."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-06-12 to 2025-08-19",
+        "pct_gain": "~5%",
+        "setup": "Flat Base",
+        "entry": "$120-125 area (breakout above $116-118 range highs)",
+        "stop": "Below $108-110 (range lows)",
+        "tradable": true,
+        "rationale": "Two-month flat consolidation between ~$110 and ~$124. Jul 17 dips to $113 but holds structure. This is textbook flat base behavior: tight range, volume dries up, price digests the Leg 1 gains. The user notes Jul would have been disappointing \u2014 price went sideways and had a brief dip below $113. But the base depth is only ~12% (within the 15% flat base threshold), and it resolves to the upside in late Aug. Patience required."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-08-19 to 2025-12-30",
+        "pct_gain": "~145%",
+        "setup": "Continuation + Episodic Pivot",
+        "entry": "Post-flat-base breakout ~$125; adds on Sep 11 gap and Dec 18 EP",
+        "stop": "Trailing 20EMA or 50SMA depending on position timing",
+        "tradable": true,
+        "rationale": "The main trending leg. Stock goes from $122 to $299. Sep 11 +5.5% gap on 2.6x vol provides momentum confirmation. The trend is orderly \u2014 69% above 10EMA overall, and likely higher during this specific leg. Only 38 days >10% underwater (20% of total). Dec 18: +13.8% gap on 2.6x vol \u2014 massive earnings EP that pushes stock from $230 to $299 in the final weeks. Multiple add points on pullbacks to 20EMA."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 3 (Aug-Dec trend) \u2014 orderly trend after the flat base breakout. Dec 18 earnings EP is a bonus catalyst. Leg 2 flat base is the defined-risk entry.",
+      "concern": "The user says 'the tempo and swing are not my best trade candidate' and 'Jul would have gotten me very disappointed.' The 2-month sideways period (Leg 2) tests patience, and the overall move takes 9 months \u2014 long hold required. The -26% max drawdown is moderate but the multiple swing back-and-forth within the flat base would frustrate an active trader."
+    },
+    "textbook_comparison": "Leg 2 meets Flat Base criteria: ~12% depth, 10+ weeks duration, horizontal range. The breakout in Aug resolves cleanly. This is one of the cleaner textbook examples in our reviewed set. Dec 18 gap also meets EP criteria: 13.8% gap on 2.6x vol. MU demonstrates the 'flat base within a trend' pattern that Minervini describes \u2014 initial advance (Leg 1), consolidation (Leg 2), then continuation (Leg 3).",
+    "myth_bust_notes": "MU validates the flat base pattern as described by the textbook \u2014 but the user's self-awareness about their style is key. Knowing that the Jul sideways period would have caused them to exit early is exactly the kind of insight that builds a playbook. The pattern worked, but it doesn't match this trader's temperament. Pattern correctness \u2260 style fit."
+  },
+  "AVAV_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 370.0,
+    "period": "2025-04-07 to 2025-12-11",
+    "snapshot": {
+      "price_range": "$113.38 -> $417.86",
+      "ema10_adherence_pct": 63,
+      "ema20_adherence_pct": 69,
+      "worst_drawdown_pct": -42.7,
+      "days_over_10pct_underwater": 77,
+      "sma50_touches": 19,
+      "trend_slope_per_day": "$0.79/day (0.70%/day)",
+      "big_gaps": [
+        "2025-04-08: +5.6% gap, 1.9x vol",
+        "2025-06-25: +15.8% gap, 9.7x vol \u2014 THE catalyst EP",
+        "2025-07-01: -7.7% gap, 4.2x vol (shakeout/profit-taking)",
+        "2025-12-10: -6.1% gap, 4.3x vol (late breakdown)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-07 to 2025-06-24",
+        "pct_gain": "~70%",
+        "setup": "Breakout from downtrend / recovery",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Recovery from tariff low ($113) to ~$190. Slow grind upward over 2.5 months. Stock starts 22-36% below all MAs \u2014 deep in downtrend. The Apr 8 gap (+5.6% on 1.9x vol) is a market-wide bounce, not stock-specific. Price gradually climbs back through the 50SMA but without conviction \u2014 touches 50SMA 19 times during the entire move. This is the rebuilding phase. No clean base, no contraction, no EP. User correctly identifies this as 'not a double bottom' and 'simple breakout from downtrend.'"
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-25 to 2025-07-01",
+        "pct_gain": "~25% (then gives back)",
+        "setup": "Episodic Pivot",
+        "entry": "$220-230 area (post Jun 25 gap consolidation)",
+        "stop": "Below Jun 25 gap-day low (~$195)",
+        "tradable": true,
+        "rationale": "Jun 25: +15.8% gap on 9.7x volume \u2014 massive EP event. This is unmistakably institutional. Stock surges from ~$190 to ~$240 in a day. However, Jul 1 gives back with a -7.7% gap on 4.2x vol \u2014 heavy profit-taking. The EP signal is real but the immediate follow-through is violent. If you entered and your stop held (gap-day low ~$195), you survive. But the whipsaw would be scary."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-07-01 to 2025-10-07",
+        "pct_gain": "~65%",
+        "setup": "Continuation (choppy)",
+        "entry": "Various MA bounces, but unreliable",
+        "stop": null,
+        "tradable": "Partially \u2014 but very choppy",
+        "rationale": "Post-EP grind from ~$240 to ~$395. The stock makes new highs in October but the path is punishing: drops below 10EMA frequently (only 63% adherence overall), -42.7% worst drawdown somewhere in this range. The user's assessment \u2014 'only the final leg was reasonably tradable' \u2014 aligns with this. You'd need a very wide stop (probably 50SMA) to survive the swings, but then your risk/reward deteriorates. 19 days touching 50SMA confirms constant revisiting."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-07 to 2025-12-11",
+        "pct_gain": "~-37%",
+        "setup": "NO SETUP (decline)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "The move peaks around $395-418 in early October, then breaks down. Dec 10: -6.1% gap on 4.3x vol \u2014 institutional selling. Stock ends at $250, giving back a third of the entire move. This is the exit signal for anyone still holding."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE \u2014 user confirms",
+      "best_leg": "Leg 2 (Jun 25 EP) \u2014 the EP event is real but followed by immediate shakeout. Leg 3 final push toward $395 is the 'reasonably tradable' part the user mentions.",
+      "concern": "Only 63% above 10EMA. 19 days touching 50SMA. Worst drawdown -42.7%. This is exactly the AU-type stock the user dislikes \u2014 keeps visiting 50EMA, would be stopped out repeatedly. The move took too long to shape up, and only accelerated briefly."
+    },
+    "textbook_comparison": "Jun 25 gap meets EP criteria: 15.8% gap on 9.7x volume \u2014 one of the strongest EPs in our sample. But the immediate -7.7% gap on Jul 1 shows that even strong EPs can fail to follow through. The AI's Double Bottom classification was wrong \u2014 user correctly rejects it.",
+    "myth_bust_notes": "A monster EP (15.8% gap, 9.7x vol) doesn't guarantee a clean trend afterwards. AVAV had the strongest single EP event in our reviewed set, yet the post-EP trend was one of the choppiest. EP quality at entry \u2260 trend quality for holding."
+  },
+  "AU_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 350.0,
+    "period": "2025-02-28 to 2025-10-22",
+    "snapshot": {
+      "price_range": "$29.47 -> $79.94",
+      "ema10_adherence_pct": 76,
+      "ema20_adherence_pct": 84,
+      "worst_drawdown_pct": -20.2,
+      "days_over_10pct_underwater": 27,
+      "sma50_touches": 7,
+      "trend_slope_per_day": "$0.23/day (0.77%/day)",
+      "big_gaps": [
+        "2025-04-09: +9.4% gap, 2.4x vol",
+        "2025-04-11: +7.4% gap, 2.5x vol",
+        "2025-04-16: +6.4% gap, 1.6x vol",
+        "2025-04-23: -7.3% gap, 2.4x vol (shakeout)",
+        "2025-05-12: -9.5% gap, 1.8x vol (shakeout)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-02-28 to 2025-04-02",
+        "pct_gain": "~25%",
+        "setup": "VCP / Breakout",
+        "entry": "$33-35 area (breakout above March consolidation)",
+        "stop": "Below $30 (range low)",
+        "tradable": true,
+        "rationale": "Stock builds a base from $29-33 in March, breaks out above the range. Already above all MAs (SMA50 +5%, SMA200 +8%) at start \u2014 stock was in an uptrend before the move. This is a clean initial breakout from a shallow base. VCP-like contraction visible if you look at the tightening range in late February."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-04-02 to 2025-05-14",
+        "pct_gain": "~20% (with violent swings)",
+        "setup": "Episodic Pivot cluster",
+        "entry": "$40-42 area (post Apr 9-11 gap cluster)",
+        "stop": "Below Apr 9 gap-day low (~$36)",
+        "tradable": "Technically yes, but violent",
+        "rationale": "Apr 9: +9.4% gap, Apr 11: +7.4% gap, Apr 16: +6.4% gap \u2014 three EP-caliber events in one week. But then Apr 23: -7.3% gap gives it all back, and May 12: -9.5% gap shakes out further. This is the exact pattern the user hates: gap up \u2192 return to entry \u2192 gap down. Even though the stock ultimately continues higher, the swing violence would trigger the user's exit instinct on every pullback."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-05-14 to 2025-10-22",
+        "pct_gain": "~55%",
+        "setup": "Continuation (20MA rider)",
+        "entry": "Various 20EMA pullbacks",
+        "stop": "Below 50SMA",
+        "tradable": "On paper yes \u2014 84% above 20EMA. In practice, too slow for this user.",
+        "rationale": "The main trending leg. Stock grinds from $43 to $80 over 5 months. 20EMA adherence is 84% \u2014 objectively one of the best trends in our sample. But the user identifies the core problem: 'I would not be able to hold this. It revisits the 50EMA often. Stopped out a million times.' The stock IS a clean trend by the numbers (76% above 10EMA, only -20% max drawdown, only 7 50SMA touches), but its TEMPO is wrong \u2014 it moves slowly with wide daily ranges that trigger the user's exit instinct."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE \u2014 user explicitly rejects despite objectively strong metrics",
+      "best_leg": "Leg 3 is objectively the cleanest trend in our sample (76% 10EMA, 84% 20EMA, -20% max DD). But the tempo doesn't match \u2014 too slow, too much range for the user's swing style.",
+      "concern": "This is a critical calibration data point. AU has BETTER quantitative metrics than CIFR (76% vs 75% 10EMA, 84% vs N/A 20EMA, -20% vs -36% DD). Yet the user rejects AU and embraces CIFR. The differentiator isn't the numbers \u2014 it's the TEMPO. CIFR moves fast with momentum, AU grinds slowly. The user's style requires SPEED + cleanliness, not just cleanliness alone."
+    },
+    "textbook_comparison": "AU is a textbook Stage 2 uptrend by Minervini's criteria: above all MAs, orderly advances with shallow pullbacks. The VCP in Leg 1 is valid. But the user's self-knowledge says this pattern doesn't suit their execution style \u2014 a crucial insight that generic textbook analysis misses.",
+    "myth_bust_notes": "AU is the most important calibration data point so far. It proves that 10EMA adherence alone doesn't determine tradability for this user. AU at 76% is rejected while CIFR at 75% is embraced. The missing variable is TEMPO/SPEED \u2014 how quickly the stock moves between pullbacks. Need to find a quantitative proxy for this (possibly ADR%, avg daily % change, or slope per day)."
+  },
+  "ALAB_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 500.0,
+    "period": "2025-04-07 to 2025-12-19",
+    "snapshot": {
+      "price_range": "$55.16 -> $262.90",
+      "ema10_adherence_pct": 60,
+      "ema20_adherence_pct": 61,
+      "worst_drawdown_pct": -50.0,
+      "days_over_10pct_underwater": 87,
+      "sma50_touches": 12,
+      "trend_slope_per_day": "$0.61/day (1.11%/day)",
+      "big_gaps": [
+        "2025-05-07: -5.6% gap, 2.2x vol",
+        "2025-05-12: +12.4% gap, 1.6x vol \u2014 EP #1",
+        "2025-07-21: +8.5% gap, 2.9x vol \u2014 EP #2",
+        "2025-08-06: +21.7% gap, 3.3x vol \u2014 THE catalyst EP",
+        "2025-09-24: -7.9% gap, 2.1x vol (crash)",
+        "2025-10-06: +13.9% gap, 1.4x vol (recovery)",
+        "2025-10-14: -7.9% gap, 2.8x vol (crash again)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-07 to 2025-05-06",
+        "pct_gain": "~30%",
+        "setup": "Recovery / initial base",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Recovery from tariff low ($55) to ~$72. Multiple small gaps both ways in April as the market whipsaws. Stock is 29-35% below all MAs \u2014 completely washed out. No identifiable setup yet, just a V-recovery bounce. Too early and too risky."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-05-07 to 2025-07-20",
+        "pct_gain": "~25%",
+        "setup": "VCP / Flat Base forming",
+        "entry": "$85-90 area (breakout above May consolidation range)",
+        "stop": "Below $75 (range bottom)",
+        "tradable": true,
+        "rationale": "May 12: +12.4% gap on 1.6x vol \u2014 first EP signal. Stock builds a consolidation range $70-90 over May-July. The base is forming with decreasing volatility \u2014 VCP characteristics. Volume dries up through June-July. User's assessment: 'setup not bad, kinda tradable.' This is the first defined-risk entry. The gap-ups both held and continued."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-07-21 to 2025-09-23",
+        "pct_gain": "~150% (then gives back half)",
+        "setup": "Episodic Pivot (double)",
+        "entry": "$110-115 area (post Jul 21 gap); or $160-170 area (post Aug 6 gap)",
+        "stop": "Below gap-day low of respective EP",
+        "tradable": true,
+        "rationale": "Jul 21: +8.5% gap on 2.9x vol \u2014 EP #2. Then Aug 6: +21.7% gap on 3.3x vol \u2014 the defining event. Stock explodes from ~$100 to $260+ in weeks. This is the acceleration phase \u2014 exactly the 10MA tracking moment. But then Sep 24-25: back-to-back gap-downs (-7.9%, -6.2%) crash it back to $160. The move is real but the volatility is extreme."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-23 to 2025-12-19",
+        "pct_gain": "~0% (volatile sideways/decline)",
+        "setup": "NO SETUP (choppy post-peak)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Stock whipsaws between $140 and $230 for 3 months with enormous gaps both ways (Oct 6 +13.9%, Oct 14 -7.9%, Nov 20 +8.8%, Dec 9 -6.6%). This is untradable noise. 23 gap events >5% during the entire move \u2014 one every 7-8 days. Only 60% above 10EMA. Would be stopped out constantly."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE \u2014 Leg 3 EP acceleration is the shot, but extreme volatility overall",
+      "best_leg": "Leg 3 (Jul-Aug EP cluster) \u2014 the Aug 6 +21.7% gap on 3.3x vol is the moment. If you catch the 10MA tracking phase between Aug 6 and Sep 23, that's the clean swing.",
+      "concern": "23 gap events in 179 days, -50% worst drawdown, only 60% above 10EMA. This stock is fundamentally volatile. Even the 'good' leg (3) ends with a crash. The user's 'kinda tradable' is the right call \u2014 the VCP/Flat Base in Leg 2 is the defined-risk entry, but you need the conviction to hold through the Aug gap for the payoff."
+    },
+    "textbook_comparison": "The Aug 6 EP (21.7% gap, 3.3x vol) is one of the strongest in our set. The May-Jul base shows VCP characteristics (contracting range, volume dry-up). User correctly tags both VCP and Flat Base \u2014 both descriptions are valid for the Leg 2 consolidation.",
+    "myth_bust_notes": "ALAB shows that even 'kinda tradable' setups can produce 500% gains. The VCP/Flat Base was real, the EP acceleration was textbook. But the post-peak destruction (Leg 4) shows why exit discipline matters \u2014 topic for Stage 2."
+  },
+  "CRWV_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 800.0,
+    "period": "2025-02-07 to 2025-06-30",
+    "snapshot": {
+      "price_range": "$40.00 -> $187.00",
+      "ema10_adherence_pct": 77,
+      "ema20_adherence_pct": 75,
+      "worst_drawdown_pct": -48.1,
+      "days_over_10pct_underwater": 40,
+      "sma50_touches": 0,
+      "trend_slope_per_day": "$1.92/day (4.81%/day)",
+      "big_gaps": [
+        "2025-04-02: +6.4% gap (tariff bounce)",
+        "2025-04-03: -9.7% gap (selloff)",
+        "2025-04-07: -8.2% gap (continuation down)",
+        "2025-05-01: +13.9% gap \u2014 EP #1",
+        "2025-05-27: +6.4% gap",
+        "2025-06-06: +7.3% gap"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-02-07 to 2025-04-22",
+        "pct_gain": "~0% (volatile, no progress)",
+        "setup": "IPO Base (forming)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Recent IPO. Stock oscillates around $40-50 with huge swings. Apr 3: -9.7% gap, Apr 7: -8.2% gap crush it back to the low $30s. This is the shakeout phase of an IPO base \u2014 volatility without direction. No tradable structure. The -48% drawdown likely occurs here."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-04-22 to 2025-05-14",
+        "pct_gain": "~75%",
+        "setup": "Episodic Pivot",
+        "entry": "$52-55 area (post May 1 gap consolidation)",
+        "stop": "Below May 1 gap-day low",
+        "tradable": true,
+        "rationale": "May 1: +13.9% gap \u2014 the IPO base breaks. This is the first real institutional signal. Stock goes from $40 to $67 in two weeks. The gap is massive and on huge volume. If the post-gap consolidation was tight, this is a textbook EP entry from an IPO base. Fast, decisive, exactly the kind of acceleration the user looks for."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-05-14 to 2025-06-30",
+        "pct_gain": "~150%",
+        "setup": "Continuation (10EMA rider)",
+        "entry": "10EMA pullback entries; add on May 27 and Jun 6 gaps",
+        "stop": "Below 10EMA",
+        "tradable": true,
+        "rationale": "The explosive trending leg. Stock goes from $67 to $187 \u2014 almost 3x in 6 weeks. 77% above 10EMA, 0 touches of 50SMA \u2014 the stock NEVER went back to the 50SMA. This is exactly the 10EMA tracking phase the user describes as 'my shot.' User's note: 'fantastic trade, entire move right above 10MA, strong moves up almost non-stop.' But the user also flags: 'the huge pullback above 10MA... I would have felt so uncomfortable... good chance I exit in late May.' Even on the best possible chart, the wide range triggers the exit instinct."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE \u2014 user calls it 'fantastic trade' but admits they'd probably exit early",
+      "best_leg": "Leg 3 \u2014 textbook 10EMA rider. Zero 50SMA touches. This is the ideal chart for this user's style. The challenge is purely psychological: holding through wide-range days despite the trend being intact.",
+      "concern": "The user's self-awareness is the key insight: even on a chart that is objectively PERFECT for their stated style (10EMA, no 50SMA visits, strong momentum), they'd still exit early. This suggests the holding problem isn't about chart quality \u2014 it's about position sizing or daily volatility tolerance. Stage 2 topic."
+    },
+    "textbook_comparison": "IPO Base \u2192 EP breakout \u2192 10EMA trend is a textbook Qullamaggie sequence. The May 1 gap is the defining event. Post-EP trend quality (77% 10EMA, 0 50SMA touches) is exceptional. CRWV is the gold standard in our set for what a clean tradable move looks like.",
+    "myth_bust_notes": "CRWV proves that even when a stock does EVERYTHING right by the user's criteria (clean 10EMA, no 50SMA visits, strong gaps, fast tempo), the holding problem persists. This is the strongest evidence that Stage 2 needs to address position sizing and daily range tolerance, not just entry/setup quality. The user's edge is in identifying CRWV-type moves \u2014 their bottleneck is in staying in them."
+  },
+  "HOOD_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 418.75,
+    "period": "2025-04-07 to 2025-10-06",
+    "snapshot": {
+      "price_range": "$29.66 -> $153.86",
+      "ema10_adherence_pct": 84,
+      "ema20_adherence_pct": 87,
+      "worst_drawdown_pct": -21.4,
+      "days_over_10pct_underwater": 14,
+      "sma50_touches": 8,
+      "trend_slope_per_day": "$0.86/day (2.44%/day)",
+      "big_gaps": [
+        "2025-04-23: +7.6% gap, 1.0x vol (recovery)",
+        "2025-05-12: +8.3% gap, 0.9x vol (continuation, not EP-caliber volume)",
+        "2025-09-08: +9.3% gap, 2.2x vol \u2014 EP but last leg"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-07 to 2025-04-30",
+        "pct_gain": "~40%",
+        "setup": "Recovery / VCP base forming",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Chaotic recovery from tariff low ($29.66). Massive intraday ranges (25%, 27%, 14%). Stock whipsaws above and below 10EMA. By late April it reclaims the 50SMA (~$47). The VCP is starting to form but this leg is too volatile to trade \u2014 no defined risk."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-05-01 to 2025-06-24",
+        "pct_gain": "~80%",
+        "setup": "VCP (classic)",
+        "entry": "$52-54 area (May 8 breakout from first consolidation) or $70-72 area (Jun 2 breakout from May tight range)",
+        "stop": "Below $46-48 (consolidation range bottom) for May entry; below $64 for Jun entry",
+        "tradable": true,
+        "rationale": "This is the heart of the move. User correctly identifies a classic VCP: the Apr consolidation ($40-48) contracts into the May range ($46-58), which contracts further into the Jun 2-24 'base above a base' ($70-82). Each contraction is tighter than the last. May 1 is where 'things get interesting' \u2014 EMAs realign, stock consolidates above 10/20 EMA. May 8 is the first breakout from the consolidation range \u2014 volume isn't strong (0.9x) but the structure is right. Jun 2 is a second entry as it breaks out of the May range. The entire May sits tight above 10EMA \u2014 textbook VCP volume dry-up."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-06-24 to 2025-09-05",
+        "pct_gain": "~35% (with nasty pullback)",
+        "setup": "Continuation (but loses character)",
+        "entry": null,
+        "stop": null,
+        "tradable": "If holding from Leg 2, this is the test of faith",
+        "rationale": "Late June acceleration ($76\u2192$94 on big volume) confirms the VCP breakout. But Jul-Aug gets rough: the $93\u2192$118\u2192$99 swing is a 77% retracement \u2014 watching your gains evaporate. Aug 19-20 drops below both 10 and 20 EMA. Sep 2-5 the stock sits on the 50SMA at $100-102. User's honest assessment: 'test of faith \u2014 would not have held through.' If stopped out here, the May 8 entry at $52 still yielded a 90% gain to the Jul peak at $100."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-08 to 2025-10-06",
+        "pct_gain": "~32%",
+        "setup": "Episodic Pivot (last leg)",
+        "entry": "$117 area (Sep 8 gap-day or Day 2)",
+        "stop": "Below Sep 8 gap-day low (~$110)",
+        "tradable": true,
+        "rationale": "Sep 8: +9.3% gap on 2.2x vol after 50SMA consolidation. Cleanest signal in the move but user correctly reads it as the LAST leg. The Oct 16 loss of the 20EMA confirms the move is ending. A good 32% trade in isolation, but if you're sizing up for a multi-month hold, this isn't the entry \u2014 the VCP breakout in May was."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE \u2014 VCP structure with good tempo",
+      "best_leg": "Leg 2 (May-Jun VCP breakout). May 8 or Jun 2 entry gives you the whole move with defined risk below the consolidation range. 84% above 10EMA, 2.44%/day slope \u2014 good speed.",
+      "concern": "The Aug pullback (77% retracement of Jul advance) is AU-type pain. User admits they wouldn't hold through it. But even if stopped out in Aug, the May entry yields 90%+ to the Jul peak. Sep 8 EP is the re-entry after the shakeout."
+    },
+    "textbook_comparison": "Textbook VCP through Apr-Jun: three successive tighter consolidations, each contracting in range and volume. User correctly identifies the VCP structure that the AI annotation (focused on EP events) missed. This proves the VCP label is valid and that base-structure entries can be superior to EP entries \u2014 May 8 breakout captures 4x the move vs Sep 8 EP.",
+    "myth_bust_notes": "HOOD is the strongest calibration point so far for AI vs user annotation. AI looked for the strongest single signal (Sep 8 EP) and called it 'best entry.' User looked for the earliest good-enough structural signal (May 8 VCP breakout) and correctly identified it as the real entry \u2014 because Sep 8 is the last leg before the Oct trend break. Lesson: don't wait for perfection. A VCP breakout with decent structure but weak volume can still be the right entry if the base pattern is clean.",
+    "ai_vs_user_comparison": {
+      "ai_best_entry": "Sep 8 EP ($117) \u2014 cleanest signal, defined risk",
+      "user_best_entry": "May 8 VCP breakout ($52-54) \u2014 structure-based, captures whole move",
+      "who_was_right": "User. Sep 8 works as a trade (+32%) but it's the last leg. May 8 entry captures the full VCP-to-acceleration sequence. The AI was hunting for EP catalysts when the real setup was the base structure.",
+      "lesson": "For this user, base-structure entries (VCP breakout) > catalyst entries (EP) when the VCP is clean. Only fall back to EP entry when the base phase is untradable (like CIEN's 5-month grind)."
+    }
+  },
+  "NBIS_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 670.62,
+    "period": "2025-04-07 to 2025-10-10",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$18.31 -> $141.10",
+      "ema10_adherence_pct": 75,
+      "ema20_adherence_pct": 82,
+      "worst_drawdown_pct": -21.3,
+      "days_over_10pct_underwater": 76,
+      "sma50_touches": 2,
+      "trend_slope_per_day": "$0.58/day (2.77%/day)",
+      "mean_adr_pct": 7.0,
+      "big_gaps": [
+        "2025-05-07: +10.0% gap, 1.6x vol",
+        "2025-05-12: +14.3% gap, 1.5x vol",
+        "2025-06-05: +5.2% gap, 4.9x vol (MAJOR EP)",
+        "2025-07-14: +10.5% gap, 1.8x vol",
+        "2025-08-07: +16.8% gap, 3.1x vol (EP)",
+        "2025-09-09: +51.9% gap, 6.6x vol (MONSTER EP)",
+        "2025-10-02: +7.1% gap, 1.6x vol"
+      ],
+      "retracement_ratios": [
+        "Jun pullback 17% (excellent)",
+        "Jul mid pullback 39% (OK)",
+        "Jul late pullback 58% (steep - AU territory)",
+        "Sep pullback 34% (healthy)",
+        "Post-monster EP 35% (healthy for +52% gap)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 5,
+        "period": "2025-04-07 to 2025-05-06",
+        "pct_gain": "~37%",
+        "setup": "NO SETUP (crash bottom base)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Crash bottom at $18.31 after 62% decline from Feb high ($48). Tight consolidation $20-25 with volume dry-up (0.3x avg). Below all MAs. No structure, no catalyst - just a bounce from capitulation. Not tradable but the volume dry-up is constructive for what comes next."
+      },
+      {
+        "leg": 2,
+        "of": 5,
+        "period": "2025-05-07 to 2025-06-01",
+        "pct_gain": "~52% ($25 -> $38)",
+        "setup": "Acceleration gaps",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Two gaps in one week (May 7 +10% on 1.6x vol, May 12 +14% on 1.5x vol) launched stock from $25 to $38 and above 50SMA. Emerging institutional interest but stock is still recovering from crash - MAs just starting to realign, no clean base structure to define risk against. Tradable in hindsight but in real-time this looks like a dead cat bounce until proven otherwise."
+      },
+      {
+        "leg": 3,
+        "of": 5,
+        "period": "2025-06-05 to 2025-08-06",
+        "pct_gain": "~45% ($38 -> $55 peak, settled $43-55)",
+        "setup": "EP",
+        "entry": "Day 2 at ~$46-48 (Jun 6 close $48.28)",
+        "stop": "Below gap-day low $41.40 (~13% risk)",
+        "tradable": true,
+        "rationale": "First clean EP above all MAs. Jun 5: +5.2% gap on 4.9x volume - clear institutional catalyst. Gap held entirely and stock consolidated above it for 2 months, never filling. Day 2 entry preferred (Jun 5 itself had a wide range $41.40-$49.73). The 2-month consolidation $43-55 that followed was choppy though - Jul 25 pullback retraced 58% of the Jun advance, which is AU-territory for this user. Holding through that chop would be very difficult."
+      },
+      {
+        "leg": 4,
+        "of": 5,
+        "period": "2025-08-07 to 2025-09-08",
+        "pct_gain": "~25% ($55 -> $76 peak, settled $63-73)",
+        "setup": "EP",
+        "entry": "Day 2 at ~$69 (Aug 8 close $68.78)",
+        "stop": "Below gap-day low $63.38 (~9% risk)",
+        "tradable": true,
+        "rationale": "Second EP. Aug 7: +16.8% gap on 3.1x volume. Stock ran to $76 in 4 days then pulled back to $63 area (34% retracement - healthy). But by now stock has 3.5x'd from the Apr low. The consolidation tracks around 20EMA, not 10EMA. Tradable as a standalone momentum play but this user would struggle with the post-EP chop down to the exact stop level area ($63)."
+      },
+      {
+        "leg": 5,
+        "of": 5,
+        "period": "2025-09-09 to 2025-10-10",
+        "pct_gain": "~120% ($64 -> $141)",
+        "setup": "EP (late/monster)",
+        "entry": "Day 2 at ~$93 (Sep 10 close $93.39)",
+        "stop": "Below gap-day low $86.12 (~8% risk)",
+        "tradable": "Tradable but late in the move",
+        "rationale": "Monster EP: +51.9% gap on 6.6x volume. Stock nearly doubled overnight ($64 -> $97 open). Intraday range on gap day was $86-$99 (14.6%!) - classic CRWV-type discomfort. Day 2 held above gap-day low. This is the last leg - stock broke 20EMA in late Oct. By HOOD calibration lesson: EP this late in a move (stock already 3.5x from low) is a momentum trade, not a position entry. 10EMA tracking was actually clean in this final 4-week sprint."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 3 (Jun 5 EP) - first EP above all MAs, earliest defined-risk entry, gap never filled",
+      "concern": "Between-EP consolidation is choppy (20EMA not 10EMA), 58% of the move spent >10% underwater, 7% mean ADR triggers exit instinct, Jul 58% retracement is AU-territory. This is NOT a smooth 10EMA trend stock - it's a staircase of catalyst events.",
+      "trading_mode": "EP hit-and-run, not swing-hold-10EMA. Each gap is tradable independently. The mistake would be entering on an EP and trying to hold through the next 6-week consolidation."
+    },
+    "textbook_comparison": "Not a classic setup from the taxonomy. Closest analogy is multiple EPs on a crash recovery, similar to an IPO base breakout pattern but with the added dynamic of a prior crash and recovery. Each individual EP meets EP criteria (gap >5%, vol >2.5x, holds above gap low) but the macro structure is a staircase, not a base breakout.",
+    "myth_bust_notes": "The 75% 10EMA adherence looks decent on paper but masks the reality: 76/130 days spent >10% underwater. This is CIFR's 75% vs AU's 76% all over again - the aggregate statistic doesn't tell you about the pain between the gaps. Also: a +670% move sounds like an easy hold, but the 21.3% worst drawdown and 7% ADR mean the daily experience was anything but easy.",
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Jun 5 EP, Day 2 (~$46-48)",
+      "key_insight": "NBIS represents a different trading mode - EP chain / staircase pattern. Not a hold-and-ride like CIFR. Each EP is an independent momentum trade. The between-EP consolidation (tracking 20EMA, not 10EMA, with steep retracements) makes this a multi-trade move, not a single-trade move."
+    },
+    "ai_vs_user_comparison": {
+      "ai_best_entry": "Jun 5 EP (Day 2, ~$46-48) \u2014 earliest EP above all MAs, gap never filled",
+      "user_best_entry": "Sep onwards \u2014 the only leg with clean enough price action to actually hold",
+      "who_was_right": "User. AI picked the theoretically earliest defined-risk entry but ignored that the 2-month post-EP consolidation (Jun-Aug) was choppy, faith-testing, and practically untradable for this style. User actually traded NBIS and confirmed: movements were not clean, stock repeatedly dipped below major MAs then gapped up \u2014 impossible to hold with confidence.",
+      "lesson": "Entry hierarchy (early > late) needs a qualifier: early entry wins ONLY when the subsequent trend matches your style. HOOD May VCP -> clean trend = early was right. NBIS Jun EP -> 2 months of chop = later clean-trend entry was actually better. The quality of the POST-entry price action matters as much as the entry itself. Also: \"not a name to chase on strong move up\" \u2014 even the EP hit-and-run approach is hard when post-gap pullbacks test your stop levels."
+    }
+  },
+  "PL_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 652.33,
+    "period": "2025-04-07 to 2025-12-23",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$2.79 -> $20.99",
+      "ema10_adherence_pct": 66,
+      "ema20_adherence_pct": 69,
+      "worst_drawdown_pct": -37.3,
+      "days_over_10pct_underwater": 133,
+      "sma50_touches": 15,
+      "trend_slope_per_day": "$0.067/day (2.06%/day)",
+      "mean_adr_pct": 6.7,
+      "big_gaps": [
+        "2025-06-05: +30.8% gap, 13.7x vol (EP TRAP \u2014 close below midrange, low below open)",
+        "2025-06-12: +15.1% gap, 4.4x vol (EP TRAP \u2014 reversed from 6.28 to close 5.46)",
+        "2025-07-01: +16.9% gap, 5.3x vol (EP TRAP \u2014 7.72 high, closed 6.16, entire gap returned)",
+        "2025-09-08: +18.0% gap, 6.9x vol (REAL EP \u2014 closed 9.67 near high 9.71)",
+        "2025-12-11: +22.0% gap, 5.5x vol (REAL EP \u2014 held and ran)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 5,
+        "period": "2025-04-07 to 2025-06-04",
+        "pct_gain": "~37% ($2.79 -> $3.99)",
+        "setup": "Base formation",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Long bottom base after crash from $6.36 to $2.79 (56% decline). Volume dried up to 0.3-1.1x avg. Range narrowed from 30%+ weekly to 7-10% by mid-May. Stock reclaimed 10/20 EMA by late Apr and 50SMA by mid-May. Constructive accumulation but no tradable entry \u2014 too low-priced, no catalyst, no structure to define risk against."
+      },
+      {
+        "leg": 2,
+        "of": 5,
+        "period": "2025-06-05 to 2025-08-31",
+        "pct_gain": "Net ~80% but round-tripped repeatedly",
+        "setup": "EP chain (TRAPS)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Three EP events, all traps. Jun 5: +30.8% on 13.7x vol looks incredible but low ($5.01) was BELOW open ($5.22) \u2014 massive intraday reversal, upper wick close. Gap filled by Jun 20. Jun 12: Another +15.1% gap reversed from $6.28 high to $5.46 close. Jul 1: Worst trap \u2014 +16.9% to $7.72 but closed $6.16, gave back the ENTIRE gap. This is exactly what user experienced: \"chase it, then it moved against you and sideway.\" The stock then chopped $6-7 for 2 months, testing 50SMA repeatedly. Untradable."
+      },
+      {
+        "leg": 3,
+        "of": 5,
+        "period": "2025-09-08 to 2025-10-15",
+        "pct_gain": "~56% ($9.67 -> $16.78)",
+        "setup": "EP",
+        "entry": "Day 2 at ~$9.02 (Sep 9 close), or wait for Sep 11 reclaim at $9.67",
+        "stop": "Below Day 2 low $8.51 (~6% risk from $9.02 entry)",
+        "tradable": true,
+        "rationale": "The REAL EP. Sep 8: +18% gap on 6.9x vol. Critical difference from the trap EPs: close at $9.67 was near the $9.71 high. Strong close = institutional commitment. Day 2 opened -10.7% gap down ($8.64) \u2014 shakeout \u2014 but recovered to $9.02. If you survived that, the stock ran cleanly along 10EMA for 5 weeks to $16+. The only leg of PL with clean 10EMA tracking."
+      },
+      {
+        "leg": 4,
+        "of": 5,
+        "period": "2025-10-16 to 2025-12-10",
+        "pct_gain": "-37% ($16.78 -> $10.52)",
+        "setup": "NO SETUP (correction)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Brutal correction. Broke 10EMA, then 20EMA, then 50SMA. Stock lost $6 in 6 weeks, round-tripping the entire Sep-Oct gain. If holding from Sep EP entry, this -37% drawdown from running high would have been devastating. The correction tested 50SMA as support around $11-12."
+      },
+      {
+        "leg": 5,
+        "of": 5,
+        "period": "2025-12-11 to 2025-12-23",
+        "pct_gain": "~60% ($12.94 -> $20.99)",
+        "setup": "EP (late)",
+        "entry": "Day 2 at ~$18.24 (Dec 12 close)",
+        "stop": "Below gap-day low $15.01 (~18% risk)",
+        "tradable": "Tradable but very late in the move",
+        "rationale": "Dec 11 EP: +22% gap on 5.5x vol. Strong close near high ($17.47 vs $17.98 high) \u2014 passes the EP quality test. Day 2 held. Ran to $21 in 2 weeks. But this is the last leg and the stop ($15.01) is 18% away from the Day 2 close \u2014 wide risk for a late-move entry."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Leg 3 (Sep 8 EP) \u2014 only leg with clean 10EMA tracking, but Day 2 gap-down shakeout would test resolve",
+      "concern": "66% 10EMA adherence (below threshold). 73% of the move spent >10% underwater. 15 touches of 50SMA. -37% worst drawdown. Three EP traps before the real one. Even the successful entry required surviving a Day 2 gap-down shakeout. The user already knows this from trading it \u2014 \"not a name to chase on strong move up.\"",
+      "trading_mode": "If trading at all: wait for EP close quality confirmation (close near high of day), enter Day 2 ONLY if it holds gap-day low. But even then, the Oct correction proves holding is brutal."
+    },
+    "textbook_comparison": "Multiple EPs on a low-priced recovering stock. The Jun 5 gap meets EP criteria quantitatively (>5% gap, >2.5x vol) but fails qualitatively \u2014 the intraday reversal (low below open) disqualifies it as a real EP entry. This introduces a new filter not in the setup definitions: EP close quality.",
+    "myth_bust_notes": "A +30.8% gap on 13.7x volume is the kind of signal that looks unambiguous on a screener. But PL proves that raw gap size and volume multiplier are NECESSARY but not SUFFICIENT for an EP entry. The intraday price action (where does it close relative to its range?) is the critical missing filter. Three massive gaps failed before one held.",
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Gap and Go"
+      ],
+      "direction": "long",
+      "best_entry": "Sep 8 EP, Day 2 (~$9.02) \u2014 only EP with strong close near high",
+      "key_insight": "PL introduces EP CLOSE QUALITY as a filter. Trap EPs close in the lower half of their range (Jun 5, Jun 12, Jul 1). Real EPs close near the high (Sep 8, Dec 11). This is a new tradability filter not yet in the playbook: if EP day closes well below its high with a long upper wick, it is a trap, not an entry."
+    }
+  },
+  "CLS_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 526,
+    "period": "2025-04-04 to 2025-11-05",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$58.05 -> $363.40",
+      "ema10_adherence_pct": 85,
+      "ema20_adherence_pct": 89,
+      "worst_drawdown_pct": -20.8,
+      "days_over_10pct_underwater": 33,
+      "sma50_touches": 2,
+      "mean_adr_pct": 5.5,
+      "big_gaps": [
+        "05/12: +7% gap, 1.2x vol, close@95% (strong)",
+        "08/05: +9% gap, 2.5x vol (EP)",
+        "09/04: +8% gap, 1.5x vol"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-04-30",
+        "pct_gain": "~60%",
+        "setup": "Crash recovery",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "V-shaped bounce from $58 crash low. Below all MAs. No structure."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-05-01 to 2025-07-25",
+        "pct_gain": "~95% ($89 -> $173)",
+        "setup": "Breakout + 10EMA trend",
+        "entry": "Reclaim above 50SMA ~$94 early May, or on 10EMA pullbacks",
+        "stop": "Below 20EMA (~8%)",
+        "tradable": true,
+        "rationale": "Clean 10EMA tracking for 12 weeks straight. Stock above all MAs, weekly ranges manageable. Steady grind with no 50SMA visits. This is CIFR-quality trend following."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-05 to 2025-09-28",
+        "pct_gain": "~45% ($170 -> $260)",
+        "setup": "EP + acceleration",
+        "entry": "Aug 5 EP Day 2 ~$195, or Sep 4 EP Day 2 ~$243",
+        "stop": "Below gap-day low",
+        "tradable": true,
+        "rationale": "Aug 5 EP (+9%, 2.5x vol) launched new leg. Brief 3-week pullback to $173 (17% retrace \u2014 healthy), then Sep 4 EP launched another acceleration. Both EPs had strong close quality."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-01 to 2025-11-05",
+        "pct_gain": "~40% ($244 -> $363)",
+        "setup": "10EMA acceleration",
+        "entry": "Pullback entries on 10EMA",
+        "stop": "Below 20EMA",
+        "tradable": true,
+        "rationale": "Final acceleration leg. Clean 10EMA tracking until the Nov 5 high. After that, stock became very choppy \u2014 $275-363 range with deep weekly swings. The move ended here."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE",
+      "best_leg": "Leg 2 \u2014 12 weeks of clean 10EMA tracking from May to Jul. CIFR-quality.",
+      "concern": "Post-Aug EP the stock gets faster and more volatile. The $173 pullback in Aug was -20% from the running high \u2014 painful but held 20EMA. After Nov 5 the stock broke down hard."
+    },
+    "textbook_comparison": "Clean breakout from crash low into sustained 10EMA trend. The Aug and Sep EPs accelerated the move. Textbook momentum stock behavior.",
+    "myth_bust_notes": "85% 10EMA adherence with only 22% of time >10% underwater \u2014 this is what a tradable move actually looks like.",
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout",
+        "EP"
+      ],
+      "direction": "long",
+      "best_entry": "Reclaim above 50SMA in early May (~$94), ride 10EMA trend",
+      "key_insight": "CLS is a CIFR-quality chart \u2014 clean 10EMA tracking, few 50SMA visits, manageable drawdowns. One of the best in the 2025 library."
+    }
+  },
+  "STRL_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 335,
+    "period": "2025-04-04 to 2025-11-04",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$96.34 -> $419.14",
+      "ema10_adherence_pct": 84,
+      "ema20_adherence_pct": 93,
+      "worst_drawdown_pct": -19.9,
+      "days_over_10pct_underwater": 35,
+      "sma50_touches": 0,
+      "mean_adr_pct": 4.7,
+      "big_gaps": [
+        "04/15: +8% gap, 2.0x vol (earnings?)",
+        "08/05: +9% gap, 2.5x vol (EP)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-04 to 2025-04-14",
+        "pct_gain": "~42% ($96 -> $137)",
+        "setup": "V-recovery + EP",
+        "entry": "Apr 15 gap entry ~$137",
+        "stop": "Below $100 (~27% \u2014 too wide)",
+        "tradable": "Partially \u2014 V-recovery, hard to time",
+        "rationale": "Sharp V-bounce from $96 crash low. Apr 15 gap +8% on 2.0x vol with close near low (close@7% \u2014 weak close quality). But stock held and never looked back."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-04-15 to 2025-08-04",
+        "pct_gain": "~95% ($137 -> $270)",
+        "setup": "10EMA trend",
+        "entry": "10EMA pullback entries throughout",
+        "stop": "Below 20EMA (~6-8%)",
+        "tradable": true,
+        "rationale": "Exceptional 16-week 10EMA trend. ZERO 50SMA touches. Stock just ground higher week after week. Low ADR (4.7%) made it comfortable to hold. This is the gold standard chart."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-08-05 to 2025-11-04",
+        "pct_gain": "~55% ($270 -> $419)",
+        "setup": "EP + acceleration",
+        "entry": "Aug 5 EP Day 2 ~$263",
+        "stop": "Below gap-day low $244 (~7%)",
+        "tradable": true,
+        "rationale": "Aug 5 EP (+9%, 2.5x vol) launched the acceleration phase. Brief 3-week pullback to $263 (14% retrace \u2014 healthy). Then climbed to $419. After Nov 4 high, stock crashed 25% in one week."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE",
+      "best_leg": "Leg 2 \u2014 16 weeks of clean 10EMA grind with ZERO 50SMA touches. Best chart in the library.",
+      "concern": "Lower ADR (4.7%) means slower tempo \u2014 user might find this too slow compared to CIFR-type. But the tradeoff is much easier holding. Nov breakdown was sharp."
+    },
+    "textbook_comparison": "Textbook momentum leader \u2014 steady uptrend, institutional accumulation, EP catalyst to accelerate. Zero 50SMA touches is extremely rare.",
+    "myth_bust_notes": "STRL proves that the best charts are often the quietest. 4.7% ADR is low for a 335% winner but it made holding effortless. Counterpoint to CRWV paradox \u2014 low volatility = easy hold.",
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout",
+        "EP"
+      ],
+      "direction": "long",
+      "best_entry": "10EMA pullback in May-Jun range ($150-190)",
+      "key_insight": "STRL is potentially the BEST chart in the entire library. 84% 10EMA, 0 50SMA touches, 24% underwater, 4.7% ADR. The opposite of AU/PL \u2014 smooth, holdable, and profitable."
+    }
+  },
+  "DAVE_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 338,
+    "period": "2025-04-07 to 2025-07-08",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$65.46 -> $286.45",
+      "ema10_adherence_pct": 86,
+      "ema20_adherence_pct": 83,
+      "worst_drawdown_pct": -23.5,
+      "days_over_10pct_underwater": 24,
+      "sma50_touches": 1,
+      "mean_adr_pct": 6.6,
+      "big_gaps": [
+        "05/08: +25% gap, 5.6x vol, close@98%range (STRONG EP)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-07 to 2025-05-07",
+        "pct_gain": "~60% ($65 -> $105)",
+        "setup": "Recovery + base",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "V-recovery from $65 crash low. Below MAs initially. Started building a base around $83-105 by early May. Not yet tradable \u2014 no clean structure."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-05-08 to 2025-07-08",
+        "pct_gain": "~173% ($105 -> $286)",
+        "setup": "EP (textbook)",
+        "entry": "May 8 EP Day 1 or Day 2 at ~$167",
+        "stop": "Below gap-day low $102 (~39% \u2014 wide) or below Day 2 low (~$168)",
+        "tradable": true,
+        "rationale": "May 8 EP: +25% gap on 5.6x vol with close at 98% of range \u2014 TEXTBOOK strong EP close. The stock more than doubled overnight. Ran cleanly along 10EMA for 8 weeks to $286. This is what a real EP looks like vs the PL traps."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-07-08 onwards",
+        "pct_gain": "N/A (post-move)",
+        "setup": "NO SETUP (collapse)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "After Jul 8 peak at $286, stock crashed 31% in one week to $196. Then bounced around $182-262 for months. Classic blow-off top followed by range-bound chop."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 2 \u2014 May 8 EP with textbook close quality (98% of range). 8-week 10EMA run.",
+      "concern": "The EP gap is huge (+25%) making the Day 1 entry at $167 risky (stop at gap low $102 = 39% risk). Day 2 tighter stop possible. Post-Jul collapse was brutal (-31% in a week). The holding period was good but the exit timing was critical."
+    },
+    "textbook_comparison": "Textbook EP \u2014 the May 8 gap is a perfect example. 5.6x vol, close at 98% of range. Compare to PL traps (close at 17-28% of range). EP close quality filter validated.",
+    "myth_bust_notes": "DAVE May 8 EP validates the close quality filter discovered in PL. 98% close = stock held and ran. 17% close (PL Jun 5) = trap.",
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP"
+      ],
+      "direction": "long",
+      "best_entry": "May 8 EP Day 2 (~$167-170)",
+      "key_insight": "DAVE validates the EP close quality filter \u2014 98% of range close = textbook strong EP. Compare to PL traps."
+    }
+  },
+  "JOBY_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 322,
+    "period": "2025-04-07 to 2025-08-04",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$4.96 -> $20.95",
+      "ema10_adherence_pct": 80,
+      "ema20_adherence_pct": 84,
+      "worst_drawdown_pct": -21.0,
+      "days_over_10pct_underwater": 41,
+      "sma50_touches": 7,
+      "mean_adr_pct": 6.2,
+      "big_gaps": [
+        "05/28: +17% gap, 7.3x vol, close@81% (GOOD EP)",
+        "06/03: +13% gap, 3.4x vol, close@9% (TRAP EP)",
+        "06/09: +10% gap, 3.1x vol, close@80% (GOOD EP)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-04-07 to 2025-05-27",
+        "pct_gain": "~33% ($5 -> $6.63)",
+        "setup": "Base formation",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Recovery from $4.96 low. Slow grind building base around $5.60-6.80. Reclaimed 50SMA by late Apr. Not yet tradable \u2014 no catalyst."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-05-28 to 2025-07-25",
+        "pct_gain": "~170% ($6.63 -> $18.55)",
+        "setup": "EP chain",
+        "entry": "May 28 EP Day 2 (~$7.50), or Jun 9 EP Day 2 (~$8.60",
+        "stop": "Below gap-day low $6.72 (~10% from May 28 entry)",
+        "tradable": true,
+        "rationale": "May 28 EP: +17%, 7.3x vol, close@81% \u2014 good EP quality. Jun 3 EP was a TRAP (close@9% of range). Jun 9 EP was real (close@80%). Stock then tracked 10EMA cleanly to $18+ by late Jul. The good/trap EP distinction applies here too."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-08-04 onwards",
+        "pct_gain": "N/A (post-move)",
+        "setup": "NO SETUP (decline)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "After $20.95 high, stock declined steadily. By Dec was back to $14. Classic post-move fade."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 2 \u2014 May 28 EP through Jul. Clean 10EMA trend for 8 weeks.",
+      "concern": "50% of move spent >10% underwater. 7 touches of 50SMA. The Jun 3 trap EP would have been expensive if chased. ADR 6.2% makes holding uncomfortable for some pullbacks."
+    },
+    "textbook_comparison": "EP chain with mixed quality \u2014 validates the close quality filter. May 28 (81%) and Jun 9 (80%) held. Jun 3 (9%) was a trap.",
+    "myth_bust_notes": "JOBY had both good and trap EPs in the same 2-week period. The close quality filter would have saved you from the Jun 3 trap.",
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "May 28 EP Day 2 (~$7.50)",
+      "key_insight": "Mixed EP quality in same stock \u2014 close quality filter separates the real entries from traps."
+    }
+  },
+  "COHR_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 339,
+    "period": "2025-04-04 to 2025-12-10",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$45.58 -> $200.19",
+      "ema10_adherence_pct": 77,
+      "ema20_adherence_pct": 82,
+      "worst_drawdown_pct": -31.6,
+      "days_over_10pct_underwater": 67,
+      "sma50_touches": 10,
+      "mean_adr_pct": 5.1,
+      "big_gaps": [
+        "06/30: +5% gap, 1.3x vol",
+        "08/20: -11% gap (earnings miss?)",
+        "11/06: +8%, 2.8x vol"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-05-01",
+        "pct_gain": "~55% ($46 -> $72)",
+        "setup": "Recovery",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "V-recovery from crash low. Below MAs, no structure."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-05-01 to 2025-08-14",
+        "pct_gain": "~60% ($72 -> $115)",
+        "setup": "10EMA trend",
+        "entry": "10EMA pullback entries",
+        "stop": "Below 20EMA",
+        "tradable": true,
+        "rationale": "Clean 10EMA tracking from May through mid-Aug. Above all MAs. Steady grind with 10 50SMA touches but mostly as support, not as resistance. Manageable ADR (5.1%)."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-18 to 2025-09-05",
+        "pct_gain": "-32% ($115 -> $84)",
+        "setup": "NO SETUP (shakeout)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Massive shakeout \u2014 stock dropped from $123 to $84 in one week (Aug 17). Broke all MAs. Anyone holding would have been stopped out. This is the kind of event that ends most positions."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-05 to 2025-12-10",
+        "pct_gain": "~130% ($85 -> $200)",
+        "setup": "Recovery + EP",
+        "entry": "Re-entry above 50SMA ~$97, or Nov 6 EP Day 2",
+        "stop": "Below 50SMA",
+        "tradable": "Partially \u2014 requires re-entry after shakeout",
+        "rationale": "Stock rebuilt above MAs by Sep 7, then ground higher. Nov 6 EP (+8%, 2.8x vol) launched the acceleration to $200. The hard part is re-entering after the Aug shakeout destroyed confidence."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 2 \u2014 May-Aug 10EMA trend before the shakeout. Clean and manageable.",
+      "concern": "The Aug shakeout (-32% in one week) is a deal-breaker for most positions. Even if you re-entered in Sep, the psychological damage from losing 32% in a week makes holding difficult. 10 touches of 50SMA throughout the move."
+    },
+    "textbook_comparison": "Classic shakeout-and-recovery pattern. The Aug crash tests conviction. Those who held or re-entered captured Leg 4 (+130%).",
+    "myth_bust_notes": "COHR shows that a single violent shakeout can make an otherwise tradable chart untradable. The Aug week was -32% \u2014 that ends most positions regardless of the subsequent recovery.",
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "10EMA pullback in Jun-Jul (~$80-90)",
+      "key_insight": "COHR was tradable until the Aug shakeout. The -32% weekly drop is a stop-out event that changes everything."
+    }
+  },
+  "RKLB_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 443,
+    "period": "2025-04-07 to 2025-12-24",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$14.71 -> $79.83",
+      "ema10_adherence_pct": 63,
+      "ema20_adherence_pct": 75,
+      "worst_drawdown_pct": -49.2,
+      "days_over_10pct_underwater": 138,
+      "sma50_touches": 15,
+      "mean_adr_pct": 7.3
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 2,
+        "period": "2025-04-07 to 2025-12-24",
+        "pct_gain": "443%",
+        "setup": "Choppy recovery",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "63% 10EMA, 76% underwater, -49% DD, 15 50SMA touches, 7.3% ADR. This is the anti-STRL \u2014 every metric is bad. The stock moved 443% but was nearly impossible to hold. Constant deep pullbacks, frequent MA violations, extreme volatility."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "No clearly tradable leg \u2014 even the best stretches had deep pullbacks",
+      "concern": "49% worst drawdown. 76% of time >10% underwater. 15 touches of 50SMA. Classic AU-type on steroids."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "None \u2014 untradable for this style",
+      "key_insight": "RKLB is the extreme version of AU \u2014 huge gains but impossible to hold. Every metric is below threshold."
+    }
+  },
+  "FLNC_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 647,
+    "period": "2025-04-21 to 2025-12-12",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$3.46 -> $25.85",
+      "ema10_adherence_pct": 64,
+      "ema20_adherence_pct": 68,
+      "worst_drawdown_pct": -38.6,
+      "days_over_10pct_underwater": 133,
+      "sma50_touches": 14,
+      "mean_adr_pct": 8.9
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 2,
+        "period": "2025-04-21 to 2025-12-12",
+        "pct_gain": "647%",
+        "setup": "Volatile low-priced recovery",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "64% 10EMA, 81% underwater, -39% DD, 14 50SMA touches, 8.9% ADR, 22+ gaps. Extremely volatile low-priced energy storage stock. The 8.9% mean ADR is the highest in the library \u2014 daily swings of 9% are impossible to hold through. 22 gaps in 165 bars means gap events every 7-8 days."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "No tradable leg \u2014 extreme volatility throughout",
+      "concern": "8.9% ADR is extreme. 81% underwater. This is CRWV problem multiplied \u2014 even perfect charts trigger exit instinct with these ranges."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "None",
+      "key_insight": "FLNC has the highest ADR in the library (8.9%). Even 647% gains are untradable when daily volatility is this extreme."
+    }
+  },
+  "QURE_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 821,
+    "period": "2025-04-09 to 2025-10-28",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$7.76 -> $71.50",
+      "ema10_adherence_pct": 63,
+      "ema20_adherence_pct": 66,
+      "worst_drawdown_pct": -38.0,
+      "days_over_10pct_underwater": 100,
+      "sma50_touches": 25,
+      "mean_adr_pct": 7.5,
+      "big_gaps": [
+        "04/17: +38% gap, 10.4x vol, close@28%range (TRAP EP \u2014 biotech gap-and-fade)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 2,
+        "period": "2025-04-09 to 2025-10-28",
+        "pct_gain": "821%",
+        "setup": "Biotech catalyst chain",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Apr 17 had a +38% gap on 10.4x vol \u2014 looks incredible on paper. But close at 28% of range = TRAP EP (PL filter applies). The stock then spent months chopping around 50SMA with 25 touches. 63% 10EMA, 71% underwater. Classic biotech \u2014 explosive on news, untradable in between."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "No tradable leg for this style. The Apr 17 gap was a trap (close@28%range). The stock chopped around 50SMA for the entire move.",
+      "concern": "25 touches of 50SMA \u2014 the worst in the library. 71% underwater. -38% DD. The EP close quality filter would have saved you from the Apr 17 trap."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP"
+      ],
+      "direction": "long",
+      "best_entry": "None",
+      "key_insight": "QURE validates EP close quality filter in biotech context. +38% gap on 10.4x vol but close@28% = trap. 25 touches of 50SMA is the worst in the library."
+    }
+  },
+  "SEDG_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 342,
+    "period": "2025-04-11 to 2025-11-10",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$11.00 -> $48.60",
+      "ema10_adherence_pct": 61,
+      "ema20_adherence_pct": 67,
+      "worst_drawdown_pct": -44.3,
+      "days_over_10pct_underwater": 108,
+      "sma50_touches": 7,
+      "mean_adr_pct": 8.6,
+      "big_gaps": [
+        "05/06: +15% gap, 4.2x vol, close@11%range (TRAP)",
+        "05/12: +8% gap, 2.4x vol, close@12%range (TRAP)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 2,
+        "period": "2025-04-11 to 2025-11-10",
+        "pct_gain": "342%",
+        "setup": "Choppy solar recovery",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "61% 10EMA (lowest in library), -44% DD (worst in library), 73% underwater. Two trap EPs in May (both close@11-12% of range). 8.6% ADR. Classic untradable solar stock \u2014 moves on macro/policy, not on clean setup patterns."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "No tradable leg. Both May EPs were traps (close@11-12% of range).",
+      "concern": "61% 10EMA and -44% DD are the worst metrics in the entire library. Both trap EPs validate the close quality filter."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "None",
+      "key_insight": "SEDG has the worst 10EMA adherence (61%) and worst drawdown (-44%) in the library. Two trap EPs with close@11-12%."
+    }
+  },
+  "AGX_2025": {
+    "reviewed_at": "2026-04-12",
+    "gain_pct": 295,
+    "period": "2025-03-10 to 2025-11-20",
+    "annotation_type": "AI independent attempt",
+    "snapshot": {
+      "price_range": "$101.02 -> $399.30",
+      "ema10_adherence_pct": 69,
+      "ema20_adherence_pct": 76,
+      "worst_drawdown_pct": -26.3,
+      "days_over_10pct_underwater": 83,
+      "sma50_touches": 21,
+      "mean_adr_pct": 5.4,
+      "big_gaps": [
+        "03/28: +20% gap, 3.3x vol, close@20%range (TRAP EP)"
+      ]
+    },
+    "legs": [
+      {
+        "leg": 1,
+        "of": 2,
+        "period": "2025-03-10 to 2025-11-20",
+        "pct_gain": "295%",
+        "setup": "Slow grind with 50SMA visits",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "69% 10EMA \u2014 below threshold. 21 touches of 50SMA \u2014 second worst in library (after QURE). The Mar 28 EP (+20%, 3.3x vol) was a trap (close@20% of range). Stock tracked 20EMA more than 10EMA, with constant pullbacks to 50SMA. 46% of time >10% underwater. Too slow and choppy for this style."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "No clearly tradable leg. The 20EMA tracking was decent (76% adherence) but 10EMA tracking was too weak.",
+      "concern": "21 touches of 50SMA. The stock is an AU-type slow grinder \u2014 looks smooth zoomed out but would shake you out repeatedly."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "None",
+      "key_insight": "AGX is an AU-type: looks smooth zoomed out, 21 50SMA touches up close. Mar 28 trap EP (close@20%). Not tradable for this style."
+    }
+  },
+  "LITE_2025": {
+    "snapshot": {
+      "price_range": "$45.65 -> $401.60",
+      "ema10_adherence_pct": 83,
+      "ema20_adherence_pct": 89,
+      "worst_drawdown_pct": -18.3,
+      "days_over_10pct_underwater": 29,
+      "sma50_touches": 3,
+      "mean_adr_pct": 5.6,
+      "longest_10ema_streak": "Jul 10 -> Sep 23 (53 days, ~10 weeks)",
+      "gaps_real_mid_trap": "1 real / 0 mid / 3 trap"
+    },
+    "gain_pct": 780,
+    "period": "2025-04-04 to 2025-12-24",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-06-09",
+        "pct_gain": "+66%",
+        "setup": "Base + initial lift",
+        "entry": "~$60 (late Apr 50SMA reclaim)",
+        "stop": "~$55",
+        "tradable": true,
+        "rationale": "71% 10EMA, 3 50SMA touches (all in first half), -18% DD. Off-low rally that transitions to clean trend. Entry is the May base breakout + 50SMA reclaim."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-10 to 2025-08-14",
+        "pct_gain": "+40%",
+        "setup": "Clean 10EMA grind",
+        "entry": null,
+        "stop": "10EMA pullback",
+        "tradable": true,
+        "rationale": "93% 10EMA, 0 50SMA touches, -7.7% DD \u2014 SHALLOWEST DD in the whole move. Pure grind from $82 to $115. Gold-standard leg."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-15 to 2025-10-20",
+        "pct_gain": "+39%",
+        "setup": "Continued trend",
+        "entry": null,
+        "stop": "10EMA pullback",
+        "tradable": true,
+        "rationale": "80% 10EMA, 0 50SMA touches. Still clean, slightly more volatile (-15.7% DD)."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-21 to 2025-12-24",
+        "pct_gain": "+143%",
+        "setup": "Parabolic completion + real EP",
+        "entry": "Nov 5 +16% EP close@71%",
+        "stop": "Below EP day low",
+        "tradable": true,
+        "rationale": "85% 10EMA, 0 50SMA touches, parabolic phase $163 -> $396. The Nov 5 real EP is an add/new momentum entry. Oct 27 and Nov 10 gaps are traps (close@22% and 23%) \u2014 signal the volatility even as trend holds."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE",
+      "best_leg": "Leg 2 (Jun 10 - Aug 14) is the cleanest \u2014 93% 10EMA, -7.7% DD. But all 4 legs are tradable for this style.",
+      "concern": "ADR 5.6% is moderate. 3 of 4 gaps are traps \u2014 the gap volatility would test faith even though the underlying trend holds. Parabolic Leg 4 is a reward phase, not a new entry zone (except the Nov 5 real EP)."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout",
+        "EP"
+      ],
+      "direction": "long",
+      "best_entry": "May 50SMA reclaim ~$60, add Nov 5 real EP",
+      "key_insight": "Gold-standard chart. 10-week clean 10EMA streak, 0 50SMA touches in Q2/Q3/Q4. Shallowest DD (-7.7%) in the middle leg. The trap gaps don't break the trend."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "STX_2025": {
+    "snapshot": {
+      "price_range": "$63.19 -> $308.93",
+      "ema10_adherence_pct": 80,
+      "ema20_adherence_pct": 85,
+      "worst_drawdown_pct": -22.2,
+      "days_over_10pct_underwater": 30,
+      "sma50_touches": 2,
+      "mean_adr_pct": 4.0,
+      "longest_10ema_streak": "Apr 17 -> Jul 8 (55 days, ~11 weeks)",
+      "gaps_real_mid_trap": "1 real / 0 mid / 0 trap"
+    },
+    "gain_pct": 389,
+    "period": "2025-04-09 to 2025-12-11",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-09 to 2025-06-09",
+        "pct_gain": "+75%",
+        "setup": "Base breakout",
+        "entry": "~$78 (Apr 17 50SMA reclaim)",
+        "stop": "$72",
+        "tradable": true,
+        "rationale": "86% 10EMA, 0 50SMA touches, -14.9% DD. Character change immediately at Apr 17 \u2014 reclaim of 50SMA becomes the entry. 11-week clean streak starts here."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-10 to 2025-08-11",
+        "pct_gain": "+19%",
+        "setup": "Continuation / digestion",
+        "entry": null,
+        "stop": "10EMA trail",
+        "tradable": true,
+        "rationale": "84% 10EMA, 0 50SMA touches, -9.5% DD. SHALLOWEST DD in the whole move. Pure grind."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-12 to 2025-10-10",
+        "pct_gain": "+38%",
+        "setup": "Continued trend",
+        "entry": null,
+        "stop": "10EMA trail",
+        "tradable": true,
+        "rationale": "88% 10EMA, 0 50SMA, -17.2% DD. Still clean."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-13 to 2025-12-11",
+        "pct_gain": "+40%",
+        "setup": "Parabolic + real EP",
+        "entry": "Oct 29 +8% real EP close@89%",
+        "stop": "Below EP low",
+        "tradable": true,
+        "rationale": "63% 10EMA (parabolic volatility), 2 50SMA touches, -22% DD. Only leg with any friction. Oct 29 real EP is the add."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE",
+      "best_leg": "Leg 1 (Apr 17 onwards). Character change + 11-week 10EMA streak + ADR 4.0% (library lowest) = easiest hold in batch.",
+      "concern": "ADR 4.0% is the lowest in the library \u2014 TOP 3 CHART quality. Only 2 50SMA touches (both in parabolic Q4). Single real EP in Oct. This is one of the cleanest setups in the library, rivaling STRL."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout",
+        "EP"
+      ],
+      "direction": "long",
+      "best_entry": "Apr 17 50SMA reclaim ~$78, add Oct 29 real EP",
+      "key_insight": "TOP 3 CHART. 80% 10EMA, 2 50SMA, 4.0% ADR, 11-week clean streak, 0 trap EPs. Gold standard for this style. Matches STRL."
+    },
+    "reviewed_at": "2026-04-14",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "CAR_2025": {
+    "snapshot": {
+      "price_range": "$54.03 -> $212.81",
+      "ema10_adherence_pct": 81,
+      "ema20_adherence_pct": 84,
+      "worst_drawdown_pct": -19.0,
+      "days_over_10pct_underwater": 16,
+      "sma50_touches": 2,
+      "mean_adr_pct": 6.3,
+      "longest_10ema_streak": "Apr 16 -> Jun 2 (32 days, ~6 weeks)",
+      "gaps_5pct_15x_vol": 0
+    },
+    "gain_pct": 294,
+    "period": "2025-03-13 to 2025-07-29",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 3,
+        "period": "2025-03-13 to 2025-04-14",
+        "pct_gain": "+28%",
+        "setup": "V-bottom base",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "V-recovery from $54 low. 39% 10EMA \u2014 still below trend. Building a rough base. No setup yet."
+      },
+      {
+        "leg": 2,
+        "of": 3,
+        "period": "2025-04-15 to 2025-06-24",
+        "pct_gain": "+140%",
+        "setup": "Base breakout + 10EMA trend",
+        "entry": "Base breakout ~$70-78 (Apr 15 character change)",
+        "stop": "$64 (8% below entry)",
+        "tradable": true,
+        "rationale": "Character change Apr 15 \u2014 stock transitions to 96% 10EMA (Q2) and 88% 10EMA (Q3), 1 and 0 50SMA touches respectively. Clean 6-week 10EMA streak Apr 16 - Jun 2. Pure breakout move \u2014 no gap catalyst triggered this (zero qualifying gaps). Steady grind from $70 to $172."
+      },
+      {
+        "leg": 3,
+        "of": 3,
+        "period": "2025-06-25 to 2025-07-29",
+        "pct_gain": "+24%",
+        "setup": "Parabolic completion",
+        "entry": null,
+        "stop": "Trail at 10EMA",
+        "tradable": "Partially \u2014 runner only, too late for new position",
+        "rationale": "100% above 10EMA, -9% DD, ADR ticks up. Parabolic final leg into Jul 29 blow-off top near $213. Existing holders ride this; new entries here are late. Post-Jul 29 immediate -35% collapse confirms the top."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE",
+      "best_leg": "Leg 2 (Apr 15 - Jun 24). Clean base breakout character change, 6-week 10EMA streak, only 1-2 50SMA touches. Pure breakout style with defined risk below base.",
+      "concern": "ADR 6.3% is moderate. No EP catalysts means the entry is pure technical base breakout \u2014 must trust the character change without a volume event to confirm. Leg 3 is parabolic and dangerous to add to."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Apr 15 base breakout ~$70-78",
+      "key_insight": "Pure breakout move with zero gap catalysts. Character change from 39% 10EMA basing (Q1) to 96% 10EMA trending (Q2) is the signal. No EP to wait for \u2014 the base breakout IS the event."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "SEZL_2025": {
+    "snapshot": {
+      "price_range": "$24.86 -> $186.74",
+      "ema10_adherence_pct": 92,
+      "ema20_adherence_pct": 95,
+      "worst_drawdown_pct": -21.6,
+      "days_over_10pct_underwater": 9,
+      "sma50_touches": 4,
+      "mean_adr_pct": 8.6,
+      "longest_10ema_streak": "Apr 22 -> Jul 07 (52 days, ~10 weeks)",
+      "gaps_real_mid_trap": "0 real / 1 mid / 0 trap"
+    },
+    "gain_pct": 651,
+    "period": "2025-04-04 to 2025-07-08",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-04-28",
+        "pct_gain": "+73%",
+        "setup": "Initial rally + character change",
+        "entry": "~$32 (early consolidation breakout)",
+        "stop": "$28",
+        "tradable": true,
+        "rationale": "75% 10EMA, 4 50SMA touches (all here), -21.6% DD. Rally with some chop, character firming up."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-04-29 to 2025-05-20",
+        "pct_gain": "+91%",
+        "setup": "Clean 10EMA rip + May 8 catalyst",
+        "entry": "May 8 +30% EP close@60% MID",
+        "stop": "Below EP low",
+        "tradable": true,
+        "rationale": "100% above 10EMA, 0 50SMA touches. Stock rips from $50 to $100. May 8 gap is mid-quality (not clean real) but works as catalyst given the subsequent trend."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-05-21 to 2025-06-12",
+        "pct_gain": "+41%",
+        "setup": "Continuation",
+        "entry": null,
+        "stop": "Trail 10EMA",
+        "tradable": true,
+        "rationale": "100% 10EMA, 0 50SMA, -19.7% DD. Pure grind to $140."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-06-13 to 2025-07-08",
+        "pct_gain": "+23%",
+        "setup": "Parabolic completion + top",
+        "entry": null,
+        "stop": "Trail 10EMA",
+        "tradable": true,
+        "rationale": "94% 10EMA, 0 50SMA. Peak $187 then collapse begins. Runner phase."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Full Apr 22 - Jul 7 10-week 10EMA streak. This is the cleanest trend in the batch by adherence%.",
+      "concern": "CRWV PARADOX: 92% 10EMA + 10-week streak + only 4 50SMA touches is gold-standard by trend quality. BUT 8.6% ADR = holding nightmare. Daily -10% swings would trigger exit instinct. Perfect chart, scary to hold."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout",
+        "EP"
+      ],
+      "direction": "long",
+      "best_entry": "Early Apr consolidation breakout ~$32, add May 8 EP",
+      "key_insight": "Library highest 10EMA% (92%). 10-week clean streak rivals STRL/STX. But 8.6% ADR forks it into CRWV paradox \u2014 stats say gold, intraday says hell."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "TSEM_2025": {
+    "snapshot": {
+      "price_range": "$28.64 -> $129.58",
+      "ema10_adherence_pct": 82,
+      "ema20_adherence_pct": 86,
+      "worst_drawdown_pct": -18.0,
+      "days_over_10pct_underwater": 13,
+      "sma50_touches": 10,
+      "mean_adr_pct": 4.2,
+      "longest_10ema_streak": "Aug 18 -> Oct 9 (38 days, ~7 weeks)",
+      "gaps_real_mid_trap": "none"
+    },
+    "gain_pct": 352,
+    "period": "2025-04-04 to 2025-12-11",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-06-05",
+        "pct_gain": "+39%",
+        "setup": "Base lift with 50SMA visits",
+        "entry": "~$32 (Apr base breakout)",
+        "stop": "$29",
+        "tradable": true,
+        "rationale": "72% 10EMA, 6 50SMA touches (all early), -12% DD. Some friction but steady climb from $30 to $41."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-06 to 2025-08-08",
+        "pct_gain": "+17%",
+        "setup": "Continuation with digestion",
+        "entry": null,
+        "stop": "10EMA",
+        "tradable": true,
+        "rationale": "75% 10EMA, 4 50SMA touches, -13.6% DD. Some chop but trend intact."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-11 to 2025-10-09",
+        "pct_gain": "+60%",
+        "setup": "GOLD LEG start",
+        "entry": null,
+        "stop": "10EMA",
+        "tradable": true,
+        "rationale": "88% 10EMA, 0 50SMA touches, -7.1% DD (shallowest). 7-week 10EMA streak starts here."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-10 to 2025-12-11",
+        "pct_gain": "+81%",
+        "setup": "Parabolic clean run",
+        "entry": null,
+        "stop": "10EMA",
+        "tradable": true,
+        "rationale": "91% 10EMA, 0 50SMA touches, -18% DD. Cleanest parabolic phase \u2014 91% above 10EMA throughout."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE",
+      "best_leg": "Leg 3+4 (Aug onwards). 90% 10EMA, 0 50SMA touches for 4 months straight. 7-week clean streak.",
+      "concern": "Only 7% of days >10% underwater \u2014 SHALLOWEST in library (SNDK is 27%). ADR 4.2% very low. 10 total 50SMA touches BUT all in Q1+Q2 basing phase. Post-Aug this is a clean chart. UPGRADED FROM PARTIAL."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Apr base breakout ~$32, hold via 10EMA trailing",
+      "key_insight": "Library's shallowest drawdown duration (7% >10% underwater). Post-Aug 11, chart is 91% 10EMA with 0 50SMA touches for 4 months. The old PARTIAL verdict understated this \u2014 it's a legit TRADABLE chart."
+    },
+    "reviewed_at": "2026-04-14",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "TTMI_2025": {
+    "snapshot": {
+      "price_range": "$15.77 -> $80.58",
+      "ema10_adherence_pct": 79,
+      "ema20_adherence_pct": 83,
+      "worst_drawdown_pct": -21.4,
+      "days_over_10pct_underwater": 28,
+      "sma50_touches": 8,
+      "mean_adr_pct": 4.7,
+      "longest_10ema_streak": "Apr 23 -> Jul 23 (63 days, ~12 weeks)",
+      "gaps_real_mid_trap": "none"
+    },
+    "gain_pct": 411,
+    "period": "2025-04-07 to 2025-12-11",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-07 to 2025-06-06",
+        "pct_gain": "+85%",
+        "setup": "Base breakout + clean rally",
+        "entry": "~$18 (Apr 23 10EMA reclaim)",
+        "stop": "$16.50",
+        "tradable": true,
+        "rationale": "77% 10EMA, 0 50SMA touches, -13% DD. Character change Apr 23, stock rips from $18 to $33. 12-week 10EMA streak starts here."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-09 to 2025-08-08",
+        "pct_gain": "+27%",
+        "setup": "Continuation",
+        "entry": null,
+        "stop": "10EMA",
+        "tradable": true,
+        "rationale": "86% 10EMA, 0 50SMA touches, -13% DD. The cleanest quarter."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-11 to 2025-10-09",
+        "pct_gain": "+27%",
+        "setup": "Digestion with 50SMA visits",
+        "entry": null,
+        "stop": "10EMA",
+        "tradable": "Partially \u2014 hold through chop",
+        "rationale": "77% 10EMA, 6 50SMA touches, -16% DD. The one friction quarter. Stock consolidates around 50SMA."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-10 to 2025-12-11",
+        "pct_gain": "+50%",
+        "setup": "Final parabolic leg",
+        "entry": null,
+        "stop": "10EMA",
+        "tradable": true,
+        "rationale": "75% 10EMA, 2 50SMA, -21% DD. Parabolic completion to $80."
+      }
+    ],
+    "style_fit": {
+      "overall": "TRADABLE",
+      "best_leg": "Legs 1-2 (Apr 23 - Aug 8). 12-week clean 10EMA streak, the longest in this batch. 0 50SMA touches for 4 months.",
+      "concern": "ADR 4.7% is holdable. No EPs \u2014 pure technical trade. Leg 3 has 6 50SMA touches which would test the 10EMA trailing. UPGRADED FROM PARTIAL \u2014 the 12-week clean streak is gold standard."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Apr 23 10EMA reclaim ~$18",
+      "key_insight": "12-week clean 10EMA streak = longest in this redo batch. Q1+Q2 had 0 50SMA touches for 86 days. Old PARTIAL verdict understated \u2014 this is TRADABLE. Pure technical grind, no EP catalyst."
+    },
+    "reviewed_at": "2026-04-14",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "W_2025": {
+    "snapshot": {
+      "price_range": "$20.41 -> $114.92",
+      "ema10_adherence_pct": 77,
+      "ema20_adherence_pct": 82,
+      "worst_drawdown_pct": -24.5,
+      "days_over_10pct_underwater": 31,
+      "sma50_touches": 11,
+      "mean_adr_pct": 5.6,
+      "longest_10ema_streak": "May 27 -> Jul 14 (33 days, ~6 weeks)",
+      "gaps_real_mid_trap": "3 real / 0 mid / 0 trap"
+    },
+    "gain_pct": 463,
+    "period": "2025-04-04 to 2025-11-10",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-05-29",
+        "pct_gain": "+64%",
+        "setup": "Initial rally + May 12 REAL EP",
+        "entry": "May 12 +16% EP close@73% = REAL",
+        "stop": "Below EP low",
+        "tradable": true,
+        "rationale": "63% 10EMA (still lifting), 0 50SMA touches, -24.5% DD. The May 12 real EP is the entry catalyst. Biggest DD of the move but close on bar."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-05-30 to 2025-07-24",
+        "pct_gain": "+47%",
+        "setup": "Clean trend",
+        "entry": null,
+        "stop": "10EMA",
+        "tradable": true,
+        "rationale": "97% 10EMA, 0 50SMA touches, -9.7% DD. Cleanest quarter. Grind from $42 to $63."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-07-25 to 2025-09-17",
+        "pct_gain": "+32%",
+        "setup": "Continuation + Aug 4 real EP",
+        "entry": "Aug 4 +12% EP close@94% = REAL (add)",
+        "stop": "Below EP low",
+        "tradable": true,
+        "rationale": "87% 10EMA, 0 50SMA touches, -12% DD. 2nd real EP of the move."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-18 to 2025-11-10",
+        "pct_gain": "+27%",
+        "setup": "3rd real EP + breakdown",
+        "entry": "Oct 28 +14% EP close@84% = REAL (late add)",
+        "stop": "Below EP low",
+        "tradable": "Partially \u2014 Q4 breakdown",
+        "rationale": "61% 10EMA, 11 50SMA touches in 38 days, -17.6% DD. Oct 28 EP is real but Q4 starts the friction. Peak $115 then pullback."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Legs 1-3 (Apr 4 - Sep 17). 3 real EPs, Q2+Q3 have 97%/87% 10EMA with 0 50SMA touches.",
+      "concern": "BEST EP HIT RATE IN LIBRARY: 3 for 3 real EPs, 0 traps. But 11 50SMA touches clustered in Q4. Need to exit by Q4 start \u2014 this is an EP-chain trade, not a hold-forever."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "May 12 real EP, add Aug 4 + Oct 28 real EPs",
+      "key_insight": "BEST EP TRACK RECORD in library: 3 for 3 real EPs. Q1-Q3 have 0 50SMA touches. The EP chain strategy shines here. But exit by Q4 \u2014 11 50SMA touches in final 38 days signal the end."
+    },
+    "reviewed_at": "2026-04-14",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "PI_2025": {
+    "snapshot": {
+      "price_range": "$60.85 -> $247.06",
+      "ema10_adherence_pct": 73,
+      "ema20_adherence_pct": 75,
+      "worst_drawdown_pct": -21.1,
+      "days_over_10pct_underwater": 44,
+      "sma50_touches": 9,
+      "mean_adr_pct": 5.1,
+      "longest_10ema_streak": "Jul 23 -> Sep 10 (35 days, ~7 weeks)",
+      "gaps_real_mid_trap": "0 real / 1 mid / 0 trap"
+    },
+    "gain_pct": 306,
+    "period": "2025-04-08 to 2025-10-24",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-08 to 2025-05-27",
+        "pct_gain": "+86%",
+        "setup": "Initial lift",
+        "entry": "~$75 (late Apr 50SMA reclaim)",
+        "stop": "~$68",
+        "tradable": true,
+        "rationale": "68% 10EMA, 1 50SMA touch, -21% DD. Rally from $61 to $116. Ends Leg 1 with character intact."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-05-28 to 2025-07-17",
+        "pct_gain": "+1%",
+        "setup": "CHOP / digestion",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "54% 10EMA, 5 50SMA touches, -16% DD. 7 weeks of going nowhere \u2014 the dead zone. Would shake out anyone trailing 10EMA."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-07-18 to 2025-09-05",
+        "pct_gain": "+65%",
+        "setup": "Character change + Jul 31 EP",
+        "entry": "Jul 31 +19% gap close@56% MID (borderline) or Jul 23 10EMA reclaim",
+        "stop": "~$115",
+        "tradable": true,
+        "rationale": "97% 10EMA, 3 50SMA touches, -8% DD. The GOLD leg. 7-week clean 10EMA streak. Character flips from Leg 2 chop."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-08 to 2025-10-24",
+        "pct_gain": "+17%",
+        "setup": "Late leg + 50SMA reset",
+        "entry": null,
+        "stop": null,
+        "tradable": "Partially \u2014 runner only",
+        "rationale": "71% 10EMA, 0 50SMA, -16% DD. Stock tops at $247 then pulls back into 50SMA zone."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 3 (Jul 18 - Sep 5) is the gold leg: 97% 10EMA, 7-week streak. Jul 23 reclaim is the clean entry.",
+      "concern": "Leg 2 is a 7-week dead zone that would shake out early buyers (54% 10EMA, 5 50SMA). Stock also tracks 20EMA (75%) almost the same as 10EMA \u2014 borderline 20EMA stock."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout",
+        "20EMA trend"
+      ],
+      "direction": "long",
+      "best_entry": "Jul 23 Leg 3 reclaim ~$115 (after 7-week Leg 2 chop)",
+      "key_insight": "Classic Q2 chop / Q3 gold pattern. Dead zone in middle would shake most holders. The Jul 31 +19% gap close@56% is a borderline re-entry catalyst."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "KTOS_2025": {
+    "snapshot": {
+      "price_range": "$23.90 -> $112.57",
+      "ema10_adherence_pct": 78,
+      "ema20_adherence_pct": 87,
+      "worst_drawdown_pct": -21.8,
+      "days_over_10pct_underwater": 12,
+      "sma50_touches": 11,
+      "mean_adr_pct": 4.9,
+      "longest_10ema_streak": "Sep 10 -> Oct 9 (22 days, ~4 weeks)",
+      "gaps_real_mid_trap": "none"
+    },
+    "gain_pct": 371,
+    "period": "2025-02-24 to 2025-10-09",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 2,
+        "period": "2025-02-24 to 2025-04-17",
+        "pct_gain": "+36%",
+        "setup": "Base with 50SMA whipsaws",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "64% 10EMA, 11 50SMA touches \u2014 ALL of the move's 50SMA friction is concentrated in this basing phase. -22% DD. Untradable accumulation."
+      },
+      {
+        "leg": 2,
+        "of": 2,
+        "period": "2025-04-21 to 2025-10-09",
+        "pct_gain": "+240%",
+        "setup": "20EMA clean uptrend (6 months)",
+        "entry": "Apr 21 character change breakout ~$32-34",
+        "stop": "Below 20EMA or prior swing low (~$29)",
+        "tradable": true,
+        "rationale": "82-90% 10EMA across Q2/Q3/Q4, 0 50SMA touches in all three quarters (\\!). 87% 20EMA \u2014 tracks 20EMA better than 10EMA. Clean 6-month grind, only -12% worst DD in the trend leg. Defense sector momentum. No EPs \u2014 pure trend trade."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 2 (Apr 21 - Oct 9) \u2014 6 months, 0 50SMA touches in all quarters, 87% 20EMA adherence. Gold-standard trend leg IF you use 20EMA trailing not 10EMA.",
+      "concern": "10EMA-only trader would see 78% adherence and hesitate. This is a 20EMA stock like PI and VSAT \u2014 wider trailing stop required. ADR 4.9% makes it holdable."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout",
+        "20EMA trend"
+      ],
+      "direction": "long",
+      "best_entry": "Apr 21 character change breakout ~$32",
+      "key_insight": "All 11 50SMA touches concentrated in the basing phase \u2014 0 touches in the 6-month trend leg. 87% 20EMA > 78% 10EMA = 20EMA stock. Pairs with PI, VSAT."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "CRDO_2025": {
+    "snapshot": {
+      "price_range": "$29.09 -> $213.80",
+      "ema10_adherence_pct": 72,
+      "ema20_adherence_pct": 78,
+      "worst_drawdown_pct": -34.0,
+      "days_over_10pct_underwater": 67,
+      "sma50_touches": 7,
+      "mean_adr_pct": 6.5,
+      "longest_10ema_streak": "Apr 23 -> May 29 (26 days, ~5 weeks)",
+      "gaps_real_mid_trap": "0 real / 1 mid / 4 trap"
+    },
+    "gain_pct": 635,
+    "period": "2025-04-07 to 2025-12-02",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-07 to 2025-06-04",
+        "pct_gain": "+113%",
+        "setup": "Rally off low (base)",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "73% 10EMA, 1 50SMA touch, -24% DD. V-recovery off April low. No base structure yet \u2014 pure rally."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-05 to 2025-08-05",
+        "pct_gain": "+51%",
+        "setup": "Clean 10EMA grind",
+        "entry": "~$78 (Jun 5 consolidation reclaim)",
+        "stop": "~$72 (8% below)",
+        "tradable": true,
+        "rationale": "88% 10EMA, 0 50SMA touches, -14% DD. The only clean leg. 5-week max 10EMA streak. Short but tradable. Jun 3 gap +20% on 4.7x vol closed at 6% = TRAP (skipped) \u2014 the real leg ran without a gap catalyst."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-06 to 2025-10-02",
+        "pct_gain": "+28%",
+        "setup": "Deteriorating trend",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "73% 10EMA slipping, -20% DD. Sep 4 +11% gap closed at 15% = TRAP. Character starting to break."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-03 to 2025-12-02",
+        "pct_gain": "+31%",
+        "setup": "Full breakdown",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "52% 10EMA, 6 50SMA touches, -34% DD. Chart falls apart. Nov 20 and Dec 2 gaps both TRAP (close@5% and 6%). Two more trap EPs confirm the move is dead."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Leg 2 (Jun 5 - Aug 5) is the only tradable window \u2014 88% 10EMA, 0 50SMA touches. ~8-week opportunity.",
+      "concern": "Zero real EPs out of 5 gaps (4 trap, 1 mid) \u2014 worst EP quality in library. Q4 completely breaks down (52% 10EMA, -34% DD, 6 50SMA touches, 2 more trap EPs). The +635% is impressive but the trajectory is untradable: you'd be shaken out in Q1, Q3, or Q4."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Jun 5 consolidation reclaim ~$78 (Leg 2 only, exit by Aug 5)",
+      "key_insight": "Worst EP stock in library \u2014 every gap is a trap. The 2-month Leg 2 clean window shows there WAS a tradable phase, but it's sandwiched by unsrable chop on both sides."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "PRAX_2025": {
+    "snapshot": {
+      "price_range": "$26.70 -> $317.72",
+      "ema10_adherence_pct": 66,
+      "ema20_adherence_pct": 75,
+      "worst_drawdown_pct": -37.2,
+      "days_over_10pct_underwater": 81,
+      "sma50_touches": 16,
+      "mean_adr_pct": 6.9,
+      "longest_10ema_streak": "Jul 01 -> Jul 30 (21 days, ~4 weeks)",
+      "gaps_real_mid_trap": "0 real / 2 mid / 2 trap \u2014 Oct 16 +176% gap closed@13% = mega trap"
+    },
+    "gain_pct": 1090,
+    "period": "2025-04-09 to 2025-12-29",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-09 to 2025-06-12",
+        "pct_gain": "+46%",
+        "setup": "Low base chop",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "64% 10EMA, 4 50SMA touches. Slow bottoming from $27."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-13 to 2025-08-19",
+        "pct_gain": "0%",
+        "setup": "Dead zone",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "59% 10EMA, 6 50SMA touches, -25% DD. 10-week dead chop. Would shake out any bull."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-20 to 2025-10-22",
+        "pct_gain": "+308%",
+        "setup": "Pre-catalyst lift + MEGA gap",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "60% 10EMA early then Oct 16 biotech event: +176% gap on 12.7x vol, close@13% = TRAP. Even though stock kept rising after, the close-in-bottom-third makes this untradable as an entry \u2014 you'd have been stopped out in the intraday reversal."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-23 to 2025-12-29",
+        "pct_gain": "+71%",
+        "setup": "Post-gap volatile run",
+        "entry": null,
+        "stop": null,
+        "tradable": "Partially \u2014 post-event only",
+        "rationale": "80% 10EMA, 0 50SMA, but -23% DD in 46 days. Dec 5 +27% gap close@20% = TRAP. Dec 29 +18% close@33% = mid. Post-event chop + drift up to $317."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "None \u2014 the entire move is untradable as a structured hold.",
+      "concern": "+1090% but 45% of days >10% underwater, 16 50SMA touches, Oct 16 +176% trap gap. Biotech event stock \u2014 pure news, no structure. Gain-size / tradability disconnect."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "None (biotech event, not a structural move)",
+      "key_insight": "Most extreme gain-vs-tradability disconnect in library. +1090% but Oct 16 +176% mega-gap closed@13% = unhedgable event. Biotech data release stock."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "SNDK_2025": {
+    "snapshot": {
+      "price_range": "$29.32 -> $284.76",
+      "ema10_adherence_pct": 77,
+      "ema20_adherence_pct": 78,
+      "worst_drawdown_pct": -15.5,
+      "days_over_10pct_underwater": 39,
+      "sma50_touches": 33,
+      "mean_adr_pct": 6.0,
+      "longest_10ema_streak": "Aug 21 -> Oct 9 (35 days, ~7 weeks)",
+      "gaps_real_mid_trap": "2 real / 1 mid / 0 trap"
+    },
+    "gain_pct": 856,
+    "period": "2025-04-22 to 2025-11-12",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-22 to 2025-06-10",
+        "pct_gain": "+40%",
+        "setup": "Choppy Q1 base",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "66% 10EMA, 11 50SMA touches in 35 days. Bottoming formation from $30, ragged."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-11 to 2025-08-01",
+        "pct_gain": "0%",
+        "setup": "Q2 DEAD ZONE",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "61% 10EMA, 14 50SMA touches in 36 days. LIBRARY RECORD for 50SMA friction in a single quarter. Stock goes nowhere."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-04 to 2025-09-23",
+        "pct_gain": "+157%",
+        "setup": "Character change + real EPs",
+        "entry": "Sep 4 +5% EP close@98% = REAL EP (~$70)",
+        "stop": "Below EP day low",
+        "tradable": true,
+        "rationale": "83% 10EMA, 8 50SMA touches (still some chop) but the character clearly flips from Q2 dead zone. Sep 4 real EP on 3.2x vol is the clean entry. Sep 11 +11% closed@65% mid. Sep 29 +7% closed@95% = 2nd real EP."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-24 to 2025-11-12",
+        "pct_gain": "+183%",
+        "setup": "GOLD run",
+        "entry": "Sep 29 real EP or 10EMA trailing",
+        "stop": "10EMA",
+        "tradable": true,
+        "rationale": "97% 10EMA, 0 50SMA touches, -15% DD. Final parabolic to $283. The clean 10EMA grind most holders would want."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Legs 3+4 (Aug 4 - Nov 12). After the 4-month base chop, character changes cleanly with 2 real EPs and a gold Q4.",
+      "concern": "33 total 50SMA touches (LIBRARY RECORD) mostly clustered in Q1+Q2 base. If you miss the Aug 4 character change / Sep 4 EP, the earlier 4 months are untradable. REVISED FROM NOT TRADABLE \u2014 the Aug-Nov leg is legit."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Sep 4 real EP ~$70 (after Aug character change)",
+      "key_insight": "33 50SMA touches is a facade \u2014 25 of them clustered in Q1+Q2 base chop. The actual tradable move is post-Aug 4. 2 real EPs in Sep confirm the character change. Old NOT-TRADABLE verdict was wrong."
+    },
+    "reviewed_at": "2026-04-14",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "SATS_2025": {
+    "snapshot": {
+      "price_range": "$14.90 -> $111.39",
+      "ema10_adherence_pct": 64,
+      "ema20_adherence_pct": 73,
+      "worst_drawdown_pct": -21.3,
+      "days_over_10pct_underwater": 85,
+      "sma50_touches": 15,
+      "mean_adr_pct": 4.9,
+      "longest_10ema_streak": "Nov 24 -> Dec 19 (19 days, ~3 weeks)",
+      "gaps_real_mid_trap": "1 real / 1 mid / 1 trap"
+    },
+    "gain_pct": 648,
+    "period": "2025-06-09 to 2025-12-19",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-06-09 to 2025-07-28",
+        "pct_gain": "+86%",
+        "setup": "Initial rally",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "68% 10EMA, 0 50SMA touches, -15% DD. Rally from $15 to $30 \u2014 no base yet."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-07-29 to 2025-09-15",
+        "pct_gain": "+144%",
+        "setup": "Accelerating + Aug 26 mega gap",
+        "entry": null,
+        "stop": null,
+        "tradable": "Partially \u2014 Aug 27 real EP only",
+        "rationale": "65% 10EMA, 4 50SMA touches. Aug 26 +81% gap on 9.5x vol closed@5% = MASSIVE TRAP. Aug 27 follow-through +7% closed@85% = REAL but requires surviving the Aug 26 trap day first."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-09-16 to 2025-10-31",
+        "pct_gain": "+4%",
+        "setup": "Consolidation",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "59% 10EMA, -10.6% DD. 6-week sideways."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-11-03 to 2025-12-19",
+        "pct_gain": "+38%",
+        "setup": "Final leg + 50SMA whipsaws",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "65% 10EMA, 11 50SMA touches in 34 days (\\!) despite trend up. Final push to $111 but extremely choppy."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Aug 27 real EP follow-through only. But you'd have to buy the day after a +81% gap closed in bottom 5%.",
+      "concern": "15 total 50SMA touches, 62% of days >10% underwater. Aug 26 mega trap gap is a killer. Low ADR (4.9%) is the only positive metric."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Aug 27 real EP follow-through (risky after Aug 26 mega trap)",
+      "key_insight": "Low ADR but 15 50SMA touches and late-move 11-touch chop disqualify. Aug 26 +81% gap close@5% is the dominant event."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "VSCO_2025": {
+    "snapshot": {
+      "price_range": "$13.76 -> $56.95",
+      "ema10_adherence_pct": 71,
+      "ema20_adherence_pct": 76,
+      "worst_drawdown_pct": -25.6,
+      "days_over_10pct_underwater": 63,
+      "sma50_touches": 20,
+      "mean_adr_pct": 5.5,
+      "longest_10ema_streak": "Apr 22 -> May 27 (25 days, ~5 weeks)",
+      "gaps_real_mid_trap": "1 real / 1 mid / 2 trap"
+    },
+    "gain_pct": 314,
+    "period": "2025-04-04 to 2025-12-19",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-06-09",
+        "pct_gain": "+34%",
+        "setup": "Initial rally",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "62% 10EMA, 5 50SMA, -23% DD. Choppy lift, no base."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-10 to 2025-08-13",
+        "pct_gain": "0%",
+        "setup": "Q2 DEAD ZONE",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "53% 10EMA, 15 50SMA touches in 45 days (\\!). LIBRARY RECORD for single-quarter 50SMA friction. 9 weeks of dead chop. Jun 16 and Aug 28 trap gaps. Retail meme-type pattern."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-14 to 2025-10-16",
+        "pct_gain": "+33%",
+        "setup": "Character change",
+        "entry": "~$25 (late Aug reclaim)",
+        "stop": "$23",
+        "tradable": "Partially \u2014 late",
+        "rationale": "84% 10EMA, 0 50SMA touches, -9.8% DD. Finally trends. But late in the move."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-17 to 2025-12-19",
+        "pct_gain": "+87%",
+        "setup": "Late gold + real EP",
+        "entry": "Dec 5 +17% close@73% REAL EP",
+        "stop": "Below EP low",
+        "tradable": true,
+        "rationale": "82% 10EMA, 0 50SMA, parabolic to $57. Dec 5 real EP adds 4 weeks before the peak."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Legs 3-4 (Aug 14 onwards). 4 months of clean 10EMA + Dec 5 real EP. But preceded by 9 weeks of Q2 dead chop.",
+      "concern": "20 total 50SMA touches, 15 clustered in Q2. Jun-Aug dead zone is longer than most people would hold. The late character change is real but psychologically impossible after Q2."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Dec 5 real EP or late Aug 50SMA reclaim",
+      "key_insight": "Q2 15 50SMA touches = LIBRARY RECORD single-quarter friction. Anyone in from Q1 would be shaken out. Late-move clean leg is legit but late-entry only."
+    },
+    "reviewed_at": "2026-04-14",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "KSS_2025": {
+    "snapshot": {
+      "price_range": "$6.04 -> $25.22",
+      "ema10_adherence_pct": 65,
+      "ema20_adherence_pct": 69,
+      "worst_drawdown_pct": -28.0,
+      "days_over_10pct_underwater": 76,
+      "sma50_touches": 15,
+      "mean_adr_pct": 6.7,
+      "longest_10ema_streak": "Jun 27 -> Jul 28 (21 days, ~4 weeks)",
+      "gaps_real_mid_trap": "1 real / 1 mid / 2 trap"
+    },
+    "gain_pct": 318,
+    "period": "2025-04-04 to 2025-12-01",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-04 to 2025-06-03",
+        "pct_gain": "+17%",
+        "setup": "Choppy basing",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "56% 10EMA, 4 50SMA touches, -22% DD. Slow bottoming. May 29 +12% gap closed@9% = TRAP."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-04 to 2025-10-01",
+        "pct_gain": "+89%",
+        "setup": "Quiet accumulation + meme squeeze trap",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Q2+Q3: 69-78% 10EMA, 0 50SMA touches in middle. BUT Jul 22 +90% squeeze gap on 11.9x vol closed at 22% of range = massive TRAP that would shake anyone out. Also Aug 27 gap mid. No clean entry window."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-10-02 to 2025-11-24",
+        "pct_gain": "+50%",
+        "setup": "Late parabolic",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "57% 10EMA, 11 50SMA touches in 42 days. Violent grind up with constant MA visits. Not holdable."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-11-25 to 2025-12-01",
+        "pct_gain": "+4%",
+        "setup": "Final EP cap",
+        "entry": "Nov 25 +24% EP close@99%",
+        "stop": "below EP day low",
+        "tradable": "Partially \u2014 momentum trade only",
+        "rationale": "One legit real EP at the very end of the move. Too late for position entry."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Nov 25 EP as a pure momentum trade (close@99% = real) but it's the last leg.",
+      "concern": "15 50SMA touches, 46% underwater. The Jul 22 +90% trap gap would destroy any base breakout entry. Retail meme squeeze pattern \u2014 not a holdable structure."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Nov 25 real EP (momentum trade only)",
+      "key_insight": "Stock had a real EP at $20 (Nov 25 close@99%) but it's at the TOP of the move. The earlier Jul 22 +90% mega-gap was a trap that rug-pulled holders."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "OUST_2025": {
+    "snapshot": {
+      "price_range": "$6.34 -> $41.65",
+      "ema10_adherence_pct": 63,
+      "ema20_adherence_pct": 73,
+      "worst_drawdown_pct": -30.5,
+      "days_over_10pct_underwater": 78,
+      "sma50_touches": 9,
+      "mean_adr_pct": 8.2,
+      "longest_10ema_streak": "May 27 -> Jun 30 (24 days, ~4 weeks)",
+      "gaps_real_mid_trap": "2 real / 2 mid / 1 trap"
+    },
+    "gain_pct": 557,
+    "period": "2025-04-09 to 2025-10-15",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-09 to 2025-05-23",
+        "pct_gain": "+39%",
+        "setup": "Initial rally",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "56% 10EMA, 4 50SMA touches. Choppy off-low lift."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-05-27 to 2025-07-14",
+        "pct_gain": "+128%",
+        "setup": "Clean 10EMA window + real EPs",
+        "entry": "Jun 11 EP ~$17 (close@83% REAL) or earlier May 27 breakout",
+        "stop": "$15 below EP gap low",
+        "tradable": true,
+        "rationale": "94% 10EMA, 0 50SMA touches, -20.7% DD. The ONLY tradable window. Two real EPs: May 12 (+5% close@73%) and Jun 11 (+14% close@83% REAL). Short 4-week max streak."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-07-15 to 2025-08-28",
+        "pct_gain": "+9%",
+        "setup": "Deterioration + trap EP",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "55% 10EMA, -30.5% DD. Aug 8 +27% gap closed@4% = massive TRAP. Stock starts failing."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-08-29 to 2025-10-15",
+        "pct_gain": "+29%",
+        "setup": "Late chop",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "45% 10EMA, 5 50SMA touches. Stock limps into peak without structure."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Leg 2 (May 27 - Jul 14) had clean 10EMA + real EPs but only lasted 4 weeks.",
+      "concern": "8.2% ADR = holding nightmare. 60% underwater. Aug 8 +27% trap gap destroyed the trend. Full-move stats (63% 10EMA, 9 50SMA, -30.5% DD) are all below threshold."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Jun 11 real EP ~$17 (Leg 2 only, exit by Jul 14)",
+      "key_insight": "One clean 4-week window with real EPs, then destroyed by Aug 8 massive trap gap. Lidar sector volatility. Skipping."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "ARWR_2025": {
+    "snapshot": {
+      "price_range": "$9.57 -> $72.36",
+      "ema10_adherence_pct": 77,
+      "ema20_adherence_pct": 78,
+      "worst_drawdown_pct": -24.3,
+      "days_over_10pct_underwater": 37,
+      "sma50_touches": 13,
+      "mean_adr_pct": 5.9,
+      "longest_10ema_streak": "Aug 8 -> Oct 31 (60 days, ~12 weeks)"
+    },
+    "gain_pct": 656,
+    "period": "2025-04-07 to 2025-12-11",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-07 to 2025-06-06",
+        "pct_gain": "+64%",
+        "setup": "Initial off-low rally",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "74% 10EMA, 3 50SMA touches, -18% DD. Off-low lift without base structure. No defined risk."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-09 to 2025-08-08",
+        "pct_gain": "-2%",
+        "setup": "AU-type chop / 50SMA visits",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "49% 10EMA, 10 50SMA touches (all of the move's 13 touches are clustered here), -24% DD. Classic AU pattern. Stock goes nowhere, visits 50SMA constantly. Unholdable for this user's style. The May 13 +13% gap closed at 25% of day's range = TRAP EP, confirms the weakness. This is the leg the original AI review mislabeled as 'best entry May-Aug'."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-11 to 2025-10-09",
+        "pct_gain": "+109%",
+        "setup": "Character change -> 10EMA tracking",
+        "entry": "~$17 (Aug 8 base reclaim of 50SMA + 10EMA)",
+        "stop": "~$15.50 (8% below entry)",
+        "tradable": true,
+        "rationale": "100% above 10EMA, 0 50SMA touches, -11% DD. Complete character flip from Leg 2. Stock finally breaks out of the AU chop and grinds up cleanly. This is the real entry window \u2014 not May-Aug. 12-week clean 10EMA streak spans Aug 8 -> Oct 31, meeting the gold-standard 8+ week threshold."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-10-10 to 2025-12-11",
+        "pct_gain": "+100%",
+        "setup": "Parabolic completion (base -> rip)",
+        "entry": "Nov 24 breakout from Oct 24-Nov 21 tight base (~$40)",
+        "stop": "~$37 (8% below base low)",
+        "tradable": "Partially \u2014 parabolic, hold for add/runner not new position",
+        "rationale": "86% 10EMA, 0 50SMA touches, -22% intraleg DD. Four-week tight consolidation Oct 24-Nov 21 (0 50SMA touches, -13% DD) followed by 13-day parabolic rip from $44 to $70 including a Nov 26 +20% intraday day. Existing position from Leg 3 rides this; new entry is late and parabolic. Dec 8 gap closed at 52% of range = MID (not a clean real EP)."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 3 (Aug 11 - Oct 9). Character change from AU-chop to 100% 10EMA tracking. 12-week clean streak meets gold standard. Entry is the Aug 8 reclaim of 10/50 EMA, not May-Aug pullbacks.",
+      "concern": "First four months are untradable AU-type chop. Miss the August character change and there is no way back in until late Leg 4 parabolic (too late). Also, Leg 4 parabolic completion with -22% intraleg DD would test even a confident holder."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "Aug 8 base reclaim (character change from AU chop to 10EMA tracker)",
+      "key_insight": "The data-only review mislabeled May-Aug as the best leg. Visual + quarterly breakdown reveals May-Aug is the WORST leg (AU chop, 10 50SMA touches, trap EP). The tradable window is the 12-week post-Aug 8 clean trend. Character-change recognition is the skill."
+    },
+    "ai_vs_user_comparison": {
+      "ai_best_entry_v1": "10EMA pullbacks in May-Aug (WRONG \u2014 that is the AU chop phase)",
+      "ai_best_entry_v2": "Aug 8 base reclaim (correct after visual+quarterly breakdown)",
+      "lesson": "Full-window averages hide which leg owns which metric. A 77% 10EMA average split into 49%/100%/86% quarters tells the real story. Always decompose."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "IONQ_2025": {
+    "snapshot": {
+      "price_range": "$17.88 -> $84.64",
+      "ema10_adherence_pct": 62,
+      "ema20_adherence_pct": 69,
+      "worst_drawdown_pct": -28.0,
+      "days_over_10pct_underwater": 96,
+      "sma50_touches": 17,
+      "mean_adr_pct": 8.1,
+      "longest_10ema_streak": "Apr 22 -> May 29 (27 days, ~5 weeks)",
+      "gaps_real_mid_trap": "0 real / 1 mid / 0 trap"
+    },
+    "gain_pct": 373,
+    "period": "2025-03-11 to 2025-10-13",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-03-11 to 2025-06-26",
+        "pct_gain": "+120%",
+        "setup": "Choppy off-low grind",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "Q1+Q2 combined: 57-66% 10EMA, -28% DD. Quantum narrative stock with giant intraday swings (8.1% ADR)."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-27 to 2025-08-19",
+        "pct_gain": "-10%",
+        "setup": "50SMA roulette",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "49% 10EMA, 8 50SMA touches in 37 days (\\!\\!). Classic AU chop. -21% DD."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-08-20 to 2025-10-13",
+        "pct_gain": "+124%",
+        "setup": "Final parabolic leg",
+        "entry": null,
+        "stop": null,
+        "tradable": "Partially \u2014 momentum trader only",
+        "rationale": "76% 10EMA but 8 more 50SMA touches, -20% DD. Parabolic completion from $37 to $84 in 38 days. Too volatile for holder style."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "None genuinely tradable. Leg 3 was fastest but 8 50SMA touches even in the 'good' leg says it all.",
+      "concern": "17 total 50SMA touches (untradable benchmark >10). 8.1% ADR = holding nightmare. 64% of days >10% underwater. Quantum narrative stock \u2014 moves on news, not structure."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "None (narrative trader territory)",
+      "key_insight": "17 50SMA touches confirms the AU pattern at scale. The 'clean' leg Q4 still had 8 touches. Extreme ADR amplifies everything."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "PONY_2025": {
+    "snapshot": {
+      "price_range": "$4.11 -> $24.92",
+      "ema10_adherence_pct": 61,
+      "ema20_adherence_pct": 62,
+      "worst_drawdown_pct": -49.3,
+      "days_over_10pct_underwater": 102,
+      "sma50_touches": 17,
+      "mean_adr_pct": 10.5,
+      "longest_10ema_streak": "Apr 23 -> May 28 (25 days, ~5 weeks)",
+      "gaps_real_mid_trap": "0 real / 0 mid / 1 trap"
+    },
+    "gain_pct": 506,
+    "period": "2025-04-22 to 2025-10-02",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-22 to 2025-05-30",
+        "pct_gain": "+363%",
+        "setup": "Explosive Q1 rally",
+        "entry": null,
+        "stop": null,
+        "tradable": "Partially \u2014 too fast to catch safely",
+        "rationale": "93% 10EMA, 1 50SMA touch in Q1. The single clean window. But price rips from $4 to $19 in 28 days \u2014 too fast for any base entry. 10.5% ADR even here."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-02 to 2025-07-14",
+        "pct_gain": "-34%",
+        "setup": "Q2 COLLAPSE",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "17% 10EMA, 7 50SMA touches, -37.9% DD. Any early holder gets crushed. Drops from $19 to $12."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-07-15 to 2025-08-21",
+        "pct_gain": "+9%",
+        "setup": "Chop",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "75% 10EMA, 4 50SMA touches. Meaningless grind."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-08-22 to 2025-10-02",
+        "pct_gain": "+63%",
+        "setup": "Late rally",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "62% 10EMA, 5 50SMA, Jul 28 trap EP. 10.5% ADR destroys any stop."
+      }
+    ],
+    "style_fit": {
+      "overall": "NOT TO MY STYLE",
+      "best_leg": "Q1 was clean on paper but impossible to enter \u2014 stock rips from the low.",
+      "concern": "MOST EXTREME CHART IN LIBRARY. 10.5% ADR (record), -49.3% DD, 89% of days >10% underwater, 17 50SMA touches. Autonomous driving narrative stock. Unholdable structure."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "Breakout"
+      ],
+      "direction": "long",
+      "best_entry": "None (structure doesn't permit entry)",
+      "key_insight": "Library record for ADR and underwater%. Q1 93% 10EMA is deceiving \u2014 it's just a 5-week rip before -38% collapse."
+    },
+    "reviewed_at": "2026-04-13",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
+  },
+  "VSAT_2025": {
+    "snapshot": {
+      "price_range": "$7.36 -> $43.59",
+      "ema10_adherence_pct": 66,
+      "ema20_adherence_pct": 77,
+      "worst_drawdown_pct": -24.1,
+      "days_over_10pct_underwater": 47,
+      "sma50_touches": 13,
+      "mean_adr_pct": 6.7,
+      "longest_10ema_streak": "Jul 30 -> Sep 2 (24 days, ~4 weeks)",
+      "gaps_real_mid_trap": "1 real / 0 mid / 1 trap"
+    },
+    "gain_pct": 492,
+    "period": "2025-04-09 to 2025-11-10",
+    "legs": [
+      {
+        "leg": 1,
+        "of": 4,
+        "period": "2025-04-09 to 2025-06-02",
+        "pct_gain": "+4%",
+        "setup": "Q1 AU chop",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "49% 10EMA, 11 50SMA touches in 37 days. All of the move's 50SMA friction is front-loaded here. Untradable accumulation."
+      },
+      {
+        "leg": 2,
+        "of": 4,
+        "period": "2025-06-03 to 2025-07-25",
+        "pct_gain": "+61%",
+        "setup": "Initial lift",
+        "entry": "~$10 (Jun 50SMA reclaim)",
+        "stop": "$9",
+        "tradable": true,
+        "rationale": "73% 10EMA, 2 50SMA touches, -14% DD. Character change begins."
+      },
+      {
+        "leg": 3,
+        "of": 4,
+        "period": "2025-07-28 to 2025-09-17",
+        "pct_gain": "+118%",
+        "setup": "Clean leg + Aug 4 real EP",
+        "entry": "Aug 4 +11% EP close@85% = REAL",
+        "stop": "Below EP low",
+        "tradable": true,
+        "rationale": "86% 10EMA, 0 50SMA touches, -23.5% DD. The clean window. Aug 4 real EP confirms character."
+      },
+      {
+        "leg": 4,
+        "of": 4,
+        "period": "2025-09-18 to 2025-11-10",
+        "pct_gain": "+14%",
+        "setup": "Deterioration + trap",
+        "entry": null,
+        "stop": null,
+        "tradable": false,
+        "rationale": "58% 10EMA, 0 50SMA, -15% DD. Nov 10 +17% gap close@7% = TRAP at peak. Exit signal."
+      }
+    ],
+    "style_fit": {
+      "overall": "PARTIALLY TRADABLE",
+      "best_leg": "Leg 2+3 (Jun 3 - Sep 17). After the Q1 AU chop, 20EMA (77%) tracks better than 10EMA. Aug 4 real EP is the clean add.",
+      "concern": "All 11 of Q1's 50SMA touches = 4-month untradable front. 20EMA stock requires wider trailing. Nov 10 trap gap at peak signals failure. REVISED UP FROM NOT TRADABLE \u2014 the Jun-Sep window is legit."
+    },
+    "ai_annotation": {
+      "tags_suggested": [
+        "EP",
+        "20EMA trend"
+      ],
+      "direction": "long",
+      "best_entry": "Jun 50SMA reclaim ~$10 or Aug 4 real EP",
+      "key_insight": "20EMA stock (77%) like PI/KTOS. All 11 50SMA touches in Q1 \u2014 the subsequent 10-week window was tradable. Old NOT-TRADABLE verdict missed the character change."
+    },
+    "reviewed_at": "2026-04-14",
+    "annotation_type": "AI independent attempt (REDO with visual inspection)"
   }
 }

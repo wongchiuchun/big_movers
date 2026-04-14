@@ -360,15 +360,14 @@ def api_fetch_ticker():
     if extend and os.path.exists(csv_path):
         last_date = None
         try:
-            with open(csv_path, "r", encoding="utf-8", errors="replace") as f:
-                reader = csv.reader(f)
-                header = next(reader, None)
-                for row in reader:
-                    if len(row) >= 2:
-                        # Try column 1 (new format) or column 0 (noindex)
-                        d = row[1].strip() if len(row) >= 7 else row[0].strip()
-                        if d and len(d) >= 10:
-                            last_date = d[:10]
+            import pandas as pd
+            df = pd.read_csv(csv_path)
+            cols = df.columns.tolist()
+            has_idx = any(c.startswith("Unnamed") for c in cols) or cols[0] == ""
+            date_col = "DateTime" if "DateTime" in cols else ("Date" if "Date" in cols else (cols[1] if has_idx else cols[0]))
+            dates = pd.to_datetime(df[date_col], errors="coerce").dropna()
+            if len(dates) > 0:
+                last_date = dates.max().strftime("%Y-%m-%d")
         except Exception:
             pass
         if last_date:
@@ -440,25 +439,37 @@ def api_fetch_ticker():
     # Write/append to CSV in "noindex" format: DateTime,Open,High,Low,Close,Volume
     os.makedirs(STOCKS_DIRS[0], exist_ok=True)
     if extend and os.path.exists(csv_path):
-        # Read existing dates to avoid duplicates
-        existing_dates = set()
+        # Read existing data, normalize to noindex format, merge with new bars
+        import pandas as pd
         try:
-            with open(csv_path, "r", encoding="utf-8", errors="replace") as f:
-                reader = csv.reader(f)
-                header = next(reader, None)
-                for row in reader:
-                    if len(row) >= 2:
-                        d = row[1].strip() if len(row) >= 7 else row[0].strip()
-                        if d:
-                            existing_dates.add(d[:10])
+            df = pd.read_csv(csv_path)
+            cols = df.columns.tolist()
+            has_idx = any(c.startswith("Unnamed") for c in cols) or cols[0] == ""
+            date_col = "DateTime" if "DateTime" in cols else ("Date" if "Date" in cols else (cols[1] if has_idx else cols[0]))
+            dates = pd.to_datetime(df[date_col], errors="coerce")
+            existing = pd.DataFrame({
+                "DateTime": dates.dt.strftime("%Y-%m-%d"),
+                "Open": pd.to_numeric(df["Open"], errors="coerce"),
+                "High": pd.to_numeric(df["High"], errors="coerce"),
+                "Low": pd.to_numeric(df["Low"], errors="coerce"),
+                "Close": pd.to_numeric(df["Close"], errors="coerce"),
+                "Volume": pd.to_numeric(df["Volume"], errors="coerce").fillna(0).astype(int),
+            }).dropna(subset=["DateTime", "Open", "High", "Low", "Close"])
+            existing = existing[existing["DateTime"] != "NaT"]
+            existing_dates = set(existing["DateTime"].tolist())
         except Exception:
-            pass
+            existing = pd.DataFrame(columns=["DateTime","Open","High","Low","Close","Volume"])
+            existing_dates = set()
         new_bars = [b for b in new_bars if b["time"] not in existing_dates]
         if new_bars:
-            with open(csv_path, "a", encoding="utf-8", newline="") as f:
-                writer = csv.writer(f)
-                for b in new_bars:
-                    writer.writerow([b["time"], b["open"], b["high"], b["low"], b["close"], int(b["volume"])])
+            new_df = pd.DataFrame([{
+                "DateTime": b["time"], "Open": b["open"], "High": b["high"],
+                "Low": b["low"], "Close": b["close"], "Volume": int(b["volume"])
+            } for b in new_bars])
+            merged = pd.concat([existing, new_df], ignore_index=True)
+            merged = merged.drop_duplicates(subset="DateTime", keep="last")
+            merged = merged.sort_values("DateTime").reset_index(drop=True)
+            merged.to_csv(csv_path, index=False)
     else:
         with open(csv_path, "w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)

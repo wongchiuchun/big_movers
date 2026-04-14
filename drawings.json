@@ -1,0 +1,5631 @@
+{
+  "AAOI_2025": [
+    {
+      "color": "#6651d2",
+      "id": 30,
+      "price": 42.4239,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    }
+  ],
+  "ABVX_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 31,
+      "p1": {
+        "price": 10.0608,
+        "time": {
+          "day": 17,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": -1.1584,
+        "time": {
+          "day": 5,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "16 Jul - This is when things first started getting interesting - the volume is rising the EMAs are in the right alignments.\nThe volume was clearly catching up - there was insider buying here",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 32,
+      "p1": {
+        "price": 66.2207,
+        "time": {
+          "day": 23,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 47.0341,
+        "time": {
+          "day": 25,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Looks to me a gap and go? the gap is so wide and the subsequent move held LoD of the gap opening range. Waited for 10 EMA to catch up then just trailed along 20 EMA. A nice move",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 34,
+      "p1": {
+        "price": 110.8164,
+        "time": {
+          "day": 3,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 79.4438,
+        "time": {
+          "day": 3,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "3 Dec - Test of faith as 20 EMA broke and did not reclaim the next day. \nThe top was near",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "AGX_2025": [
+    {
+      "color": "#6651d2",
+      "id": 2,
+      "price": 163.165,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 149.4473,
+        "time": {
+          "day": 28,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 102.9595,
+        "time": {
+          "day": 19,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Started getting interestng here with tightness and EMA alignments",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 160.8787,
+        "time": {
+          "day": 5,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 324.729,
+        "time": {
+          "day": 19,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "5/6 May could be a possible entry on the break of the prior high",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 228.7051,
+        "time": {
+          "day": 9,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 433.7085,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 Jun - Test of faith on strong selloff with volume. \nShould probably exit the next day",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 237.8503,
+        "time": {
+          "day": 16,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 181.4553,
+        "time": {
+          "day": 20,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "16 Sep - tightness after an undercut and reclaim. A possible entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 360.0943,
+        "time": {
+          "day": 24,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 563.455,
+        "time": {
+          "day": 18,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This entire move up would have been difficult to hold given the constant pullback to below 20 EMA",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "ALAB_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 15,
+      "p1": {
+        "price": 100.6908,
+        "time": {
+          "day": 18,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": -52.683,
+        "time": {
+          "day": 31,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "18 Jul was arugably when things atarted becoming interesting but not yet tradable. \nThe stock based in this range since May and before that had a round bottom. The range is very tight",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 16,
+      "p1": {
+        "price": 113.7748,
+        "time": {
+          "day": 21,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 237.3462,
+        "time": {
+          "day": 19,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "21 Jul was when the pivot happened, \nStrong volume breakout from the base. Tradable with a stop that is perhaps 8% below LoD?",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 18,
+      "p1": {
+        "price": 118.1362,
+        "time": {
+          "day": 29,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 49.0816,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "29 Jul Also a great entry with pricing sitting just above 10EMA. \nCould have been a low risk entry with say stop just below 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 19,
+      "p1": {
+        "price": 166.1109,
+        "time": {
+          "day": 6,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 315.1234,
+        "time": {
+          "day": 1,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 Aug Second EP day. Volume was strong again tradable with a stop below 8% fo LoD",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "APLD_2025": [
+    {
+      "color": "#984ea6",
+      "id": 20,
+      "p1": {
+        "price": 11.1981,
+        "time": {
+          "day": 22,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 8.8979,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 21,
+      "p1": {
+        "price": 7.153,
+        "time": {
+          "day": 28,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 0.4904,
+        "time": {
+          "day": 4,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "First Consolidation above the 200 EMA, Things are setting up",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 22,
+      "p1": {
+        "price": 9.6118,
+        "time": {
+          "day": 2,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 25.5543,
+        "time": {
+          "day": 7,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Breakout from downtrend line with volume, Possible entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 23,
+      "p1": {
+        "price": 9.4531,
+        "time": {
+          "day": 9,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 3.3458,
+        "time": {
+          "day": 2,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Retest of support but dragged on dfor most of Jun and Jul. \nMost likely  I would have given up here",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 25,
+      "p1": {
+        "price": 11.674,
+        "time": {
+          "day": 21,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 33.2479,
+        "time": {
+          "day": 28,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Tried to breakout but  then immediately moved back into the 50 EMA. \nStill tight action but again where I would have been stopped out because it just moved all the way below LoD of the breakout bar on 17 Jul",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 26,
+      "p1": {
+        "price": 12.4672,
+        "time": {
+          "day": 31,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 6.6771,
+        "time": {
+          "day": 28,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "31 Jul - probably a EP, gapped up with volume. The next day was a nasty candle to test 10MA but held up well - a possible entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 28,
+      "p1": {
+        "price": 15.0053,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 11.2774,
+        "time": {
+          "day": 6,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 Sep - a test of faith the few bars before broke 10 and 20 EMA and \nheld 50EMA to recover back up to both 10 and 20 EMA - this is not easy",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 29,
+      "p1": {
+        "price": 29.8374,
+        "time": {
+          "day": 22,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 45.0661,
+        "time": {
+          "day": 8,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "The rest of the move respected the 10 EMA and broke on 22 Oct. A good run on this leg",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "ARWR_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 17,
+        "time": {
+          "day": 9,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 8.1474,
+        "time": {
+          "day": 14,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q2 AU chop: 49% 10EMA, 10 50SMA touches in 43 days.\nStock goes nowhere. UNTRADABLE basing.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 4,
+      "price": 15.5,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 40.2297,
+        "time": {
+          "day": 3,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 66.4812,
+        "time": {
+          "day": 19,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "12-week clean 10EMA streak\nAug 8 - Oct 31\nMeets gold-standard 8+ week threshold",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 8,
+      "price": 37,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 9,
+      "p1": {
+        "price": 61.5737,
+        "time": {
+          "day": 4,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 48.4834,
+        "time": {
+          "day": 31,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Nov 26: +20% intraday on 7.1M vol\nExplosive single-day move\nReward phase, not entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 10,
+      "p1": {
+        "price": 66.7291,
+        "time": {
+          "day": 17,
+          "month": 2,
+          "year": 2026
+        }
+      },
+      "p2": {
+        "price": 92.8823,
+        "time": {
+          "day": 11,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Dec 8: +9% gap close@52% = MID\nNot a clean real EP\nLate in parabolic phase",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 47,
+      "p1": {
+        "price": 15.3154,
+        "time": {
+          "day": 13,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 6.8194,
+        "time": {
+          "day": 21,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May 13: +13% gap on 2.5x vol\nclose@25% = TRAP EP\nSkip. [NOTE] This was below 200EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 48,
+      "p1": {
+        "price": 19.1474,
+        "time": {
+          "day": 13,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 45.2595,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "ENTRY #1: Aug 12/13 when price broke out from 200EMA and took off. \nVolume followed. EMA alignments looking bullish",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 49,
+      "p1": {
+        "price": 40.3154,
+        "time": {
+          "day": 11,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 34,
+        "time": {
+          "day": 12,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "4-wk tight consolidation\nOct 24 - Nov 21\n0 50SMA touches, -13% DD",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 11,
+      "p1": {
+        "price": 42.2537,
+        "time": {
+          "day": 24,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 39.2869,
+        "time": {
+          "day": 30,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "ADD: Nov 24 base breakout ~$44\nStop $37 (below base)\nBecomes parabolic — runner only\n[NOTE] There was also a shaekout U&R andcolume was strong",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#984ea6",
+      "id": 14,
+      "p1": {
+        "price": 39.747,
+        "time": {
+          "day": 28,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 13.2419,
+        "time": {
+          "day": 2,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 15,
+      "p1": {
+        "price": 15.3265,
+        "time": {
+          "day": 22,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 14.0287,
+        "time": {
+          "day": 5,
+          "month": 1,
+          "year": 2026
+        }
+      },
+      "style": "solid",
+      "text": "Zooming out this was a breakout downtrend retest that held - \nthe subsequent setup became much more believable",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "ASTS_2025": [
+    {
+      "color": "#984ea6",
+      "id": 18,
+      "p1": {
+        "price": 34.841,
+        "time": {
+          "day": 5,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 22.8987,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 19,
+      "p1": {
+        "price": 27.6377,
+        "time": {
+          "day": 4,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 89.8136,
+        "time": {
+          "day": 27,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This was an interesting point because things started moving when it broke the trendline.\nThe volume was good the EMAs alignments were super bullish",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 20,
+      "p1": {
+        "price": 42.8026,
+        "time": {
+          "day": 9,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 24.9839,
+        "time": {
+          "day": 29,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 Jul first test of faith, would have exited",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 22,
+      "p1": {
+        "price": 48.1103,
+        "time": {
+          "day": 22,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 33.5141,
+        "time": {
+          "day": 14,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "22 Sep this is a follow through day after EMA reclaim and the EMA alignments were right. \nCoould be an entry against the EMAs as the stop (just below)",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 23,
+      "p1": {
+        "price": 49.0581,
+        "time": {
+          "day": 30,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 132.4648,
+        "time": {
+          "day": 27,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "30 Sep - 2nd low risk entry, price pulled right into 10 EMA on low volume, held\nNext day the share price broke top of the range and go",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 24,
+      "p1": {
+        "price": 79.5774,
+        "time": {
+          "day": 21,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 126.3988,
+        "time": {
+          "day": 29,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "21 Oct - this was when you should just exited when the gap up got filled and we close below t10 EMA",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "AU_2025": [
+    {
+      "color": "#984ea6",
+      "id": 8,
+      "p1": {
+        "price": 32.6922,
+        "time": {
+          "day": 21,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 28.8909,
+        "time": {
+          "day": 14,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 9,
+      "p1": {
+        "price": 28.0888,
+        "time": {
+          "day": 24,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 19.3203,
+        "time": {
+          "day": 30,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "reclaim the 200EMA and started showing tightness.\nThis was when things started looking interesting",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 10,
+      "p1": {
+        "price": 29.7384,
+        "time": {
+          "day": 30,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 52.8317,
+        "time": {
+          "day": 26,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "30 Jan was an interesting 1st entry. Gapped up, held. Broke resistance but volume was average",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 11,
+      "p1": {
+        "price": 28.7834,
+        "time": {
+          "day": 3,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 20.5358,
+        "time": {
+          "day": 4,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "28 Feb, true test of faith. opened below 50EMA but closed up.\nDifficult spot",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 12,
+      "p1": {
+        "price": 30.4329,
+        "time": {
+          "day": 5,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 24.3557,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "5 Mar is a possible entry it reclaimed the EMAs and the EMAs are tight. Exit at just below  LoD",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 13,
+      "p1": {
+        "price": 30.7802,
+        "time": {
+          "day": 10,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 44.3236,
+        "time": {
+          "day": 30,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "10 Mar, test of faithe again. \nCould get stopout",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 14,
+      "p1": {
+        "price": 32.8638,
+        "time": {
+          "day": 7,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 27.8284,
+        "time": {
+          "day": 23,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "7 Apr Again Test of faith, down to 50EMA and held",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "AVAV_2025": [
+    {
+      "color": "#984ea6",
+      "id": 1,
+      "p1": {
+        "price": 240.4742,
+        "time": {
+          "day": 8,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 121.0021,
+        "time": {
+          "day": 19,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 177.0621,
+        "time": {
+          "day": 27,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 312.1574,
+        "time": {
+          "day": 11,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "27 May was the first day it started becoming interesting. Tightness above 200 EMA.\nThe other EMAs are aligning for greatness",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 225.7699,
+        "time": {
+          "day": 25,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 8.8822,
+        "time": {
+          "day": 15,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "25 Jun was arguably a EP day. The move gapped above the consolidation range with volume. It closed in the middle of the range.\nIt is a buyable entry potentially",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 227.608,
+        "time": {
+          "day": 5,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 117.3261,
+        "time": {
+          "day": 8,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "5 Sep was test of faith it touched the LoD of the EP. It held for 2 days",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 245.0693,
+        "time": {
+          "day": 10,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 428.8724,
+        "time": {
+          "day": 22,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "10 Sep was the potential entry. It gapped above the EMAs, The EMAs tangled up. The stop could be LoD.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 258.8545,
+        "time": {
+          "day": 16,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 509.7458,
+        "time": {
+          "day": 2,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "16 Sep - also a potential entry as it broke the top of the range of the consolidation jsut above the EMAs.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "BE_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 10,
+      "p1": {
+        "price": 21.9102,
+        "time": {
+          "day": 27,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 2.3152,
+        "time": {
+          "day": 18,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Very interesting area in Jun Jul right before the point of pivot. The stock is coming out of a 3 month \nbase with EMAs re-aglining to bullish pattern. The price is consolidating in a tight range and holding 20MA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#6651d2",
+      "id": 11,
+      "price": 25.8726,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 12,
+      "p1": {
+        "price": 27.4737,
+        "time": {
+          "day": 10,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 35.7639,
+        "time": {
+          "day": 19,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "10 Jul is the first interesting entry point whereby the price gapped up and move strongly above the former resistance",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 13,
+      "p1": {
+        "price": 25.2305,
+        "time": {
+          "day": 22,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 20.549,
+        "time": {
+          "day": 30,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "The subsequent moves erased all the gain and moved back into the 20MA. A hard one to hold",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 14,
+      "p1": {
+        "price": 30.9849,
+        "time": {
+          "day": 24,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 38.6898,
+        "time": {
+          "day": 25,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "24 Jul was another EP style entry whereby it gapped up again\nThis time it was on strong volume and started pulling off",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 15,
+      "p1": {
+        "price": 32.9355,
+        "time": {
+          "day": 1,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 44.1516,
+        "time": {
+          "day": 17,
+          "month": 2,
+          "year": 2026
+        }
+      },
+      "style": "solid",
+      "text": "The retest was a couple of days later into the 10MA but D1 D2 after the gap were strong movement.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 16,
+      "p1": {
+        "price": 68.7596,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 63.4855,
+        "time": {
+          "day": 8,
+          "month": 1,
+          "year": 2026
+        }
+      },
+      "style": "solid",
+      "text": "25 Sept was the test of faith. The entire move prior was well above 10MA.\nThis was a sharp gap down following a pull back the day before it tested 20MA and hold",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 17,
+      "p1": {
+        "price": 72.8616,
+        "time": {
+          "day": 29,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 80.2843,
+        "time": {
+          "day": 3,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "29 Sept was arguably a undercut and reclaim of the 10MA. \nThis was when you could potentially become bullish again",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 18,
+      "p1": {
+        "price": 86.1443,
+        "time": {
+          "day": 10,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 108.0217,
+        "time": {
+          "day": 18,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "10 Oct was a nice tactical entry as well with price touching 10MA \non a tight consolidation of >1 wk",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 19,
+      "p1": {
+        "price": 108.217,
+        "time": {
+          "day": 13,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 136.7358,
+        "time": {
+          "day": 11,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Another EP on 13 Oct. Tradable but would be stopped out on 22 Oct on the undercut of 20EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 20,
+      "p1": {
+        "price": 107.632,
+        "time": {
+          "day": 24,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 82.1682,
+        "time": {
+          "day": 21,
+          "month": 1,
+          "year": 2026
+        }
+      },
+      "style": "solid",
+      "text": "Quick reclaim on 24 - This  wild price action is signaling a near top last rally",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "CAR_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 60.6753,
+        "time": {
+          "day": 18,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 56.4044,
+        "time": {
+          "day": 31,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q1 base: V-bottom from $54\n39% 10EMA, still untradable\nNo structure yet",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 3,
+      "price": 73.5498,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 119.6075,
+        "time": {
+          "day": 25,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 97.753,
+        "time": {
+          "day": 17,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Leg 2: Apr 15 - Jun 24\n96%/88% 10EMA, 0-1 50SMA\n6-week clean streak",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 168.484,
+        "time": {
+          "day": 7,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 132.8665,
+        "time": {
+          "day": 10,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Leg 3 parabolic: 100% 10EMA\n-9% DD (clean) but late-cycle\nRunner only, no new position",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 207.8665,
+        "time": {
+          "day": 29,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 194.7191,
+        "time": {
+          "day": 15,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Jul 29 parabolic TOP ~$213\nPost-top collapse -35% in days\nExit signal",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 102.526,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 163.7553,
+        "time": {
+          "day": 26,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "No EPs in this move\nPure technical breakout\nMust trust character change",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 79.8884,
+        "time": {
+          "day": 17,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 71.5498,
+        "time": {
+          "day": 29,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "text": "Possible ENTRY (AI): Apr 15 base breakout ~$70-78\nCharacter change to 96% 10EMA (Q2)\nStop $64 / pure breakout — no EP catalyst\n[Note] this was a strong candle with volume but probably not a good buy point except seeing EMAs setting up whilst still under 200EMA",
+      "color": "#000000",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 55
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 88.5479,
+        "time": {
+          "day": 24,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 169.1597,
+        "time": {
+          "day": 18,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "text": "21 Feb - Possible entry as broke out from 200EMA, \nbullish EMA alignments, prior day testing 200EMA and held",
+      "color": "#000000",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 56
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 186.0123,
+        "time": {
+          "day": 26,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 232.0762,
+        "time": {
+          "day": 18,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "text": "26 Jun looked a bit like a claimax top but turned out the retest held 10MA very well.\nShould have exited 1/3 at this level though",
+      "color": "#000000",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 57
+    },
+    {
+      "type": "seg",
+      "p1": {
+        "price": 133.3609,
+        "time": {
+          "day": 13,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 81.0124,
+        "time": {
+          "day": 20,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "color": "#984ea6",
+      "width": 2,
+      "style": "solid",
+      "id": 59
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 175.9007,
+        "time": {
+          "day": 30,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 173.6537,
+        "time": {
+          "day": 16,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "text": "30 Jul very clear exit signal. Could be a good signal to short",
+      "color": "#000000",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 60
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 155.6776,
+        "time": {
+          "day": 22,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 98.6595,
+        "time": {
+          "day": 9,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "text": "This area was probabaly difficult to short fgiven the chop",
+      "color": "#000000",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 61
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 155.9584,
+        "time": {
+          "day": 28,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 228.9866,
+        "time": {
+          "day": 13,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "text": "28 oct the gap up and sold down was a very bearish signal and was a good one to start shorting again",
+      "color": "#000000",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 62
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 126.7472,
+        "time": {
+          "day": 14,
+          "month": 1,
+          "year": 2026
+        }
+      },
+      "p2": {
+        "price": 175.9007,
+        "time": {
+          "day": 29,
+          "month": 1,
+          "year": 2026
+        }
+      },
+      "text": "Entire move below 50 EMA was a shortable move but not easy",
+      "color": "#000000",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 64
+    }
+  ],
+  "CIEN_2025": [
+    {
+      "color": "#984ea6",
+      "id": 5,
+      "p1": {
+        "price": 101.7669,
+        "time": {
+          "day": 24,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 94.9797,
+        "time": {
+          "day": 3,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 103.3194,
+        "time": {
+          "day": 28,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 166.1609,
+        "time": {
+          "day": 23,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is a large cup and handle formation, around 9 months. You could also potentially interpret  the movement inside this setup in the framework of VCP",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 112.4672,
+        "time": {
+          "day": 5,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 62.3532,
+        "time": {
+          "day": 7,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This is a EP setup with large volume",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 8,
+      "p1": {
+        "price": 147.0698,
+        "time": {
+          "day": 24,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 223.0363,
+        "time": {
+          "day": 28,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "The gap up was not tested, not filled, it largely followed EMA10.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 9,
+      "p1": {
+        "price": 181.0747,
+        "time": {
+          "day": 5,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 283.4289,
+        "time": {
+          "day": 17,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This loos like an undercut and reclaim. Basically drop below 20 EMA and then reclaimed in 2 days with volume, showing support of 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 13,
+      "p1": {
+        "price": 81.842,
+        "time": {
+          "day": 16,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 50.819,
+        "time": {
+          "day": 21,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Possible ENTRY 1 breakout from consolidation range - see tightness in this area, stop should be low of range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 14,
+      "p1": {
+        "price": 114.4559,
+        "time": {
+          "day": 5,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 100.933,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Possible ENTRY 2 on EP day",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 15,
+      "p1": {
+        "price": 134.3424,
+        "time": {
+          "day": 26,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 126.4278,
+        "time": {
+          "day": 10,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Possible Entry 3 - consolidation after move up, not exactly HTF but tightness after a strong run and retested 10MA support and held. Low risk entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 16,
+      "p1": {
+        "price": 67.9214,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 10.2505,
+        "time": {
+          "day": 6,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "First point when the chart should be taken seriously as all the EMAs are in right order and trending up",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "CIFR_2025": [
+    {
+      "color": "#984ea6",
+      "id": 1,
+      "p1": {
+        "price": 7.4336,
+        "time": {
+          "day": 16,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 3.6399,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 5.0476,
+        "time": {
+          "day": 27,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 12.3317,
+        "time": {
+          "day": 24,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "First get interesting here as the bar broke out from the base and downtrendline\nit crossed 200 EMA on volume. The pivot is the right classification. that was when things started getting interesting",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 5.3674,
+        "time": {
+          "day": 19,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 1.3878,
+        "time": {
+          "day": 28,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Consider the bar on 18 Aug and undercut and reclaim. 10MA 20MA 50MA meet. This is strong bullish signal",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 6.007,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 16.6666,
+        "time": {
+          "day": 25,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Best Entry so far, 22 Aug, breakout from 3 day consolidation, holding all EMA the EMAs are aligned stop at low of the consolidation range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 7.3572,
+        "time": {
+          "day": 8,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 3.3066,
+        "time": {
+          "day": 14,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "8 Sept - 2nd possible entry, undercut 10MA 2 days and held.\nLow risk entry to stop out just below 20MA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 12.4027,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 7.3217,
+        "time": {
+          "day": 8,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "First Test of faith on breakdown",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 8,
+      "p1": {
+        "price": 12.3672,
+        "time": {
+          "day": 29,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 9.1338,
+        "time": {
+          "day": 28,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "29 Sept - Consider this an undercut and reclaim; back above 10MA. Entry with LoD the day before as stop",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 11,
+      "p1": {
+        "price": 16.4206,
+        "time": {
+          "day": 22,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 29.1786,
+        "time": {
+          "day": 3,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "22 Oct: Here the chop became too much; range too wide, after the stop out should stay on the sideline but could get sucked right back into it.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "CLS_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 110,
+        "time": {
+          "day": 5,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 60,
+        "time": {
+          "day": 20,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May: Reclaimed 50SMA. Clean 10EMA trend starts.\n12 weeks of steady grind — CIFR-quality.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 230,
+        "time": {
+          "day": 5,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 150,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Aug 5 EP: +9% gap on 2.5x vol.\nAcceleration into new leg.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 3,
+      "price": 169.19,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    }
+  ],
+  "COHR_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 90,
+        "time": {
+          "day": 5,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 50,
+        "time": {
+          "day": 20,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May-Aug: Clean 10EMA trend.\nTradable phase before the shakeout.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 130,
+        "time": {
+          "day": 18,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 75,
+        "time": {
+          "day": 1,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Aug 18: -32% shakeout in one week\\!\nBroke all MAs. Stop-out event.\nEnds most positions.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "CRDO_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 50,
+        "time": {
+          "day": 7,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 28,
+        "time": {
+          "day": 25,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q1: V-bottom from $29\n73% 10EMA, -24% DD\nNo base yet",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 65,
+        "time": {
+          "day": 12,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 50,
+        "time": {
+          "day": 25,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May 12: +10% gap\nclose@56% = MID\nNot a clean real EP",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 95,
+        "time": {
+          "day": 3,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 60,
+        "time": {
+          "day": 20,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Jun 3: +20% gap on 4.7x vol\nclose@6% = MASSIVE TRAP\nSkip — signal of weakness",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 110,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 80,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "ONLY tradable leg\nQ2: 88% 10EMA, 0 50SMA\nEntry ~$78, Stop $72\nExit by Aug 5",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 5,
+      "price": 72,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 160,
+        "time": {
+          "day": 4,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 130,
+        "time": {
+          "day": 18,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Sep 4: +11% gap close@15% = TRAP\n2nd trap — character deteriorating",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 225,
+        "time": {
+          "day": 3,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 165,
+        "time": {
+          "day": 2,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q4 BREAKDOWN\n52% 10EMA, 6 50SMA touches, -34% DD\nChart falls apart",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 8,
+      "p1": {
+        "price": 220,
+        "time": {
+          "day": 20,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 180,
+        "time": {
+          "day": 30,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Nov 20: +8% gap close@5% = TRAP\n3rd trap EP",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 9,
+      "p1": {
+        "price": 230,
+        "time": {
+          "day": 2,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 195,
+        "time": {
+          "day": 10,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Dec 2: +14% gap close@6% = TRAP\n4th trap EP — WORST EP STOCK in library",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "CRWV_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 12,
+      "p1": {
+        "price": 41.9136,
+        "time": {
+          "day": 29,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 41.7337,
+        "time": {
+          "day": 23,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "29 Apr is where tightness was formed",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#6651d2",
+      "id": 13,
+      "price": 60.986,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 14,
+      "p1": {
+        "price": 62.0656,
+        "time": {
+          "day": 13,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 54.5086,
+        "time": {
+          "day": 19,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "The entire move respected the 10MA and it broke out from the IPO high point with volume. \nThis is the 1st Possible entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 16,
+      "p1": {
+        "price": 158.7494,
+        "time": {
+          "day": 17,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 80.4727,
+        "time": {
+          "day": 6,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This may actually be considered the second entry although in hindsight it was not where things worked out. \nStop should be at low of range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 17,
+      "p1": {
+        "price": 157.289,
+        "time": {
+          "day": 8,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 190.5858,
+        "time": {
+          "day": 3,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "8 Jul is where you would exit",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "DAVE_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 190,
+        "time": {
+          "day": 8,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 90,
+        "time": {
+          "day": 22,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May 8 EP: +25% gap on 5.6x vol.\nClose at 98% of range — TEXTBOOK strong EP.\nRan to $286 in 8 weeks along 10EMA.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 2,
+      "price": 102.11,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    }
+  ],
+  "FLNC_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 15,
+        "time": {
+          "day": 1,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 5,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "64% 10EMA, -39% DD, 81% underwater.\n8.9% ADR — highest in library. Untradable.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "GLXY_2025": [
+    {
+      "color": "#6651d2",
+      "id": 21,
+      "price": 21.7019,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 23,
+      "p1": {
+        "price": 20.872,
+        "time": {
+          "day": 14,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 11.4409,
+        "time": {
+          "day": 8,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "These price actions here around Jun Jul was starting to get a bit interesting. \nThe price action not super tight but EMAs are in right alignment",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 24,
+      "p1": {
+        "price": 22.9091,
+        "time": {
+          "day": 16,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 37.4707,
+        "time": {
+          "day": 24,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "16 Jul was a breakout entry. Would be a buy on the break of the top of the consolidation range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 25,
+      "p1": {
+        "price": 27.2851,
+        "time": {
+          "day": 15,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 47.2036,
+        "time": {
+          "day": 17,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "15 Aug showed a good example of a failed flag. \nTight action followed by a break of candle crossing both 10 and 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 26,
+      "p1": {
+        "price": 25.927,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 16.6468,
+        "time": {
+          "day": 17,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 Sept could be considered an undercut and rally - typical of such a move. \nThe 10 20 50 EMA are all tangled up, Price reclaimed everyone of it and started moving up",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 27,
+      "p1": {
+        "price": 38.0743,
+        "time": {
+          "day": 22,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 49.2407,
+        "time": {
+          "day": 29,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Entire move was tradable until 22 Oct when price closed below both 10 and 20 EMA",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "HOOD_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 46.5735,
+        "time": {
+          "day": 1,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": -18.61,
+        "time": {
+          "day": 4,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This is where things start getting interesting. \nIt reclaimed the 10 and 20 EMA and started consolidated above with all EMA re-aligning.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 52.6957,
+        "time": {
+          "day": 8,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 121.8406,
+        "time": {
+          "day": 30,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "8 May would be a possible entry. The volume may not be there but it \nstarted breaking out from the consolidation range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 64.9401,
+        "time": {
+          "day": 30,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 28.567,
+        "time": {
+          "day": 23,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Another tight consolidation zone whereby price tightened up above the 10 EMA for the entire May.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 70.7022,
+        "time": {
+          "day": 3,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 158.5738,
+        "time": {
+          "day": 21,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "2 Jun - potential 2nd entry point as it broke out from the range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 76.1041,
+        "time": {
+          "day": 24,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 60.9787,
+        "time": {
+          "day": 2,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "2-24 Jun could be considered a base above a base with tight action",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 102.3936,
+        "time": {
+          "day": 5,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 76.1041,
+        "time": {
+          "day": 4,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Test of faith 5 Sept the entire August was a test and would not have held through that",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 112.4772,
+        "time": {
+          "day": 8,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 185.5836,
+        "time": {
+          "day": 26,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "8 Sep things atarted getting interesting again. \nGap up with good volume and closed at high of bar. Possible day of entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 8,
+      "p1": {
+        "price": 127.6027,
+        "time": {
+          "day": 7,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 185.9437,
+        "time": {
+          "day": 16,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Clear break of trend here. Probably would exit",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "IONQ_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 30,
+        "time": {
+          "day": 11,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 17,
+        "time": {
+          "day": 15,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q1 base: 57% 10EMA, -28% DD\n8.1% ADR — giant intraday swings\nNo entry structure",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 35,
+        "time": {
+          "day": 8,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 25,
+        "time": {
+          "day": 25,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May 8: +9% gap close@69% = MID\nOnly qualifying gap in whole move",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 45,
+        "time": {
+          "day": 27,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 30,
+        "time": {
+          "day": 5,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q3 AU CHOP\n49% 10EMA, 8 50SMA touches in 37 days\\!\n-21% DD — classic AU pattern",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 85,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 50,
+        "time": {
+          "day": 20,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q4 parabolic: 76% 10EMA but\nSTILL 8 more 50SMA touches\\!\nTotal 17 — worst in library",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 75,
+        "time": {
+          "day": 1,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 50,
+        "time": {
+          "day": 20,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "NOT TRADABLE\n17 50SMA touches, 8.1% ADR\n64% underwater — narrative stock",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "IREN_2025": [
+    {
+      "color": "#984ea6",
+      "id": 9,
+      "p1": {
+        "price": 15.5776,
+        "time": {
+          "day": 6,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 9.3305,
+        "time": {
+          "day": 24,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 11,
+      "p1": {
+        "price": 11.2046,
+        "time": {
+          "day": 25,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 26.5446,
+        "time": {
+          "day": 12,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This Pivot marks the break of a trend line with good volume. Could be a posible second entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 12,
+      "p1": {
+        "price": 9.8164,
+        "time": {
+          "day": 13,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": -33.2235,
+        "time": {
+          "day": 15,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Some level of tightness here with the chart getting a lot more interesting. the Moving averages are setting up and the stock itself is seeing tightness whilst holding 10MA. A very nice looking chart\nA possible entry would be to set entry at the break of the tight range with stop below the range. The volume in this period is very bullish too",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 13,
+      "p1": {
+        "price": 15.5776,
+        "time": {
+          "day": 1,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 153.1027,
+        "time": {
+          "day": 14,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Here you have the first test of faith when share price plunges through the 10MA and 20MA but foudn support at the 50 The volume on pullback here is notably small",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 14,
+      "p1": {
+        "price": 17.2434,
+        "time": {
+          "day": 6,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 12.0376,
+        "time": {
+          "day": 10,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "6 Aug could actually be considered an undercut and reclaim. It was back up on strong volume and above all EMAs",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 15,
+      "p1": {
+        "price": 18.5623,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 200.9468,
+        "time": {
+          "day": 15,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "The entire half a month after the reclaim was very choppy for long\nIt is very easy to get stopped out and 20 Aug was the toughtest as it broke the low fo the consolidation range (but reclaim to close green). This should have been taken as a positive signal",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 17,
+      "p1": {
+        "price": 22.8658,
+        "time": {
+          "day": 28,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 183.2616,
+        "time": {
+          "day": 31,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Tightness in this range. Again a possible tradable entry on 28 Aug on breakout although it ended up as a squat",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 20,
+      "p1": {
+        "price": 20.714,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 40.5657,
+        "time": {
+          "day": 24,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "22 Aug arguably could be an entry although it is not the typical entry but it broke the top of the range and also the move before held 10MA consistently.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 21,
+      "p1": {
+        "price": 26.6834,
+        "time": {
+          "day": 29,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 33.208,
+        "time": {
+          "day": 17,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Gap up EP here, the subsequent move was choppy but again held largely low of the range on Day0 and met with 10 MA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 23,
+      "p1": {
+        "price": 29.9457,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 62.7766,
+        "time": {
+          "day": 28,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This is a great entry on breakout of the top of the range. It tested the gap and held reclaimed to close green.\n\nSubsequent move held 10MA entirely",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "JOBY_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 10,
+        "time": {
+          "day": 28,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 4,
+        "time": {
+          "day": 10,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May 28 EP: +17%, 7.3x vol, close@81% = GOOD.\nJun 3 EP: +13%, close@9% = TRAP.\nJun 9 EP: +10%, close@80% = GOOD.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 2,
+      "price": 6.72,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    }
+  ],
+  "KSS_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 10,
+        "time": {
+          "day": 4,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 6,
+        "time": {
+          "day": 25,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Q1 base: 56% 10EMA, 4 50SMA touches\nSlow bottoming from $6",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 12,
+        "time": {
+          "day": 29,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 7,
+        "time": {
+          "day": 15,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May 29: +12% gap on 2.6x vol\nclose@9% = TRAP EP",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 22,
+        "time": {
+          "day": 22,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 11,
+        "time": {
+          "day": 10,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Jul 22: +90% MEGA SQUEEZE on 11.9x vol\nclose@22% = MASSIVE TRAP\nWould destroy any holder",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 20,
+        "time": {
+          "day": 27,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 14,
+        "time": {
+          "day": 15,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Aug 27: +26% gap close@60% = MID\nStill not clean",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 90,
+        "time": {
+          "day": 13,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 60,
+        "time": {
+          "day": 1,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Oct parabolic spike to ~$80\n57% 10EMA, 11 50SMA touches\nVolatile blow-off",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 30,
+        "time": {
+          "day": 25,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 20,
+        "time": {
+          "day": 1,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Nov 25: +24% EP close@99% = REAL\nOnly clean EP but at TOP\nMomentum trade only",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "KTOS_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 31.7151,
+        "time": {
+          "day": 28,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 19.7151,
+        "time": {
+          "day": 28,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "ENTRY: Apr 21 breakout ~$32\nCharacter change from Q1 base\nStop $29 / Use 20EMA trailing\n20EMA stock (87% adherence)",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 2,
+      "price": 29,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    }
+  ],
+  "LEU_2025": [
+    {
+      "color": "#984ea6",
+      "id": 17,
+      "p1": {
+        "price": 123.8044,
+        "time": {
+          "day": 11,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 93.9179,
+        "time": {
+          "day": 30,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 18,
+      "p1": {
+        "price": 91.0716,
+        "time": {
+          "day": 16,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 22.7597,
+        "time": {
+          "day": 16,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "First tightness with nice consolidation and good EMA alignment. This is the first Possible Entry - eith on retreat to 10EMA or on breakout. The stop is below low of the range.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 111.4606,
+        "time": {
+          "day": 23,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 306.6273,
+        "time": {
+          "day": 31,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This is a EP day. Also a breakout from the base. This is another possibel entry.\n\nCan either enter here or wait for 2day to see if there is any weakness. Volume was multiple times of before",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 144.9548,
+        "time": {
+          "day": 11,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 94.8285,
+        "time": {
+          "day": 5,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Track 10 MA really well. Nice swing",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 155.5877,
+        "time": {
+          "day": 26,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 114.5752,
+        "time": {
+          "day": 5,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "First test of faith, held 20MA. flat to consolidate",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 186.7268,
+        "time": {
+          "day": 10,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 492.8015,
+        "time": {
+          "day": 1,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Another possible entrey. Potential Entry 3 - breakout from consolidation range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 216.3469,
+        "time": {
+          "day": 12,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 429.0043,
+        "time": {
+          "day": 24,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Should be a marginal exit if didn't the next day is the exit",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 201.1571,
+        "time": {
+          "day": 5,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 171.537,
+        "time": {
+          "day": 19,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This entire move since the breakdown in Aug and reclaim could be viewed as a mini undercut and reclaim, \nthen you see tightness around 50EMA then tighness above 10 20 EMA, 10 20 EMA closely tangled, this is a high qualith entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 8,
+      "p1": {
+        "price": 213.5647,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 591.0083,
+        "time": {
+          "day": 27,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 Sep is a high quality low risk entry, Possible Entry at breakout from consolidation range and stop at low of range\nThe entire move afterwards held 10MA very very well",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "LITE_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 75,
+        "time": {
+          "day": 1,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 50,
+        "time": {
+          "day": 20,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "ENTRY: May 50SMA reclaim ~$60\nStop ~$55\nTRADABLE — gold standard",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 2,
+      "price": 55,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 200,
+        "time": {
+          "day": 5,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 150,
+        "time": {
+          "day": 25,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Nov 5: +16% EP close@71% = REAL\nAdd / momentum entry",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "MP_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 28,
+      "p1": {
+        "price": 23.409,
+        "time": {
+          "day": 28,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 6.8122,
+        "time": {
+          "day": 15,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Price action was interesting in this range. \nFeb MAr we saw tightness and sideway action with EMAs lining up",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 29,
+      "p1": {
+        "price": 25.4445,
+        "time": {
+          "day": 2,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 56.7593,
+        "time": {
+          "day": 20,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Apr and May the price action was wild with constant crossing of the 2 EMAs.\nThe price eventually broke down to test 50 EMA - showing that generally difficult to trade something not ready to move yet",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#6651d2",
+      "id": 30,
+      "price": 27.3234,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 31,
+      "p1": {
+        "price": 26.8537,
+        "time": {
+          "day": 9,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 11.9791,
+        "time": {
+          "day": 21,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 Jun broke out with increased volume but price action was not decisive. \nThe closing price moved back into the resistance. The next day gap up was being sold off",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 32,
+      "p1": {
+        "price": 24.9748,
+        "time": {
+          "day": 11,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": -3.052,
+        "time": {
+          "day": 27,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "11 Jun we saw one final shaekout test and hold movement. Very difficult",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 34,
+      "p1": {
+        "price": 27.7931,
+        "time": {
+          "day": 12,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 38.2836,
+        "time": {
+          "day": 23,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "12 Jun we saw a strong move up breaking the resistance closing \nstrongly with a FT the day after. This was the first decent entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 35,
+      "p1": {
+        "price": 30.2983,
+        "time": {
+          "day": 9,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 43.7637,
+        "time": {
+          "day": 16,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "10 Jul the retest was brutal. It was a very bad test of faith that was almost\nimpossible to hold",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 36,
+      "p1": {
+        "price": 47.3649,
+        "time": {
+          "day": 10,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 82.9071,
+        "time": {
+          "day": 28,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "10 Jul had a EP style gap up on government investment. \nGot sold off. 3 days later there was another gap up on apple news",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 37,
+      "p1": {
+        "price": 66.78,
+        "time": {
+          "day": 4,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 94.9634,
+        "time": {
+          "day": 10,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Price action here became wide and loose.\nNot a very tradable setup anymore and signaling top is near",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "MU_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 96.5415,
+        "time": {
+          "day": 20,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 63.2692,
+        "time": {
+          "day": 9,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This was when things started getting interesting.\nThings got tight at just above 200EMA. bullish alignment of EMAs emerging",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 95.9776,
+        "time": {
+          "day": 3,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 249.9323,
+        "time": {
+          "day": 16,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "3 Jun. First Potential Entry as it broke out from the range, low of the range as stop",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 120.2268,
+        "time": {
+          "day": 4,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 90.9021,
+        "time": {
+          "day": 7,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "4 Sep - second tightness formed. EMAs started becoming interesting. This day the candle started forming early breakout. \nA good entry with low of EMA as the stop loss",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 225.1191,
+        "time": {
+          "day": 20,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 312.5292,
+        "time": {
+          "day": 27,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "20 Nov - First exit as it broke 10MA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 258.9553,
+        "time": {
+          "day": 19,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 183.9517,
+        "time": {
+          "day": 6,
+          "month": 1,
+          "year": 2026
+        }
+      },
+      "style": "solid",
+      "text": "19 Dec, looked like a possible entry. EMAs re aligned and expanded\nThis candle broke the top of the range. The stop is just below 20 EMA",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "NBIS_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 42.6189,
+        "time": {
+          "day": 6,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 12.1803,
+        "time": {
+          "day": 2,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Jun 5 EP: +5.2% gap on 4.9x vol. BEST ENTRY.\nDay 2 ~$46-48, stop below gap low $41.40 (~13% risk).\nGap held for 2 months, never filled.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 3,
+      "price": 41.4,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 5,
+      "p1": {
+        "price": 63.664,
+        "time": {
+          "day": 7,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 55,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Aug 7 EP: +16.8% gap on 3.1x vol.\nDay 2 ~$69, stop below $63 (~9% risk).\nAlternative entry if missed Jun EP.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 6,
+      "price": 63.38,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 95.8771,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 75,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Sep 9 MONSTER EP: +52% gap on 6.6x vol!\nTradable but LATE in move (3.5x from low already).\nLast leg - HOOD lesson applies. Momentum trade only.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 8,
+      "price": 86.12,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": -2.7828,
+        "time": {
+          "day": 17,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 69.5488,
+        "time": {
+          "day": 11,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Volume dried up to 0.3x of the avg",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 50,
+      "p1": {
+        "price": 27.4097,
+        "time": {
+          "day": 8,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 114.2945,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Early May Price started to consolidate above the 50 EMA and showed tightness",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 51,
+      "p1": {
+        "price": 44.1312,
+        "time": {
+          "day": 14,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 29.7828,
+        "time": {
+          "day": 4,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Jul 11: 58% retracement - AU territory.\nWould have been very uncomfortable to hold through this.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 64.5529,
+        "time": {
+          "day": 8,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 44.135,
+        "time": {
+          "day": 3,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Test of the low of the gap. Again followed by a EP - very difficultto hold after the chase. \nSideway downward chop for 1mth+",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "OKLO_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 38,
+      "p1": {
+        "price": 26.995,
+        "time": {
+          "day": 9,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 0.1566,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "9 May - this is when things started to look interesting. \nAll the EMAs are tangled up and the price action started become tight. 12 May was the first notable entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 40,
+      "p1": {
+        "price": 30.6968,
+        "time": {
+          "day": 13,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 73.9622,
+        "time": {
+          "day": 10,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "13 May was also a possible entry with breakout on volume\nSubsequent move was a base on top of a base. Another week long consolidation",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#6651d2",
+      "id": 41,
+      "price": 55.2216,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 42,
+      "p1": {
+        "price": 57.7666,
+        "time": {
+          "day": 11,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 99.8752,
+        "time": {
+          "day": 14,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Things got interesting on 11 Jun when the price broke out from the cup\nand handle pattern and moved on strong volume",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 43,
+      "p1": {
+        "price": 53.6021,
+        "time": {
+          "day": 10,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 29.54,
+        "time": {
+          "day": 30,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "until 10 Jul the move was very challenging. It was a test of faith",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 44,
+      "p1": {
+        "price": 73.0368,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 125.3255,
+        "time": {
+          "day": 8,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "14 Jun - 10 Sept the price action was \nhorrible. A lot of deep pullbacks. Test of 50MA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 45,
+      "p1": {
+        "price": 80.2091,
+        "time": {
+          "day": 12,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 54.7589,
+        "time": {
+          "day": 17,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "12 Sept presented another opp. The prices are cleanly above all EMA and all EMA rising. \nThis was near breakout point",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 46,
+      "p1": {
+        "price": 115.0942,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 213.1375,
+        "time": {
+          "day": 11,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "25 Sept - still vividly remember how wildly this trades with the strong gap down and reclaim. \nThe subsequent 4 day move was not nice neither. Another signal of near top behavior",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "OUST_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 22.907500000000002,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 10.4125,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "63% 10EMA, 9 50SMA touches, -32.9% DD, 8.2% ADR.\\nNOT TO MY STYLE. 8.2% ADR. Too volatile to hold.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "PI_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 135.883,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 61.765,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "73% 10EMA, 9 50SMA touches, -21.5% DD, 5.1% ADR.\\nPARTIALLY TRADABLE. PI respects 20EMA, not 10EMA. A 20EMA-style trade.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "PL_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 3.0798,
+        "time": {
+          "day": 22,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 1.5,
+        "time": {
+          "day": 12,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Apr-May: Base tightening below all MAs.\nVolume drying up. Range narrowing $3.10-3.60.\nConstructive but not yet tradable.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 3,
+      "p1": {
+        "price": 7.252,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 4.5,
+        "time": {
+          "day": 14,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Jul 1 EP TRAP: +16.9% gap to $7.72 high.\nBut closed at $6.16 — gave back ENTIRE gap!\nClassic chase-and-reverse.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 4,
+      "p1": {
+        "price": 8.59,
+        "time": {
+          "day": 8,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 5,
+        "time": {
+          "day": 22,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Sep 8 EP: +18% gap on 6.9x vol. THE REAL ONE.\nClose $9.67 near high $9.71 = strong close.\nDay 2 gap-down shakeout (-10.7%) but recovered.\nRan to $16+ in 4 weeks.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 5,
+      "price": 7.29,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 6,
+      "p1": {
+        "price": 14.3584,
+        "time": {
+          "day": 16,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 10,
+        "time": {
+          "day": 3,
+          "month": 11,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Oct-Nov: -37% correction from $16.78 to $10.52.\nBroke below 10/20 EMA. Eventually 50SMA.\nEntire Sep-Oct gain round-tripped.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 7,
+      "p1": {
+        "price": 17.385,
+        "time": {
+          "day": 11,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 14,
+        "time": {
+          "day": 22,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Dec 11 EP: +22% gap on 5.5x vol.\nLate-move EP but held and ran to $21.\nStrong close near high.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 8,
+      "price": 15.01,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 52,
+      "p1": {
+        "price": 5.9507,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": -0.7543,
+        "time": {
+          "day": 16,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Jun 5 EP TRAP: +30.8% gap on 13.7x vol.\nLooks incredible but LOW ($5.01) was BELOW open ($5.22)!\nClose $5.96 vs high $6.45 = upper wick reversal.\nGap filled over next 2 weeks.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 5.0104,
+        "time": {
+          "day": 23,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 13.2733,
+        "time": {
+          "day": 22,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Despite the challenge still hold 20MA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 53,
+      "p1": {
+        "price": 20.6755,
+        "time": {
+          "day": 5,
+          "month": 2,
+          "year": 2026
+        }
+      },
+      "p2": {
+        "price": 17.3618,
+        "time": {
+          "day": 17,
+          "month": 3,
+          "year": 2026
+        }
+      },
+      "style": "solid",
+      "text": "again repeating the pattern of pushing below 50MA",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "PONY_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 13.706000000000001,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 6.23,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "61% 10EMA, 17 50SMA touches, -49.5% DD, 10.5% ADR.\\nNOT TO MY STYLE. 10.5% ADR is new library record. 95% underwater. The most extreme untradable cha",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "PRAX_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 174.74600000000004,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 79.43,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "66% 10EMA, 16 50SMA touches, -39.1% DD, 6.9% ADR.\\nNOT TO MY STYLE. +1090% but untradable. Confirms gain size has zero correlation with tradability.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "QURE_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 25,
+        "time": {
+          "day": 17,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 5,
+        "time": {
+          "day": 5,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Apr 17: +38% gap on 10.4x vol.\nBut close@28% of range = TRAP EP.\n25 touches of 50SMA — worst in library.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "RKLB_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 50,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 20,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "63% 10EMA, -49% DD, 76% underwater.\n15 touches of 50SMA. Untradable.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "SATS_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 61.264500000000005,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 27.8475,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "64% 10EMA, 15 50SMA touches, -23.9% DD, 4.9% ADR.\\nNOT TO MY STYLE. Below threshold on all key metrics.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "SEDG_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 30,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 10,
+        "time": {
+          "day": 25,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May 6: +15% gap, close@11% = TRAP.\nMay 12: +8% gap, close@12% = TRAP.\n61% 10EMA, -44% DD. Worst in library.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "SEZL_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 102.70700000000001,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 46.685,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "92% 10EMA, 4 50SMA touches, -24.9% DD, 8.6% ADR.\\nPARTIALLY TRADABLE. Highest 10EMA in library (92%) but CRWV paradox — 8.6% ADR makes holding uncomfo",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "SNDK_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 155.705,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 70.775,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "77% 10EMA, 33 50SMA touches, -19.5% DD, 6.0% ADR.\\nNOT TO MY STYLE. 33 50SMA touches — new record. 50SMA metric alone disqualifies this despite othe",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "SNDK_2026": [],
+  "STRL_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 200,
+        "time": {
+          "day": 15,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 100,
+        "time": {
+          "day": 1,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "May-Jul: 16 weeks of clean 10EMA grind.\nZERO 50SMA touches. Gold standard chart.\nLow ADR (4.7%) = easy to hold.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 2,
+      "p1": {
+        "price": 330,
+        "time": {
+          "day": 5,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 240,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Aug 5 EP: +9% gap on 2.5x vol.\nAcceleration into final leg to $419.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#fb7185",
+      "id": 3,
+      "price": 244.02,
+      "style": "dashed",
+      "type": "hline",
+      "width": 1
+    }
+  ],
+  "STX_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 169.91150000000002,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 77.2325,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "80% 10EMA, 2 50SMA touches, -23.3% DD, 4.0% ADR.\\nTRADABLE. STX rivals STRL as best chart. 4.0% ADR = easiest hold in library. 23-week clean",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "TSEM_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 71.26900000000002,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 32.395,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "82% 10EMA, 10 50SMA touches, -18.2% DD, 4.2% ADR.\\nPARTIALLY TRADABLE. TSEM has the shallowest drawdown (-18%) and low ADR. Borderline on 50SMA touches",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "TTMI_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 44.319,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 20.145,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "79% 10EMA, 8 50SMA touches, -23.4% DD, 4.7% ADR.\\nPARTIALLY TRADABLE. Steady grinder with no catalysts. Low ADR = easy hold but might be too slow for ",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "VSAT_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 23.974500000000003,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 10.8975,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "66% 10EMA, 13 50SMA touches, -25.8% DD, 6.7% ADR.\\nNOT TO MY STYLE. Another 20EMA stock (77%) misclassified as 10EMA candidate. Below threshold.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "VSCO_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 31.322500000000005,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 14.2375,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "71% 10EMA, 20 50SMA touches, -26.4% DD, 5.5% ADR.\\nNOT TO MY STYLE. 20 50SMA touches. Retail sector AU-type.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "W_2025": [
+    {
+      "color": "#000000",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1,
+      "p1": {
+        "price": 63.206,
+        "time": {
+          "day": 1,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 28.73,
+        "time": {
+          "day": 20,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "77% 10EMA, 11 50SMA touches, -28.8% DD, 5.6% ADR.\\nPARTIALLY TRADABLE. 4 good EPs, 0 traps — best EP hit rate in library. But 11 50SMA touches = EP tra",
+      "type": "note",
+      "width": 2
+    }
+  ]
+}

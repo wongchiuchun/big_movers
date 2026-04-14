@@ -113,32 +113,44 @@ Eight detectors, each returns `DetectorResult(setup, matched, score, criteria_me
 - CIEN 2025 classified as VCP (85) when the real entry is the Sep 4 EP (80) — VCP won on score because the Jun-Sep base met contraction criteria, even though the gap was the defining event
 - IREN 2025 correctly gets no match — no clean tradable setup at inception
 
-## What we agreed to do next (not yet built)
+## Current state — Stage 1 in progress
 
-### Stage 1: Manual chart review process
-The user will review ~200-300 charts manually, broken into legs:
-- Each move gets broken into 2-5 **legs** (distinct phases: advance, consolidation, pullback)
-- Each leg gets independently classified (setup or "no setup") with entry/stop levels
-- User adds **subjective style notes** ("too choppy, would be shaken out", "clean 10EMA trend, tradable")
-- **No performance rating from the user** — that's hindsight-biased. Ratings come from empirical analysis later.
+### What's been annotated
+30 tickers annotated (20 user + 10 AI batch). 23 have structured AI reviews. 3 AI calibration attempts (HOOD, NBIS, PL). See `ANNOTATION_TRACKER.md` for the full analysis including tradability patterns and quick-filter checklist.
 
-**Note convention** for the existing Study drawer textarea:
-```
-[VCP] 2025-03-15 → 2025-05-20 | leg 1 of 3
-Entry: 48.50 (range break) | Stop: 45.00
-Context: 2-year base, broke ATH Jan 2025
-Structure: 3 contractions, VDU last week, breakout closed top 20% of range
-Subjective: textbook tight. To my liking — would trade.
+### User's style profile (established through annotation)
 
-[NO SETUP] — choppy, pulled back to 20 EMA 6 times, would've been shaken out.
-```
+**The ideal setup pattern:**
+1. Stock climbs along 20MA — clear, orderly
+2. Breaks down to 50MA, holds, consolidates
+3. Accelerates — transitions to tracking along 10MA
+4. **"That's my shot"** — the 10MA tracking phase is the entry zone
 
-### Stage 2: LLM-assisted co-pilot (future)
-Once enough labeled examples exist (~50-100 legs), the library becomes a retrieval corpus:
-- User shows a current chart: "I think this is a VCP breakout from a 3-month base"
-- System pulls up similar historical legs from the library
-- LLM debates the setup: agrees/disagrees, suggests entry/stop based on labeled examples
-- Rates the setup for the user's specific style (not generic textbook rating)
+**Key style markers:**
+- Likes high ADR stocks with clean 10EMA trends (CIFR is the ideal)
+- 10EMA adherence threshold: ~65-70% separates "tradable" from "skip"
+- Hates stocks that constantly visit 50EMA (AU type)
+- Major weakness: holding through pullbacks → tends to overtrade → wants to swing trade instead
+- Solution: trade only the "easy ones" — if it's clean 10EMA, can swing; if it's choppy, pass
+- Good at spotting entries; not good at ranking/choosing between them or remembering parallels
+
+**Stop logic (heuristic, to refine in Stage 2):**
+- Breakout: ~8% below consolidation range bottom
+- Gap-up: ~8% below gap-day low
+
+### Staged approach
+
+**Stage 1 (NOW):** Free annotation. User annotates freely, AI produces structured reviews. Focus is ENTRY only — exit/stop refinement is deferred. Target: ~20-30 annotated tickers before calibration.
+
+**Stage 1.5:** AI attempts independent annotations, user grades them. Disagreements are the highest-value data.
+
+**Stage 2:** Strategy refinement — exit logic, position sizing, simulation, rating/filtering. Determine "best strategy" not just "is this tradable."
+
+**Stage 3:** Live co-pilot — debate new charts, pull parallels, challenge reads, checklist-based assessment.
+
+**Important:** Pivot detection is backward-looking (uses known low_date/high_date). Not forward-identifiable.
+
+See `NEXT_STEPS.md` for full details on each stage, open questions, and immediate actions.
 
 ### Review guide
 `REVIEW_GUIDE.md` documents the structured process for Claude to analyze a ticker+year:
@@ -199,3 +211,24 @@ The user is an active trader studying Qullamaggie/Minervini/O'Neil style momentu
 5. Eventually having an LLM co-pilot that can pull relevant examples and challenge/validate live trade ideas
 
 The system sits between art and science — structured enough to query, flexible enough to handle discretion. The automated classifier is a starting hint, not the answer. The human's labeled annotations are the real value.
+
+### Phase transition: Classifier → Library building
+The Python classifier phase is **done**. Setup detectors and pivot detection are backward-looking (need known high_date) and classifications often disagree with user reads. The quantitative snapshot computation (EMA adherence, retracement ratios, gaps, slope) is still used in every review. Chart overlays (MAs) are still used during annotation. But further detector tuning is retired.
+
+We're now in the **library building phase**: user annotates charts freely, AI produces structured reviews, periodic calibration attempts where AI annotates independently and user grades.
+
+### Reviews completed: 13
+IREN, LEU, CIEN, ASTS, CIFR, MU (first batch) + AVAV, AU, ALAB, CRWV, HOOD (second batch) + NBIS, PL (third batch — AI independent annotations with chart annotations).
+
+**AI annotation attempts:** 3 total (HOOD, NBIS, PL). Key calibration:
+- HOOD: AI picked Sep EP, user corrected to May VCP breakout (early structural entry wins when trend is clean)
+- NBIS: AI picked Jun EP, user corrected to Sep onwards (post-entry trend quality matters — chop after early EP makes it untradable)
+- PL: AI and user aligned on Sep EP as best entry. **New discovery: EP close quality filter** — trap EPs close in lower half of range, real EPs close near high.
+
+### Forward-looking exercises started
+Evaluated ASTS, IREN, CIFR on current 2026 charts as if in real-time. CIFR showed the most promising setup (gap above converging MAs after undercut low). This exercise type is the bridge to Stage 3.
+
+### UI features added (latest session)
+- **Compare Side-by-Side popup**: floating, draggable, shows user notes (editable) + AI review. Button in study drawer.
+- **Leg highlight on hover**: hover a review leg → golden band on chart for that date range
+- **CSV format normalization**: all 593 CSVs standardized; server extend logic fixed to prevent mixed formats
