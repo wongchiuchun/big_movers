@@ -212,6 +212,11 @@
   .dir-short{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:0.08em;background:rgba(251,113,133,0.08);color:#fb7185;}
   .tag-mini{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;background:var(--bg3);color:var(--text-2);border:1px solid var(--border);font-weight:500;letter-spacing:0.02em;}
   .unrated{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:0.1em;text-transform:uppercase;}
+  /* Annotation source badge — AI vs Human */
+  .src-badge{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:0.08em;border:1px solid;}
+  .src-badge.src-ai{background:rgba(122,126,138,0.12);color:var(--muted);border-color:rgba(122,126,138,0.35);}
+  .src-badge.src-h{background:rgba(237,228,207,0.12);color:var(--accent-cream);border-color:rgba(237,228,207,0.45);}
+  .src-badge.src-none{background:transparent;color:var(--muted);border-color:var(--border);opacity:0.55;}
 
   .chart-symbol{font-size:15px;font-weight:600;color:var(--text);}
   .chart-cond{font-size:10px;padding:2px 7px;border-radius:2px;border:1px solid var(--accent);color:var(--accent);}
@@ -994,15 +999,15 @@
     font-family: var(--mono);
     font-size: 9px;
     color: var(--muted);
-    background: rgba(10,12,15,0.85);
+    background: var(--bg4);
     padding: 2px 6px;
     border-radius: 2px 2px 0 0;
     white-space: nowrap;
   }
   #txt-input {
     display: block;
-    background: rgba(10,12,15,0.75);
-    border: 1px solid rgba(0,212,170,0.35);
+    background: var(--bg4);
+    border: 1px solid var(--border-bright);
     color: var(--text);
     font-family: Arial, sans-serif;
     font-size: 12px;
@@ -1121,6 +1126,7 @@
       <label>Dir</label><select id="f-dir" class="study-select" style="width:5em"><option value="">All</option><option value="long">Long</option><option value="short">Short</option></select>
       <label>Min Rtg</label><select id="f-rating" class="study-select" style="width:4em"><option value="">All</option><option value="A">≥A</option><option value="B">≥B</option><option value="C">≥C</option><option value="D">≥D</option></select>
       <label>AI</label><select id="f-ai" class="study-select" style="width:8em"><option value="">Any</option></select>
+      <label>Src</label><select id="f-src" class="study-select" style="width:5em" title="Annotation source"><option value="">All</option><option value="human">H only</option><option value="ai">AI only</option><option value="none">Untouched</option></select>
       <div class="vsep" style="height:16px"></div>
       <div class="filter-views">
         <select id="fv-select" title="Saved filter views"><option value="">Views...</option></select>
@@ -1399,6 +1405,10 @@
           <div class="fetch-field">
             <label>End Date (default: today)</label>
             <input id="fetch-end" type="date">
+          </div>
+          <div class="fetch-field">
+            <label>Year (default: from start date)</label>
+            <input id="fetch-year" type="number" min="1900" max="2100" step="1" placeholder="e.g. 2025" autocomplete="off">
           </div>
           <div class="fetch-actions">
             <button class="fetch-btn-cancel" id="fetch-cancel-btn">Cancel</button>
@@ -1847,6 +1857,9 @@ function applyTheme() {
     // Update MA lines - refresh them to pick up any color changes
     updateAllMA();
   }
+
+  // Refresh drawings so the light-mode white-annotation shim re-runs.
+  try{ if(typeof redrawAll === 'function') redrawAll(); }catch(e){}
 }
 
 themeToggle.addEventListener('click', () => {
@@ -3115,7 +3128,10 @@ function wrapCanvasText(ctx, text, maxWidth){
 
 function drawOne(d,sel=false){
   if(!textNotesVisible && (d.type==='text'||d.type==='note')) return;
-  const col=d.color||'#ffffff';
+  const rawCol=d.color||'#ffffff';
+  // Light-mode shim: white-default annotations are invisible on light chart bg.
+  // Map #fff/#ffffff → theme text color; preserve any user-picked color.
+  const col=(isLightTheme && /^#f{3}(f{3})?$/i.test(rawCol)) ? '#1a1f2e' : rawCol;
   const c=sel?'#ffdd00':col;
   ctx2.save();ctx2.globalAlpha=sel?1:0.88;
   const lw=sel?(d.width||2)+1:(d.width||2);
@@ -4482,6 +4498,7 @@ function applyFilters(){
   const dirFilter=document.getElementById('f-dir').value;
   const ratingFilter=document.getElementById('f-rating').value;
   const aiFilterVal=document.getElementById('f-ai').value;
+  const srcFilter=document.getElementById('f-src')?.value || '';
 
   filtered=allRows.filter(r=>{
     if(parseFloat(r.gain_pct)<mg)return false;
@@ -4494,6 +4511,7 @@ function applyFilters(){
       const k=moveKey(r);
       if(aiClassByMoveKey[k]?.ai_primary !== aiFilterVal) return false;
     }
+    if(srcFilter && getAnnotationSource(r) !== srcFilter) return false;
     return true;
   });
   applySort();
@@ -4535,7 +4553,7 @@ function applySort(){
   }
 }
 ['f-gain','f-sym','f-year'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
-['f-tag','f-dir','f-rating','f-ai'].forEach(id=>document.getElementById(id).addEventListener('change',applyFilters));
+['f-tag','f-dir','f-rating','f-ai','f-src'].forEach(id=>document.getElementById(id)?.addEventListener('change',applyFilters));
 document.getElementById('table-header').addEventListener('click',e=>{
   const sp=e.target.closest('span[data-col]');if(!sp)return;
   const col=sp.dataset.col;
@@ -4544,9 +4562,33 @@ document.getElementById('table-header').addEventListener('click',e=>{
   sp.classList.add(sortDir===1?'sort-asc':'sort-desc');
   applySort();
 });
+// Annotation source: 'human' | 'ai' | 'none'
+// 1. ai_classifications[key].user_reviewed === true → human
+// 2. notes contains "[Human]" → human
+// 3. notes starts with "[AI]" → ai
+// 4. notes non-empty with first-person user-voice markers → human
+// 5. notes empty → none
+function getAnnotationSource(r) {
+  const key = moveKey(r);
+  if (aiClassByMoveKey[key]?.user_reviewed) return 'human';
+  const notes = (getMeta(r).notes || '').trim();
+  if (!notes) return 'none';
+  if (notes.includes('[Human]')) return 'human';
+  if (notes.startsWith('[AI]')) return 'ai';
+  const lower = notes.toLowerCase();
+  const hints = ['to me','i think','i believe','in hindsight','in my view','i disagree','not a double bottom'];
+  if (hints.some(h => lower.includes(h))) return 'human';
+  return 'ai';
+}
+function renderSourceBadge(r) {
+  const s = getAnnotationSource(r);
+  if (s === 'human') return '<span class="src-badge src-h" title="Human-reviewed">H</span>';
+  if (s === 'ai')    return '<span class="src-badge src-ai" title="AI-annotated — needs your review">AI</span>';
+  return '<span class="src-badge src-none" title="No annotations yet">·</span>';
+}
 function renderStudyCell(r) {
   const m = getMeta(r);
-  let parts = [];
+  let parts = [renderSourceBadge(r)];
   if (m.rating) parts.push(`<span class="study-badge r-${m.rating}">${m.rating}</span>`);
   if (m.direction) parts.push(`<span class="${m.direction==='long'?'dir-long':'dir-short'}">${m.direction==='long'?'LONG':'SHORT'}</span>`);
   const TAG_ABBREV = {EP:'EP',VCP:'VCP',Parabolic:'Parabolic',HTF:'HTF',Breakout:'Breakout',Flag:'Flag','Power Earnings Gap':'PEG','IPO Base':'IPO','Low Cheat':'LC',Other:'Other'};
@@ -5248,6 +5290,7 @@ document.addEventListener('click', e => {
   const symInput = document.getElementById('fetch-symbol');
   const startInput = document.getElementById('fetch-start');
   const endInput = document.getElementById('fetch-end');
+  const yearInput = document.getElementById('fetch-year');
   const submitBtn = document.getElementById('fetch-submit-btn');
   const cancelBtn = document.getElementById('fetch-cancel-btn');
   const statusEl = document.getElementById('fetch-status');
@@ -5256,6 +5299,7 @@ document.addEventListener('click', e => {
     symInput.value = '';
     startInput.value = '';
     endInput.value = '';
+    yearInput.value = '';
     statusEl.textContent = '';
     statusEl.className = 'fetch-status';
     submitBtn.disabled = false;
@@ -5274,8 +5318,10 @@ document.addEventListener('click', e => {
     const symbol = symInput.value.trim().toUpperCase();
     const start = startInput.value;
     const end = endInput.value;
+    const yearOverride = yearInput.value.trim();
     if (!symbol) { statusEl.textContent = 'Symbol required'; statusEl.className = 'fetch-status error'; return; }
     if (!start) { statusEl.textContent = 'Start date required'; statusEl.className = 'fetch-status error'; return; }
+    if (yearOverride && !/^\d{4}$/.test(yearOverride)) { statusEl.textContent = 'Year must be a 4-digit number'; statusEl.className = 'fetch-status error'; return; }
 
     submitBtn.disabled = true;
     statusEl.textContent = 'Fetching from Twelve Data...';
@@ -5301,6 +5347,7 @@ document.addEventListener('click', e => {
       // Add to results table if we got a result row
       if (data.result_row) {
         const row = data.result_row;
+        if (yearOverride) row.year = yearOverride;
         // POST to add-result endpoint to persist
         await fetch('/api/add-result', {
           method: 'POST',

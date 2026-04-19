@@ -3499,7 +3499,10 @@
       }
     ],
     "ai_primary": "Flat Base",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "Flat Base",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-15"
   },
   "CRCL_2025": {
     "pivot": null,
@@ -4164,7 +4167,10 @@
       }
     ],
     "ai_primary": "Episodic Pivot",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "Episodic Pivot",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-15"
   },
   "EOSE_2025": {
     "pivot": {
@@ -9901,7 +9907,14 @@
       }
     ],
     "ai_primary": "Episodic Pivot",
-    "needs_review": false
+    "needs_review": false,
+    "user_primary": "Episodic Pivot",
+    "user_reviewed": true,
+    "user_reviewed_at": "2026-04-16",
+    "user_secondary": [
+      "Episodic Pivot",
+      "Gap & Go"
+    ]
   },
   "PL_2025": {
     "pivot": {

@@ -9,10 +9,21 @@
   "items": {
     "AAOI_2025": {
       "direction": "long",
-      "notes": "No setup in 2025 basically until it broke out of the cup and handle in 2026. This is one that traded like shit the entire year and started getting interesting in Nov 2025 when the EMAs started slopping up in the right alignments. However there were at least 4-5 deep round trips if you enter at 10 EMA and use that as a stop. Acceleration happened only around Feb 2026",
+      "notes": "[AI] Not a style fit. ADR 9.4%, library record 20 50 EMA tests, two upper-wick TRAPs (12 Jun close@8%, 8 Aug close@25%). +332% headline but only 4-week clean streak. Optical semis name with binary swing risk.\n\n[Human] No setup in 2025 not a tradable name",
       "rating": "",
       "tags": [
-        "Cup and Handle Breakout"
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "AAOI_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 move. Feb 27 REAL +23% close@100% (earnings) launched parabolic $43 → $102. Mar 2 MID +28% close@54% was climax top. 36-day +247% velocity trade.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot",
+        "Breakout"
       ]
     },
     "ABVX_2025": {
@@ -23,13 +34,47 @@
         "Gap and Go"
       ]
     },
-    "AGX_2025": {
+    "ACHC_2026": {
       "direction": "long",
-      "notes": "[AI] NOT TRADABLE. 69% 10EMA, 21 50SMA touches (2nd worst). AU-type slow grinder. Mar 28 EP trap (close@20%). Looks smooth zoomed out but shakes you out.\n\nHuman - totally agree with the assessment here. The only tradable leg was the move from May to Jun. Rest of the move was way too choppy for my style",
+      "notes": "[AI] Healthcare name with Feb 5 character change. Feb 25 MID +18% vol 2.8x close@32% was trim-zone consolidation. 4-week Feb-Mar 10 EMA streak was core trade. 58-day +145% with smooth trail. Style fit.",
       "rating": "",
       "tags": [
         "Breakout",
-        "Flat Base"
+        "EP"
+      ]
+    },
+    "ADTN_2026": {
+      "direction": "long",
+      "notes": "[AI] Networking slow grinder. Very low ADR (4.6%), 4-week Mar-Apr 10 EMA streak — near-perfect tempo. 0 gaps logged. 68-day +102% patient trade. Style fit for $8+ grinder.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "AEHR_2026": {
+      "direction": "long",
+      "notes": "[AI] Semi test equipment. 3-week Feb-Mar streak was primary window. Feb 11 MID consolidation, late-March drawdown character break. Apr 8 REAL re-opened entry; Apr 16 TRAP close@2% was top signal at $91.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "AGX_2025": {
+      "direction": "long",
+      "notes": "[AI] AU-style slow grinder. 21 50 EMA tests (library 2nd worst) is the headline. Low ADR (5.4%) makes it look tradable on stats but the constant 10 EMA undercuts kill any trail. Two clean windows (Apr 23 → Jun 9, late Sep → mid Nov) sandwich a long mid-summer chop. Skip for this style.\n\n[Human] Apr 23 till Jun was a tradable leg, though the moves before were very disgusting. Aug to Nov leg was much less tradable given how wild the swing was",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "AGX_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 AGX engineering name. 3-week Feb-Mar 10 EMA streak; Mar 27 REAL +23% vol 3.1x close@83% was catalyst re-entry add; Mar 25 → Apr 17 final leg $437 → $598. 67-day +103% catalyst + trail trade. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
       ]
     },
     "ALAB_2025": {
@@ -41,9 +86,34 @@
         "Flat Base"
       ]
     },
+    "ALMS_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech velocity trade. Early Jan +200% in 6 days — too fast for sizing. 3-week Jan streak provided consolidation add zone. 32-day +290% no logged gaps — pure tempo. Style fit after initial spike.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "ALM_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech with U&R pattern. 3-week Feb-Mar streak (primary trade), mid-Mar -34% drawdown would have stopped runners, late-Mar U&R reclaim for re-entry. 62-day +195%. Tradable with disciplined re-entry.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "AMPX_2026": {
+      "direction": "long",
+      "notes": "[AI] Battery tech textbook tempo. 22-day +81% with near-perfect 10 EMA adherence. Only 1 logged gap (Feb 3 REAL at top). ADR 7.1%, 0 TRAPs — tight grinder style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
     "APLD_2025": {
       "direction": "long",
-      "notes": "No clear pattern. More just a breakout from a downtrend with 200EMA reclaim. Very typical but the momentum was weak between May and Mid Sept - this is what I said about names that would be hard to trade for me because the strong pull back from each high into the 50 EMA was enough to shake me out a few times and in between the entries showed a lof of pullbacks into the 50 EMA. Only the final move after 9 Sept was something I could have considered. The rest would have been very difficult",
+      "notes": "[Human] No clear pattern. More just a breakout from a downtrend with 200EMA reclaim. Very typical but the momentum was weak between May and Mid Sept - this is what I said about names that would be hard to trade for me because the strong pull back from each high into the 50 EMA was enough to shake me out a few times and in between the entries showed a lof of pullbacks into the 50 EMA. Only the final move after 9 Sept was something I could have considered. The rest would have been very difficult",
       "rating": "",
       "tags": [
         "Breakout"
@@ -60,7 +130,15 @@
     },
     "ASTS_2025": {
       "direction": "long",
-      "notes": "This did not have any particular pattern but a simple breakout. The tradable legs were not easy but there were times when it just worked.",
+      "notes": "[Human] This did not have any particular pattern but a simple breakout. The tradable legs were not easy but there were times when it just worked.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "AUGO_2026": {
+      "direction": "long",
+      "notes": "[AI] Consumer name two-window trade. 3-week Jan streak (primary), mid-Feb → mid-Mar -34% drawdown character break, Mar-Apr recovery leg $65 → $109. 73-day +127% no-gap tempo. Recovery required U&R discipline.",
       "rating": "",
       "tags": [
         "Breakout"
@@ -83,6 +161,34 @@
         "Breakout"
       ]
     },
+    "AVNS_2026": {
+      "direction": "long",
+      "notes": "[AI] Health equipment low-ADR (3.5%) slow grinder. 5-week Jan-Feb 10 EMA streak was the trade. Apr 14 MEGA gap +69% vol 14.8x close@63% MID was catalyst blow-off (trim zone). 71-day +124% with late-cycle news-driven spike.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "AXTI_2026": {
+      "direction": "long",
+      "notes": "[AI] High-ADR (14.7%) semi name with 2 REAL EPs (Feb 20, Mar 2) in sequence. 3-week Mar streak was core trade. Mar 30 TRAP +7% close@15% was explicit exit signal. -42% late drawdown — hard outside Feb-Mar window.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "BBAI_2025": {
+      "direction": "long",
+      "notes": "[AI] Hard chart. ADR 9.3%, 2 TRAPs (Jun 25, Sep 12) that killed chasers, -43% summer drawdown. 3-week longest streak. Tradable only in narrow spring window and after Oct 13 REAL. Not a style fit — quantum/AI volatility.\n\n[Human] Honestly whilst it looked tradable at times the reality is the strong retrace was a big red flag, the stock almost always retrace 95% of the move with lots of traps. Not one you would like to be in bed with",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
     "BE_2025": {
       "direction": "long",
       "notes": "Actually closed to a flat base breakout and multiple EP setup. I think the leg on 24 Jul EP was quite tradable all the way until Sept. After which the price action was very loose and it would have been hard to hold through the move",
@@ -93,11 +199,88 @@
         "EP"
       ]
     },
+    "BE_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 hydrogen move. 4-week Jan 10 EMA streak $99 → $165 was the trade. Feb 6 MID, then consolidation with -22% drawdown, then recovery to $181 top. Low gap density = tempo-driven.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "BITF_2025": {
+      "direction": "long",
+      "notes": "[AI] Late-breakout story. 5 months of chop $0.85-1.30, then explosive Q4 $1.34 → $6.47 on catalyst cluster (Sep 11 REAL, Oct 15 REAL). Base-above-base structure. Tradable only after Aug character change — earlier chop would stop out.\n\n[Human] - very tradable strong stock which went 5x in a short 2 month run. Sep breakout was clearly tradable. It was a perfect candidate for swing trading",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "BKSY_2026": {
+      "direction": "long",
+      "notes": "[AI] Satellite imagery name with U&R pattern. 3-week Mar 10 EMA streak was primary. Late-Mar → early-Apr -25% drawdown was test of faith. Apr 7+ recovery leg — U&R reclaim for re-entry. 35-day +132%, ADR 10.6%.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "BTDR_2025": {
+      "direction": "long",
+      "notes": "[AI] Partially tradable crypto miner. Spring 5-week streak ($7 → $13) was the cleanest early leg, then 3 months chop with 16 50 EMA tests, then autumn recovery $14 → $26. Only 1 logged gap the whole year. Two-window trade.\n\n[Human] very borderline actually not very tradable. Lack of clean movement, sideway movement and chops most of the time.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "BW_2026": {
+      "direction": "long",
+      "notes": "[AI] Industrial / nuclear two-window trade. Early Jan 3-week streak; Feb chop -26%; Mar 4/17 REAL pair re-opened trend. 68-day +218% with patient-style requirement to survive February break.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
     "CAR_2025": {
       "direction": "long",
       "notes": "[AI] Clean short move. 81% 10EMA, 2 50SMA touches. Proof that shorter moves can be very tradable.\n\n[Human] - Agree mostly. The move was quite tradable after the broke of 200MA. The gap down was also a clean signal for short",
       "rating": "",
       "tags": [
+        "Breakout"
+      ]
+    },
+    "CAR_2026": {
+      "direction": "long",
+      "notes": "[AI] Parabolic +484% in 38 days. Mar 17 → Apr 17 4-week 10 EMA streak was the trade. $95 → $494 with late-cycle blow-off Apr 6-17 ($213 → $494). Library parabolic-profile template. Human-reviewed for 2025 context already.",
+      "rating": "",
+      "tags": [
+        "Parabolic",
+        "Breakout"
+      ]
+    },
+    "CC_2026": {
+      "direction": "long",
+      "notes": "[AI] Chemicals grinder. Early Jan leg, Feb-Mar -24% consolidation, 3-week Mar-Apr 10 EMA streak as final acceleration. 72-day +104% no-gap pure tempo trade. Low ADR (6.0%). Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "CDE_2025": {
+      "direction": "long",
+      "notes": "[AI] Best style-fit precious-metal miner of the batch. Low ADR (4.8%), 10-week Aug-Oct 10 EMA streak (library-class for a grinder), 0 50 EMA tests across Q4. Only 1 logged EP but the 10-week autumn streak was the trade.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "CDNL_2026": {
+      "direction": "long",
+      "notes": "[AI] Agricultural name with catalyst + recovery. Feb 19 REAL +10% vol 5.6x close@88% character change; Mar 20 TRAP +9% vol 6.0x close@27% mid-consolidation warning. 4-week Mar-Apr streak was the main trade. 71-day +148%.",
+      "rating": "",
+      "tags": [
+        "EP",
         "Breakout"
       ]
     },
@@ -111,6 +294,14 @@
         "Cup and Handle Breakout"
       ]
     },
+    "CIEN_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 human-reviewed telecom equipment move. 32-day +69% with 2-week late 10 EMA streak. No gaps logged — pure tempo. Patient style fit — low headline gain but clean behavior.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
     "CIFR_2025": {
       "direction": "long",
       "notes": "I think it is a round bottom breakout. The entire move is quite tradable with the bulk of the move respecting 10MA. A very tradable setup for me",
@@ -121,7 +312,7 @@
     },
     "CLS_2025": {
       "direction": "long",
-      "notes": "[AI] CIFR-quality chart. 85% 10EMA, 0 50SMA touches during trend. Clean 10EMA tracking May-Jul (12 weeks). Aug+Sep EPs accelerated the move. One of the best charts in the 2025 library.",
+      "notes": "[AI] CIFR-quality chart. 85% 10EMA, 0 50SMA touches during trend. Clean 10EMA tracking May-Jul (12 weeks). Aug+Sep EPs accelerated the move. One of the best charts in the 2025 library.\n\n[Human] I think this could be broken down into 2 legs. The leg between Apr and Sep would have been very tradable based on my style. However the mid sept move onwards was less clean with constant chopping below 20 EMA all the way until late Oct. Even on breakout in mid Oct the price pulled back hard to touch the EMA. It was perhaps a one leg swing mostly",
       "rating": "",
       "tags": [
         "Breakout",
@@ -130,7 +321,25 @@
     },
     "COHR_2025": {
       "direction": "long",
-      "notes": "[AI] Tradable May-Aug 10EMA trend, then Aug 18 -32% weekly shakeout destroyed it. Recovery in Sep-Dec with Nov EP. The shakeout is the defining event — ends most positions.",
+      "notes": "[AI] Tradable May-Aug 10EMA trend, then Aug 15 -32% weekly shakeout destroyed it. Recovery in Sep-Dec with Nov EP. The shakeout is the defining event — ends most positions.\n\n[Human] Agree with assessment. The movement afterwards were trailing 20 EMA with a lot of undercuts. Not my favorite target",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Flat Base",
+        "Cup and Handle Breakout"
+      ]
+    },
+    "COHR_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 Coherent optical move. 2-week Jan-Feb 10 EMA streak $178 → $229, mid-Feb -17% consolidation, Feb 18 → Mar 2 final acceleration $224 → $299. 35-day +79% no-gap pure tempo. Near-perfect 20 EMA adherence. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "CRCL_2025": {
+      "direction": "long",
+      "notes": "[AI] IPO parabolic, not a setup. 12-day $64 → $299 with 100% 10 EMA tracking but 0 50 SMA tests and no base — nowhere to size a position. Textbook untradable for this style. Skip.\n\n[Human] REquire a different playbook for IPO The initial consolidation range was tradable but requires users to look past valuation and initial gain. Not easy. Mostly trap after the initial move. lower highs and lower lows",
       "rating": "",
       "tags": [
         "Breakout"
@@ -138,14 +347,32 @@
     },
     "CRDO_2025": {
       "direction": "long",
-      "notes": "[AI] CRDO is the worst EP stock in library — 0 good, 4 traps. Proves that EP close quality filter is essential.",
+      "notes": "[AI] CRDO is the worst EP stock in library — 0 good, 4 traps. Proves that EP close quality filter is essential.\n\n[Human] Not exactly. The stock had a orderly setup for 4 months which were very tradable. Mostly respecting 10 EMA. the acceleration happened in Sept with an undercut and rally",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Cup and Handle Breakout"
+      ]
+    },
+    "CRML_2025": {
+      "direction": "long",
+      "notes": "[AI] Tradable in narrow windows. High ADR (14.0%), -49% drawdown, 11 logged gaps mostly volatile. 3-week Aug streak was clean; Oct 6 MEGA +44% vol 12.6x close@32% was catalyst-driven blow-off (trim-zone). Late Oct 13-14 REALs were top-cycle.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "CRVS_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech velocity trade. 9-day +322% with -41% intraday drawdown mid-move = unholdable. No gaps logged, no MA base. Catalyst pump without setup-grade structure. Skip for this style.",
       "rating": "",
       "tags": [
         "Breakout"
       ]
     },
     "CRWV_2025": {
-      "direction": "",
+      "direction": "long",
       "notes": "In hindsight this was a fantastic trade with the entire move right above 10MA strong moves up almost non-stop. The challenge was in the huge pullback that happened above 10MA - I would have felt so uncomfortable to hodl onto the name and there would be a good chance I exit in late May instead",
       "rating": "",
       "tags": [
@@ -154,15 +381,102 @@
     },
     "DAVE_2025": {
       "direction": "long",
-      "notes": "[AI] May 8 EP is a textbook example — +25% gap, 5.6x vol, close at 98% of range. Validates EP close quality filter. 8-week 10EMA run after. But Jul collapse (-31% in one week) ended the move violently.",
+      "notes": "[AI] May 8 EP is a textbook example — +25% gap, 5.6x vol, close at 98% of range. Validates EP close quality filter. 8-week 10EMA run after. But Jul collapse (-31% in one week) ended the move violently.\n\n[Human] a very tradable move with price respecting 10 EMA amost the entire time. using a 10EMA stop is a very good tactic here",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "DAWN_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech catalyst trade. Mar 6 MEGA gap +65% vol 12.4x close@80% REAL was the move. 5-week Mar-Apr 10 EMA streak (post-catalyst). 68-day +157%. Entered on D+2 hold after the mega gap.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot",
+        "Breakout"
+      ]
+    },
+    "DIOD_2026": {
+      "direction": "long",
+      "notes": "[AI] Semi low-ADR (4.4%) grinder. 4-week Jan 10 EMA streak $51 → $60, then Feb 11 MID +17% vol 4.7x character-change gap, late-Feb → mid-Mar -19% break, Mar-Apr recovery. 73-day +95% two-window trade. Style fit with patience.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "DNTH_2026": {
+      "direction": "long",
+      "notes": "[AI] Library-class biotech. 8-week Feb-Apr 10 EMA streak $53 → $93. 2 MID gaps absorbed (Mar 4, Mar 9 earnings?). 70-day +169% — tight tempo with mid-move consolidations. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "ELVN_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech two-phase. Early Jan-Feb leg $15 → $26 first window; late Feb-Mar consolidation; 4-week Mar-Apr streak $31 → $48 was main trade. Clean continuation after chop resolution.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "EOSE_2025": {
+      "direction": "long",
+      "notes": "[AI] Two-window battery storage. May 7 REAL vol 4.9x close@86% kicks spring leg. Summer chop. Sep 11 → Oct 16 5-week 10 EMA streak $9 → $19 acceleration was primary trade. Oct 13 REAL D+5 save after Oct 6 TRAP.\n\n[Human] Not a clean easy name. Sept to Mid Oct leg was very tradable but rest of the time the moves would stop the trader out on  a loss. Not a nice chart overall but partially tradable",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "ERAS_2026": {
+      "direction": "long",
+      "notes": "[AI] Library-class 9-week Jan-Mar 10 EMA streak $3.49 → $14.32. ADR 8.8%, 0 50 EMA tests, no logged gaps. Pure tempo grinder — biotech. Late-Mar chop then Apr re-acceleration. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "FLNC_2025": {
+      "direction": "long",
+      "notes": "[AI] Not a style fit. 8.9% ADR, only 1 REAL EP late in the move (15 Oct), 14 50 EMA tests. +647% headline but the holding experience is brutal. Battery-storage name with rotation flow, not a tradable trend.\n\n[Human] Looked order at a glance but the constant retracing and the slow move up made it hard to trade. only real tradable leg was in fact Sep to Nov",
       "rating": "",
       "tags": [
         "EP"
       ]
     },
-    "FLNC_2025": {
+    "FLY_2026": {
       "direction": "long",
-      "notes": "[AI] NOT TRADABLE. 64% 10EMA, 81% underwater, 8.9% ADR (highest in library). Extreme daily volatility makes holding impossible.",
+      "notes": "[AI] Aviation leasing. Late-starter in 2026 (Mar 2 base). 2-week Apr streak was core trade. 34-day +156% with high ADR (9.7%) — short-window tempo trade. Late-leg clean.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "FORM_2026": {
+      "direction": "long",
+      "notes": "[AI] Semi test name. Lower gain (+85%) but clean tempo — 2-week early streak, Feb 5 REAL catalyst, tight late-Feb final push. Low ADR (5.3%), 100% 10 EMA in final leg. Style fit for $60+ grinder.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "FSLY_2026": {
+      "direction": "long",
+      "notes": "[AI] Short-window CDN name. 17-day +170% Feb 5 → Mar 2. 2-week 10 EMA streak was the trade. No gaps logged — pure tempo. Late-starter within 2026 YTD but clean tempo after the character-change day.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "GLW_2026": {
+      "direction": "long",
+      "notes": "[AI] Library gold-standard for $80+ name. 6-week Jan-Feb 10 EMA streak $85 → $160. Very low ADR (4.4%), 0 gaps logged, only 3 50 EMA tests. 33-day +93% pure trail-the-10 EMA trade. Style gold-standard.",
       "rating": "",
       "tags": [
         "Breakout"
@@ -177,6 +491,32 @@
         "Breakout"
       ]
     },
+    "GRAL_2025": {
+      "direction": "long",
+      "notes": "[AI] Two-window biotech. Spring-summer leg $22 → $43 tradable; summer -42% drawdown; autumn 8-week streak $35 → $107 was gold window. Oct 20 TRAP +15% close@25% was explicit exit. Binary-catalyst risk ever-present.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "HIVE_2025": {
+      "direction": "long",
+      "notes": "[AI] Two-window crypto miner. Early 5-week streak Apr-May, then 3 months chop, then Sep 12 REAL kicks off autumn leg $2.90 → $6.60. ADR 7.1%. Main trade: Aug-Oct autumn window.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "HL_2025": {
+      "direction": "long",
+      "notes": "[AI] Library-class 11-week Aug-Oct 10 EMA streak — silver miner. Low ADR (5.0%), slow but sustained. Aug 7 MID +14% was character change. Nov 6 TRAP close@11% was exit near top. Late-Dec recovery window bonus.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
     "HOOD_2025": {
       "direction": "long",
       "notes": "Very Classic VCP setup all the way through Apr May and Jun. Like the fact that it was above 10 EMA most of the time during the move with nice price action along the way",
@@ -185,9 +525,42 @@
         "VCP"
       ]
     },
+    "HUT_2025": {
+      "direction": "long",
+      "notes": "[AI] Cleanest miner of the batch. ADR 7.2%, only 7 50 EMA tests across 134 days, autumn leg $26 → $54 with 85% 10 EMA and 0 50 EMA tests. Oct 10 TRAP was the explicit exit signal. Tradable end-to-end.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "IBRX_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech melt-up. 4-week Jan-Feb 10 EMA streak $2 → $6. Feb 23/25 back-to-back TRAPs at top = exit cluster. 37-day +528% but penny-stock ADR 10.5% = wider stops required.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "ICHR_2026": {
+      "direction": "long",
+      "notes": "[AI] Semi equipment two-window name. 3-week Jan 10 EMA streak $20 → $31 (primary), Feb 10 MID earnings gap, late-Feb-Mar chop (-27%), Mar 23+ recovery leg. Tradable with patience.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
     "IONQ_2025": {
       "direction": "long",
-      "notes": "[AI] Quantum computing narrative stock. All metrics fail. Sector-driven, not setup-driven.",
+      "notes": "[AI] Quantum-stock pair with QBTS. 8.1% ADR, 17 50 SMA tests, 28% drawdown. Only the Apr 22 - May 29 or Aug 20 - Oct 13 sub-windows were tradable. Waiting for the character-change is the whole edge.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "IRDM_2026": {
+      "direction": "long",
+      "notes": "[AI] Satellite comms low-ADR (4.9%) grinder. 4-week Feb-Mar streak, 0 gaps logged, only 2 50 EMA tests across 73 days. 73-day +156% with tight trail. Style gold-standard for comm/satellite names.",
       "rating": "",
       "tags": [
         "Breakout"
@@ -195,16 +568,24 @@
     },
     "IREN_2025": {
       "direction": "long",
-      "notes": "This is a round bottom breakout with the stock breaking out of a long 5-6 month base towards the upside. There were a few min EP s here and there which were trabale",
+      "notes": "[AI] Tradable despite high ADR. 10-week 10 EMA streak Aug 6 → Oct 16. Three TRAPs (Aug 29, Oct 10, Nov 3) that didn't break trend — crypto-miner volatility profile but the trend was clean enough to hold. +1400% from $5.12 to $76.\n\n[Human] - actually a very very tradable chart. All the way from May. It had a monster 6 month run that mostly respect 10 EMA with fakeouts but still held the EMA. It is just that simple. One to study and try to find",
       "rating": "",
       "tags": [
-        "Round Bottom Breakout",
-        "VCP"
+        "Breakout"
       ]
     },
     "JOBY_2025": {
       "direction": "long",
-      "notes": "[AI] Mixed EP quality — May 28 (close@81%) and Jun 9 (close@80%) were real. Jun 3 (close@9%) was a trap. 80% 10EMA in the move window. Decent May-Jul 10EMA trend.",
+      "notes": "[AI] Tradable EP-driven mover. 5 REAL EPs in 10 weeks (28 May, 9 Jun, 15 Jul, 16 Jul, 4 Aug), only 1 TRAP absorbed. Final stretch tracks 10 EMA on essentially every bar. Fast 82-day move — eVTOL story stock with cleanest EP chain in the library.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "KOS_2026": {
+      "direction": "long",
+      "notes": "[AI] Energy (offshore oil). Low-ADR (9.7%) slow tempo. 4-week Feb-Mar 10 EMA streak $1.58 → $2.33 was the core. Feb 20 REAL +12% was catalyst entry. 60-day +261% sub-$3 name.",
       "rating": "",
       "tags": [
         "EP",
@@ -213,7 +594,7 @@
     },
     "KSS_2025": {
       "direction": "long",
-      "notes": "[AI] -52% DD is 2nd worst in library. 87% underwater. Untradable.",
+      "notes": "[AI] -52% DD is 2nd worst in library. 87% underwater. Untradable.\n\n[Human] Not a tradable stock - weak up trend. Slow moving, lots of undercut of EMAs, not my target play",
       "rating": "",
       "tags": [
         "Breakout"
@@ -221,7 +602,42 @@
     },
     "KTOS_2025": {
       "direction": "long",
-      "notes": "[AI] KTOS is a 20EMA stock (87% adherence). 10EMA trader would struggle but 20EMA approach works.",
+      "notes": "[AI] KTOS is a 20EMA stock (87% adherence). 10EMA trader would struggle but 20EMA approach works.\n\n[Human] partially agree. I think it takes more than the 20 EMA rule to trade this one well. Apr through Jul the moves were slow and not clean. Constant test of faith. 11 Jul EP was a clean move for a whie but Aug was mostly sideway movements. Sept had 4 days of undercut. These are all heavy signs of manipulations. Only the Sep leg was clean",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "VCP"
+      ]
+    },
+    "LAC_2025": {
+      "direction": "long",
+      "notes": "[AI] Catalyst-dependent. 4 months of chop with 39 50 EMA touches — untradable — then Sep 24 MEGA gap +65% vol 12.3x close@78% REAL (DOE news) launches the move. Without the catalyst this chart was a skip.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "LAES_2025": {
+      "direction": "long",
+      "notes": "[AI] Untradable grind. Loose 10 EMA adherence, only 2 logged REAL EPs across 133 days vs 9 TRAPs. Oct 9 REAL → Oct 10 TRAP D+1 rejection pattern confirms the pumps don't hold. Skip.\n\n[Human] partially tradable but really wide and lose on the Sept leg. It would have been partially tradable setup but not the best one given how deep the pull backs are. This one really is something of a hit an run and need to keep size right",
+      "rating": "",
+      "tags": [
+        "EP"
+      ]
+    },
+    "LASR_2026": {
+      "direction": "long",
+      "notes": "[AI] Laser/semi name. 3-week Feb 10 EMA streak (core consolidation), Mar 2 REAL +20% vol 2.4x close@94% was acceleration catalyst. 39-day +89% with near-perfect 20 EMA adherence. Style fit for $35+ grinder.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "LCID_2025": {
+      "direction": "long",
+      "notes": "[AI] News-driven parabolic. 26-day +1181% on Saudi investment news. 96% 10 EMA tracking but first week unsizeable — only the Sep 9-17 tight consolidation gave a clean entry. EV meme-style velocity.",
       "rating": "",
       "tags": [
         "Breakout"
@@ -238,11 +654,63 @@
     },
     "LITE_2025": {
       "direction": "long",
-      "notes": "[AI] CLS-quality 10EMA trend. 83% adherence, 3 50SMA touches, 15-week clean grind.",
+      "notes": "[AI] Clean tradable +780%. Three TRAP gaps (4 Jun, 27 Oct, 10 Nov) that never broke trend plus one REAL EP (5 Nov) that ignited the parabolic. Lesson: TRAP close-quality without a base break is noise, not exit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Episodic Pivot"
+      ]
+    },
+    "LITE_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 optical components trend. 4-week Jan-Mar 10 EMA streak with near-perfect adherence in final push. 30-day +147% parabolic to $783. Pure trail-the-10 EMA trade — library-class grinder.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Parabolic"
+      ]
+    },
+    "LUMN_2025": {
+      "direction": "long",
+      "notes": "[AI] Telecom slow grinder. Only the Sep 25 → Nov 3 5-week autumn 10 EMA streak was tradable. Oct 27 REAL +7% close@96% was the only clean EP of the year. Spring-summer was chop.",
       "rating": "",
       "tags": [
         "Breakout",
         "EP"
+      ]
+    },
+    "LWLG_2026": {
+      "direction": "long",
+      "notes": "[AI] Catalyst-driven. Mar 12 REAL +20% vol 8.2x close@72% was the move. Pre-catalyst base $3 → $3.50 was base-building. 50-day +343% with late-Mar -25% test-of-faith pullback. U&R re-entry pattern.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "MANE_2026": {
+      "direction": "long",
+      "notes": "[AI] Transportation name tempo trade. 4-week Feb-Mar 10 EMA streak was core phase. No gaps logged — pure tempo. Late-Mar → Apr chop was trim signal. 50-day +153% with clean behavior until near top.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "METC_2025": {
+      "direction": "long",
+      "notes": "[AI] Met Coal producer. 4-week spring + 4-week autumn streaks with summer chop. Jul 10 REAL +14% vol 3.8x was the primary spring entry (D+7 save after Jul 1 TRAP). Oct 15 TRAP was exit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "MGOL_2025": {
+      "direction": "long",
+      "notes": "[AI] Penny pump-and-dump. 13-day +1160% micro-cap with ADR 20.9%, 0 logged gaps, sub-$1 territory. Never a tradable setup for this style — no MA history, no base, no stop works. Skip.",
+      "rating": "",
+      "tags": [
+        "Breakout"
       ]
     },
     "MP_2025": {
@@ -271,18 +739,103 @@
         "EP"
       ]
     },
-    "OKLO_2025": {
+    "NBIS_2026": {
       "direction": "long",
-      "notes": "To be honest, not the easiest trade here. The chops were real for a long time and the real pullup happened at around Sept when the valuation was already very stretched. Not a trade I could handle well",
+      "notes": "[AI] Continuation of 2025 NBIS cloud-AI move. Feb early leg, late-Feb → early-Mar consolidation with -21% drawdown, Mar 11 REAL +9% vol 2.5x close@78% catalyst re-entry, 2-week Mar streak, Mar 30+ acceleration $92 → $165. 49-day +129% catalyst + trail.",
       "rating": "",
       "tags": [
-        "Cup and Handle Breakout",
+        "Breakout",
+        "EP"
+      ]
+    },
+    "NGD_2025": {
+      "direction": "long",
+      "notes": "[AI] Slow grinder gold miner. Full-year move, 9-week 10 EMA streak Aug-Oct (library-class for a grinder). Low ADR (4.4%) makes it hold-tradable. Only 1 logged gap all year. Tempo fit only if you like slow.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "NKTR_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech two-window trade. Early Jan-Feb +97% explosive leg was velocity trade. Mid-Feb → late-Mar chop with -15% test of faith. Late-Mar U&R re-opened trend for 2-week Apr streak. 54-day +160% no-gap tempo.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "NTLA_2025": {
+      "direction": "long",
+      "notes": "[AI] Biotech with two windows. 7-week streak Jun-Jul (primary trade), then chop, then Sep 17/18 TRAP-then-REAL pair re-opens entry for autumn surge. Binary-catalyst risk always — wider stops than tech names.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "NUAI_2025": {
+      "direction": "long",
+      "notes": "[AI] Micro-cap meme pump. 40-day +2266% with ADR 21.6%, 0 logged gaps, 0 50 SMA tests. Strong 10 EMA adherence but meme-velocity — CRWV paradox extreme. Statistical trend, practical untradable. Skip.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "NVTS_2025": {
+      "direction": "long",
+      "notes": "[AI] One-catalyst chart. May 22 MEGA +157% vol 14.7x close@84% (Nvidia partnership) was the move. D+1/D+2 TRAPs destroyed chasers — needed D+3+ base. 8 MID gaps overall = wide-tempo mess outside the catalyst.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "OKLO_2025": {
+      "direction": "long",
+      "notes": "[AI] Hard chart. 0 REAL EPs across the move, 9.3% ADR, 1 TRAP. +1013% headline but the gain is back-loaded into a late-summer parabolic $77 → $193. Tradable only Apr-early-Jun and late-Aug → mid-Oct. Not a favorite target.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "ONDS_2025": {
+      "direction": "long",
+      "notes": "[AI] Drone/defense name. Summer Jun TRAP cluster (4 rejections in 2 weeks) was unsizeable. Aug 12 REAL +15% vol 2.6x kicked the move. Jul 31 → Sep 30 8-week 10 EMA streak — library-class — was the trade. Oct 2 REAL final push.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "OPEN_2025": {
+      "direction": "long",
+      "notes": "[AI] CRWV paradox in extreme form. 58-day +2038% meme squeeze with 86% 10 EMA adherence but ADR 16.6% — statistically tradable, practically impossible to hold. Sep 11 MEGA gap +30% close@95% was the only clean EP. Skip.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "ORKA_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech two-window trade. Early Jan 3-week streak (primary), mid-Feb chop break, 5-week Mar-Apr streak (gold window). 72-day +177% no-gap tempo trade. Style fit with patience across chop.",
+      "rating": "",
+      "tags": [
         "Breakout"
       ]
     },
     "OUST_2025": {
       "direction": "long",
-      "notes": "[AI] 8.2% ADR. Too volatile to hold.",
+      "notes": "[AI] Partial. The summer leg was the only window — two REAL EPs (12 May, 11 Jun) with 94% 10 EMA tracking. The 8 Aug +27% close@4% TRAP was the explicit exit signal — listen to it. Late-summer onwards was untradable.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "PGY_2025": {
+      "direction": "long",
+      "notes": "[AI] Library-class grinder. 13-week 10 EMA streak Apr-Jul ($11 → $31) is the headline. Multiple REAL EPs in sequence (Feb 13, May 8, Jul 17). Aug 7-8 double TRAP was the explicit exit — late-cycle push after was dead money.",
       "rating": "",
       "tags": [
         "Breakout",
@@ -291,9 +844,22 @@
     },
     "PI_2025": {
       "direction": "long",
-      "notes": "[AI] PI respects 20EMA, not 10EMA. A 20EMA-style trade.",
+      "notes": "[AI] PI respects 20EMA, not 10EMA. A 20EMA-style trade.PI is a 20EMA name, not a 10EMA name — that's the tell.\n\nQ2 (May-Jul): -16% DD, 54% 10EMA, 5x 50SMA touches. A chop stock. Any breakout chased here gets stopped out. You're not looking for a pivot — you're waiting for the character to change.\n\nCharacter change: 23 Jul. Tightens on 20EMA, stops undercutting 50SMA. THAT'S the entry — not the 31 Jul +19% gap (close@56% = MID, would feel mechanical to chase). From 23 Jul, the gap is an add day. Without the hold, it's just another trap to chase.\n\nClean leg 23 Jul -> 10 Sep (35d, 97% 10EMA, DD only -8%). Exit on Q4 character change — DD back to -16%, 10EMA drops to 71%. One-leg trade.\n\nHard but tradable if you wait. Not my favorite target — a 20EMA-family name (KTOS, VSAT flavor).\n\n[Human] Agree with the assessment. Leg 3 was probably the most tradable leg although i tagged a slightly different entry point. This EP setup was very tradable. Rest of the year was a bit difficult.",
       "rating": "",
       "tags": [
+        "Breakout",
+        "EP",
+        "Episodic Pivot",
+        "Gap & Go",
+        "Gap and Go"
+      ]
+    },
+    "PLUG_2025": {
+      "direction": "long",
+      "notes": "[AI] Two-phase hydrogen name. 4-week Jun-Jul streak (Jun 30 REAL) was the first leg, then chop, then Oct 3 REAL launches catalyst-driven 2-week +170% push. Sep 23 TRAP vol 4.7x close@3% is the warning not to chase.",
+      "rating": "",
+      "tags": [
+        "EP",
         "Breakout"
       ]
     },
@@ -306,41 +872,149 @@
         "Gap and Go"
       ]
     },
-    "PONY_2025": {
+    "PL_2026": {
       "direction": "long",
-      "notes": "[AI] 10.5% ADR is new library record. 95% underwater. The most extreme untradable chart.",
-      "rating": "",
-      "tags": [
-        "EP"
-      ]
-    },
-    "PRAX_2025": {
-      "direction": "long",
-      "notes": "[AI] +1090% but untradable. Confirms gain size has zero correlation with tradability.",
-      "rating": "",
-      "tags": [
-        "EP"
-      ]
-    },
-    "QURE_2025": {
-      "direction": "long",
-      "notes": "[AI] NOT TRADABLE. Apr 17 +38% gap was a TRAP (close@28%). 25 50SMA touches (worst in library). Biotech gap-and-fade pattern.",
-      "rating": "",
-      "tags": [
-        "EP"
-      ]
-    },
-    "RKLB_2025": {
-      "direction": "long",
-      "notes": "[AI] NOT TRADABLE. 63% 10EMA, -49% DD, 76% underwater, 15 50SMA touches, 7.3% ADR. AU-type on steroids.",
+      "notes": "[AI] Continuation of 2025 human-reviewed Planet Labs. 11-day +63% short-window burst with near-perfect 10/20 EMA adherence. 0 gaps, 0 50 EMA tests. Short trade but clean style fit.",
       "rating": "",
       "tags": [
         "Breakout"
       ]
     },
+    "PONY_2025": {
+      "direction": "long",
+      "notes": "[AI] 10.5% ADR is new library record. 95% underwater. The most extreme untradable chart.\n\n[Human] Totally agree",
+      "rating": "",
+      "tags": [
+        "EP"
+      ]
+    },
+    "POWL_2026": {
+      "direction": "long",
+      "notes": "[AI] Library gold-standard chart. 29-day +90% with 100% 10 EMA, 100% 20 EMA, 0 50 EMA tests, 0 gaps logged, ADR 5.2%. Electrical infrastructure grinder. Textbook trail-the-10 EMA trade.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "PRAX_2025": {
+      "direction": "long",
+      "notes": "[AI] Biotech catalyst chain. +1090% is mostly the 16 Oct +176% news gap — two TRAPs, two MIDs, 16 50 SMA tests. Only the 20 Aug -> 16 Oct base-hold was a real entry; the Q4 parabolic is binary-catalyst math, not style.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "QBTS_2025": {
+      "direction": "long",
+      "notes": "[AI] Quantum-stock chop king. ADR over 10%, only half the move tracks 10 EMA, 4 EPs failed before the real one. Only the 9 Sep → 15 Oct 5-week leg was tradable. Hard chart, not my favorite target — but the gold leg, once you spot it, is clean.\n\n[HUMAN] Agree - lots of chops here and there mostly because the EP points did not go.  However late 2024 into 2025 and the Sept move were tradable. The May move possibly but the mo es before were not clean so may really have made it hard to pull that trigger",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot",
+        "Pocket Pivot"
+      ]
+    },
+    "QS_2025": {
+      "direction": "long",
+      "notes": "[AI] Base-break-base-break pattern. Jun 25 MID EP (extreme volume) ran to $12 then full retrace to $7.50 by Aug. Sep 8 looked like a second TRAP but held the $8 base — then Oct 1 broke out to $19 in two weeks. Hard chart: only the Oct rally was a clean entry. Not a style fit on aggregate.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "QUBT_2025": {
+      "direction": "long",
+      "notes": "[AI] Two-window quantum name. May surge $7 → $17 (3-week streak, 3 REAL EPs in 10 days) was the gold window. Summer chop -34% ate runners. Oct 3 REAL late re-entry. High ADR (9.6%) makes it hard for this style.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "QURE_2025": {
+      "direction": "long",
+      "notes": "[AI] Biotech gap-to-gap. Two traps (17 Apr, 30 Jul) before the 24 Sep Huntington's Phase 1/2 catalyst (+188% gap). Chopped $12-16 for 11 weeks in between. Not a style fit aggregate but the 11 Aug → Sep 10 tight base + catalyst-hold is a real leg.\n\n[Human] Largely untradable news driven stock. Maybe more for the fundamentalist. The Sep gain that ran till Nov was kinda tradable but look at the backside gap down action. This is not one I would have traded",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "RGTI_2025": {
+      "direction": "long",
+      "notes": "[AI] CRWV paradox. ADR 10.6%, -51% drawdown, 6-month move but only the Sep-Oct 5-week streak was cleanly tradable ($16 → $56). Spring and summer were chop. Not a style fit.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "RIOT_2025": {
+      "direction": "long",
+      "notes": "[AI] Cleanest miner chart in the library. ADR 6.7%, 77% 10 EMA, 84% 20 EMA, zero logged gaps across 122 days. Two tradable windows (Q2 4-week streak + Q4 90% tempo leg). Boring and tradable — best style fit of the miners.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "RKLB_2025": {
+      "direction": "long",
+      "notes": "[AI] Partially tradable. Apr → Aug clean (~+150%), then late summer onwards deteriorated. 15 50 EMA tests overall, ADR borderline. The first half was the trade. Nov 11 TRAP +8% close@1% was the explicit exit signal.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "RLAY_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech two-window trade. 3-week Feb-Mar streak (primary), mid-Mar -14% chop, late-Mar U&R reclaim for Apr acceleration. 62-day +147% with disciplined re-entry required.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "RR_2025": {
+      "direction": "long",
+      "notes": "[AI] High-ADR (9.9%) robotics name with -40% spring/summer drawdown. Only Sep 8-24 2-week 10 EMA streak was clean. Aug 26 REAL vol 6.3x close@90% was character-change entry. Pattern: every early rally trapped.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "RUN_2025": {
+      "direction": "long",
+      "notes": "[AI] Solar catalyst + continuation. Aug 7 REAL +23% vol 3.4x close@78% (policy news) was primary entry. 3-week Aug-Sep streak + tight autumn continuation. Oct 1 TRAP was trim signal. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
     "SATS_2025": {
       "direction": "long",
-      "notes": "[AI] Below threshold on all key metrics.",
+      "notes": "[AI] Late-cycle catalyst-driven move. Aug 26 mega TRAP +81% close@5% saved by Aug 27 D+1 REAL close@85% — that pair is the whole edge. Without the D+1 hold, it's a -50% intraday loss. 3-week longest 10 EMA streak, 15 50 EMA tests. Not a style fit but the catalyst-save pattern is a teaching moment.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "SBET_2025": {
+      "direction": "long",
+      "notes": "[AI] Meme squeeze in extreme form. 29-day +5402% with ADR 18.9%, -63% drawdown. May 27 MEGA +405% vol 16.9x close@29% was the whole move + TRAP in one day. Pure mechanics — untradable. Skip.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "SBSW_2025": {
+      "direction": "long",
+      "notes": "[AI] Low-ADR (4.0%) PGM miner. 5-week spring 10 EMA streak $4.60 → $9 (primary trade) + autumn continuation $11.80 → $15.70. Apr 9 REAL vol 2.2x close@86% was entry. Summer chop between windows. Patient-style fit.",
       "rating": "",
       "tags": [
         "Breakout",
@@ -355,40 +1029,147 @@
     },
     "SEDG_2025": {
       "direction": "long",
-      "notes": "[AI] NOT TRADABLE. Worst metrics in library: 61% 10EMA, -44% DD. Two trap EPs in May (close@11-12%). Solar macro-driven, no clean setups.",
+      "notes": "[AI] Trap king. Two upper-wick TRAPs (12 May close@12%, 7 Aug close@29%) and only a 3-week clean window (Jun 24 - Jul 15). 8.6% ADR + -42% drawdown = explicit skip. Solar post-bankruptcy story bid, explosive news without trend.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "SEI_2025": {
+      "direction": "long",
+      "notes": "[AI] Two-window investment name. Jun 6 REAL close@86% spring entry failed — summer chop -27% drawdown. Sep 10 → Oct 20 5-week autumn 10 EMA streak $31 → $54 was the real trade.",
       "rating": "",
       "tags": [
         "Breakout"
       ]
     },
-    "SEZL_2025": {
+    "SERV_2025": {
       "direction": "long",
-      "notes": "[AI] Highest 10EMA in library (92%) but CRWV paradox — 8.6% ADR makes holding uncomfortable. Perfect on paper, scary in practice.",
-      "rating": "",
-      "tags": [
-        "Breakout"
-      ]
-    },
-    "SNDK_2025": {
-      "direction": "long",
-      "notes": "[AI] 33 50SMA touches — new record. 50SMA metric alone disqualifies this despite otherwise decent stats.",
-      "rating": "",
-      "tags": [
-        "Breakout"
-      ]
-    },
-    "STRL_2025": {
-      "direction": "long",
-      "notes": "[AI] Potentially the BEST chart in the library. 84% 10EMA, ZERO 50SMA touches, 24% underwater, 4.7% ADR. 16 weeks of steady 10EMA grind. Low volatility = easy hold. The anti-AU.",
+      "notes": "[AI] Robotics name with two tradable windows. May 22/27 back-to-back REALs opened spring 3-week streak. Oct 6/9 back-to-back REALs opened autumn 2-week acceleration. Summer chop between. Partially tradable.",
       "rating": "",
       "tags": [
         "Breakout",
         "EP"
       ]
     },
+    "SEZL_2025": {
+      "direction": "long",
+      "notes": "[AI] CRWV paradox. 10 EMA adherence looks perfect on paper but 8.6% ADR made every pullback feel like a trend break. 10-week clean streak packed into a 64-day move — short enough that the paradox was bearable.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "Episodic Pivot"
+      ]
+    },
+    "SMR_2025": {
+      "direction": "long",
+      "notes": "[AI] Two-window nuclear name. Spring 5-week streak $22 → $37 (gold), then -41% summer drawdown, then autumn recovery. May 23 REAL +13% was primary entry; Oct 15-16 MID-then-TRAP pair was the explicit exit. Partially tradable with summer pause.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "SNDK_2025": {
+      "direction": "long",
+      "notes": "[AI] Tradable late summer onwards. Library record 33 50 EMA touches but ALL cluster in the spring-summer base — once cleared, a clean tradable +500% leg. Pattern: wait for the base to complete, then ride. +856% from $29 to $283.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "SNDK_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 breakout. 5-week Jan-Feb 10 EMA streak $275 → $481. Tight grinder, only 1 logged gap (Jan 30 MID earnings). ADR 8.4% for $200+ name = low-vol proxy. Style gold-standard.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "SSL_2026": {
+      "direction": "long",
+      "notes": "[AI] Energy/chemicals grinder. Very low ADR (3.7%), 4-week Feb-Mar 10 EMA streak $8 → $12. 3 gaps (2 MID, 1 late REAL on Apr 7). 55-day +125% patient-style trade. Style fit for slow-tempo energy name.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "STRL_2025": {
+      "direction": "long",
+      "notes": "[AI] Library #1 by 50 SMA discipline — zero touches in 7 months. 22 Apr breakout entry, 9-week gold streak, one Aug 5 TRAP absorbed without character break. Cleanest chart in the set.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
     "STX_2025": {
       "direction": "long",
-      "notes": "[AI] STX rivals STRL as best chart. 4.0% ADR = easiest hold in library. 23-week clean grind with zero trap EPs.",
+      "notes": "[AI] Top-3 library chart. Textbook tradable grinder — 11-week 10 EMA streak, only 2 50 SMA tests all year, lowest ADR in class. 17 Apr 50 EMA reclaim entry, no catalyst needed. Reference for 'clean tradable' pattern.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "STX_2026": {
+      "direction": "long",
+      "notes": "[AI] Storage giant. 4-week Jan 10 EMA streak $290 → $447 was primary trade. Feb-Mar chop with -17% drawdown. Mar 24 → Apr 17 recovery leg. 72-day +99% with two windows. Low ADR (6.2%), 0 gaps. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "SYM_2025": {
+      "direction": "long",
+      "notes": "[AI] Warehouse automation. 6-week Apr-Jun 10 EMA streak $17 → $29 was core spring trade. Summer-autumn -33% drawdown. Nov 25 REAL +32% vol 3.8x was late catalyst (earnings?) — top-cycle add only, not entry.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "SYRE_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech with clean exit signal. 3-week Feb streak (primary trade), mid-Mar chop, late-Mar recovery. Apr 13 TRAP +31% vol 5.0x close@27% was explicit exit. 68-day +168% but final trap was the top signal.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "TER_2026": {
+      "direction": "long",
+      "notes": "[AI] Library-class 7-week Jan-Feb 10 EMA streak $208 → $329. Low ADR (4.8%) semi test name. -23% mid-Mar drawdown broke trend; Apr 8 REAL +7% close@98% was recovery add. 73-day +91% — style gold-standard grinder.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "TMC_2025": {
+      "direction": "long",
+      "notes": "[AI] Deep-sea mining, high ADR (10.1%). Two windows: Jan-Feb 5-week spring streak + Aug-Oct autumn recovery. Apr 14/15 REAL-TRAP pair and Jun TRAP cluster made middle untradable. Tradable in windows, dangerous otherwise.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "TNGX_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech patient grinder. 72 days, zero logged gaps — pure tempo trade. 4-week Mar-Apr 10 EMA streak was core phase. Late-Feb → late-Mar -30% drawdown was test of faith. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "TROX_2026": {
+      "direction": "long",
+      "notes": "[AI] Materials name two-window trade. 3-week Jan streak (primary), Feb 19 TRAP explicit exit, -20% drawdown, late-Mar recovery. 61-day +134% with disciplined re-entry required after Feb TRAP.",
       "rating": "",
       "tags": [
         "Breakout",
@@ -397,7 +1178,16 @@
     },
     "TSEM_2025": {
       "direction": "long",
-      "notes": "[AI] TSEM has the shallowest drawdown (-18%) and low ADR. Borderline on 50SMA touches (10). A 20EMA-style trader could trade this well.",
+      "notes": "[AI] Partially tradable. Q1-Q2 chop with 10 tests of 50 SMA is the cost of admission; after 18 Aug it's a clean 7-week 10 EMA leg into year-end. Shallow drawdown, low ADR.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "VCP"
+      ]
+    },
+    "TSEM_2026": {
+      "direction": "long",
+      "notes": "[AI] Semi name late-starter (Mar 9 base in 2026). 2-week Apr 10 EMA streak, 29-day +110% with low 50 EMA test count. Short-window tempo trade — clean but late.",
       "rating": "",
       "tags": [
         "Breakout"
@@ -405,15 +1195,110 @@
     },
     "TTMI_2025": {
       "direction": "long",
-      "notes": "[AI] Steady grinder with no catalysts. Low ADR = easy hold but might be too slow for this style.",
+      "notes": "[AI] Steady grinder tradable. 12-week 10 EMA streak (second longest library after STRL). Zero catalysts — no EPs scanned. Just grind $18 -> $80. Opposite of QBTS / PRAX.",
       "rating": "",
       "tags": [
         "Breakout"
       ]
     },
+    "TWST_2026": {
+      "direction": "long",
+      "notes": "[AI] Biotech two-window trade. 3-week Jan 10 EMA streak (primary) with Feb 2 REAL; late-Feb → mid-Mar -16% break; Mar 23+ recovery leg. 73-day +96% with disciplined U&R re-entry required.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "UAMY_2025": {
+      "direction": "long",
+      "notes": "[AI] Critical-minerals catalyst name. Apr 14 REAL and Jul 10/15 back-to-back REALs set up summer window; Aug 20 → Oct 14 autumn gold window $4.40 → $17.50 was the main trade. Sep 9 → Oct 14 5-week streak. Oct 13 REAL +20% was parabolic blow-off.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "UAMY_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 antimony miner. 16-day +131% with near-perfect 10/20 EMA adherence. High-ADR (12.1%) but tight 3-week tempo. Short-window trade with full trail-the-10 EMA discipline. Extension of 2025 parabolic.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "UCTT_2026": {
+      "direction": "long",
+      "notes": "[AI] Cleanest style-fit chart of the top 20. 37-day +182% with 92% 10 EMA, 100% 20 EMA, 0 50 EMA tests, ADR 5.8%. Only Feb 10 TRAP warning, otherwise pure trail-the-10 EMA trade. Semi equipment.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "UEC_2025": {
+      "direction": "long",
+      "notes": "[AI] Good style fit. Low ADR (6.3%), 83% 10 EMA tracking, only 8 50 EMA tests across 134 days, 3 REAL EPs (May 23, Jun 3, plus continuation). 5-week Jul-Aug streak + autumn continuation. Tight trail wins.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "UI_2026": {
+      "direction": "long",
+      "notes": "[AI] Networking grinder style gold-standard. 4-week Feb-Mar 10 EMA streak. Very low ADR (4.9%), 0 gaps logged, low drawdown (-14%). 57-day +107% for $500+ name. Textbook trail-the-10 EMA trade.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "USAR_2025": {
+      "direction": "long",
+      "notes": "[AI] Hard chart. High ADR (12.5%), -49% drawdown. Sep 16 → Oct 13 4-week autumn streak was the only clean window. Oct 3-13 FIVE TRAPs at the top (explicit exit cluster). Skip outside the narrow window.",
+      "rating": "",
+      "tags": [
+        "EP",
+        "Breakout"
+      ]
+    },
+    "UUUU_2025": {
+      "direction": "long",
+      "notes": "[AI] Best uranium chart of the batch. 83% 10 EMA, 91% 20 EMA, only 4 50 EMA tests across 133 days. 4 REAL EPs stacked (May 23, Jun 3, Jul 10, Oct 14). Autumn leg 94% 10 EMA tracking $12 → $25. Highly tradable.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "VIAV_2026": {
+      "direction": "long",
+      "notes": "[AI] Textbook low-ADR grinder. 6-week Jan-Mar 10 EMA streak — LONGEST in top-20. $17 → $35 with 0 TRAPs, ADR 4.9%. Only 1 logged gap. Pure trail-the-10 EMA trade — style gold-standard.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "VICR_2026": {
+      "direction": "long",
+      "notes": "[AI] Power conversion name. 3-week Jan 10 EMA streak was the clean trade. Late Jan → mid Mar -34% drawdown was character break. Apr recovery is messy. 73-day +104% but hard chart outside the Jan window.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "VRT_2026": {
+      "direction": "long",
+      "notes": "[AI] Data-center infrastructure. 3-week Jan-Feb 10 EMA streak + Feb 11 REAL +17% vol 3.3x close@92% acceleration add. Low ADR (5.0%), 0 50 EMA tests in core leg. 33-day +67% clean tempo trade. Style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
     "VSAT_2025": {
       "direction": "long",
-      "notes": "[AI] Another 20EMA stock (77%) misclassified as 10EMA candidate. Below threshold.",
+      "notes": "[AI] 20 EMA name (KTOS / PI family). 11 50 SMA tests clustered in Apr-May — once past that, 4-week clean 10 EMA leg Jul 30 -> Sep 2 is tradable with 20 EMA trailing. 10 Nov TRAP close@7% marks the top.",
       "rating": "",
       "tags": [
         "Breakout"
@@ -421,18 +1306,63 @@
     },
     "VSCO_2025": {
       "direction": "long",
-      "notes": "[AI] 20 50SMA touches. Retail sector AU-type.",
+      "notes": "[AI] Partially tradable. The first 4 months were untradable chop with multiple traps; 14 Aug character change → 19 Dec was the real move. Patient entry wins, chasing the early TRAPs gets stopped. Slow burner.",
       "rating": "",
       "tags": [
         "Breakout"
       ]
     },
-    "W_2025": {
+    "WBD_2025": {
       "direction": "long",
-      "notes": "[AI] 4 good EPs, 0 traps — best EP hit rate in library. But 11 50SMA touches = EP trading stock, not a hold stock.",
+      "notes": "[AI] Media slow-grinder. Low ADR (4.5%), 7-week Jun-Jul summer 10 EMA streak ($10 → $11.20 — low-tempo). Sep 12 REAL vol 3.9x close@78% (M&A news) was character change. Oct-Dec $18 → $30 was the real move. Low-ADR catalyst style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "WDC_2025": {
+      "direction": "long",
+      "notes": "[AI] LIBRARY GOLD STANDARD. 17-week Apr-Aug 10 EMA streak (library record), ADR 4.0%, 0 50 EMA tests across 173 days. Pure trail-the-10 EMA trade. Oct 29 REAL was earnings add. Memory/storage giant — textbook style fit.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP"
+      ]
+    },
+    "WDC_2026": {
+      "direction": "long",
+      "notes": "[AI] Continuation of 2025 library-gold-standard move. 32-day +75% with 3-week Jan-Feb streak, near-perfect 20 EMA adherence, 0 50 EMA tests, 0 gaps. Memory/storage giant — classic tempo trade extending 2025 tight grinder.",
+      "rating": "",
+      "tags": [
+        "Breakout"
+      ]
+    },
+    "WULF_2025": {
+      "direction": "long",
+      "notes": "[AI] Catalyst + clean continuation. Aug 14 MEGA +32% vol 5.9x close@98% REAL (likely AI/HPC deal news) was the move. Aug 18 D+1 TRAP close@6% would have stopped chasers — D+2 entry required. Sep-Oct autumn leg 89% 10 EMA clean.",
       "rating": "",
       "tags": [
         "EP",
+        "Episodic Pivot",
+        "Breakout"
+      ]
+    },
+    "W_2025": {
+      "direction": "long",
+      "notes": "[AI] Tradable. Three REAL EPs in clean sequence (12 May, 4 Aug, 28 Oct), summer and early autumn gold leg, late autumn deteriorates but main move done. Wayfair retail rotation play — textbook VCP / EP combo.",
+      "rating": "",
+      "tags": [
+        "Breakout",
+        "EP",
+        "Episodic Pivot"
+      ]
+    },
+    "XNDU_2026": {
+      "direction": "long",
+      "notes": "[AI] 10-day +509% speculative IPO/listing parabolic. No MA history, 0 gaps logged, ADR N/A (too few bars). Velocity trade without sizing framework. Untradable for this style. Skip.",
+      "rating": "",
+      "tags": [
         "Breakout"
       ]
     }
