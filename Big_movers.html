@@ -1096,6 +1096,503 @@
   /* Fetch ticker modal */
   .fetch-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:none;align-items:center;justify-content:center;}
   .fetch-modal-overlay.open{display:flex;}
+
+  /* ============== SIM: Panel + Transport ============== */
+  #sim-panel {
+    display: none;
+    margin-top: 12px;
+    padding: 16px 20px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--ui);
+    color: var(--text);
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+  .sim-active #sim-panel { display: block; }
+  .sim-hero {
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sim-col-left   { flex: 0 0 28%; display: flex; flex-direction: column; justify-content: center; }
+  .sim-col-mid    { flex: 0 0 20%; max-width: 180px; display: flex; justify-content: center; align-items: center; }
+  .sim-col-right  { flex: 1 1 52%; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .sim-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 500;
+  }
+  .sim-sublabel {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-top: 4px;
+  }
+  #sim-value-big {
+    font-family: var(--mono);
+    font-size: 44px;
+    font-weight: 600;
+    line-height: 1.05;
+    color: var(--text);
+    margin-top: 4px;
+    letter-spacing: -0.01em;
+  }
+  .sim-rail-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  #sim-rail-peak-label, #sim-rail-base-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  #sim-rail-peak-label { color: var(--text-2); }
+  #sim-rail-base-label { color: var(--muted); }
+  #sim-rail {
+    position: relative;
+    width: 38px;
+    height: 180px;
+    border-radius: 6px;
+    background: linear-gradient(to bottom, var(--bg3) 0%, var(--bg4) 100%);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  #sim-rail-fill {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 0%;
+    background: linear-gradient(to bottom, rgba(251, 113, 133, 0.6) 0%, rgba(251, 113, 133, 0.2) 100%);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: height 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #sim-rail-fill.sim-rail-fill-active { display: flex; }
+  #sim-rail-fill-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+  }
+  #sim-rail-now {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 10px rgba(212, 165, 116, 0.4);
+    transform: translate(-50%, -50%);
+    transition: top 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+  }
+  #sim-rail-now-label {
+    position: absolute;
+    left: calc(100% + 6px);
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+  .sim-row { display: flex; flex-direction: column; gap: 2px; }
+  #sim-pnl-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  #sim-pnl-value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  #sim-pnl-value.sim-pnl-pos { color: var(--green); }
+  #sim-pnl-value.sim-pnl-neg { color: var(--red); }
+  #sim-pnl-pct {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  #sim-giveback-row { display: none; flex-direction: column; gap: 2px; }
+  #sim-giveback-row.sim-visible { display: flex; }
+  #sim-giveback-row .sim-label { color: var(--muted); }
+  #sim-giveback-value {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--red);
+    transform-origin: left center;
+  }
+  #sim-giveback-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  #sim-rhit-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--mono);
+  }
+  #sim-rhit-stars {
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: #fbbf24;
+    line-height: 1.1;
+  }
+  #sim-rhit-stars.sim-rhit-empty { color: var(--muted); font-size: 13px; letter-spacing: 0; }
+  #sim-rhit-num { font-size: 12px; color: var(--text-2); }
+  #sim-stops-manage-list {
+    display: flex; flex-direction: column; gap: 3px;
+    max-height: 132px; overflow-y: auto;
+    font-family: var(--mono); font-size: 10px;
+    padding-top: 2px;
+  }
+  .sim-stop-history-empty { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .sim-stop-row-edit {
+    display: grid;
+    grid-template-columns: 28px 1fr 60px 28px auto;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+  }
+  .sim-stop-row-edit.sim-stop-fired { opacity: 0.45; }
+  .sim-stop-row-edit.sim-stop-init { border-color: var(--accent); }
+  .sim-stop-row-edit.sim-stop-dirty { border-color: var(--accent); background: rgba(212,165,116,0.08); }
+  .sim-stop-row-edit .sim-stop-day {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 9px;
+    text-align: center;
+  }
+  .sim-stop-row-edit .sim-stop-init-badge {
+    color: var(--accent);
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-left: 2px;
+  }
+  .sim-stop-row-edit .sim-stop-input {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    padding: 1px 4px;
+    border-radius: 3px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: right;
+  }
+  .sim-stop-row-edit .sim-stop-input-pct { width: 100%; }
+  .sim-stop-row-edit .sim-stop-pct-suffix { color: var(--accent); font-size: 9px; padding-left: 1px; }
+  .sim-stop-row-edit .sim-stop-input:focus { outline: none; border-color: var(--accent); }
+  .sim-stop-row-edit .sim-stop-input:disabled { opacity: 0.6; cursor: not-allowed; }
+  .sim-stop-row-edit .sim-stop-actions { display: inline-flex; gap: 2px; }
+  .sim-stop-row-edit .sim-stop-btn {
+    background: transparent; border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px; line-height: 1;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  .sim-stop-row-edit .sim-stop-btn:hover { color: var(--text); background: var(--bg4); }
+  .sim-stop-row-edit .sim-stop-btn-save { color: var(--accent); font-weight: 600; }
+  .sim-stop-row-edit .sim-stop-btn-save:disabled { opacity: 0.3; cursor: not-allowed; color: var(--muted); }
+  .sim-stop-row-edit .sim-stop-btn-del:hover { color: var(--red); }
+  .sim-stop-row-edit .sim-stop-fired-tag { color: var(--muted); font-size: 9px; margin-left: 4px; }
+  .sim-chiprow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+  .sim-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .sim-chip-label {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 9px;
+  }
+  .sim-chip-value { color: var(--text); }
+  .sim-chip-value.sim-pos { color: var(--green); }
+  .sim-chip-value.sim-neg { color: var(--red); }
+  .sim-chip-sep { color: var(--border-bright); margin: 0 2px; user-select: none; }
+  .sim-actions { display: flex; gap: 6px; margin-top: 4px; }
+  .sim-btn {
+    flex: 1 1 0;
+    height: 28px;
+    padding: 0 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-2);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 140ms, color 140ms, border-color 140ms;
+  }
+  .sim-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border-bright); }
+  .sim-btn:active { transform: translateY(1px); }
+  #sim-transport {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 4px 12px;
+    margin-top: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-2);
+  }
+  .sim-transport-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .sim-transport-btn {
+    height: 24px;
+    min-width: 28px;
+    padding: 0 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-2);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .sim-transport-btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border-bright); }
+  #sim-btn-play { color: var(--text); border-color: var(--border-bright); }
+  .sim-speed-group { display: inline-flex; gap: 4px; align-items: center; }
+  .sim-speed-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-right: 2px; }
+  .sim-speed-pill {
+    height: 22px;
+    min-width: 36px;
+    padding: 0 7px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-2);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .sim-speed-pill:hover { border-color: var(--border-bright); color: var(--text); }
+  .sim-speed-pill.sim-speed-active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  #sim-date-readout {
+    flex: 1 1 auto;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+  #sim-btn-exit { color: var(--red); border-color: var(--red); background: transparent; }
+  #sim-btn-exit:hover { background: var(--red); color: var(--bg); border-color: var(--red); }
+
+  /* Sim animations */
+  @keyframes sim-flash-up   { 0% { color: var(--green); } 100% { color: var(--text); } }
+  @keyframes sim-flash-down { 0% { color: var(--red);   } 100% { color: var(--text); } }
+  @keyframes sim-pulse-red  { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); color: var(--red); } }
+  .sim-flash-up   { animation: sim-flash-up   800ms ease-out 1; }
+  .sim-flash-down { animation: sim-flash-down 800ms ease-out 1; }
+  .sim-pulse-red  { animation: sim-pulse-red  400ms ease-in-out 1; }
+
+  @media (max-width: 720px) {
+    .sim-hero { flex-direction: column; gap: 16px; }
+    .sim-col-left, .sim-col-mid, .sim-col-right { flex: 1 1 auto; max-width: none; }
+    #sim-value-big { font-size: 32px; }
+  }
+
+  /* ============== SIM: Modal add-ons ============== */
+  .sim-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-2);
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .sim-pill:hover { border-color: var(--border-bright); color: var(--text); }
+  .sim-pill-active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .sim-pill-active:hover { color: var(--bg); border-color: var(--accent); }
+  .sim-pill-row { display: flex; gap: 6px; margin-top: 4px; }
+  .fetch-modal.sim-modal-wide { width: 520px; }
+  .sim-readout {
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-2);
+    margin: 8px 0;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.6;
+  }
+  .sim-readout strong { color: var(--text); font-weight: 600; }
+  .sim-readout div + div { margin-top: 2px; }
+  .sim-note { font-style: italic; color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .sim-log {
+    max-height: 200px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 8px 0;
+    padding: 4px 0;
+  }
+  .sim-log-row {
+    padding: 4px 2px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .sim-log-row:last-child { border-bottom: none; }
+  .sim-log-day { color: var(--muted); width: 52px; flex-shrink: 0; }
+  .sim-log-type { text-transform: uppercase; font-family: var(--mono); font-size: 9px; font-weight: 700; width: 56px; flex-shrink: 0; letter-spacing: 0.06em; }
+  .sim-log-price { width: 72px; flex-shrink: 0; color: var(--text); }
+  .sim-log-qty { width: 64px; flex-shrink: 0; color: var(--text-2); }
+  .sim-log-note { color: var(--muted); font-style: italic; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sim-log-type-entry { color: var(--accent); }
+  .sim-log-type-add { color: var(--green); }
+  .sim-log-type-sell { color: var(--accent-cream, var(--text)); }
+  .sim-log-type-stop { color: var(--red); }
+  .sim-log-type-close { color: var(--muted); }
+  .sim-log-type-movestop { color: var(--muted); }
+  .sim-summary-hero { text-align: center; padding: 12px 0 16px; }
+  .sim-summary-r { font-family: var(--mono); font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .sim-summary-r.up { color: var(--green); }
+  .sim-summary-r.down { color: var(--red); }
+  .sim-summary-total { color: var(--text-2); font-size: 16px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .sim-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    margin: 12px 0;
+    padding: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .sim-summary-grid div { font-family: var(--mono); font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .sim-summary-grid strong { color: var(--text); font-weight: 600; margin-left: 6px; }
+  .fetch-field input[type="number"], .fetch-field input[type="date"] { font-variant-numeric: tabular-nums; }
+
+  /* Start Sim button in topbar */
+  #sim-start-btn {
+    font-size: 10px;
+    padding: 4px 12px;
+    width: auto;
+    border-radius: 5px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  #sim-start-btn:hover { background: var(--accent); color: var(--bg); }
+  .sim-input-with-pick { display: flex; gap: 6px; align-items: stretch; }
+  .sim-input-with-pick input { flex: 1; }
+  .sim-pick-btn {
+    padding: 0 10px; height: 30px;
+    background: var(--bg3); color: var(--text-2);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-family: var(--mono); font-size: 10px;
+    cursor: pointer; white-space: nowrap;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .sim-pick-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .sim-barcount-readout {
+    margin-top: 6px; padding: 4px 8px;
+    font-family: var(--mono); font-size: 10px; color: var(--text-2);
+    background: var(--bg3); border-radius: 4px;
+  }
+  .sim-field-flash { animation: sim-field-flash 600ms ease-out 1; }
+  @keyframes sim-field-flash {
+    0%   { box-shadow: 0 0 0 2px var(--accent); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .sim-pick-banner {
+    position: absolute; top: 44px; left: 12px; right: 12px;
+    height: 36px; padding: 0 14px;
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(212, 165, 116, 0.15);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text);
+    z-index: 60;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+  #sim-pick-banner-msg { font-weight: 600; color: var(--accent); }
+  .sim-pick-banner-hint { color: var(--muted); margin-left: auto; font-style: italic; }
+  .sim-pick-banner-cancel {
+    background: transparent; border: 1px solid var(--border-bright);
+    color: var(--text-2); padding: 4px 10px;
+    font-family: var(--mono); font-size: 10px; border-radius: 4px;
+    cursor: pointer;
+  }
+  .sim-pick-banner-cancel:hover { background: var(--bg4); color: var(--text); }
+  body[data-sim-picking] { cursor: crosshair; }
   .fetch-modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;width:360px;max-width:90vw;box-shadow:0 12px 40px rgba(0,0,0,0.4);}
   .fetch-modal h3{font-family:var(--mono);font-size:13px;color:var(--text);margin-bottom:14px;font-weight:600;}
   .fetch-field{margin-bottom:10px;}
@@ -1137,6 +1634,7 @@
     </div>
     <div class="spacer"></div>
     <button id="add-ticker-btn" class="tb-btn" title="Fetch new ticker or extend existing" style="font-size:10px;padding:4px 12px;width:auto;border-radius:5px;">+ Add</button>
+    <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
     <div class="vsep"></div>
     <button id="theme-toggle" class="tb-btn" title="Toggle theme">☀ Light</button>
   </div>
@@ -1418,6 +1916,168 @@
         </div>
       </div>
 
+      <!-- Sim Setup Modal -->
+      <div class="fetch-modal-overlay" id="sim-setup-modal">
+        <div class="fetch-modal">
+          <h3>Start Simulation</h3>
+          <div class="fetch-field">
+            <label for="sim-entry-date">Entry date</label>
+            <div class="sim-input-with-pick">
+              <input type="date" id="sim-entry-date">
+              <button type="button" class="sim-pick-btn" id="sim-pick-entry-btn" title="Click a bar on the chart">📍 Pick</button>
+            </div>
+          </div>
+          <div class="fetch-field">
+            <label for="sim-entry-price">Entry price</label>
+            <input type="number" step="0.01" id="sim-entry-price">
+          </div>
+          <div class="fetch-field">
+            <label id="sim-setup-size-label" for="sim-size-value">Shares</label>
+            <div class="sim-pill-row" id="sim-setup-pills">
+              <button type="button" class="sim-pill sim-pill-active" data-mode="shares">Shares</button>
+              <button type="button" class="sim-pill" data-mode="dollars">$ Amount</button>
+            </div>
+            <input type="hidden" id="sim-size-mode" value="shares">
+            <input type="number" id="sim-size-value" style="margin-top:6px;">
+          </div>
+          <div class="fetch-field">
+            <label for="sim-stop-price">Stop price</label>
+            <input type="number" step="0.01" id="sim-stop-price">
+          </div>
+          <div class="fetch-field">
+            <label for="sim-end-date">End date (optional · force close)</label>
+            <div class="sim-input-with-pick">
+              <input type="date" id="sim-end-date">
+              <button type="button" class="sim-pick-btn" id="sim-pick-end-btn" title="Click a bar on the chart">📍 Pick</button>
+            </div>
+            <div class="sim-barcount-readout" id="sim-setup-barcount" style="display:none"></div>
+          </div>
+          <div class="sim-readout" id="sim-setup-summary">
+            <div>Shares: <strong>—</strong></div>
+            <div>Notional: <strong>—</strong></div>
+            <div>Risk: <strong>—</strong></div>
+          </div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-setup-cancel">Cancel</button>
+            <button class="fetch-btn-primary" id="sim-setup-submit">Start Sim</button>
+          </div>
+          <div class="fetch-status" id="sim-setup-status"></div>
+        </div>
+      </div>
+
+      <!-- Sim Sell Modal -->
+      <div class="fetch-modal-overlay" id="sim-sell-modal">
+        <div class="fetch-modal">
+          <h3>Sell Shares</h3>
+          <div class="fetch-field">
+            <label for="sim-sell-qty">Quantity</label>
+            <input type="number" id="sim-sell-qty">
+            <div class="sim-pill-row" id="sim-sell-pills">
+              <button type="button" class="sim-pill" data-frac="1">All</button>
+              <button type="button" class="sim-pill" data-frac="0.5">Half</button>
+              <button type="button" class="sim-pill" data-frac="0.3333">1/3</button>
+            </div>
+          </div>
+          <div class="fetch-field">
+            <label for="sim-sell-price">Price</label>
+            <input type="number" step="0.01" id="sim-sell-price">
+          </div>
+          <div class="sim-note">Fills at next bar open</div>
+          <div class="sim-readout" id="sim-sell-summary">
+            <div>Realized: <strong>—</strong></div>
+          </div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-sell-cancel">Cancel</button>
+            <button class="fetch-btn-primary" id="sim-sell-submit">Sell</button>
+          </div>
+          <div class="fetch-status" id="sim-sell-status"></div>
+        </div>
+      </div>
+
+      <!-- Sim Add Modal -->
+      <div class="fetch-modal-overlay" id="sim-add-modal">
+        <div class="fetch-modal">
+          <h3>Add to Position</h3>
+          <div class="fetch-field">
+            <label id="sim-add-size-label" for="sim-add-size-value">Shares</label>
+            <div class="sim-pill-row" id="sim-add-pills">
+              <button type="button" class="sim-pill sim-pill-active" data-mode="shares">Shares</button>
+              <button type="button" class="sim-pill" data-mode="dollars">$ Amount</button>
+            </div>
+            <input type="hidden" id="sim-add-size-mode" value="shares">
+            <input type="number" id="sim-add-size-value" style="margin-top:6px;">
+          </div>
+          <div class="fetch-field">
+            <label for="sim-add-price">Price</label>
+            <input type="number" step="0.01" id="sim-add-price">
+          </div>
+          <div class="fetch-field">
+            <label for="sim-add-newstop">New stop (optional)</label>
+            <input type="number" step="0.01" id="sim-add-newstop" placeholder="leave blank to keep current">
+          </div>
+          <div class="sim-note">Fills at next bar open</div>
+          <div class="sim-readout" id="sim-add-summary">
+            <div>New avg cost: <strong>—</strong></div>
+            <div>New qty: <strong>—</strong></div>
+          </div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-add-cancel">Cancel</button>
+            <button class="fetch-btn-primary" id="sim-add-submit">Add</button>
+          </div>
+          <div class="fetch-status" id="sim-add-status"></div>
+        </div>
+      </div>
+
+      <!-- Sim Move Stop Modal -->
+      <div class="fetch-modal-overlay" id="sim-movestop-modal">
+        <div class="fetch-modal">
+          <h3>Add Stop Level</h3>
+          <div class="fetch-field">
+            <label for="sim-movestop-price">Stop price</label>
+            <input type="number" step="0.01" id="sim-movestop-price">
+          </div>
+          <div class="fetch-field">
+            <label for="sim-movestop-pct">% of original position to close</label>
+            <input type="number" step="1" min="1" max="100" id="sim-movestop-pct" value="100">
+          </div>
+          <div class="sim-readout" id="sim-movestop-summary">
+            <div>Distance from current price: <strong>—</strong></div>
+          </div>
+          <div class="sim-note">Remaining % falls to the prior stop. Active from next bar open.</div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-movestop-cancel">Cancel</button>
+            <button class="fetch-btn-primary" id="sim-movestop-submit">Add Stop</button>
+          </div>
+          <div class="fetch-status" id="sim-movestop-status"></div>
+        </div>
+      </div>
+
+      <!-- Sim Summary Modal -->
+      <div class="fetch-modal-overlay" id="sim-summary-modal">
+        <div class="fetch-modal sim-modal-wide">
+          <h3>Simulation Complete</h3>
+          <div class="sim-summary-hero">
+            <div class="sim-summary-r" id="sim-summary-r">R +0.00</div>
+            <div class="sim-summary-total" id="sim-summary-total">Total P&amp;L: $0</div>
+          </div>
+          <div class="sim-summary-grid" id="sim-summary-grid">
+            <div>Days held<strong id="sim-summary-days">—</strong></div>
+            <div>MFE<strong id="sim-summary-mfe">—</strong></div>
+            <div>MAE<strong id="sim-summary-mae">—</strong></div>
+            <div>Max drawdown<strong id="sim-summary-dd">—</strong></div>
+            <div># Entries<strong id="sim-summary-entries">—</strong></div>
+            <div># Sells<strong id="sim-summary-sells">—</strong></div>
+          </div>
+          <div class="sim-log" id="sim-summary-log"></div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-summary-close">Close</button>
+            <button class="fetch-btn-cancel" id="sim-summary-screenshot">Screenshot</button>
+            <button class="fetch-btn-primary" id="sim-summary-newsim">New Sim</button>
+          </div>
+          <div class="fetch-status" id="sim-summary-status"></div>
+        </div>
+      </div>
+
       <!-- Crosshair Info Bar -->
       <div class="crosshair-info" id="crosshair-info">
         <div class="info-item">
@@ -1653,6 +2313,95 @@
           <div id="vol-chart"></div>
         </div>
         <canvas id="crosshair-overlay"></canvas>
+      </div>
+      <!-- P&L Simulator Panel -->
+      <div id="sim-panel" aria-label="Position simulator">
+        <div class="sim-hero">
+          <div class="sim-col-left">
+            <div class="sim-label">Position</div>
+            <div id="sim-value-big">$0</div>
+            <div id="sim-value-sub" class="sim-sublabel">current notional</div>
+          </div>
+          <div class="sim-col-mid">
+            <div class="sim-rail-wrap">
+              <div id="sim-rail-peak-label">PEAK $0</div>
+              <div id="sim-rail">
+                <div id="sim-rail-fill"><span id="sim-rail-fill-label">−$0</span></div>
+                <div id="sim-rail-now"><span id="sim-rail-now-label">$0</span></div>
+              </div>
+              <div id="sim-rail-base-label">BASE $0</div>
+            </div>
+          </div>
+          <div class="sim-col-right">
+            <div class="sim-row">
+              <div class="sim-label">P&amp;L</div>
+              <div id="sim-pnl-row">
+                <span id="sim-pnl-value">$0</span>
+                <span id="sim-pnl-pct">(+0.00%)</span>
+              </div>
+            </div>
+            <div id="sim-giveback-row" class="sim-row">
+              <div class="sim-label">Down from peak</div>
+              <div id="sim-giveback-value">−$0 (−0.00%)</div>
+              <div id="sim-giveback-sub">peak was 0 bars ago</div>
+            </div>
+            <div class="sim-row">
+              <div class="sim-label">R hit</div>
+              <div id="sim-rhit-row">
+                <span id="sim-rhit-stars">—</span>
+                <span id="sim-rhit-num"></span>
+              </div>
+            </div>
+            <div class="sim-row sim-row-stops">
+              <div class="sim-label">Manage stops</div>
+              <div id="sim-stops-manage-list"><span class="sim-stop-history-empty">—</span></div>
+            </div>
+            <div id="sim-factrow" class="sim-chiprow">
+              <span class="sim-chip"><span class="sim-chip-label">Entry</span><span class="sim-chip-value" data-field="entry">—</span></span>
+              <span class="sim-chip-sep">·</span>
+              <span class="sim-chip"><span class="sim-chip-label">Avg</span><span class="sim-chip-value" data-field="avg">—</span></span>
+              <span class="sim-chip-sep">·</span>
+              <span class="sim-chip"><span class="sim-chip-label">Qty</span><span class="sim-chip-value" data-field="qty">—</span></span>
+              <span class="sim-chip-sep">·</span>
+              <span class="sim-chip"><span class="sim-chip-label">Stop</span><span class="sim-chip-value" data-field="stop">—</span></span>
+            </div>
+            <div id="sim-statsrow" class="sim-chiprow">
+              <span class="sim-chip"><span class="sim-chip-label">MFE</span><span class="sim-chip-value sim-pos" data-field="mfe">—</span></span>
+              <span class="sim-chip-sep">·</span>
+              <span class="sim-chip"><span class="sim-chip-label">MAE</span><span class="sim-chip-value sim-neg" data-field="mae">—</span></span>
+              <span class="sim-chip-sep">·</span>
+              <span class="sim-chip"><span class="sim-chip-label">R</span><span class="sim-chip-value" data-field="r">—</span></span>
+              <span class="sim-chip-sep">·</span>
+              <span class="sim-chip"><span class="sim-chip-label">Days</span><span class="sim-chip-value" data-field="days">—</span></span>
+            </div>
+            <div class="sim-actions">
+              <button id="sim-btn-sell"     class="sim-btn" type="button">Sell</button>
+              <button id="sim-btn-add"      class="sim-btn" type="button">Add</button>
+              <button id="sim-btn-movestop" class="sim-btn" type="button">Move Stop</button>
+              <button id="sim-btn-closeall" class="sim-btn" type="button">Close</button>
+            </div>
+          </div>
+        </div>
+        <div id="sim-transport">
+          <button id="sim-btn-entry"     class="sim-transport-btn" type="button" title="Jump to entry bar">⏮ Entry</button>
+          <button id="sim-btn-step-back" class="sim-transport-btn" type="button" title="Step back one bar">◀</button>
+          <button id="sim-btn-play"      class="sim-transport-btn" type="button" title="Play/Pause (Space)">▶ Play</button>
+          <button id="sim-btn-step-fwd"  class="sim-transport-btn" type="button" title="Step forward one bar (→)">▶+</button>
+          <div class="sim-transport-sep"></div>
+          <div class="sim-speed-group">
+            <span class="sim-speed-label">speed</span>
+            <button id="sim-speed-025" class="sim-speed-pill" type="button">0.25×</button>
+            <button id="sim-speed-05" class="sim-speed-pill" type="button">0.5×</button>
+            <button id="sim-speed-1" class="sim-speed-pill sim-speed-active" type="button">1×</button>
+            <button id="sim-speed-2" class="sim-speed-pill" type="button">2×</button>
+            <button id="sim-speed-5" class="sim-speed-pill" type="button">5×</button>
+          </div>
+          <div class="sim-transport-sep"></div>
+          <div id="sim-date-readout">Day 0 · —</div>
+          <div class="sim-transport-sep"></div>
+          <button id="sim-btn-export" class="sim-transport-btn" type="button" title="Export P&amp;L curve as CSV">↓ Export</button>
+          <button id="sim-btn-exit" class="sim-transport-btn" type="button" title="Exit simulator (Esc)">✕ Exit Sim</button>
+        </div>
       </div>
     </div>
   </div>
@@ -3388,6 +4137,7 @@ function setupChartEvents(){
   }catch(e){}
 
   chart.subscribeClick(param=>{
+    if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
     if(!drawKey()||drawTool==='pan')return;
     if(!param.point)return;
     let price=priceSeries?.coordinateToPrice(param.point.y);
@@ -3448,6 +4198,7 @@ function setupChartEvents(){
   });
 
   chart.subscribeClick(param=>{
+    if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
     if(drawTool!=='pan'||!drawKey()||!param.point||drawingsLocked)return;
     const x=param.point.x, y=param.point.y;
     const hit=hitTest(x,y);
@@ -3470,6 +4221,7 @@ function setupDrag(){
 
   let dragPart='whole';
   wrapEl.addEventListener('mousedown',e=>{
+    if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
     if(drawTool!=='pan'||e.button!==0||!drawKey()||drawingsLocked)return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
@@ -3510,6 +4262,7 @@ function setupDrag(){
   });
 
   wrapEl.addEventListener('dblclick',e=>{
+    if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
     if(drawTool!=='pan'||!drawKey()||drawingsLocked)return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
@@ -5699,6 +6452,1702 @@ window.addEventListener('load',async()=>{
 window.addEventListener('beforeunload', () => {
   try { saveSettings(); } catch (e) {}
 });
+
+// =====================================================================
+// P&L SIMULATOR — core logic (pure), UI renderers, modals, controller
+// =====================================================================
+
+/* ---------- Sim core (pure logic) ---------- */
+const Sim = (function(){
+  const r2 = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  const rPct = (n) => Math.round((Number.isFinite(n) ? n : 0) * 10000) / 10000;
+  const rR = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  function createSim({ moveKey, direction = 'long', entry }) {
+    if (direction !== 'long') console.warn('Sim: only direction="long" supported in phase 1');
+    if (!entry || typeof entry.barIdx !== 'number' || typeof entry.price !== 'number' || typeof entry.stop !== 'number') {
+      throw new Error('createSim: entry.barIdx, entry.price, entry.stop required');
+    }
+    const shares = entry.sizeMode === 'shares'
+      ? Math.floor(entry.sizeValue)
+      : Math.floor(entry.sizeValue / entry.price);
+    if (!(shares > 0)) throw new Error('createSim: computed shares <= 0');
+    const initialRisk = shares * (entry.price - entry.stop);
+    if (!(initialRisk > 0)) throw new Error('createSim: initialRisk must be > 0 (stop below entry for long)');
+
+    let endBarIdx = null;
+    if (entry.endBarIdx != null) {
+      if (typeof entry.endBarIdx !== 'number' || !(entry.endBarIdx > entry.barIdx)) {
+        throw new Error('createSim: entry.endBarIdx must be a number > entry.barIdx');
+      }
+      endBarIdx = entry.endBarIdx;
+    }
+
+    return {
+      moveKey: moveKey || null,
+      direction,
+      entry: {
+        barIdx: entry.barIdx, date: entry.date || null, price: entry.price,
+        sizeMode: entry.sizeMode || 'shares', sizeValue: entry.sizeValue, stop: entry.stop
+      },
+      endBarIdx,
+      shares0: shares, initialRisk,
+      qty: shares, avgCost: entry.price,
+      realizedPnL: 0,
+      stopLevels: [{ id: 'stop_initial', price: entry.stop, pct: 1.0, fired: false, barIdx: entry.barIdx }],
+      playIdx: entry.barIdx, stoppedOut: false, closed: false,
+      pendingActions: [],
+      eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price,
+                    note: 'entry ' + shares + '@' + r2(entry.price) + ' stop ' + r2(entry.stop) }],
+      peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0
+    };
+  }
+
+  function queueAction(sim, action) {
+    if (!action || !action.type) return sim;
+    if (sim.closed || sim.stoppedOut) return sim;
+    sim.pendingActions.push(clone(action));
+    return sim;
+  }
+
+  function _computeTotalPnLAtBar(sim, bar) {
+    const dir = sim.direction === 'long' ? 1 : -1;
+    const unreal = sim.qty > 0 ? sim.qty * (bar.close - sim.avgCost) * dir : 0;
+    return sim.realizedPnL + unreal;
+  }
+  function _updateExtremes(sim, totalPnL, barIdx) {
+    if (totalPnL > sim.peakTotal) { sim.peakTotal = totalPnL; sim.peakBarIdx = barIdx; }
+    if (totalPnL > sim._mfeVal) sim._mfeVal = totalPnL;
+    if (totalPnL < sim._maeVal) sim._maeVal = totalPnL;
+  }
+  function _updateIntradayExtremes(sim, bar, barIdx) {
+    if (!bar || sim.qty <= 0) return;
+    const dir = sim.direction === 'long' ? 1 : -1;
+    const lowPnL  = sim.realizedPnL + sim.qty * (bar.low  - sim.avgCost) * dir;
+    const highPnL = sim.realizedPnL + sim.qty * (bar.high - sim.avgCost) * dir;
+    if (highPnL > sim.peakTotal) { sim.peakTotal = highPnL; sim.peakBarIdx = barIdx; }
+    if (highPnL > sim._mfeVal) sim._mfeVal = highPnL;
+    if (lowPnL  < sim._maeVal) sim._maeVal = lowPnL;
+  }
+  function _seedEntryExtremes(sim, bars) {
+    const bar = bars[sim.entry.barIdx]; if (!bar) return;
+    _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), sim.entry.barIdx);
+    _updateIntradayExtremes(sim, bar, sim.entry.barIdx);
+  }
+
+  function _processStopOnBar(sim, bar, barIdx, fired) {
+    if (sim.stoppedOut || sim.closed || sim.qty <= 0) return false;
+    const active = (sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price);
+    let anyFired = false;
+    for (const stop of active) {
+      if (sim.qty <= 0) break;
+      if (bar.low > stop.price) continue;
+      const fillPx = Math.min(bar.open, stop.price);
+      const targetQty = Math.max(0, Math.floor(sim.shares0 * stop.pct));
+      const sellQty = Math.min(targetQty, sim.qty);
+      if (sellQty > 0) {
+        sim.realizedPnL += (fillPx - sim.avgCost) * sellQty;
+        sim.qty -= sellQty;
+      }
+      stop.fired = true;
+      const pctLbl = Math.round(stop.pct * 100);
+      const ev = { barIdx, date: bar.time, type: 'stop', qty: sellQty, price: r2(fillPx),
+        note: 'stop ' + r2(stop.price) + ' hit (' + pctLbl + '%), filled ' + r2(fillPx) + ' qty ' + sellQty };
+      sim.eventsLog.push(ev); fired.push(ev);
+      anyFired = true;
+      if (sim.qty === 0) {
+        sim.closed = true;
+        sim.stoppedOut = true;
+        break;
+      }
+    }
+    if (anyFired && sim.closed) sim.pendingActions = [];
+    return anyFired;
+  }
+
+  function _processActionsOnBar(sim, bar, barIdx, fired) {
+    if (sim.closed || sim.stoppedOut) { sim.pendingActions = []; return; }
+    const queue = sim.pendingActions; sim.pendingActions = [];
+    for (const a of queue) {
+      if (sim.closed || sim.stoppedOut) break;
+      const fillPx = (typeof a.price === 'number') ? a.price : bar.open;
+      if (a.type === 'add') {
+        const addQty = Math.floor(a.qty || 0);
+        if (addQty <= 0) { sim.eventsLog.push({ barIdx, date: bar.time, type: 'add', qty: 0, price: r2(fillPx), note: 'add skipped: qty<=0' }); continue; }
+        const newQty = sim.qty + addQty;
+        sim.avgCost = (sim.qty * sim.avgCost + addQty * fillPx) / newQty;
+        sim.qty = newQty;
+        const ev = { barIdx, date: bar.time, type: 'add', qty: addQty, price: r2(fillPx), note: 'add ' + addQty + '@' + r2(fillPx) };
+        sim.eventsLog.push(ev); fired.push(ev);
+      } else if (a.type === 'sell') {
+        const wantQty = Math.floor(a.qty || 0);
+        if (wantQty <= 0 || wantQty > sim.qty) {
+          sim.eventsLog.push({ barIdx, date: bar.time, type: 'sell', qty: 0, price: r2(fillPx), note: 'sell skipped: requested ' + wantQty + ', held ' + sim.qty });
+          console.warn('Sim: sell ' + wantQty + ' > held ' + sim.qty + ', skipped'); continue;
+        }
+        sim.realizedPnL += (fillPx - sim.avgCost) * wantQty;
+        sim.qty -= wantQty;
+        const ev = { barIdx, date: bar.time, type: 'sell', qty: wantQty, price: r2(fillPx), note: 'sell ' + wantQty + '@' + r2(fillPx) };
+        sim.eventsLog.push(ev); fired.push(ev);
+        if (sim.qty === 0) {
+          sim.closed = true;
+          const evc = { barIdx, date: bar.time, type: 'close', qty: 0, price: r2(fillPx), note: 'flat via sell' };
+          sim.eventsLog.push(evc); fired.push(evc);
+        }
+      } else if (a.type === 'movestop') {
+        const ns = Number(a.newStop); if (!Number.isFinite(ns) || ns <= 0) continue;
+        const pct = Number.isFinite(a.pct) ? Math.max(0, Math.min(1, a.pct)) : 1.0;
+        if (pct <= 0) continue;
+        const stopId = 'stop_' + Math.random().toString(36).slice(2, 8);
+        sim.stopLevels.push({ id: stopId, price: ns, pct, fired: false, barIdx });
+        const pctLbl = Math.round(pct * 100);
+        const ev = { barIdx, date: bar.time, type: 'movestop', qty: sim.qty, price: null, newStop: r2(ns), pct, stopId,
+          note: 'stop ' + r2(ns) + ' added (' + pctLbl + '%)' };
+        sim.eventsLog.push(ev); fired.push(ev);
+      }
+    }
+  }
+
+  function advanceTo(sim, bars, targetIdx) {
+    const fired = [];
+    if (sim.closed || sim.stoppedOut) return { sim, derived: computeDerived(sim, bars), eventsFired: fired };
+    if (targetIdx <= sim.playIdx) return { sim, derived: computeDerived(sim, bars), eventsFired: fired };
+    if (sim.playIdx === sim.entry.barIdx && sim._mfeVal === 0 && sim._maeVal === 0) _seedEntryExtremes(sim, bars);
+    const lastIdx = Math.min(targetIdx, bars.length - 1, sim.endBarIdx != null ? sim.endBarIdx : Infinity);
+    while (sim.playIdx < lastIdx) {
+      const nextIdx = sim.playIdx + 1; const bar = bars[nextIdx]; if (!bar) break;
+      const stopFired = _processStopOnBar(sim, bar, nextIdx, fired);
+      if (!stopFired) _processActionsOnBar(sim, bar, nextIdx, fired);
+      _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), nextIdx);
+      _updateIntradayExtremes(sim, bar, nextIdx);
+      sim.playIdx = nextIdx;
+      if (sim.closed || sim.stoppedOut) break;
+    }
+    if (sim.endBarIdx != null && sim.playIdx === sim.endBarIdx && !sim.closed && sim.qty > 0) {
+      const lastBar = bars[sim.playIdx];
+      if (lastBar) {
+        const soldQty = sim.qty;
+        sim.realizedPnL += (lastBar.close - sim.avgCost) * soldQty;
+        sim.qty = 0;
+        sim.closed = true;
+        const ev = { barIdx: sim.playIdx, date: lastBar.time, type: 'close', qty: soldQty,
+          price: Math.round(lastBar.close * 100) / 100,
+          note: 'reached end bar, force close at close ' + (Math.round(lastBar.close * 100) / 100) };
+        sim.eventsLog.push(ev);
+        fired.push(ev);
+        _updateExtremes(sim, _computeTotalPnLAtBar(sim, lastBar), sim.playIdx);
+      }
+    }
+    return { sim, derived: computeDerived(sim, bars), eventsFired: fired };
+  }
+
+  function computeDerived(sim, bars) {
+    const bar = bars[sim.playIdx];
+    const dir = sim.direction === 'long' ? 1 : -1;
+    const unreal = sim.qty > 0 && bar ? sim.qty * (bar.close - sim.avgCost) * dir : 0;
+    const totalPnL = sim.realizedPnL + unreal;
+    const positionValue = sim.qty > 0 && bar ? sim.qty * bar.close : 0;
+    const denom = sim.shares0 * sim.entry.price;
+    const mae = Math.min(0, sim._maeVal); const mfe = Math.max(0, sim._mfeVal);
+    const peakBarsAgo = sim.playIdx - sim.peakBarIdx;
+    const giveBack = Math.max(0, sim.peakTotal - totalPnL);
+    const rCurrent = sim.initialRisk > 0 ? totalPnL / sim.initialRisk : 0;
+    return {
+      qty: sim.qty, avgCost: r2(sim.avgCost),
+      unrealizedPnL: r2(unreal), realizedPnL: r2(sim.realizedPnL),
+      totalPnL: r2(totalPnL), positionValue: r2(positionValue),
+      peakTotal: r2(sim.peakTotal), peakBarIdx: sim.peakBarIdx, peakBarsAgo,
+      giveBack: r2(giveBack),
+      mae: r2(mae), maePct: rPct(denom > 0 ? mae / denom : 0),
+      mfe: r2(mfe), mfePct: rPct(denom > 0 ? mfe / denom : 0),
+      rCurrent: rR(rCurrent), dayCount: sim.playIdx - sim.entry.barIdx,
+      stoppedOut: sim.stoppedOut, closed: sim.closed,
+      currentStop: r2((function(){
+        const active = (sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price);
+        return active.length ? active[0].price : sim.entry.stop;
+      })()),
+      stopLevels: (sim.stopLevels || []).map(s => ({ id: s.id, price: r2(s.price), pct: s.pct, fired: s.fired, barIdx: s.barIdx })),
+      eventsLog: sim.eventsLog.slice(),
+      endBarIdx: sim.endBarIdx
+    };
+  }
+
+  function closeAt(sim, bars, price) {
+    if (sim.closed) return { sim, derived: computeDerived(sim, bars) };
+    const bar = bars[sim.playIdx]; const px = Number(price);
+    if (!Number.isFinite(px)) throw new Error('closeAt: price required');
+    if (sim.qty > 0) {
+      const soldQty = sim.qty;
+      sim.realizedPnL += (px - sim.avgCost) * soldQty;
+      sim.qty = 0; sim.closed = true;
+      sim.eventsLog.push({ barIdx: sim.playIdx, date: bar ? bar.time : null, type: 'close', qty: soldQty, price: r2(px), note: 'manual close ' + soldQty + '@' + r2(px) });
+      if (bar) _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), sim.playIdx);
+    }
+    sim.pendingActions = [];
+    return { sim, derived: computeDerived(sim, bars) };
+  }
+
+  function reset(sim, bars) {
+    const preservedEndBarIdx = sim.endBarIdx;
+    const fresh = createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry) });
+    Object.keys(sim).forEach(k => delete sim[k]);
+    Object.assign(sim, fresh);
+    sim.endBarIdx = preservedEndBarIdx;
+    _seedEntryExtremes(sim, bars);
+    return sim;
+  }
+
+  function editStop(sim, id, newPrice, newPct) {
+    if (!sim || !sim.stopLevels) return false;
+    const stop = sim.stopLevels.find(s => s.id === id);
+    if (!stop || stop.fired) return false;
+    if (Number.isFinite(newPrice) && newPrice > 0) stop.price = newPrice;
+    if (Number.isFinite(newPct) && newPct > 0 && newPct <= 1) stop.pct = newPct;
+    return true;
+  }
+  function deleteStop(sim, id) {
+    if (!sim || !sim.stopLevels) return false;
+    const idx = sim.stopLevels.findIndex(s => s.id === id);
+    if (idx < 0 || sim.stopLevels[idx].fired) return false;
+    sim.stopLevels.splice(idx, 1);
+    return true;
+  }
+
+  return { createSim, queueAction, advanceTo, computeDerived, closeAt, reset, editStop, deleteStop };
+})();
+
+/* ---------- Sim.UI: DOM helpers + hero panel render ---------- */
+(function(){
+  window.Sim = window.Sim || {};
+  Sim.UI = Sim.UI || {};
+
+  // DOM helpers (no innerHTML)
+  function _setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+  function _clearChildren(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
+  function _fillReadout(el, rows) {
+    _clearChildren(el);
+    rows.forEach(r => {
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(r.label + ': '));
+      const s = document.createElement('strong');
+      s.textContent = r.value;
+      div.appendChild(s);
+      if (r.suffix) div.appendChild(document.createTextNode(r.suffix));
+      el.appendChild(div);
+    });
+  }
+  Sim.UI._setText = _setText;
+  Sim.UI._clearChildren = _clearChildren;
+  Sim.UI._fillReadout = _fillReadout;
+
+  // Number formatters
+  const fmt$ = n => (n == null || isNaN(n)) ? '$0' : ((n < 0 ? '−' : '') + '$' + Math.round(Math.abs(n)).toLocaleString());
+  const fmt$Signed = n => {
+    if (n == null || isNaN(n)) return '$0';
+    if (n === 0) return '$0';
+    return (n > 0 ? '+' : '−') + '$' + Math.round(Math.abs(n)).toLocaleString();
+  };
+  const fmtPct = p => (p == null || isNaN(p)) ? '0.00%' : ((p >= 0 ? '+' : '') + (p * 100).toFixed(2) + '%');
+  const fmtPrice = n => (n == null || isNaN(n)) ? '—' : '$' + Number(n).toFixed(2);
+  const fmtQty = n => (n == null || isNaN(n)) ? '—' : Math.round(n).toLocaleString();
+
+  function _setChip(rowId, field, text, cls) {
+    const row = document.getElementById(rowId); if (!row) return;
+    const el = row.querySelector('[data-field="' + field + '"]'); if (!el) return;
+    el.textContent = text;
+    if (cls !== undefined) { el.classList.remove('sim-pos', 'sim-neg'); if (cls) el.classList.add(cls); }
+  }
+  function _flashOnce(el, className, duration) {
+    if (!el) return;
+    el.classList.remove(className);
+    void el.offsetWidth;
+    el.classList.add(className);
+    setTimeout(() => el.classList.remove(className), duration);
+  }
+
+  Sim.UI._last = { pnl: null, giveBack: null };
+
+  Sim.UI.render = function(derived) {
+    if (!derived) return;
+    const { positionValue = 0, peakTotal = 0, totalPnL = 0, pnlPct = 0, giveBack = 0, giveBackPct = 0,
+            peakBarsAgo = 0, entry = null, avg = null, qty = null, stop = null, stopDollar = null, stopPct = null,
+            mfe = null, mae = null, r = null, days = null, barIndex = 0, dateISO = '—' } = derived;
+
+    _setText('sim-value-big', fmt$(positionValue));
+
+    const railEl = document.getElementById('sim-rail');
+    const nowEl  = document.getElementById('sim-rail-now');
+    const fillEl = document.getElementById('sim-rail-fill');
+    _setText('sim-rail-peak-label', 'PEAK ' + fmt$(peakTotal));
+    _setText('sim-rail-base-label', 'BASE $0');
+    _setText('sim-rail-now-label', 'NOW ' + fmt$(positionValue));
+    _setText('sim-rail-fill-label', '−' + fmt$(Math.abs(giveBack)));
+
+    if (railEl && nowEl) {
+      let ratio = peakTotal > 0 ? (totalPnL / peakTotal) : 0;
+      ratio = Math.max(0, Math.min(1, ratio));
+      const topPct = (1 - ratio) * 100;
+      nowEl.style.top = topPct + '%';
+      if (fillEl) {
+        if (giveBack > 0 && peakTotal > 0) { fillEl.classList.add('sim-rail-fill-active'); fillEl.style.height = topPct + '%'; }
+        else { fillEl.classList.remove('sim-rail-fill-active'); fillEl.style.height = '0%'; }
+      }
+    }
+
+    const pnlEl = document.getElementById('sim-pnl-value');
+    const pctEl = document.getElementById('sim-pnl-pct');
+    if (pnlEl) {
+      pnlEl.textContent = fmt$Signed(totalPnL);
+      pnlEl.classList.remove('sim-pnl-pos', 'sim-pnl-neg');
+      if (totalPnL > 0) pnlEl.classList.add('sim-pnl-pos');
+      else if (totalPnL < 0) pnlEl.classList.add('sim-pnl-neg');
+      if (Sim.UI._last.pnl !== null && totalPnL !== Sim.UI._last.pnl) {
+        if (totalPnL > Sim.UI._last.pnl) _flashOnce(pnlEl, 'sim-flash-up', 800);
+        else if (totalPnL < Sim.UI._last.pnl) _flashOnce(pnlEl, 'sim-flash-down', 800);
+      }
+    }
+    if (pctEl) pctEl.textContent = '(' + fmtPct(pnlPct) + ')';
+
+    const gbRow = document.getElementById('sim-giveback-row');
+    const gbVal = document.getElementById('sim-giveback-value');
+    const gbSub = document.getElementById('sim-giveback-sub');
+    if (gbRow) {
+      if (giveBack > 0) {
+        gbRow.classList.add('sim-visible');
+        if (gbVal) {
+          gbVal.textContent = '−' + fmt$(Math.abs(giveBack)) + ' (' + fmtPct(-Math.abs(giveBackPct)) + ')';
+          if (Sim.UI._last.giveBack !== null && giveBack > Sim.UI._last.giveBack) _flashOnce(gbVal, 'sim-pulse-red', 400);
+        }
+        if (gbSub) {
+          const n = peakBarsAgo || 0;
+          gbSub.textContent = 'peak was ' + n + ' bar' + (n === 1 ? '' : 's') + ' ago';
+        }
+      } else { gbRow.classList.remove('sim-visible'); }
+    }
+
+    _setChip('sim-factrow', 'entry', entry != null ? fmtPrice(entry) : '—');
+    _setChip('sim-factrow', 'avg',   avg   != null ? fmtPrice(avg)   : '—');
+    _setChip('sim-factrow', 'qty',   qty   != null ? fmtQty(qty)     : '—');
+    if (stop != null) {
+      const parts = [fmtPrice(stop)];
+      if (stopDollar != null || stopPct != null) {
+        const sub = [];
+        if (stopDollar != null) sub.push(fmt$Signed(-Math.abs(stopDollar)));
+        if (stopPct != null) sub.push(fmtPct(-Math.abs(stopPct)));
+        if (sub.length) parts.push('(' + sub.join(', ') + ')');
+      }
+      _setChip('sim-factrow', 'stop', parts.join(' '), 'sim-neg');
+    } else { _setChip('sim-factrow', 'stop', '—', null); }
+
+    const rhitEl = document.getElementById('sim-rhit-stars');
+    const rhitNumEl = document.getElementById('sim-rhit-num');
+    if (rhitEl) {
+      if (r != null && r >= 1) {
+        const n = Math.min(10, Math.floor(r));
+        rhitEl.textContent = '★'.repeat(n);
+        rhitEl.classList.remove('sim-rhit-empty');
+      } else {
+        rhitEl.textContent = '—';
+        rhitEl.classList.add('sim-rhit-empty');
+      }
+    }
+    if (rhitNumEl) {
+      if (r != null) rhitNumEl.textContent = (r >= 0 ? '+' : '') + Number(r).toFixed(2) + 'R';
+      else rhitNumEl.textContent = '';
+    }
+
+    _setChip('sim-statsrow', 'mfe', mfe != null ? fmt$Signed(Math.abs(mfe)) : '—', 'sim-pos');
+    _setChip('sim-statsrow', 'mae', mae != null ? fmt$Signed(-Math.abs(mae)) : '—', 'sim-neg');
+    _setChip('sim-statsrow', 'r',   r   != null ? (r >= 0 ? '+' : '') + Number(r).toFixed(2) : '—',
+             r != null ? (r >= 0 ? 'sim-pos' : 'sim-neg') : null);
+    _setChip('sim-statsrow', 'days', days != null ? String(days) : '—');
+
+    _setText('sim-date-readout', 'Day ' + (barIndex || 0) + ' · ' + (dateISO || '—'));
+    Sim.UI._last.pnl = totalPnL; Sim.UI._last.giveBack = giveBack;
+  };
+
+  Sim.UI.setPlayingState = function(isPlaying) {
+    const btn = document.getElementById('sim-btn-play'); if (!btn) return;
+    btn.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+    btn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+  };
+
+  Sim.UI.setSpeed = function(speed) {
+    const map = { 0.25: 'sim-speed-025', 0.5: 'sim-speed-05', 1: 'sim-speed-1', 2: 'sim-speed-2', 5: 'sim-speed-5' };
+    Object.values(map).forEach(id => {
+      const el = document.getElementById(id); if (!el) return;
+      if (id === map[speed]) el.classList.add('sim-speed-active'); else el.classList.remove('sim-speed-active');
+    });
+  };
+
+  Sim.UI.setActive = function(isActive) {
+    const host = document.querySelector('.chart-panel') || document.body;
+    if (isActive) host.classList.add('sim-active');
+    else { host.classList.remove('sim-active'); Sim.UI._last.pnl = null; Sim.UI._last.giveBack = null; }
+  };
+
+  // Expose formatters for modal code
+  Sim.UI._fmt$ = fmt$; Sim.UI._fmt$Signed = fmt$Signed; Sim.UI._fmtPct = fmtPct;
+})();
+
+/* ---------- Sim.UI: modals (no innerHTML) ---------- */
+(function(){
+  window.Sim = window.Sim || {};
+  Sim.UI = Sim.UI || {};
+
+  function _parseNum(v, fallback) {
+    if (v === null || v === undefined || v === '') return fallback;
+    const n = typeof v === 'number' ? v : parseFloat(String(v));
+    return isFinite(n) ? n : fallback;
+  }
+  function _fmt$(n) {
+    if (!isFinite(n)) return '—';
+    const sign = n < 0 ? '-' : ''; const abs = Math.abs(n);
+    let s = abs >= 100 ? abs.toFixed(0) : abs.toFixed(2);
+    s = s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return sign + '$' + s;
+  }
+  function _fmtInt(n) { return !isFinite(n) ? '—' : Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function _fmtSignedR(r) { return !isFinite(r) ? 'R —' : 'R ' + (r >= 0 ? '+' : '−') + Math.abs(r).toFixed(2); }
+  function _fmtSigned$(n) {
+    if (!isFinite(n)) return '—';
+    const sign = n >= 0 ? '+' : '-';
+    return sign + _fmt$(Math.abs(n)).replace('-','');
+  }
+  function _closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); _cleanupEsc(); }
+  function _openModal(id)  { const el = document.getElementById(id); if (el) el.classList.add('open'); _installEsc(); }
+  function _setStatus(id, msg, isError) {
+    const el = document.getElementById(id); if (!el) return;
+    el.textContent = msg || '';
+    el.style.color = isError ? 'var(--red)' : 'var(--green)';
+  }
+  function _clearStatus(id) { _setStatus(id, '', false); }
+  function _onBackdrop(overlayId, onClose) {
+    const overlay = document.getElementById(overlayId); if (!overlay) return;
+    overlay.onclick = function(e) { if (e.target === overlay) { onClose && onClose(); _closeModal(overlayId); } };
+  }
+
+  let _escHandler = null;
+  function _installEsc() {
+    if (_escHandler) return;
+    _escHandler = function(e) {
+      if (e.key !== 'Escape') return;
+      const open = document.querySelector('.fetch-modal-overlay.open[id^="sim-"]');
+      if (open) _closeModal(open.id);
+    };
+    document.addEventListener('keydown', _escHandler);
+  }
+  function _cleanupEsc() {
+    const anyOpen = document.querySelector('.fetch-modal-overlay.open[id^="sim-"]');
+    if (!anyOpen && _escHandler) { document.removeEventListener('keydown', _escHandler); _escHandler = null; }
+  }
+
+  function _setupPills(containerId, hiddenId, labelId, onChange) {
+    const container = document.getElementById(containerId); if (!container) return;
+    const pills = container.querySelectorAll('.sim-pill');
+    pills.forEach(pill => {
+      pill.onclick = function() {
+        pills.forEach(p => p.classList.remove('sim-pill-active'));
+        pill.classList.add('sim-pill-active');
+        const mode = pill.getAttribute('data-mode');
+        const hidden = document.getElementById(hiddenId); if (hidden) hidden.value = mode;
+        const label = document.getElementById(labelId); if (label) label.textContent = mode === 'dollars' ? '$ Amount' : 'Shares';
+        onChange && onChange(mode);
+      };
+    });
+  }
+  function _setPillActive(containerId, mode) {
+    const container = document.getElementById(containerId); if (!container) return;
+    container.querySelectorAll('.sim-pill').forEach(p => p.classList.toggle('sim-pill-active', p.getAttribute('data-mode') === mode));
+  }
+
+  Sim.UI.showSetupModal = function(ctx, onSubmit) {
+    ctx = ctx || {};
+    const dateEl = document.getElementById('sim-entry-date');
+    const priceEl = document.getElementById('sim-entry-price');
+    const sizeEl = document.getElementById('sim-size-value');
+    const stopEl = document.getElementById('sim-stop-price');
+    const modeEl = document.getElementById('sim-size-mode');
+    const labelEl = document.getElementById('sim-setup-size-label');
+    const summaryEl = document.getElementById('sim-setup-summary');
+    const endDateEl = document.getElementById('sim-end-date');
+    const barcountEl = document.getElementById('sim-setup-barcount');
+    const pickEntryBtn = document.getElementById('sim-pick-entry-btn');
+    const pickEndBtn = document.getElementById('sim-pick-end-btn');
+
+    if (ctx.defaultDate) dateEl.value = ctx.defaultDate;
+    if (ctx.defaultPrice != null) priceEl.value = Number(ctx.defaultPrice).toFixed(2);
+    sizeEl.value = ctx.suggestedSize != null ? ctx.suggestedSize : '';
+    stopEl.value = ''; modeEl.value = 'shares'; labelEl.textContent = 'Shares';
+    _setPillActive('sim-setup-pills', 'shares');
+    _clearStatus('sim-setup-status');
+
+    endDateEl.value = ctx.restoreFrom?.endDate || '';
+    if (ctx.restoreFrom) {
+      if (ctx.restoreFrom.date) dateEl.value = ctx.restoreFrom.date;
+      if (ctx.restoreFrom.price != null) priceEl.value = ctx.restoreFrom.price;
+      if (ctx.restoreFrom.sizeMode) { modeEl.value = ctx.restoreFrom.sizeMode; _setPillActive('sim-setup-pills', ctx.restoreFrom.sizeMode); labelEl.textContent = ctx.restoreFrom.sizeMode === 'dollars' ? '$ Amount' : 'Shares'; }
+      if (ctx.restoreFrom.sizeValue != null) sizeEl.value = ctx.restoreFrom.sizeValue;
+      if (ctx.restoreFrom.stop != null) stopEl.value = ctx.restoreFrom.stop;
+      if (ctx.restoreFrom.pickedField) {
+        const flashId = ctx.restoreFrom.pickedField === 'entry' ? 'sim-entry-date' : 'sim-end-date';
+        const flashEl = document.getElementById(flashId);
+        if (flashEl) { flashEl.classList.add('sim-field-flash'); setTimeout(() => flashEl.classList.remove('sim-field-flash'), 600); }
+      }
+    }
+
+    function recompute() {
+      const price = _parseNum(priceEl.value, NaN);
+      const stop = _parseNum(stopEl.value, NaN);
+      const size = _parseNum(sizeEl.value, NaN);
+      const mode = modeEl.value;
+      let shares = NaN, notional = NaN;
+      if (isFinite(price) && price > 0 && isFinite(size) && size > 0) {
+        shares = mode === 'shares' ? Math.floor(size) : Math.floor(size / price);
+        notional = shares * price;
+      }
+      let risk = NaN, riskPct = NaN;
+      if (isFinite(shares) && isFinite(price) && isFinite(stop) && stop > 0 && stop < price) {
+        risk = shares * (price - stop);
+        if (notional > 0) riskPct = (risk / notional) * 100;
+      }
+      const rows = [];
+      if (mode === 'shares') {
+        rows.push({ label: 'Shares', value: isFinite(shares) ? _fmtInt(shares) : '—' });
+      } else {
+        rows.push({ label: '$ Amount', value: isFinite(size) ? _fmt$(size) : '—', suffix: ' · Shares: ' + (isFinite(shares) ? _fmtInt(shares) : '—') });
+      }
+      rows.push({ label: 'Notional', value: isFinite(notional) ? _fmt$(notional) : '—' });
+      rows.push({ label: 'Risk', value: isFinite(risk) ? _fmt$(risk) : '—', suffix: isFinite(riskPct) ? ' (' + riskPct.toFixed(1) + '%)' : '' });
+      Sim.UI._fillReadout(summaryEl, rows);
+
+      const date = dateEl.value;
+      const endDate = endDateEl.value;
+      if (endDate && date && endDate > date) {
+        const d1 = new Date(date), d2 = new Date(endDate);
+        const calDays = Math.round((d2 - d1) / 86400000);
+        const barsCount = Math.max(0, Math.round(calDays * 5 / 7));
+        const weeks = Math.round(barsCount / 5 * 10) / 10;
+        barcountEl.textContent = barsCount + ' bars of simulation · ~' + weeks + ' weeks';
+        barcountEl.style.display = 'block';
+      } else {
+        barcountEl.style.display = 'none';
+      }
+    }
+    [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
+    _setupPills('sim-setup-pills', 'sim-size-mode', 'sim-setup-size-label', recompute);
+    recompute();
+
+    document.getElementById('sim-setup-cancel').onclick = () => _closeModal('sim-setup-modal');
+    _onBackdrop('sim-setup-modal');
+
+    function _snapshotForm() {
+      return {
+        date: dateEl.value,
+        price: _parseNum(priceEl.value, null),
+        sizeMode: modeEl.value,
+        sizeValue: _parseNum(sizeEl.value, null),
+        stop: _parseNum(stopEl.value, null),
+        endDate: endDateEl.value
+      };
+    }
+    if (pickEntryBtn) pickEntryBtn.onclick = function() {
+      if (window.Sim && Sim.Ctrl && Sim.Ctrl.beginPick) {
+        Sim.Ctrl.beginPick('entry', _snapshotForm(), function(pickedBar) {
+          dateEl.value = pickedBar.time;
+          priceEl.value = Number(pickedBar.close).toFixed(2);
+          recompute();
+        });
+      }
+    };
+    if (pickEndBtn) pickEndBtn.onclick = function() {
+      if (window.Sim && Sim.Ctrl && Sim.Ctrl.beginPick) {
+        Sim.Ctrl.beginPick('end', _snapshotForm(), function(pickedBar) {
+          endDateEl.value = pickedBar.time;
+          recompute();
+        });
+      }
+    };
+
+    document.getElementById('sim-setup-submit').onclick = function() {
+      _clearStatus('sim-setup-status');
+      const date = dateEl.value;
+      const price = _parseNum(priceEl.value, NaN);
+      const size = _parseNum(sizeEl.value, NaN);
+      const stop = _parseNum(stopEl.value, NaN);
+      const mode = modeEl.value;
+      if (!date) return _setStatus('sim-setup-status', 'Entry date is required', true);
+      if (!isFinite(price) || price <= 0) return _setStatus('sim-setup-status', 'Entry price must be > 0', true);
+      if (!isFinite(size) || size <= 0) return _setStatus('sim-setup-status', 'Size must be > 0', true);
+      if (!isFinite(stop) || stop <= 0) return _setStatus('sim-setup-status', 'Stop price must be > 0', true);
+      if (stop >= price) return _setStatus('sim-setup-status', 'Stop must be below entry price', true);
+      const endDate = endDateEl.value;
+      if (endDate && endDate <= date) return _setStatus('sim-setup-status', 'End date must be after entry date', true);
+      try { onSubmit && onSubmit({ date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null }); _closeModal('sim-setup-modal'); }
+      catch (err) { _setStatus('sim-setup-status', err && err.message ? err.message : 'Failed to start sim', true); }
+    };
+    _openModal('sim-setup-modal');
+    setTimeout(() => priceEl.focus(), 30);
+  };
+
+  Sim.UI.showSellModal = function(ctx, onSubmit) {
+    ctx = ctx || {};
+    const qtyEl = document.getElementById('sim-sell-qty');
+    const priceEl = document.getElementById('sim-sell-price');
+    const summaryEl = document.getElementById('sim-sell-summary');
+    const currentQty = _parseNum(ctx.currentQty, 0);
+    const avgCost = _parseNum(ctx.avgCost, 0);
+    const currentPrice = _parseNum(ctx.currentPrice, 0);
+    const riskPerShare = _parseNum(ctx.riskPerShare, NaN);
+    qtyEl.value = '';
+    priceEl.value = isFinite(currentPrice) && currentPrice > 0 ? currentPrice.toFixed(2) : '';
+    _clearStatus('sim-sell-status');
+
+    function recompute() {
+      const qty = _parseNum(qtyEl.value, NaN);
+      const price = _parseNum(priceEl.value, NaN);
+      let realized = NaN, rMult = NaN;
+      if (isFinite(qty) && qty > 0 && isFinite(price) && isFinite(avgCost)) {
+        realized = qty * (price - avgCost);
+        if (isFinite(riskPerShare) && riskPerShare > 0) rMult = (price - avgCost) / riskPerShare;
+      }
+      const realizedTxt = isFinite(realized) ? _fmtSigned$(realized) : '—';
+      const rTxt = isFinite(rMult) ? ' (' + (rMult >= 0 ? '+' : '') + 'R ' + rMult.toFixed(2) + ')' : '';
+      Sim.UI._fillReadout(summaryEl, [{ label: 'Realized', value: realizedTxt, suffix: rTxt }]);
+    }
+    [qtyEl, priceEl].forEach(el => { el.oninput = recompute; });
+    const pills = document.getElementById('sim-sell-pills').querySelectorAll('.sim-pill');
+    pills.forEach(pill => {
+      pill.onclick = function() {
+        const frac = parseFloat(pill.getAttribute('data-frac'));
+        const q = frac >= 1 ? currentQty : Math.floor(currentQty * frac);
+        qtyEl.value = q; recompute();
+      };
+    });
+    recompute();
+    document.getElementById('sim-sell-cancel').onclick = () => _closeModal('sim-sell-modal');
+    _onBackdrop('sim-sell-modal');
+    document.getElementById('sim-sell-submit').onclick = function() {
+      _clearStatus('sim-sell-status');
+      const qty = _parseNum(qtyEl.value, NaN);
+      const price = _parseNum(priceEl.value, NaN);
+      if (!isFinite(qty) || qty <= 0) return _setStatus('sim-sell-status', 'Quantity must be > 0', true);
+      if (qty > currentQty) return _setStatus('sim-sell-status', 'Quantity exceeds position (' + _fmtInt(currentQty) + ')', true);
+      if (!isFinite(price) || price <= 0) return _setStatus('sim-sell-status', 'Price must be > 0', true);
+      try { onSubmit && onSubmit({ qty: Math.floor(qty), price }); _closeModal('sim-sell-modal'); }
+      catch (err) { _setStatus('sim-sell-status', err && err.message ? err.message : 'Sell failed', true); }
+    };
+    _openModal('sim-sell-modal');
+    setTimeout(() => qtyEl.focus(), 30);
+  };
+
+  Sim.UI.showAddModal = function(ctx, onSubmit) {
+    ctx = ctx || {};
+    const sizeEl = document.getElementById('sim-add-size-value');
+    const priceEl = document.getElementById('sim-add-price');
+    const stopEl = document.getElementById('sim-add-newstop');
+    const modeEl = document.getElementById('sim-add-size-mode');
+    const labelEl = document.getElementById('sim-add-size-label');
+    const summaryEl = document.getElementById('sim-add-summary');
+    const currentQty = _parseNum(ctx.currentQty, 0);
+    const avgCost = _parseNum(ctx.avgCost, 0);
+    const currentPrice = _parseNum(ctx.currentPrice, 0);
+
+    sizeEl.value = '';
+    priceEl.value = isFinite(currentPrice) && currentPrice > 0 ? currentPrice.toFixed(2) : '';
+    stopEl.value = ''; modeEl.value = 'shares'; labelEl.textContent = 'Shares';
+    _setPillActive('sim-add-pills', 'shares');
+    _clearStatus('sim-add-status');
+
+    function recompute() {
+      const mode = modeEl.value;
+      const size = _parseNum(sizeEl.value, NaN);
+      const price = _parseNum(priceEl.value, NaN);
+      let addShares = NaN;
+      if (isFinite(size) && size > 0 && isFinite(price) && price > 0) {
+        addShares = mode === 'shares' ? Math.floor(size) : Math.floor(size / price);
+      }
+      let newQty = NaN, newAvg = NaN;
+      if (isFinite(addShares) && addShares > 0 && isFinite(avgCost)) {
+        newQty = currentQty + addShares;
+        const totalCost = currentQty * avgCost + addShares * price;
+        newAvg = newQty > 0 ? totalCost / newQty : NaN;
+      }
+      Sim.UI._fillReadout(summaryEl, [
+        { label: 'New avg cost', value: isFinite(newAvg) ? _fmt$(newAvg) : '—' },
+        { label: 'New qty', value: isFinite(newQty) ? _fmtInt(newQty) : '—' }
+      ]);
+    }
+    [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
+    _setupPills('sim-add-pills', 'sim-add-size-mode', 'sim-add-size-label', recompute);
+    recompute();
+
+    document.getElementById('sim-add-cancel').onclick = () => _closeModal('sim-add-modal');
+    _onBackdrop('sim-add-modal');
+    document.getElementById('sim-add-submit').onclick = function() {
+      _clearStatus('sim-add-status');
+      const mode = modeEl.value;
+      const size = _parseNum(sizeEl.value, NaN);
+      const price = _parseNum(priceEl.value, NaN);
+      const newStopRaw = stopEl.value.trim();
+      const newStop = newStopRaw === '' ? null : _parseNum(newStopRaw, NaN);
+      if (!isFinite(size) || size <= 0) return _setStatus('sim-add-status', 'Size must be > 0', true);
+      if (!isFinite(price) || price <= 0) return _setStatus('sim-add-status', 'Price must be > 0', true);
+      if (newStop !== null && (!isFinite(newStop) || newStop <= 0)) return _setStatus('sim-add-status', 'New stop must be > 0', true);
+      if (newStop !== null && newStop >= price) return _setStatus('sim-add-status', 'New stop must be below price', true);
+      try {
+        const payload = { sizeMode: mode, sizeValue: size, price };
+        if (newStop !== null) payload.newStop = newStop;
+        onSubmit && onSubmit(payload); _closeModal('sim-add-modal');
+      } catch (err) { _setStatus('sim-add-status', err && err.message ? err.message : 'Add failed', true); }
+    };
+    _openModal('sim-add-modal');
+    setTimeout(() => sizeEl.focus(), 30);
+  };
+
+  Sim.UI.showMoveStopModal = function(ctx, onSubmit) {
+    ctx = ctx || {};
+    const priceEl = document.getElementById('sim-movestop-price');
+    const pctEl = document.getElementById('sim-movestop-pct');
+    const summaryEl = document.getElementById('sim-movestop-summary');
+    const currentPrice = _parseNum(ctx.currentPrice, NaN);
+    const currentStop = _parseNum(ctx.currentStop, NaN);
+    const shares0 = _parseNum(ctx.shares0, NaN);
+    priceEl.value = isFinite(currentStop) ? currentStop.toFixed(2) : '';
+    pctEl.value = 100;
+    _clearStatus('sim-movestop-status');
+
+    function recompute() {
+      const newStop = _parseNum(priceEl.value, NaN);
+      const pct = _parseNum(pctEl.value, NaN);
+      const rows = [];
+      if (isFinite(newStop) && isFinite(currentPrice) && currentPrice > 0) {
+        const diff = newStop - currentPrice;
+        const pctPx = (diff / currentPrice) * 100;
+        const sign = diff >= 0 ? '+' : '-';
+        rows.push({ label: 'Distance from current price', value: sign + _fmt$(Math.abs(diff)).replace('-','') + ' (' + (pctPx >= 0 ? '+' : '') + pctPx.toFixed(1) + '%)' });
+      } else {
+        rows.push({ label: 'Distance from current price', value: '—' });
+      }
+      if (isFinite(shares0) && isFinite(pct) && pct > 0) {
+        const sharesToClose = Math.floor(shares0 * (pct / 100));
+        rows.push({ label: 'Closes on hit', value: _fmtInt(sharesToClose) + ' shares (' + pct.toFixed(0) + '% of original)' });
+      }
+      Sim.UI._fillReadout(summaryEl, rows);
+    }
+    priceEl.oninput = recompute;
+    pctEl.oninput = recompute;
+    recompute();
+    document.getElementById('sim-movestop-cancel').onclick = () => _closeModal('sim-movestop-modal');
+    _onBackdrop('sim-movestop-modal');
+    document.getElementById('sim-movestop-submit').onclick = function() {
+      _clearStatus('sim-movestop-status');
+      const newStop = _parseNum(priceEl.value, NaN);
+      const pct = _parseNum(pctEl.value, NaN);
+      if (!isFinite(newStop) || newStop <= 0) return _setStatus('sim-movestop-status', 'Stop must be > 0', true);
+      if (isFinite(currentPrice) && newStop >= currentPrice) return _setStatus('sim-movestop-status', 'Stop must be below current price', true);
+      if (!isFinite(pct) || pct <= 0 || pct > 100) return _setStatus('sim-movestop-status', '% must be between 1 and 100', true);
+      try { onSubmit && onSubmit({ newStop, pct: pct / 100 }); _closeModal('sim-movestop-modal'); }
+      catch (err) { _setStatus('sim-movestop-status', err && err.message ? err.message : 'Add failed', true); }
+    };
+    _openModal('sim-movestop-modal');
+    setTimeout(() => { priceEl.focus(); priceEl.select && priceEl.select(); }, 30);
+  };
+
+  Sim.UI.showSummaryModal = function(derived, handlers) {
+    derived = derived || {}; handlers = handlers || {};
+    const r = _parseNum(derived.rMultiple, NaN);
+    const rEl = document.getElementById('sim-summary-r');
+    rEl.textContent = _fmtSignedR(r);
+    rEl.classList.remove('up', 'down');
+    if (isFinite(r)) rEl.classList.add(r >= 0 ? 'up' : 'down');
+    const total = _parseNum(derived.totalPnL, NaN);
+    document.getElementById('sim-summary-total').textContent = 'Total P&L: ' + (isFinite(total) ? _fmtSigned$(total) : '—');
+    document.getElementById('sim-summary-days').textContent = derived.daysHeld != null ? derived.daysHeld : '—';
+    document.getElementById('sim-summary-mfe').textContent = derived.mfe != null ? (typeof derived.mfe === 'number' ? _fmtSigned$(derived.mfe) : derived.mfe) : '—';
+    document.getElementById('sim-summary-mae').textContent = derived.mae != null ? (typeof derived.mae === 'number' ? _fmtSigned$(derived.mae) : derived.mae) : '—';
+    document.getElementById('sim-summary-dd').textContent = derived.maxDrawdown != null ? (typeof derived.maxDrawdown === 'number' ? _fmtSigned$(derived.maxDrawdown) : derived.maxDrawdown) : '—';
+    document.getElementById('sim-summary-entries').textContent = derived.numEntries != null ? derived.numEntries : '—';
+    document.getElementById('sim-summary-sells').textContent = derived.numSells != null ? derived.numSells : '—';
+
+    const logEl = document.getElementById('sim-summary-log');
+    Sim.UI._clearChildren(logEl);
+    const events = Array.isArray(derived.eventsLog) ? derived.eventsLog : [];
+    events.forEach(ev => {
+      const row = document.createElement('div');
+      row.className = 'sim-log-row';
+      const type = String(ev.type || '').toLowerCase();
+      const mkSpan = (cls, txt) => { const s = document.createElement('span'); s.className = cls; s.textContent = txt; return s; };
+      row.appendChild(mkSpan('sim-log-day',   ev.day != null ? ('Day ' + ev.day) : ''));
+      row.appendChild(mkSpan('sim-log-type sim-log-type-' + (type || 'close'), type || '—'));
+      row.appendChild(mkSpan('sim-log-price', ev.price != null ? _fmt$(ev.price) : ''));
+      row.appendChild(mkSpan('sim-log-qty',   ev.qty != null ? _fmtInt(ev.qty) : ''));
+      row.appendChild(mkSpan('sim-log-note',  ev.note || ''));
+      logEl.appendChild(row);
+    });
+
+    _clearStatus('sim-summary-status');
+    document.getElementById('sim-summary-close').onclick = () => { handlers.onClose && handlers.onClose(); _closeModal('sim-summary-modal'); };
+    document.getElementById('sim-summary-screenshot').onclick = function() {
+      try { handlers.onScreenshot && handlers.onScreenshot(); }
+      catch (err) { _setStatus('sim-summary-status', err && err.message ? err.message : 'Screenshot failed', true); }
+    };
+    document.getElementById('sim-summary-newsim').onclick = () => { _closeModal('sim-summary-modal'); handlers.onNewSim && handlers.onNewSim(); };
+    _onBackdrop('sim-summary-modal', handlers.onClose);
+    _openModal('sim-summary-modal');
+  };
+})();
+
+/* ---------- Sim.Ctrl: controller ---------- */
+Sim.Ctrl = (function(){
+  const state = {
+    sim: null, bars: null, playing: false, playTimer: null, speed: 1, active: false,
+    pickMode: null, _pickStash: null, _pickCb: null,
+    _highlightedIdx: null, _maData: null,
+    _stopHistory: [],
+    _initialStopLine: null,
+    _rLevels: [], _hitRLevels: null, _rMarkers: [],
+    _curve: null
+  };
+  const PLAY_INTERVAL_MS = 900;
+  const SPEEDS = [0.25, 0.5, 1, 2, 5];
+  const HIGHLIGHT_COLOR = '#a7f3d0';
+  const STOP_LINE_COLOR = '#fecdd3';
+  const INITIAL_STOP_COLOR = '#6b7280';
+  const R_STAR_COLOR = '#fbbf24';
+  const CHART_STAR_MIN_R = 3;
+
+  function _addStopLine(price, barIdx, pct, type, simStopId) {
+    if (!candleSeries || price == null || !Number.isFinite(price) || !state.sim) return;
+    const day = barIdx - state.sim.entry.barIdx;
+    const pctNum = Number.isFinite(pct) ? pct : 1.0;
+    const pctLbl = Math.round(pctNum * 100);
+    const id = 'stop_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    let priceLine = null;
+    try {
+      priceLine = candleSeries.createPriceLine({
+        price, color: STOP_LINE_COLOR, lineWidth: 1, lineStyle: 2,
+        axisLabelVisible: true, title: 'STOP D' + day + ' ' + pctLbl + '%'
+      });
+    } catch(e) {}
+    state._stopHistory.push({ id, simStopId: simStopId || null, price, barIdx, day, pct: pctNum, priceLine, type: type || 'moved' });
+    _renderManageStops();
+  }
+  function _updateStopLineVisual(visualId, newPrice, newPct) {
+    const s = state._stopHistory.find(h => h.id === visualId);
+    if (!s) return;
+    s.price = newPrice;
+    s.pct = newPct;
+    const pctLbl = Math.round(newPct * 100);
+    if (s.priceLine) {
+      try { s.priceLine.applyOptions({ price: newPrice, title: 'STOP D' + s.day + ' ' + pctLbl + '%' }); } catch(e) {}
+    }
+  }
+  function _deleteStopLine(id) {
+    const idx = state._stopHistory.findIndex(s => s.id === id);
+    if (idx < 0) return;
+    const s = state._stopHistory[idx];
+    if (s.priceLine && candleSeries) {
+      try { candleSeries.removePriceLine(s.priceLine); } catch(e) {}
+    }
+    if (s.simStopId && state.sim) {
+      Sim.deleteStop(state.sim, s.simStopId);
+    }
+    state._stopHistory.splice(idx, 1);
+    _renderManageStops();
+    _render(null);
+  }
+  function _clearStopHistory() {
+    (state._stopHistory || []).forEach(s => {
+      if (s.priceLine && candleSeries) {
+        try { candleSeries.removePriceLine(s.priceLine); } catch(e) {}
+      }
+    });
+    state._stopHistory = [];
+    _renderManageStops();
+  }
+  function _saveStopEdit(visualId, newPrice, newPct) {
+    const s = state._stopHistory.find(h => h.id === visualId);
+    if (!s || !s.simStopId || !state.sim) return false;
+    if (!Number.isFinite(newPrice) || newPrice <= 0) return false;
+    if (!Number.isFinite(newPct) || newPct <= 0 || newPct > 1) return false;
+    const ok = Sim.editStop(state.sim, s.simStopId, newPrice, newPct);
+    if (!ok) return false;
+    _updateStopLineVisual(visualId, newPrice, newPct);
+    _render(null);
+    _renderManageStops();
+    return true;
+  }
+  function _renderManageStops() {
+    const el = document.getElementById('sim-stops-manage-list');
+    if (!el) return;
+    while (el.firstChild) el.removeChild(el.firstChild);
+    if (!state._stopHistory || !state._stopHistory.length) {
+      const empty = document.createElement('span');
+      empty.className = 'sim-stop-history-empty';
+      empty.textContent = '—';
+      el.appendChild(empty);
+      return;
+    }
+    const simStopsById = {};
+    if (state.sim && state.sim.stopLevels) {
+      state.sim.stopLevels.forEach(s => { simStopsById[s.id] = s; });
+    }
+    state._stopHistory.forEach((s) => {
+      const simStop = s.simStopId ? simStopsById[s.simStopId] : null;
+      const fired = simStop ? simStop.fired : false;
+      const orphaned = !simStop;
+      const row = document.createElement('div');
+      row.className = 'sim-stop-row-edit' + (fired ? ' sim-stop-fired' : '') + (s.type === 'initial' ? ' sim-stop-init' : '');
+
+      const dayCell = document.createElement('span');
+      dayCell.className = 'sim-stop-day';
+      dayCell.textContent = 'D' + s.day;
+      if (s.type === 'initial') {
+        const badge = document.createElement('span');
+        badge.className = 'sim-stop-init-badge';
+        badge.textContent = ' init';
+        dayCell.appendChild(badge);
+      }
+      row.appendChild(dayCell);
+
+      const priceWrap = document.createElement('span');
+      const priceInput = document.createElement('input');
+      priceInput.type = 'number';
+      priceInput.step = '0.01';
+      priceInput.className = 'sim-stop-input sim-stop-input-price';
+      priceInput.value = Number(s.price).toFixed(2);
+      priceInput.disabled = fired || orphaned;
+      priceWrap.appendChild(priceInput);
+      row.appendChild(priceWrap);
+
+      const pctWrap = document.createElement('span');
+      const pctInput = document.createElement('input');
+      pctInput.type = 'number';
+      pctInput.step = '1';
+      pctInput.min = '1';
+      pctInput.max = '100';
+      pctInput.className = 'sim-stop-input sim-stop-input-pct';
+      pctInput.value = Math.round((Number.isFinite(s.pct) ? s.pct : 1.0) * 100);
+      pctInput.disabled = fired || orphaned;
+      pctWrap.appendChild(pctInput);
+      row.appendChild(pctWrap);
+
+      const pctSuf = document.createElement('span');
+      pctSuf.className = 'sim-stop-pct-suffix';
+      pctSuf.textContent = '%';
+      row.appendChild(pctSuf);
+
+      const actions = document.createElement('span');
+      actions.className = 'sim-stop-actions';
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.className = 'sim-stop-btn sim-stop-btn-save';
+      saveBtn.textContent = '✓';
+      saveBtn.title = 'Save changes';
+      saveBtn.disabled = true;
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'sim-stop-btn sim-stop-btn-del';
+      delBtn.textContent = '×';
+      delBtn.title = 'Delete this stop';
+      actions.appendChild(saveBtn);
+      actions.appendChild(delBtn);
+      row.appendChild(actions);
+
+      if (fired) {
+        const tag = document.createElement('span');
+        tag.className = 'sim-stop-fired-tag';
+        tag.textContent = 'fired';
+        actions.insertBefore(tag, saveBtn);
+      } else if (orphaned) {
+        const tag = document.createElement('span');
+        tag.className = 'sim-stop-fired-tag';
+        tag.textContent = 'line only';
+        actions.insertBefore(tag, saveBtn);
+      }
+
+      const checkDirty = () => {
+        const newPx = parseFloat(priceInput.value);
+        const newPct = parseFloat(pctInput.value);
+        const dirty = (Number.isFinite(newPx) && Math.abs(newPx - s.price) > 1e-6) ||
+                      (Number.isFinite(newPct) && Math.round(newPct) !== Math.round((Number.isFinite(s.pct) ? s.pct : 1.0) * 100));
+        saveBtn.disabled = !dirty || fired || orphaned;
+        if (dirty) row.classList.add('sim-stop-dirty'); else row.classList.remove('sim-stop-dirty');
+      };
+      priceInput.oninput = checkDirty;
+      pctInput.oninput = checkDirty;
+      [priceInput, pctInput].forEach(inp => {
+        inp.onkeydown = (e) => { if (e.key === 'Enter' && !saveBtn.disabled) { e.preventDefault(); saveBtn.click(); } };
+      });
+      saveBtn.onclick = () => {
+        const newPx = parseFloat(priceInput.value);
+        const newPctNum = parseFloat(pctInput.value);
+        if (!Number.isFinite(newPx) || newPx <= 0) return;
+        if (!Number.isFinite(newPctNum) || newPctNum < 1 || newPctNum > 100) return;
+        _saveStopEdit(s.id, newPx, newPctNum / 100);
+      };
+      delBtn.onclick = () => {
+        if (s.type === 'initial') {
+          if (!confirm('Delete the initial stop? Position will have no floor below until a new stop is added.')) return;
+        }
+        _deleteStopLine(s.id);
+      };
+
+      el.appendChild(row);
+    });
+  }
+
+  function _ensureInitialStopLine() {
+    if (!candleSeries || !state.sim || state._initialStopLine) return;
+    try {
+      state._initialStopLine = candleSeries.createPriceLine({
+        price: state.sim.entry.stop,
+        color: INITIAL_STOP_COLOR,
+        lineWidth: 1,
+        lineStyle: 3,
+        axisLabelVisible: true,
+        title: '−1R (init)'
+      });
+    } catch(e) { state._initialStopLine = null; }
+  }
+  function _clearInitialStopLine() {
+    if (state._initialStopLine && candleSeries) {
+      try { candleSeries.removePriceLine(state._initialStopLine); } catch(e) {}
+    }
+    state._initialStopLine = null;
+  }
+
+  function _buildRLevels() {
+    state._rLevels = [];
+    state._hitRLevels = new Set();
+    state._rMarkers = [];
+    if (!state.sim) return;
+    const risk = state.sim.entry.price - state.sim.entry.stop;
+    if (risk <= 0) return;
+    for (let r = CHART_STAR_MIN_R; r <= 15; r++) {
+      state._rLevels.push({ level: r, price: state.sim.entry.price + r * risk });
+    }
+  }
+
+  function _checkRHits(bar) {
+    if (!bar || !state._rLevels || !state._rLevels.length) return;
+    let added = false;
+    state._rLevels.forEach(rl => {
+      if (state._hitRLevels.has(rl.level)) return;
+      if (bar.high >= rl.price) {
+        state._hitRLevels.add(rl.level);
+        state._rMarkers.push({
+          time: bar.time,
+          position: 'aboveBar',
+          color: R_STAR_COLOR,
+          shape: 'circle',
+          text: '★ +' + rl.level + 'R',
+          size: 1
+        });
+        added = true;
+      }
+    });
+    if (added) {
+      state._rMarkers.sort((a, b) => (a.time < b.time ? -1 : a.time > b.time ? 1 : 0));
+      try { (priceSeries || candleSeries).setMarkers(state._rMarkers.slice()); } catch(e) {}
+    }
+  }
+
+  function _appendCurvePoint(idx) {
+    if (!state.sim || !state.bars) return;
+    if (!state._curve) state._curve = [];
+    const bar = state.bars[idx];
+    const d = Sim.computeDerived(state.sim, state.bars);
+    const sim = state.sim;
+    let intraLow = null, intraHigh = null;
+    if (d.qty > 0 && bar) {
+      intraLow  = sim.realizedPnL + sim.qty * (bar.low  - sim.avgCost);
+      intraHigh = sim.realizedPnL + sim.qty * (bar.high - sim.avgCost);
+    } else if (bar) {
+      intraLow = intraHigh = sim.realizedPnL;
+    }
+    const point = {
+      barIdx: idx,
+      date: bar ? bar.time : null,
+      open:  bar ? bar.open  : null,
+      high:  bar ? bar.high  : null,
+      low:   bar ? bar.low   : null,
+      close: bar ? bar.close : null,
+      volume: bar ? bar.volume : null,
+      qty: d.qty,
+      avgCost: d.avgCost,
+      currentStop: d.currentStop,
+      realizedPnL: d.realizedPnL,
+      unrealizedPnL: d.unrealizedPnL,
+      totalPnL: d.totalPnL,
+      intradayLowPnL: intraLow == null ? '' : Math.round(intraLow * 100) / 100,
+      intradayHighPnL: intraHigh == null ? '' : Math.round(intraHigh * 100) / 100,
+      rCurrent: d.rCurrent,
+      rIntradayLow: sim.initialRisk > 0 && intraLow  != null ? Math.round(intraLow  / sim.initialRisk * 100) / 100 : '',
+      rIntradayHigh: sim.initialRisk > 0 && intraHigh != null ? Math.round(intraHigh / sim.initialRisk * 100) / 100 : '',
+      positionValue: d.positionValue,
+      peakTotal: d.peakTotal,
+      giveBack: d.giveBack
+    };
+    const last = state._curve[state._curve.length - 1];
+    if (last && last.barIdx === idx) state._curve[state._curve.length - 1] = point;
+    else state._curve.push(point);
+  }
+
+  function _downloadCurveCSV() {
+    if (!state.sim || !state._curve || !state._curve.length) { alert('No simulation data to export.'); return; }
+    const cols = ['barIdx','date','open','high','low','close','volume',
+      'qty','avgCost','currentStop',
+      'realizedPnL','unrealizedPnL','totalPnL',
+      'intradayLowPnL','intradayHighPnL',
+      'rCurrent','rIntradayLow','rIntradayHigh',
+      'positionValue','peakTotal','giveBack'];
+    const lines = [cols.join(',')];
+    state._curve.forEach(p => {
+      lines.push(cols.map(c => {
+        const v = p[c];
+        if (v == null || v === '') return '';
+        return String(v);
+      }).join(','));
+    });
+    const csv = lines.join('\n');
+    const sym = (state.sim.moveKey || 'sim').replace(/[^A-Za-z0-9_]/g, '_');
+    const ts = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+    const fname = 'sim_' + sym + '_' + ts + '.csv';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+  }
+
+  function _precomputeMAs() {
+    state._maData = {};
+    if (typeof maList === 'undefined' || !Array.isArray(maList)) return;
+    if (typeof getMaData !== 'function') return;
+    try {
+      const tfBars = (typeof resampleBars === 'function' && typeof currentTF !== 'undefined')
+        ? resampleBars(state.bars, currentTF) : state.bars;
+      maList.forEach(m => {
+        if (!m || !m.enabled || !m.series) return;
+        const data = getMaData(tfBars, m.type, m.period);
+        state._maData[m.id] = new Map(data.map(p => [p.time, p.value]));
+      });
+    } catch(e) { console.warn('sim MA precompute failed', e); }
+  }
+
+  function _maskMAs(sliceIdx) {
+    if (typeof maList === 'undefined' || !Array.isArray(maList)) return;
+    maList.forEach(m => {
+      if (!m || !m.series) return;
+      const dataMap = state._maData && state._maData[m.id];
+      if (!dataMap || !m.enabled) { try { m.series.setData([]); } catch(e) {} return; }
+      const sliced = [];
+      for (let i = 0; i <= sliceIdx; i++) {
+        const b = state.bars[i];
+        if (b && dataMap.has(b.time)) sliced.push({ time: b.time, value: dataMap.get(b.time) });
+      }
+      try { m.series.setData(sliced); } catch(e) {}
+    });
+  }
+
+  function _appendMAs(idx) {
+    if (typeof maList === 'undefined' || !Array.isArray(maList)) return;
+    const b = state.bars[idx]; if (!b) return;
+    maList.forEach(m => {
+      if (!m || !m.series || !m.enabled) return;
+      const dataMap = state._maData && state._maData[m.id];
+      if (!dataMap || !dataMap.has(b.time)) return;
+      try { m.series.update({ time: b.time, value: dataMap.get(b.time) }); } catch(e) {}
+    });
+  }
+
+  function _candleBar(b) { return { time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }; }
+  function _volColor(b) {
+    const up = (typeof isLightTheme !== 'undefined' && isLightTheme) ? '#d4efe6' : '#1a3a35';
+    const dn = (typeof isLightTheme !== 'undefined' && isLightTheme) ? '#f5d4d4' : '#3a1a1a';
+    return b.close >= b.open ? up : dn;
+  }
+  function _volBar(b) { return { time: b.time, value: b.volume, color: _volColor(b) }; }
+
+  function _maskChart(sliceIdx) {
+    const slice = state.bars.slice(0, sliceIdx + 1);
+    const candleData = slice.map(_candleBar);
+    if (candleData.length > 0) {
+      const lastIdx = candleData.length - 1;
+      candleData[lastIdx] = Object.assign({}, candleData[lastIdx], {
+        color: HIGHLIGHT_COLOR, borderColor: HIGHLIGHT_COLOR, wickColor: HIGHLIGHT_COLOR
+      });
+      state._highlightedIdx = sliceIdx;
+    } else {
+      state._highlightedIdx = null;
+    }
+    try { candleSeries.setData(candleData); } catch(e) { console.warn('sim mask candle', e); }
+    try { volSeries.setData(slice.map(_volBar)); } catch(e) { console.warn('sim mask vol', e); }
+    state._rMarkers = [];
+    state._hitRLevels = new Set();
+    try { (priceSeries || candleSeries).setMarkers([]); } catch(e) {}
+    _maskMAs(sliceIdx);
+    ['spyLineSeries','spyCandleSeries','spyBarSeries'].forEach(k => {
+      try { if (window[k]) window[k].setData([]); } catch(e) {}
+    });
+  }
+
+  function _appendBar(idx) {
+    const b = state.bars[idx]; if (!b) return;
+    // normalize previously highlighted bar back to default colors
+    if (state._highlightedIdx != null && state._highlightedIdx !== idx) {
+      const prev = state.bars[state._highlightedIdx];
+      if (prev) { try { candleSeries.update(_candleBar(prev)); } catch(e) {} }
+    }
+    // append new bar with highlight
+    try {
+      candleSeries.update(Object.assign({}, _candleBar(b), {
+        color: HIGHLIGHT_COLOR, borderColor: HIGHLIGHT_COLOR, wickColor: HIGHLIGHT_COLOR
+      }));
+    } catch(e) {}
+    try { volSeries.update(_volBar(b)); } catch(e) {}
+    _appendMAs(idx);
+    state._highlightedIdx = idx;
+  }
+
+  function _deriveForUI(d) {
+    const sim = state.sim;
+    const bar = state.bars[sim.playIdx];
+    const notional = sim.shares0 * sim.entry.price;
+    const stopDollar = d.currentStop - sim.entry.price;
+    const stopPct = sim.entry.price > 0 ? stopDollar / sim.entry.price : 0;
+    return {
+      positionValue: d.positionValue, peakTotal: d.peakTotal, totalPnL: d.totalPnL,
+      pnlPct: notional > 0 ? d.totalPnL / notional : 0,
+      giveBack: d.giveBack,
+      giveBackPct: d.peakTotal > 0 ? d.giveBack / d.peakTotal : 0,
+      peakBarsAgo: d.peakBarsAgo,
+      entry: sim.entry.price, avg: d.avgCost, qty: d.qty,
+      stop: d.currentStop, stopDollar, stopPct,
+      mfe: d.mfe, mae: d.mae, r: d.rCurrent,
+      days: d.dayCount, barIndex: d.dayCount,
+      dateISO: bar ? bar.time : '—'
+    };
+  }
+
+  function _deriveForSummary(d) {
+    const sim = state.sim;
+    const eventsLog = (d.eventsLog || []).map(ev => ({
+      day: ev.barIdx - sim.entry.barIdx, type: ev.type, price: ev.price, qty: ev.qty, note: ev.note
+    }));
+    const numEntries = d.eventsLog.filter(e => e.type === 'entry' || e.type === 'add').length;
+    const numSells = d.eventsLog.filter(e => e.type === 'sell' || e.type === 'stop' || e.type === 'close').length;
+    return {
+      rMultiple: d.rCurrent, totalPnL: d.totalPnL, daysHeld: d.dayCount,
+      mfe: d.mfe, mae: d.mae, maxDrawdown: d.mae,
+      numEntries, numSells, eventsLog
+    };
+  }
+
+  function _render(result) {
+    if (!state.sim) return null;
+    const d = result ? result.derived : Sim.computeDerived(state.sim, state.bars);
+    Sim.UI.render(_deriveForUI(d));
+    if (result && result.eventsFired) {
+      result.eventsFired.forEach(ev => {
+        if (ev.type === 'movestop' && ev.newStop != null) _addStopLine(ev.newStop, ev.barIdx, ev.pct != null ? ev.pct : 1.0, 'moved', ev.stopId);
+      });
+    }
+    if (d.stoppedOut || d.closed) { pause(); setTimeout(() => _showSummary(d), 400); }
+    else if (state.sim.playIdx >= state.bars.length - 1) { pause(); }
+    return d;
+  }
+  function _showSummary(d) {
+    if (!d) d = Sim.computeDerived(state.sim, state.bars);
+    Sim.UI.showSummaryModal(_deriveForSummary(d), {
+      onClose: () => {},
+      onScreenshot: () => { if (typeof takeScreenshot === 'function') takeScreenshot(); },
+      onNewSim: () => { exit(); setTimeout(openSetup, 100); }
+    });
+  }
+
+  function openSetup() {
+    if (typeof currentBars === 'undefined' || !currentBars || !currentBars.length) {
+      alert('Select a ticker first to start a simulation.'); return;
+    }
+    const lastBar = currentBars[currentBars.length - 1];
+    Sim.UI.showSetupModal({ defaultDate: lastBar.time, defaultPrice: lastBar.close, suggestedSize: 1000 }, _onSetupSubmit);
+  }
+
+  function _onSetupSubmit(form) {
+    let barIdx = currentBars.findIndex(b => b.time === form.date);
+    if (barIdx < 0) {
+      for (let i = currentBars.length - 1; i >= 0; i--) {
+        if (currentBars[i].time <= form.date) { barIdx = i; break; }
+      }
+    }
+    if (barIdx < 0) { alert('Entry date not found in available bars.'); return; }
+
+    let endBarIdx = null;
+    if (form.endDate) {
+      endBarIdx = currentBars.findIndex(b => b.time === form.endDate);
+      if (endBarIdx < 0) {
+        for (let i = currentBars.length - 1; i >= 0; i--) {
+          if (currentBars[i].time <= form.endDate) { endBarIdx = i; break; }
+        }
+      }
+      if (endBarIdx <= barIdx) { alert('End bar must be after entry bar'); return; }
+    }
+
+    const moveKey = (typeof currentMoveRow !== 'undefined' && currentMoveRow) ? (currentMoveRow.symbol + '_' + currentMoveRow.year) : currentSymbol;
+    let sim;
+    try {
+      sim = Sim.createSim({
+        moveKey, direction: 'long',
+        entry: { barIdx, date: currentBars[barIdx].time, price: form.price, sizeMode: form.sizeMode, sizeValue: form.sizeValue, stop: form.stop, endBarIdx }
+      });
+    } catch (e) { alert('Could not start sim: ' + e.message); return; }
+
+    state.sim = sim;
+    state.bars = currentBars.slice();
+    state.active = true;
+    state.speed = 1;
+    _precomputeMAs();
+    Sim.UI.setSpeed(1);
+    Sim.UI.setActive(true);
+    _maskChart(sim.playIdx);
+    _buildRLevels();
+    _ensureInitialStopLine();
+    _clearStopHistory();
+    _addStopLine(sim.entry.stop, sim.entry.barIdx, 1.0, 'initial', 'stop_initial');
+    state._curve = [];
+    _appendCurvePoint(sim.playIdx);
+    _checkRHits(state.bars[sim.playIdx]);
+    _render();
+    _bindKeys();
+  }
+
+  function exit() {
+    _exitPickMode();
+    pause();
+    _clearStopHistory();
+    _clearInitialStopLine();
+    const wasActive = state.active;
+    state.active = false; state.sim = null; state.bars = null; state._maData = null;
+    state._curve = null; state._rLevels = []; state._hitRLevels = null; state._rMarkers = [];
+    Sim.UI.setActive(false);
+    _unbindKeys();
+    if (wasActive && typeof activeIdx !== 'undefined' && activeIdx >= 0 && typeof selectRow === 'function') {
+      try { selectRow(activeIdx); } catch(e) {}
+    }
+  }
+
+  function beginPick(mode, formSnapshot, onPickedCb) {
+    if (mode !== 'entry' && mode !== 'end') return;
+    const modal = document.getElementById('sim-setup-modal');
+    if (modal) modal.classList.remove('open');
+    state.pickMode = mode;
+    state._pickStash = Object.assign({}, formSnapshot || {});
+    state._pickCb = onPickedCb || null;
+    _showBanner(mode);
+    try { chart.subscribeClick(_pickClickHandler); } catch(e) {}
+    document.addEventListener('keydown', _pickKeyHandler, true);
+    document.body.dataset.simPicking = mode;
+  }
+
+  function _lwcTimeToStr(t) {
+    if (t == null) return null;
+    if (typeof t === 'string') return t;
+    if (typeof t === 'number') { try { return new Date(t * 1000).toISOString().slice(0, 10); } catch(e) { return null; } }
+    if (typeof t === 'object' && t.year != null && t.month != null && t.day != null) {
+      return t.year + '-' + String(t.month).padStart(2, '0') + '-' + String(t.day).padStart(2, '0');
+    }
+    return null;
+  }
+
+  function _pickClickHandler(param) {
+    if (!state.pickMode) return;
+    if (!param || !param.point) { _showBannerHint('Click on the chart area'); return; }
+    let idx = -1;
+    if (typeof param.logical === 'number' && currentBars[param.logical]) {
+      idx = param.logical;
+    } else {
+      const timeStr = _lwcTimeToStr(param.time);
+      if (timeStr) idx = currentBars.findIndex(b => b.time === timeStr);
+    }
+    if (idx < 0) { _showBannerHint('No bar here — try again'); return; }
+    const bar = currentBars[idx];
+    const pickedField = state.pickMode;
+    const stash = state._pickStash || {};
+    if (pickedField === 'entry') {
+      stash.date = bar.time;
+      stash.price = Number(bar.close).toFixed(2);
+    } else {
+      stash.endDate = bar.time;
+    }
+    stash.pickedField = pickedField;
+    const cb = state._pickCb;
+    _exitPickMode();
+    Sim.UI.showSetupModal({
+      defaultDate: stash.date,
+      defaultPrice: stash.price,
+      suggestedSize: stash.sizeValue,
+      restoreFrom: stash
+    }, _onSetupSubmit);
+    if (typeof cb === 'function') { try { cb({ time: bar.time, close: bar.close, barIdx: idx }); } catch(e) {} }
+  }
+
+  function _pickKeyHandler(e) {
+    if (e.key !== 'Escape' || !state.pickMode) return;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    const stash = state._pickStash || {};
+    _exitPickMode();
+    Sim.UI.showSetupModal({
+      defaultDate: stash.date,
+      defaultPrice: stash.price,
+      suggestedSize: stash.sizeValue,
+      restoreFrom: stash
+    }, _onSetupSubmit);
+  }
+
+  function _exitPickMode() {
+    if (!state.pickMode) return;
+    state.pickMode = null;
+    state._pickStash = null;
+    state._pickCb = null;
+    try { chart.unsubscribeClick(_pickClickHandler); } catch(e) {}
+    document.removeEventListener('keydown', _pickKeyHandler, true);
+    delete document.body.dataset.simPicking;
+    _hideBanner();
+  }
+
+  function _showBanner(mode) {
+    let el = document.getElementById('sim-pick-banner');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'sim-pick-banner';
+      el.className = 'sim-pick-banner';
+      const msg = document.createElement('span');
+      msg.id = 'sim-pick-banner-msg';
+      el.appendChild(msg);
+      const hint = document.createElement('span');
+      hint.id = 'sim-pick-banner-hint';
+      hint.className = 'sim-pick-banner-hint';
+      el.appendChild(hint);
+      const cancel = document.createElement('button');
+      cancel.className = 'sim-pick-banner-cancel';
+      cancel.textContent = '✕ Cancel';
+      cancel.onclick = function() {
+        const stash = state._pickStash || {};
+        _exitPickMode();
+        Sim.UI.showSetupModal({ defaultDate: stash.date, defaultPrice: stash.price, suggestedSize: stash.sizeValue, restoreFrom: stash }, _onSetupSubmit);
+      };
+      el.appendChild(cancel);
+      const host = document.querySelector('.chart-panel') || document.body;
+      if (host.firstChild) host.insertBefore(el, host.firstChild.nextSibling);
+      else host.appendChild(el);
+    }
+    document.getElementById('sim-pick-banner-msg').textContent =
+      mode === 'entry' ? 'Click a bar for ENTRY date.' : 'Click a bar for END date (force close).';
+    document.getElementById('sim-pick-banner-hint').textContent = 'Esc to cancel';
+    el.style.display = 'flex';
+  }
+  function _hideBanner() {
+    const el = document.getElementById('sim-pick-banner');
+    if (el) el.style.display = 'none';
+  }
+  function _showBannerHint(text) {
+    const h = document.getElementById('sim-pick-banner-hint');
+    if (h) { h.textContent = text; setTimeout(() => { if (state.pickMode) h.textContent = 'Esc to cancel'; }, 1500); }
+  }
+
+  function _stepForward(n) {
+    if (!state.active || !state.sim) return;
+    if (state.sim.closed || state.sim.stoppedOut) { pause(); return; }
+    const before = state.sim.playIdx;
+    const target = Math.min(state.bars.length - 1, before + n);
+    if (target === before) { pause(); return; }
+    let lastResult = null;
+    for (let step = before + 1; step <= target; step++) {
+      const playBefore = state.sim.playIdx;
+      lastResult = Sim.advanceTo(state.sim, state.bars, step);
+      if (state.sim.playIdx > playBefore) {
+        _appendBar(state.sim.playIdx);
+        _checkRHits(state.bars[state.sim.playIdx]);
+        _appendCurvePoint(state.sim.playIdx);
+      }
+      if (state.sim.closed || state.sim.stoppedOut) break;
+    }
+    _render(lastResult);
+  }
+
+  function _stepBack(n) {
+    if (!state.active || !state.sim) return;
+    const target = Math.max(state.sim.entry.barIdx, state.sim.playIdx - n);
+    if (target === state.sim.playIdx) return;
+    Sim.reset(state.sim, state.bars);
+    _maskChart(state.sim.playIdx);
+    _buildRLevels();
+    _clearStopHistory();
+    _addStopLine(state.sim.entry.stop, state.sim.entry.barIdx, 1.0, 'initial', 'stop_initial');
+    state._curve = [];
+    _appendCurvePoint(state.sim.playIdx);
+    _checkRHits(state.bars[state.sim.playIdx]);
+    if (target > state.sim.entry.barIdx) {
+      for (let step = state.sim.entry.barIdx + 1; step <= target; step++) {
+        Sim.advanceTo(state.sim, state.bars, step);
+        _appendBar(step);
+        _checkRHits(state.bars[step]);
+        _appendCurvePoint(step);
+        if (state.sim.closed || state.sim.stoppedOut) break;
+      }
+    }
+    _render();
+  }
+
+  function jumpToEntry() {
+    if (!state.active || !state.sim) return;
+    pause();
+    Sim.reset(state.sim, state.bars);
+    _maskChart(state.sim.playIdx);
+    _buildRLevels();
+    _clearStopHistory();
+    _addStopLine(state.sim.entry.stop, state.sim.entry.barIdx, 1.0, 'initial', 'stop_initial');
+    state._curve = [];
+    _appendCurvePoint(state.sim.playIdx);
+    _checkRHits(state.bars[state.sim.playIdx]);
+    _render();
+  }
+
+  function play() {
+    if (!state.active || state.playing || !state.sim) return;
+    if (state.sim.stoppedOut || state.sim.closed) return;
+    if (state.sim.playIdx >= state.bars.length - 1) return;
+    state.playing = true;
+    Sim.UI.setPlayingState(true);
+    const intervalMs = PLAY_INTERVAL_MS / state.speed;
+    state.playTimer = setInterval(() => {
+      if (!state.sim || state.sim.closed || state.sim.stoppedOut) { pause(); return; }
+      _stepForward(1);
+    }, intervalMs);
+  }
+  function pause() {
+    if (state.playTimer) clearInterval(state.playTimer);
+    state.playTimer = null; state.playing = false;
+    Sim.UI.setPlayingState(false);
+  }
+  function playToggle() { state.playing ? pause() : play(); }
+  function setSpeed(s) {
+    state.speed = s; Sim.UI.setSpeed(s);
+    if (state.playing) { pause(); play(); }
+  }
+  function _speedStep(dir) {
+    const i = SPEEDS.indexOf(state.speed);
+    const j = Math.max(0, Math.min(SPEEDS.length - 1, (i < 0 ? 2 : i) + dir));
+    setSpeed(SPEEDS[j]);
+  }
+
+  function onSellClick() {
+    if (!state.active || !state.sim || state.sim.qty <= 0) return;
+    const bar = state.bars[state.sim.playIdx]; pause();
+    Sim.UI.showSellModal({
+      currentPrice: bar.close, currentQty: state.sim.qty, avgCost: state.sim.avgCost,
+      riskPerShare: state.sim.entry.price - state.sim.entry.stop
+    }, form => {
+      Sim.queueAction(state.sim, { type: 'sell', qty: form.qty, price: form.price });
+      _stepForward(1);
+    });
+  }
+  function onAddClick() {
+    if (!state.active || !state.sim) return;
+    const bar = state.bars[state.sim.playIdx]; pause();
+    Sim.UI.showAddModal({
+      currentPrice: bar.close, currentQty: state.sim.qty,
+      currentStop: state.sim.currentStop, avgCost: state.sim.avgCost
+    }, form => {
+      const addShares = form.sizeMode === 'shares' ? Math.floor(form.sizeValue) : Math.floor(form.sizeValue / form.price);
+      Sim.queueAction(state.sim, { type: 'add', qty: addShares, price: form.price });
+      if (form.newStop != null) Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop });
+      _stepForward(1);
+    });
+  }
+  function onMoveStopClick() {
+    if (!state.active || !state.sim) return;
+    const bar = state.bars[state.sim.playIdx]; pause();
+    const activeStops = (state.sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price);
+    const currentStopPx = activeStops.length ? activeStops[0].price : state.sim.entry.stop;
+    Sim.UI.showMoveStopModal({ currentStop: currentStopPx, currentPrice: bar.close, shares0: state.sim.shares0 }, form => {
+      Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop, pct: form.pct });
+      _stepForward(1);
+    });
+  }
+  function onCloseAllClick() {
+    if (!state.active || !state.sim || state.sim.qty <= 0) return;
+    pause();
+    const bar = state.bars[state.sim.playIdx];
+    if (!confirm('Close entire position (' + state.sim.qty + ' shares) at $' + bar.close.toFixed(2) + '?')) return;
+    const { derived } = Sim.closeAt(state.sim, state.bars, bar.close);
+    _appendCurvePoint(state.sim.playIdx);
+    _render({ derived });
+  }
+
+  let _keyHandler = null;
+  function _bindKeys() {
+    if (_keyHandler) return;
+    _keyHandler = function(e) {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+      if (document.querySelector('.fetch-modal-overlay.open')) return;
+      if (!state.active) return;
+      if (state.pickMode) return;
+      switch (e.key) {
+        case ' ': case 'Spacebar': e.preventDefault(); playToggle(); break;
+        case 'ArrowRight': e.preventDefault(); pause(); _stepForward(1); break;
+        case 'ArrowLeft':  e.preventDefault(); pause(); _stepBack(1); break;
+        case '[': e.preventDefault(); _speedStep(-1); break;
+        case ']': e.preventDefault(); _speedStep(1); break;
+        case 's': case 'S': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); onSellClick(); } break;
+        case 'a': case 'A': if (!e.altKey) { e.preventDefault(); onAddClick(); } break;
+        case 'm': case 'M': if (!e.altKey) { e.preventDefault(); onMoveStopClick(); } break;
+        case 'c': case 'C': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); onCloseAllClick(); } break;
+        case 'Escape': e.preventDefault(); if (confirm('Exit simulator?')) exit(); break;
+      }
+    };
+    document.addEventListener('keydown', _keyHandler);
+  }
+  function _unbindKeys() {
+    if (_keyHandler) { document.removeEventListener('keydown', _keyHandler); _keyHandler = null; }
+  }
+
+  function _wire() {
+    const byId = id => document.getElementById(id);
+    const start = byId('sim-start-btn');
+    if (start) start.addEventListener('click', () => state.active ? exit() : openSetup());
+    const pairs = [
+      ['sim-btn-entry', jumpToEntry],
+      ['sim-btn-step-back', () => { pause(); _stepBack(1); }],
+      ['sim-btn-step-fwd',  () => { pause(); _stepForward(1); }],
+      ['sim-btn-play', playToggle],
+      ['sim-speed-025', () => setSpeed(0.25)],
+      ['sim-speed-05',  () => setSpeed(0.5)],
+      ['sim-speed-1',   () => setSpeed(1)],
+      ['sim-speed-2',   () => setSpeed(2)],
+      ['sim-speed-5',   () => setSpeed(5)],
+      ['sim-btn-export', _downloadCurveCSV],
+      ['sim-btn-exit', exit],
+      ['sim-btn-sell', onSellClick],
+      ['sim-btn-add',  onAddClick],
+      ['sim-btn-movestop', onMoveStopClick],
+      ['sim-btn-closeall', onCloseAllClick]
+    ];
+    pairs.forEach(([id, fn]) => { const el = byId(id); if (el) el.addEventListener('click', fn); });
+    window.addEventListener('pagehide', _exitPickMode);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _wire);
+  else _wire();
+
+  return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode };
+})();
 </script>
 </body>
 </html>
