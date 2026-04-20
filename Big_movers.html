@@ -2072,7 +2072,7 @@
           <div class="fetch-actions">
             <button class="fetch-btn-cancel" id="sim-summary-close">Close</button>
             <button class="fetch-btn-cancel" id="sim-summary-screenshot">Screenshot</button>
-            <button class="fetch-btn-primary" id="sim-summary-newsim">New Sim</button>
+            <button class="fetch-btn-primary" id="sim-summary-reenter">Re-enter →</button>
           </div>
           <div class="fetch-status" id="sim-summary-status"></div>
         </div>
@@ -7293,7 +7293,7 @@ const Sim = (function(){
       try { handlers.onScreenshot && handlers.onScreenshot(); }
       catch (err) { _setStatus('sim-summary-status', err && err.message ? err.message : 'Screenshot failed', true); }
     };
-    document.getElementById('sim-summary-newsim').onclick = () => { _closeModal('sim-summary-modal'); handlers.onNewSim && handlers.onNewSim(); };
+    document.getElementById('sim-summary-reenter').onclick = () => { _closeModal('sim-summary-modal'); handlers.onReenter && handlers.onReenter(); };
     _onBackdrop('sim-summary-modal', handlers.onClose);
     _openModal('sim-summary-modal');
   };
@@ -7674,6 +7674,17 @@ Sim.Ctrl = (function(){
   }
   function _volBar(b) { return { time: b.time, value: b.volume, color: _volColor(b) }; }
 
+  function _centerOnEntry(barIdx) {
+    if (!chart || typeof chart.timeScale !== 'function') return;
+    try {
+      const before = 60;
+      const after = 40;
+      chart.timeScale().setVisibleLogicalRange({
+        from: Math.max(0, barIdx - before),
+        to: barIdx + after
+      });
+    } catch(e) {}
+  }
   function _maskChart(sliceIdx) {
     const slice = state.bars.slice(0, sliceIdx + 1);
     const candleData = slice.map(_candleBar);
@@ -7764,19 +7775,30 @@ Sim.Ctrl = (function(){
   }
   function _showSummary(d) {
     if (!d) d = Sim.computeDerived(state.sim, state.bars);
+    const lastBarIdx = state.sim ? state.sim.playIdx : null;
     Sim.UI.showSummaryModal(_deriveForSummary(d), {
       onClose: () => {},
       onScreenshot: () => { if (typeof takeScreenshot === 'function') takeScreenshot(); },
-      onNewSim: () => { exit(); setTimeout(openSetup, 100); }
+      onReenter: () => {
+        const nextIdx = lastBarIdx != null ? lastBarIdx + 1 : null;
+        exit();
+        setTimeout(() => openSetup({ defaultBarIdx: nextIdx }), 100);
+      }
     });
   }
 
-  function openSetup() {
+  function openSetup(opts) {
+    opts = opts || {};
     if (typeof currentBars === 'undefined' || !currentBars || !currentBars.length) {
       alert('Select a ticker first to start a simulation.'); return;
     }
-    const lastBar = currentBars[currentBars.length - 1];
-    Sim.UI.showSetupModal({ defaultDate: lastBar.time, defaultPrice: lastBar.close, suggestedSize: 1000 }, _onSetupSubmit);
+    let defaultBar;
+    if (opts.defaultBarIdx != null && currentBars[opts.defaultBarIdx]) {
+      defaultBar = currentBars[opts.defaultBarIdx];
+    } else {
+      defaultBar = currentBars[currentBars.length - 1];
+    }
+    Sim.UI.showSetupModal({ defaultDate: defaultBar.time, defaultPrice: defaultBar.close, suggestedSize: 1000 }, _onSetupSubmit);
   }
 
   function _onSetupSubmit(form) {
@@ -7816,6 +7838,7 @@ Sim.Ctrl = (function(){
     Sim.UI.setSpeed(1);
     Sim.UI.setActive(true);
     _maskChart(sim.playIdx);
+    _centerOnEntry(sim.entry.barIdx);
     _buildRLevels();
     _ensureInitialStopLine();
     _clearStopHistory();
@@ -7987,6 +8010,7 @@ Sim.Ctrl = (function(){
     if (target === state.sim.playIdx) return;
     Sim.reset(state.sim, state.bars);
     _maskChart(state.sim.playIdx);
+    _centerOnEntry(state.sim.entry.barIdx);
     _buildRLevels();
     _clearStopHistory();
     _addStopLine(state.sim.entry.stop, state.sim.entry.barIdx, 1.0, 'initial', 'stop_initial');
@@ -8010,6 +8034,7 @@ Sim.Ctrl = (function(){
     pause();
     Sim.reset(state.sim, state.bars);
     _maskChart(state.sim.playIdx);
+    _centerOnEntry(state.sim.entry.barIdx);
     _buildRLevels();
     _clearStopHistory();
     _addStopLine(state.sim.entry.stop, state.sim.entry.barIdx, 1.0, 'initial', 'stop_initial');
