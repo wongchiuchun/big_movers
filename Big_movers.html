@@ -1348,7 +1348,22 @@
   .sim-chip-value.sim-pos { color: var(--green); }
   .sim-chip-value.sim-neg { color: var(--red); }
   .sim-chip-sep { color: var(--border-bright); margin: 0 2px; user-select: none; }
-  .sim-actions { display: flex; gap: 6px; margin-top: 4px; }
+  .sim-actions { display: flex; gap: 6px; margin-top: 4px; align-items: center; }
+  .sim-actions-between { display: none; }
+  .sim-actions-between.sim-visible { display: flex; }
+  #sim-panel.sim-between #sim-actions-active { display: none; }
+  #sim-panel.sim-between #sim-actions-between { display: flex; }
+  .sim-between-msg {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text-2); flex: 1;
+    padding-left: 2px;
+  }
+  .sim-btn.sim-btn-primary {
+    background: var(--accent); color: var(--bg);
+    border-color: var(--accent); font-weight: 600;
+  }
+  .sim-btn.sim-btn-primary:hover { filter: brightness(1.1); }
+  #sim-panel.sim-between .sim-row-stops .sim-stop-history-empty::before { content: '(no active position) '; color: var(--muted); }
   .sim-btn {
     flex: 1 1 0;
     height: 28px;
@@ -2052,6 +2067,44 @@
         </div>
       </div>
 
+      <!-- Sim New Leg (continuation entry) Modal -->
+      <div class="fetch-modal-overlay" id="sim-newleg-modal">
+        <div class="fetch-modal">
+          <h3>New Entry (Leg <span id="sim-newleg-num">2</span>)</h3>
+          <div class="sim-readout" id="sim-newleg-bar">
+            <div>Entering at <strong id="sim-newleg-bardate">—</strong> · close <strong id="sim-newleg-barprice">—</strong></div>
+          </div>
+          <div class="fetch-field">
+            <label>Size</label>
+            <div class="sim-pills" id="sim-newleg-pills">
+              <button type="button" class="sim-pill sim-pill-active" data-mode="shares">Shares</button>
+              <button type="button" class="sim-pill" data-mode="dollars">$ Amount</button>
+            </div>
+            <input type="hidden" id="sim-newleg-size-mode" value="shares">
+            <input type="number" step="any" id="sim-newleg-size-value" placeholder="1000">
+            <div class="sim-field-hint" id="sim-newleg-size-label">Shares</div>
+          </div>
+          <div class="fetch-field">
+            <label for="sim-newleg-price">Entry price (defaults to bar close · editable for fills)</label>
+            <input type="number" step="0.01" id="sim-newleg-price">
+          </div>
+          <div class="fetch-field">
+            <label for="sim-newleg-stop">Initial stop price</label>
+            <input type="number" step="0.01" id="sim-newleg-stop">
+          </div>
+          <div class="sim-readout" id="sim-newleg-summary">
+            <div>Risk per share: <strong>—</strong></div>
+            <div>Initial $ risk: <strong>—</strong></div>
+          </div>
+          <div class="sim-note">Entry is locked to the current paused bar — no time travel, no hindsight bias.</div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-newleg-cancel">Cancel</button>
+            <button class="fetch-btn-primary" id="sim-newleg-submit">Start Leg</button>
+          </div>
+          <div class="fetch-status" id="sim-newleg-status"></div>
+        </div>
+      </div>
+
       <!-- Sim Summary Modal -->
       <div class="fetch-modal-overlay" id="sim-summary-modal">
         <div class="fetch-modal sim-modal-wide">
@@ -2072,7 +2125,7 @@
           <div class="fetch-actions">
             <button class="fetch-btn-cancel" id="sim-summary-close">Close</button>
             <button class="fetch-btn-cancel" id="sim-summary-screenshot">Screenshot</button>
-            <button class="fetch-btn-primary" id="sim-summary-reenter">Re-enter →</button>
+            <button class="fetch-btn-primary" id="sim-summary-reenter">Continue Simulation →</button>
           </div>
           <div class="fetch-status" id="sim-summary-status"></div>
         </div>
@@ -2374,11 +2427,15 @@
               <span class="sim-chip-sep">·</span>
               <span class="sim-chip"><span class="sim-chip-label">Days</span><span class="sim-chip-value" data-field="days">—</span></span>
             </div>
-            <div class="sim-actions">
+            <div class="sim-actions" id="sim-actions-active">
               <button id="sim-btn-sell"     class="sim-btn" type="button">Sell</button>
               <button id="sim-btn-add"      class="sim-btn" type="button">Add</button>
               <button id="sim-btn-movestop" class="sim-btn" type="button">Move Stop</button>
               <button id="sim-btn-closeall" class="sim-btn" type="button">Close</button>
+            </div>
+            <div class="sim-actions sim-actions-between" id="sim-actions-between">
+              <div class="sim-between-msg">Out of position · waiting for next entry</div>
+              <button id="sim-btn-newleg" class="sim-btn sim-btn-primary" type="button">+ New Entry</button>
             </div>
           </div>
         </div>
@@ -6500,7 +6557,8 @@ const Sim = (function(){
       pendingActions: [],
       eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price,
                     note: 'entry ' + shares + '@' + r2(entry.price) + ' stop ' + r2(entry.stop) }],
-      peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0
+      peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
+      legs: [], between: false, simStartBarIdx: entry.barIdx
     };
   }
 
@@ -6669,7 +6727,14 @@ const Sim = (function(){
       })()),
       stopLevels: (sim.stopLevels || []).map(s => ({ id: s.id, price: r2(s.price), pct: s.pct, fired: s.fired, barIdx: s.barIdx })),
       eventsLog: sim.eventsLog.slice(),
-      endBarIdx: sim.endBarIdx
+      endBarIdx: sim.endBarIdx,
+      between: !!sim.between,
+      legCount: (sim.legs || []).length,
+      legIndex: (sim.legs || []).length + (sim.between ? 0 : 1),
+      cumulativePnL: r2((sim.legs || []).reduce((s, l) => s + (l.realizedPnL || 0), 0) + totalPnL),
+      cumulativeR: rR((sim.legs || []).reduce((s, l) => s + (l.rMultiple || 0), 0) + (sim.between ? 0 : rCurrent)),
+      simStartBarIdx: sim.simStartBarIdx != null ? sim.simStartBarIdx : sim.entry.barIdx,
+      simDayCount: sim.playIdx - (sim.simStartBarIdx != null ? sim.simStartBarIdx : sim.entry.barIdx)
     };
   }
 
@@ -6698,6 +6763,75 @@ const Sim = (function(){
     return sim;
   }
 
+  function continueSim(sim) {
+    if (!sim) return sim;
+    if (!sim.closed && !sim.stoppedOut) return sim;
+    if (!sim.legs) sim.legs = [];
+    sim.legs.push({
+      index: sim.legs.length,
+      entry: clone(sim.entry),
+      shares0: sim.shares0,
+      initialRisk: sim.initialRisk,
+      eventsLog: sim.eventsLog.slice(),
+      realizedPnL: sim.realizedPnL,
+      rMultiple: sim.initialRisk > 0 ? sim.realizedPnL / sim.initialRisk : 0,
+      mfe: sim._mfeVal,
+      mae: sim._maeVal,
+      exitBarIdx: sim.playIdx,
+      exitReason: sim.stoppedOut ? 'stop' : 'close'
+    });
+    sim.qty = 0;
+    sim.avgCost = 0;
+    sim.realizedPnL = 0;
+    sim.stopLevels = [];
+    sim.pendingActions = [];
+    sim.eventsLog = [];
+    sim.closed = false;
+    sim.stoppedOut = false;
+    sim.between = true;
+    sim.peakTotal = 0;
+    sim.peakBarIdx = sim.playIdx;
+    sim._mfeVal = 0;
+    sim._maeVal = 0;
+    return sim;
+  }
+
+  function startNewLeg(sim, params) {
+    if (!sim) throw new Error('startNewLeg: no sim');
+    if (!params || typeof params.barIdx !== 'number' || typeof params.price !== 'number' || typeof params.stop !== 'number') {
+      throw new Error('startNewLeg: barIdx, price, stop required');
+    }
+    const shares = params.sizeMode === 'shares'
+      ? Math.floor(params.sizeValue)
+      : Math.floor(params.sizeValue / params.price);
+    if (!(shares > 0)) throw new Error('startNewLeg: computed shares <= 0');
+    const initialRisk = shares * (params.price - params.stop);
+    if (!(initialRisk > 0)) throw new Error('startNewLeg: initialRisk must be > 0 (stop below price)');
+    const legNum = (sim.legs || []).length + 1;
+    sim.entry = {
+      barIdx: params.barIdx, date: params.date || null, price: params.price,
+      sizeMode: params.sizeMode || 'shares', sizeValue: params.sizeValue, stop: params.stop
+    };
+    sim.shares0 = shares;
+    sim.initialRisk = initialRisk;
+    sim.qty = shares;
+    sim.avgCost = params.price;
+    sim.realizedPnL = 0;
+    sim.stopLevels = [{ id: 'stop_initial_l' + legNum, price: params.stop, pct: 1.0, fired: false, barIdx: params.barIdx }];
+    sim.pendingActions = [];
+    sim.between = false;
+    sim.peakTotal = 0;
+    sim.peakBarIdx = params.barIdx;
+    sim._mfeVal = 0;
+    sim._maeVal = 0;
+    sim.eventsLog.push({
+      barIdx: params.barIdx, date: params.date || null, type: 'entry',
+      qty: shares, price: params.price,
+      note: 'leg ' + legNum + ' entry ' + shares + '@' + r2(params.price) + ' stop ' + r2(params.stop)
+    });
+    return sim;
+  }
+
   function editStop(sim, id, newPrice, newPct) {
     if (!sim || !sim.stopLevels) return false;
     const stop = sim.stopLevels.find(s => s.id === id);
@@ -6714,7 +6848,7 @@ const Sim = (function(){
     return true;
   }
 
-  return { createSim, queueAction, advanceTo, computeDerived, closeAt, reset, editStop, deleteStop };
+  return { createSim, queueAction, advanceTo, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg };
 })();
 
 /* ---------- Sim.UI: DOM helpers + hero panel render ---------- */
@@ -6864,6 +6998,13 @@ const Sim = (function(){
     _setChip('sim-statsrow', 'days', days != null ? String(days) : '—');
 
     _setText('sim-date-readout', 'Day ' + (barIndex || 0) + ' · ' + (dateISO || '—'));
+
+    const panel = document.getElementById('sim-panel');
+    if (panel) {
+      if (derived.between) panel.classList.add('sim-between');
+      else panel.classList.remove('sim-between');
+    }
+
     Sim.UI._last.pnl = totalPnL; Sim.UI._last.giveBack = giveBack;
   };
 
@@ -7140,6 +7281,73 @@ const Sim = (function(){
     };
     _openModal('sim-sell-modal');
     setTimeout(() => qtyEl.focus(), 30);
+  };
+
+  Sim.UI.showNewLegModal = function(ctx, onSubmit) {
+    ctx = ctx || {};
+    const sizeEl = document.getElementById('sim-newleg-size-value');
+    const priceEl = document.getElementById('sim-newleg-price');
+    const stopEl = document.getElementById('sim-newleg-stop');
+    const modeEl = document.getElementById('sim-newleg-size-mode');
+    const labelEl = document.getElementById('sim-newleg-size-label');
+    const summaryEl = document.getElementById('sim-newleg-summary');
+    const dateEl = document.getElementById('sim-newleg-bardate');
+    const barpriceEl = document.getElementById('sim-newleg-barprice');
+    const numEl = document.getElementById('sim-newleg-num');
+    const barClose = _parseNum(ctx.barClose, NaN);
+
+    if (numEl) numEl.textContent = String(ctx.legNum || 2);
+    if (dateEl) dateEl.textContent = ctx.barDate || '—';
+    if (barpriceEl) barpriceEl.textContent = isFinite(barClose) ? _fmt$(barClose) : '—';
+
+    sizeEl.value = ctx.suggestedSize != null ? ctx.suggestedSize : '';
+    priceEl.value = isFinite(barClose) ? barClose.toFixed(2) : '';
+    stopEl.value = '';
+    modeEl.value = 'shares';
+    labelEl.textContent = 'Shares';
+    _setPillActive('sim-newleg-pills', 'shares');
+    _clearStatus('sim-newleg-status');
+
+    function recompute() {
+      const mode = modeEl.value;
+      const size = _parseNum(sizeEl.value, NaN);
+      const price = _parseNum(priceEl.value, NaN);
+      const stop = _parseNum(stopEl.value, NaN);
+      let shares = NaN;
+      if (isFinite(size) && size > 0 && isFinite(price) && price > 0) {
+        shares = mode === 'shares' ? Math.floor(size) : Math.floor(size / price);
+      }
+      const riskPerShare = (isFinite(price) && isFinite(stop)) ? (price - stop) : NaN;
+      const dollarRisk = (isFinite(shares) && isFinite(riskPerShare)) ? shares * riskPerShare : NaN;
+      Sim.UI._fillReadout(summaryEl, [
+        { label: 'Risk per share', value: isFinite(riskPerShare) ? _fmt$(riskPerShare) : '—' },
+        { label: 'Initial $ risk', value: isFinite(dollarRisk) ? _fmt$(dollarRisk) : '—' },
+        { label: 'Shares', value: isFinite(shares) ? _fmtInt(shares) : '—' }
+      ]);
+    }
+    [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
+    _setupPills('sim-newleg-pills', 'sim-newleg-size-mode', 'sim-newleg-size-label', recompute);
+    recompute();
+
+    document.getElementById('sim-newleg-cancel').onclick = () => _closeModal('sim-newleg-modal');
+    _onBackdrop('sim-newleg-modal');
+    document.getElementById('sim-newleg-submit').onclick = function() {
+      _clearStatus('sim-newleg-status');
+      const mode = modeEl.value;
+      const size = _parseNum(sizeEl.value, NaN);
+      const price = _parseNum(priceEl.value, NaN);
+      const stop = _parseNum(stopEl.value, NaN);
+      if (!isFinite(size) || size <= 0) return _setStatus('sim-newleg-status', 'Size must be > 0', true);
+      if (!isFinite(price) || price <= 0) return _setStatus('sim-newleg-status', 'Entry price must be > 0', true);
+      if (!isFinite(stop) || stop <= 0) return _setStatus('sim-newleg-status', 'Stop must be > 0', true);
+      if (stop >= price) return _setStatus('sim-newleg-status', 'Stop must be below entry price', true);
+      try {
+        onSubmit && onSubmit({ sizeMode: mode, sizeValue: size, price, stop });
+        _closeModal('sim-newleg-modal');
+      } catch (err) { _setStatus('sim-newleg-status', err && err.message ? err.message : 'Could not start leg', true); }
+    };
+    _openModal('sim-newleg-modal');
+    setTimeout(() => sizeEl.focus(), 30);
   };
 
   Sim.UI.showAddModal = function(ctx, onSubmit) {
@@ -7742,7 +7950,9 @@ Sim.Ctrl = (function(){
       stop: d.currentStop, stopDollar, stopPct,
       mfe: d.mfe, mae: d.mae, r: d.rCurrent,
       days: d.dayCount, barIndex: d.dayCount,
-      dateISO: bar ? bar.time : '—'
+      dateISO: bar ? bar.time : '—',
+      between: d.between, legCount: d.legCount, legIndex: d.legIndex,
+      cumulativePnL: d.cumulativePnL, cumulativeR: d.cumulativeR
     };
   }
 
@@ -7775,15 +7985,50 @@ Sim.Ctrl = (function(){
   }
   function _showSummary(d) {
     if (!d) d = Sim.computeDerived(state.sim, state.bars);
-    const lastBarIdx = state.sim ? state.sim.playIdx : null;
     Sim.UI.showSummaryModal(_deriveForSummary(d), {
       onClose: () => {},
       onScreenshot: () => { if (typeof takeScreenshot === 'function') takeScreenshot(); },
-      onReenter: () => {
-        const nextIdx = lastBarIdx != null ? lastBarIdx + 1 : null;
-        exit();
-        setTimeout(() => openSetup({ defaultBarIdx: nextIdx }), 100);
-      }
+      onReenter: () => { onContinueClick(); }
+    });
+  }
+  function onContinueClick() {
+    if (!state.sim) return;
+    Sim.continueSim(state.sim);
+    _clearStopHistory();
+    _clearInitialStopLine();
+    state._rLevels = []; state._hitRLevels = new Set(); state._rMarkers = [];
+    try { (priceSeries || candleSeries).setMarkers([]); } catch(e) {}
+    state._curve = [];
+    _appendCurvePoint(state.sim.playIdx);
+    _render(null);
+  }
+  function onNewEntryClick() {
+    if (!state.active || !state.sim || !state.sim.between) return;
+    pause();
+    const bar = state.bars[state.sim.playIdx];
+    if (!bar) return;
+    Sim.UI.showNewLegModal({
+      barClose: bar.close,
+      barDate: bar.time,
+      legNum: (state.sim.legs || []).length + 1,
+      suggestedSize: state.sim.shares0 || 1000
+    }, form => {
+      try {
+        Sim.startNewLeg(state.sim, {
+          barIdx: state.sim.playIdx,
+          date: bar.time,
+          price: form.price,
+          sizeMode: form.sizeMode,
+          sizeValue: form.sizeValue,
+          stop: form.stop
+        });
+      } catch (e) { alert('Could not start new leg: ' + e.message); return; }
+      _ensureInitialStopLine();
+      _addStopLine(state.sim.entry.stop, state.sim.entry.barIdx, 1.0, 'initial', state.sim.stopLevels[0].id);
+      _buildRLevels();
+      _appendCurvePoint(state.sim.playIdx);
+      _checkRHits(state.bars[state.sim.playIdx]);
+      _render(null);
     });
   }
 
@@ -8163,7 +8408,8 @@ Sim.Ctrl = (function(){
       ['sim-btn-sell', onSellClick],
       ['sim-btn-add',  onAddClick],
       ['sim-btn-movestop', onMoveStopClick],
-      ['sim-btn-closeall', onCloseAllClick]
+      ['sim-btn-closeall', onCloseAllClick],
+      ['sim-btn-newleg', onNewEntryClick]
     ];
     pairs.forEach(([id, fn]) => { const el = byId(id); if (el) el.addEventListener('click', fn); });
     window.addEventListener('pagehide', _exitPickMode);
