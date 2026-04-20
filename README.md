@@ -80,10 +80,32 @@ Everything runs offline. No cloud, no subscription, no telemetry.
 
 ## Quick Start
 
+> **Important:** your shell's default `python3` (in `~/.browser-use-env/`) does **not** have Flask. Always use the full path to system Python 3.13, which does.
+
 ```bash
-# From the project directory
-python3 Big_movers_server.py
-# Open http://localhost:5051/
+# From the project directory (big_movers/)
+cd "/Users/raywong/Desktop/qullamaggie-study-guide/setup analysis/big_movers"
+
+# Foreground (blocks terminal, Ctrl+C to stop)
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Big_movers_server.py
+
+# Background (keeps running after you close the terminal)
+nohup /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Big_movers_server.py > server.log 2>&1 &
+
+# Then open http://localhost:5051/
+```
+
+### Stop the server
+
+```bash
+lsof -ti :5051 | xargs kill
+```
+
+### Check status / tail logs
+
+```bash
+lsof -ti :5051              # prints PID if running, nothing if stopped
+tail -f server.log          # watch requests live
 ```
 
 Tested with Python 3.13 + Flask. For Twelve Data ticker fetching, put `TWELVE_API_KEY=<your-key>` in `.env` (either in the project dir or the parent dir — both are checked).
