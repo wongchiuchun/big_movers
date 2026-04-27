@@ -1795,6 +1795,158 @@
   .fetch-status{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;min-height:14px;}
   .fetch-status.error{color:var(--red);}
   .fetch-status.success{color:var(--green);}
+
+  /* ============ PORTSIM TRACK B: Card Styles — START ============ */
+  .portsim-grid{
+    display:grid;
+    grid-template-columns:repeat(1,1fr);
+    grid-auto-rows:1fr;
+    gap:8px;
+    padding:8px;
+    width:100%;
+    height:100%;
+    overflow:auto;
+    background:var(--bg);
+    box-sizing:border-box;
+  }
+  .portsim-grid.cols-1{grid-template-columns:repeat(1,1fr);}
+  .portsim-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .portsim-grid.cols-3{grid-template-columns:repeat(2,1fr);} /* 3-4 → 2 cols */
+  .portsim-grid.cols-4{grid-template-columns:repeat(2,1fr);}
+  .portsim-grid.cols-5{grid-template-columns:repeat(3,1fr);} /* 5-6 → 3 cols */
+  .portsim-grid.cols-6{grid-template-columns:repeat(3,1fr);}
+  .portsim-grid.cols-7{grid-template-columns:repeat(4,1fr);} /* 7-8 → 4 cols (cap) */
+  .portsim-grid.cols-8{grid-template-columns:repeat(4,1fr);}
+  .portsim-grid.cols-9{grid-template-columns:repeat(4,1fr);} /* 9-10 → 4 cols (cap at 4 per spec) */
+  .portsim-grid.cols-10{grid-template-columns:repeat(4,1fr);}
+
+  .portcard{
+    display:flex;
+    flex-direction:column;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+    min-height:280px;
+    transition:border-color 0.18s ease, box-shadow 0.18s ease;
+    position:relative;
+  }
+  .portcard.is-active{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent), 0 4px 18px rgba(212,165,116,0.18);
+  }
+
+  .portcard-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:8px 10px 6px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg2);
+    flex:0 0 auto;
+  }
+  .portcard-symbol{
+    font-family:var(--mono);
+    font-size:13px;
+    font-weight:700;
+    color:var(--text);
+    letter-spacing:0.02em;
+  }
+  .portcard.is-active .portcard-symbol{color:var(--accent-cream);}
+  .portcard-price{
+    display:inline-flex;
+    align-items:baseline;
+    gap:6px;
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:500;
+    color:var(--text-2);
+    margin-left:auto;
+  }
+  .portcard-px{color:var(--text);font-weight:600;}
+  .portcard-chg{font-size:10px;color:var(--muted);}
+  .portcard-chg.is-up{color:var(--green);}
+  .portcard-chg.is-down{color:var(--red);}
+
+  .portcard-badge{
+    font-family:var(--mono);
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    padding:2px 8px;
+    border-radius:999px;
+    background:var(--bg3);
+    color:var(--muted);
+    border:1px solid var(--border);
+    white-space:nowrap;
+    line-height:1.4;
+  }
+  .portcard-badge:empty{display:none;}
+  .portcard-badge.is-stale{background:var(--bg3);color:var(--muted-2);border-color:var(--border);}
+  .portcard-badge.is-between{background:rgba(245,200,66,0.12);color:var(--yellow);border-color:rgba(245,200,66,0.35);}
+  .portcard-badge.is-active{background:rgba(110,231,183,0.12);color:var(--green);border-color:rgba(110,231,183,0.35);}
+  .portcard-badge.is-idle{background:var(--bg3);color:var(--muted);border-color:var(--border);}
+
+  .portcard-mini-panel{
+    display:flex;
+    align-items:center;
+    gap:0;
+    padding:0 4px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg2);
+    flex:0 0 auto;
+    min-height:28px;
+    overflow:hidden;
+  }
+  .portcard-mini-panel > span{
+    flex:1 1 0;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:0;
+    padding:3px 6px;
+    border-right:1px solid var(--border);
+    min-width:0;
+  }
+  .portcard-mini-panel > span:last-child{border-right:none;}
+  .portcard-mini-panel label{
+    font-family:var(--mono);
+    font-size:8px;
+    font-weight:500;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    line-height:1;
+  }
+  .portcard-mini-panel strong{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:600;
+    color:var(--text);
+    line-height:1.1;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    max-width:100%;
+  }
+  .portcard-mini-panel strong.is-up{color:var(--green);}
+  .portcard-mini-panel strong.is-down{color:var(--red);}
+  .portcard-mini-panel strong.is-muted{color:var(--muted);}
+
+  .portcard-chart-wrap{
+    flex:1 1 auto;
+    position:relative;
+    min-height:0;
+    background:var(--chart-bg);
+    width:100%;
+  }
+  .portcard-chart-wrap > div{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+  }
+  /* ============ PORTSIM TRACK B: Card Styles — END ============ */
 </style>
 </head>
 <body>
@@ -9416,6 +9568,404 @@ Sim.Ctrl = (function(){
   };
 })();
 // ============ PORTSIM TRACK A: Cash Ledger — END ============
+
+// ============ PORTSIM TRACK B: Card Chart Factory — START ============
+(function(){
+  'use strict';
+  // Resolve the global namespace lazily so order of declaration with sibling
+  // PortSim modules (Cash, Modal, Ctrl, etc.) doesn't matter.
+  const PortSim = (window.PortSim = window.PortSim || {});
+
+  // ---------- Theming helpers ----------
+  function _cssVar(name, fallback){
+    try{
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+      const t = (v || '').trim();
+      return t || fallback;
+    }catch(e){ return fallback; }
+  }
+  function _theme(){
+    return {
+      bg:        _cssVar('--chart-bg', '#0c0d10'),
+      grid:      _cssVar('--chart-grid', '#1a1c22'),
+      text:      _cssVar('--text', '#f4f1e8'),
+      border:    _cssVar('--border', '#262932'),
+      green:     '#26a69a',
+      red:       '#ef5350',
+    };
+  }
+
+  // ---------- Number / format helpers (local, lightweight) ----------
+  function _fmtPx(n){
+    if (n == null || !isFinite(n)) return '—';
+    const a = Math.abs(n);
+    if (a >= 1000) return '$' + n.toFixed(0);
+    if (a >= 100)  return '$' + n.toFixed(2);
+    return '$' + n.toFixed(2);
+  }
+  function _fmtPct(n){
+    if (n == null || !isFinite(n)) return '—';
+    const sign = n > 0 ? '+' : '';
+    return sign + n.toFixed(2) + '%';
+  }
+  function _fmtMoney(n){
+    if (n == null || !isFinite(n)) return '—';
+    const sign = n < 0 ? '-' : '';
+    const a = Math.abs(n);
+    if (a >= 10000) return sign + '$' + a.toFixed(0);
+    return sign + '$' + a.toFixed(2);
+  }
+  function _fmtQty(n){
+    if (n == null || !isFinite(n)) return '—';
+    return String(Math.round(n));
+  }
+
+  // ---------- Bar normalization ----------
+  // The single-ticker chart in this app already accepts LWC-shaped bars
+  // (`{time, open, high, low, close, value}`). For robustness, accept either
+  // that shape or {date, open, high, low, close, volume}. Volume becomes the
+  // histogram value; we colorize it up/down based on close vs open.
+  function _toLWCBars(bars){
+    if (!Array.isArray(bars) || !bars.length) return { candles: [], vols: [] };
+    const candles = new Array(bars.length);
+    const vols    = new Array(bars.length);
+    for (let i = 0; i < bars.length; i++){
+      const b = bars[i] || {};
+      const t = b.time || b.date || b.Date || b.datetime || b.DateTime;
+      const o = +b.open, h = +b.high, l = +b.low, c = +b.close;
+      const v = (b.volume != null) ? +b.volume : (b.value != null ? +b.value : 0);
+      candles[i] = { time: t, open: o, high: h, low: l, close: c };
+      vols[i]    = {
+        time: t,
+        value: isFinite(v) ? v : 0,
+        color: (c >= o) ? 'rgba(38,166,154,0.45)' : 'rgba(239,83,80,0.45)',
+      };
+    }
+    return { candles, vols };
+  }
+
+  // ---------- DOM construction ----------
+  function _buildCardEl(ticker){
+    const root = document.createElement('div');
+    root.className = 'portcard';
+    root.setAttribute('data-symbol', ticker || '');
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'portcard-header';
+
+    const symEl = document.createElement('span');
+    symEl.className = 'portcard-symbol';
+    symEl.textContent = ticker || '—';
+
+    const priceWrap = document.createElement('span');
+    priceWrap.className = 'portcard-price';
+    const pxEl = document.createElement('span');
+    pxEl.className = 'portcard-px';
+    pxEl.textContent = '—';
+    const chgEl = document.createElement('span');
+    chgEl.className = 'portcard-chg';
+    chgEl.textContent = '';
+    priceWrap.appendChild(pxEl);
+    priceWrap.appendChild(chgEl);
+
+    const badgeEl = document.createElement('span');
+    badgeEl.className = 'portcard-badge';
+
+    header.appendChild(symEl);
+    header.appendChild(priceWrap);
+    header.appendChild(badgeEl);
+
+    // Mini panel
+    const mini = document.createElement('div');
+    mini.className = 'portcard-mini-panel';
+    const fields = [
+      ['STATE',    'posState', 'idle'],
+      ['QTY',      'qty',      '—'],
+      ['AVG',      'avg',      '—'],
+      ['STOP',     'stop',     '—'],
+      ['LEG P&L',  'legPnL',   '—'],
+      ['TOTAL',    'totalPnL', '—'],
+    ];
+    fields.forEach(([lbl, field, defaultVal]) => {
+      const cell = document.createElement('span');
+      const lblEl = document.createElement('label');
+      lblEl.textContent = lbl;
+      const strong = document.createElement('strong');
+      strong.setAttribute('data-field', field);
+      strong.textContent = defaultVal;
+      cell.appendChild(lblEl);
+      cell.appendChild(strong);
+      mini.appendChild(cell);
+    });
+
+    // Chart wrap
+    const chartWrap = document.createElement('div');
+    chartWrap.className = 'portcard-chart-wrap';
+    const chartEl = document.createElement('div');
+    chartWrap.appendChild(chartEl);
+
+    root.appendChild(header);
+    root.appendChild(mini);
+    root.appendChild(chartWrap);
+
+    return { root, header, symEl, pxEl, chgEl, badgeEl, mini, chartWrap, chartEl };
+  }
+
+  // ---------- Sizing ----------
+  function _measure(el){
+    const r = el.getBoundingClientRect();
+    return {
+      width:  Math.max(0, Math.floor(r.width)),
+      height: Math.max(0, Math.floor(r.height)),
+    };
+  }
+
+  // ---------- Public factory ----------
+  PortSim.Cards = PortSim.Cards || {};
+
+  PortSim.Cards.createCard = function(host, ticker, bars, opts){
+    if (!host || !host.appendChild){
+      throw new Error('PortSim.Cards.createCard: host element required');
+    }
+    if (typeof LightweightCharts === 'undefined' || !LightweightCharts.createChart){
+      throw new Error('PortSim.Cards.createCard: LightweightCharts not loaded');
+    }
+    opts = opts || {};
+
+    const dom = _buildCardEl(ticker);
+    host.appendChild(dom.root);
+
+    // Build chart in the chart container.
+    const th = _theme();
+
+    // Initial size from the just-attached container.
+    let { width, height } = _measure(dom.chartEl);
+    if (!width)  width  = dom.chartWrap.clientWidth  || 320;
+    if (!height) height = dom.chartWrap.clientHeight || 200;
+
+    const chart = LightweightCharts.createChart(dom.chartEl, {
+      width: width,
+      height: height,
+      layout: { background: { color: th.bg }, textColor: th.text },
+      grid: {
+        vertLines: { color: th.grid, visible: true },
+        horzLines: { color: th.grid, visible: true },
+      },
+      rightPriceScale: { borderColor: th.border, scaleMargins: { top: 0.05, bottom: 0.18 } },
+      timeScale: { borderColor: th.border, timeVisible: false, rightOffset: 4 },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      localization: { locale: 'en-US' },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale:  { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+    });
+
+    const candleSeries = chart.addCandlestickSeries({
+      upColor: '#26a69a',
+      downColor: '#ef5350',
+      borderVisible: false,
+      wickVisible: true,
+      wickUpColor: '#26a69a',
+      wickDownColor: '#ef5350',
+    });
+
+    const volSeries = chart.addHistogramSeries({
+      priceScaleId: '',
+      priceFormat: { type: 'volume' },
+      scaleMargins: { top: 0.85, bottom: 0 },
+      color: 'rgba(120,140,160,0.4)',
+    });
+
+    // Set initial data if provided.
+    function _applyData(rawBars){
+      const norm = _toLWCBars(rawBars);
+      candleSeries.setData(norm.candles);
+      volSeries.setData(norm.vols);
+      try { chart.timeScale().fitContent(); } catch(e){}
+    }
+    if (Array.isArray(bars) && bars.length){
+      _applyData(bars);
+    }
+
+    // ResizeObserver — react to grid / panel resize.
+    let ro = null;
+    let _disposed = false;
+    function _resize(){
+      if (_disposed) return;
+      const m = _measure(dom.chartWrap);
+      if (m.width > 0 && m.height > 0){
+        try { chart.resize(m.width, m.height); } catch(e){}
+      }
+    }
+    if (typeof ResizeObserver !== 'undefined'){
+      ro = new ResizeObserver(_resize);
+      ro.observe(dom.chartWrap);
+    } else {
+      window.addEventListener('resize', _resize);
+    }
+    // One scheduled resize to absorb initial layout.
+    setTimeout(_resize, 0);
+
+    // ---------- API methods ----------
+    function setData(newBars){
+      _applyData(newBars || []);
+    }
+    function appendBar(bar){
+      if (!bar) return;
+      const t = bar.time || bar.date || bar.Date || bar.datetime || bar.DateTime;
+      const o = +bar.open, h = +bar.high, l = +bar.low, c = +bar.close;
+      const v = (bar.volume != null) ? +bar.volume : (bar.value != null ? +bar.value : 0);
+      try {
+        candleSeries.update({ time: t, open: o, high: h, low: l, close: c });
+        volSeries.update({
+          time: t,
+          value: isFinite(v) ? v : 0,
+          color: (c >= o) ? 'rgba(38,166,154,0.45)' : 'rgba(239,83,80,0.45)',
+        });
+      } catch(e){
+        // .update() throws if `time` < last bar; caller is responsible for ordering.
+        if (window.console) console.warn('[PortSim.Cards] appendBar:', e && e.message);
+      }
+    }
+    function setActive(on){
+      dom.root.classList.toggle('is-active', !!on);
+    }
+    function setBadge(text, cls){
+      // Wipe known modifier classes, then re-apply caller's class (if any).
+      dom.badgeEl.classList.remove('is-stale','is-between','is-active','is-idle');
+      dom.badgeEl.textContent = text || '';
+      if (cls){
+        // Allow space-separated class list, or shorthand (e.g. 'stale').
+        String(cls).split(/\s+/).forEach(c => {
+          if (!c) return;
+          if (c === 'stale' || c === 'between' || c === 'active' || c === 'idle'){
+            dom.badgeEl.classList.add('is-' + c);
+          } else {
+            dom.badgeEl.classList.add(c);
+          }
+        });
+      }
+    }
+
+    // setHeader updates the header price block + mini-panel cells in one call.
+    // Accepted keys: ticker, currentPrice, dayChange, posState, qty, avg, stop,
+    // legPnL, totalPnL. Pass null/undefined to leave a field unchanged; pass
+    // empty string to blank it.
+    function setHeader(obj){
+      obj = obj || {};
+      if (obj.ticker != null){
+        dom.symEl.textContent = obj.ticker || '—';
+        dom.root.setAttribute('data-symbol', obj.ticker || '');
+      }
+      if (obj.currentPrice !== undefined){
+        dom.pxEl.textContent = (obj.currentPrice === '' || obj.currentPrice == null)
+          ? '—'
+          : (typeof obj.currentPrice === 'number' ? _fmtPx(obj.currentPrice) : String(obj.currentPrice));
+      }
+      if (obj.dayChange !== undefined){
+        let txt = '';
+        let cls = '';
+        if (obj.dayChange === '' || obj.dayChange == null){
+          txt = '';
+        } else if (typeof obj.dayChange === 'number'){
+          txt = _fmtPct(obj.dayChange);
+          cls = obj.dayChange > 0 ? 'is-up' : (obj.dayChange < 0 ? 'is-down' : '');
+        } else {
+          txt = String(obj.dayChange);
+        }
+        dom.chgEl.textContent = txt;
+        dom.chgEl.classList.remove('is-up','is-down');
+        if (cls) dom.chgEl.classList.add(cls);
+      }
+      // Mini-panel field updates.
+      const mapField = (key, formatter, valueClassFn) => {
+        if (obj[key] === undefined) return;
+        const sel = dom.mini.querySelector('strong[data-field="' + key + '"]');
+        if (!sel) return;
+        const v = obj[key];
+        let text;
+        if (v === '' || v == null){
+          text = '—';
+        } else if (formatter){
+          text = formatter(v);
+        } else {
+          text = String(v);
+        }
+        sel.textContent = text;
+        sel.classList.remove('is-up','is-down','is-muted');
+        if (valueClassFn){
+          const cls = valueClassFn(v);
+          if (cls) sel.classList.add(cls);
+        } else if (v === '' || v == null){
+          sel.classList.add('is-muted');
+        }
+      };
+      mapField('posState', (v) => String(v));
+      mapField('qty', (v) => typeof v === 'number' ? _fmtQty(v) : String(v));
+      mapField('avg', (v) => typeof v === 'number' ? _fmtPx(v) : String(v));
+      mapField('stop', (v) => typeof v === 'number' ? _fmtPx(v) : String(v));
+      mapField(
+        'legPnL',
+        (v) => typeof v === 'number' ? _fmtMoney(v) : String(v),
+        (v) => typeof v === 'number' ? (v > 0 ? 'is-up' : (v < 0 ? 'is-down' : '')) : ''
+      );
+      mapField(
+        'totalPnL',
+        (v) => typeof v === 'number' ? _fmtMoney(v) : String(v),
+        (v) => typeof v === 'number' ? (v > 0 ? 'is-up' : (v < 0 ? 'is-down' : '')) : ''
+      );
+    }
+
+    function destroy(){
+      if (_disposed) return;
+      _disposed = true;
+      if (ro){ try { ro.disconnect(); } catch(e){} ro = null; }
+      else { window.removeEventListener('resize', _resize); }
+      try { chart.remove(); } catch(e){}
+      if (dom.root && dom.root.parentNode){
+        dom.root.parentNode.removeChild(dom.root);
+      }
+    }
+
+    return {
+      cardEl: dom.root,
+      chart: chart,
+      candleSeries: candleSeries,
+      volSeries: volSeries,
+      setData: setData,
+      appendBar: appendBar,
+      setActive: setActive,
+      setBadge: setBadge,
+      setHeader: setHeader,
+      destroy: destroy,
+      // Internal handles — useful for sibling modules (Ctrl, Header) but not part
+      // of the public Track B contract.
+      _dom: dom,
+      _resize: _resize,
+    };
+  };
+})();
+// ============ PORTSIM TRACK B: Card Chart Factory — END ============
 </script>
+<!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
+<template id="portcard-template">
+  <div class="portcard" data-symbol="">
+    <div class="portcard-header">
+      <span class="portcard-symbol">SYM</span>
+      <span class="portcard-price"><span class="portcard-px">$0.00</span> <span class="portcard-chg"></span></span>
+      <span class="portcard-badge"></span>
+    </div>
+    <div class="portcard-mini-panel">
+      <span><label>STATE</label><strong data-field="posState">idle</strong></span>
+      <span><label>QTY</label><strong data-field="qty">—</strong></span>
+      <span><label>AVG</label><strong data-field="avg">—</strong></span>
+      <span><label>STOP</label><strong data-field="stop">—</strong></span>
+      <span><label>LEG P&amp;L</label><strong data-field="legPnL">—</strong></span>
+      <span><label>TOTAL</label><strong data-field="totalPnL">—</strong></span>
+    </div>
+    <div class="portcard-chart-wrap"><div></div></div>
+  </div>
+</template>
+<!-- ============ PORTSIM TRACK B: Card Template — END ============ -->
 </body>
 </html>
