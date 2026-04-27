@@ -13940,6 +13940,662 @@ Sim.Ctrl = (function(){
   };
 })();
 // ============ PORTSIM TRACK I: Card Panel UI — END ============
+
+// ============ PORTSIM TRACK J: Ctrl Parity Wiring — START ============
+// Wires PortSim.CardChart (markers, R-stars, stop lines, entry highlight) and
+// PortSim.CardPanel (extended stats, toolbar, Legs/Stops popovers, CSV export)
+// into PortSim.Ctrl WITHOUT modifying the Ctrl IIFE. We monkey-patch
+// _advanceAll and _renderAll (both publicly exposed per Track G report) so we
+// run a "post-tick" pass on every bar advance and a "post-render" pass on
+// every chart refresh.
+//
+// Per-entry shadow state (attached as `entry._trkj`):
+//   {
+//     rState                : { levels:[{level,price}], hit:Set<number> }  // R-level tracking
+//     rStateForSimRef       : sim object ref the rState was built for
+//     lastSeenSim           : sim object ref previously observed
+//     lastSeenLegCount      : # of finished legs in entry.sim.legs
+//     lastSeenEntryBarIdx   : sim.entry.barIdx of the leg currently observed
+//     lastSeenEventCount    : sim.eventsLog.length last seen
+//     lastSeenStoppedOut    : sim.stoppedOut last seen
+//     lastSeenClosed        : sim.closed last seen
+//     initialStopPlaced     : did we already paint −1R initial stop for current leg?
+//     toolbarReady          : did we attach toolbar handlers?
+//     popoverEntry          : reference for Stops popover refresh (closure)
+//   }
+//
+// Idempotency:
+//   - Wrapping is guarded by PortSim.Ctrl._trackJWired
+//   - Toolbar attach guarded by entry._trkj.toolbarReady
+//   - All API calls wrapped in try/catch — never throw past the engine
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+
+  // ---- helpers ----
+  function _safe(label, fn){
+    try { return fn(); }
+    catch(e){
+      if (window.console) console.error('[Track J] ' + label + ':', e && e.message ? e.message : e);
+      return null;
+    }
+  }
+  function _isCardOk(card){
+    return !!(card && card.cardEl && card.cardEl.parentNode && card.candleSeries);
+  }
+  function _ensureShadow(entry){
+    if (!entry._trkj){
+      entry._trkj = {
+        rState: null,
+        rStateForSimRef: null,
+        lastSeenSim: null,
+        lastSeenLegCount: -1,
+        lastSeenEntryBarIdx: -1,
+        lastSeenEventCount: 0,
+        lastSeenStoppedOut: false,
+        lastSeenClosed: false,
+        initialStopPlaced: false,
+        toolbarReady: false
+      };
+    }
+    return entry._trkj;
+  }
+  function _resetShadowForNewLeg(shadow){
+    shadow.rState = null;
+    shadow.rStateForSimRef = null;
+    shadow.lastSeenEventCount = 0;
+    shadow.lastSeenStoppedOut = false;
+    shadow.lastSeenClosed = false;
+    shadow.initialStopPlaced = false;
+  }
+  function _findBarByDate(entry, date){
+    if (!entry || !date || !entry.dateToBarIdx) return null;
+    var idx = entry.dateToBarIdx.get(date);
+    if (idx == null) return null;
+    return entry.bars && entry.bars[idx] || null;
+  }
+  function _csvEscape(v){
+    if (v == null) return '';
+    var s = String(v);
+    if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0){
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+  function _downloadCSV(filename, csv){
+    try {
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){
+        try { document.body.removeChild(a); } catch(e){}
+        try { URL.revokeObjectURL(url); } catch(e){}
+      }, 100);
+    } catch(e){
+      if (window.console) console.error('[Track J] csv download:', e);
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // Job 1 — R-level tracking + R-star markers
+  // ----------------------------------------------------------------
+  function _ensureRState(entry){
+    var sh = _ensureShadow(entry);
+    var sim = entry.sim;
+    if (!sim) { sh.rState = null; sh.rStateForSimRef = null; return null; }
+    // Rebuild on sim change OR on entry.barIdx change (new leg uses same sim).
+    var entryBarIdx = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : -1;
+    if (sh.rStateForSimRef !== sim || sh.lastSeenEntryBarIdx !== entryBarIdx){
+      sh.rState = {
+        levels: window.PortSim.CardChart.buildRLevels(sim, 3, 15),
+        hit: new Set()
+      };
+      sh.rStateForSimRef = sim;
+      sh.lastSeenEntryBarIdx = entryBarIdx;
+    }
+    return sh.rState;
+  }
+
+  function _checkRHitsForEntry(entry){
+    var sh = _ensureShadow(entry);
+    var rState = _ensureRState(entry);
+    if (!rState || !rState.levels.length) return;
+    if (!entry.sim || entry.sim.qty <= 0) return;
+    // Use the latest bar appended to the card — which is the bar at the
+    // current unified date (or last seen if bar absent today).
+    var date = window.PortSim._state && window.PortSim._state.unifiedDates &&
+               window.PortSim._state.unifiedDates[window.PortSim._state.playIdx];
+    var bar = date ? _findBarByDate(entry, date) : null;
+    if (!bar) return;
+    var newly = window.PortSim.CardChart.checkRHitsForBar(rState, bar);
+    if (newly && newly.length){
+      newly.forEach(function(level){
+        _safe('addRStarMarker', function(){
+          window.PortSim.CardChart.addRStarMarker(entry.card, bar.time, level);
+        });
+      });
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // Job 2 — Leg entry / exit markers + entry-bar highlight
+  // ----------------------------------------------------------------
+  function _detectLegBoundaryAndMark(entry){
+    var sh = _ensureShadow(entry);
+    var sim = entry.sim;
+    if (!sim){
+      // No sim — clear stale state.
+      if (sh.lastSeenSim){
+        _safe('clearAllMarkers (no-sim)', function(){
+          window.PortSim.CardChart.clearAllMarkers(entry.card);
+        });
+        sh.lastSeenSim = null;
+        _resetShadowForNewLeg(sh);
+      }
+      return;
+    }
+    var pastLegs = (sim.legs || []).length;
+    var currentLegNum = pastLegs + 1; // legs counts FINISHED legs only; current leg is pastLegs+1
+    var entryBarIdx = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : -1;
+
+    // Initial sim creation OR new leg started: detect by sim ref change OR
+    // by leg count change OR by entry.barIdx changing on same sim.
+    var simChanged = sh.lastSeenSim !== sim;
+    var legCountChanged = sh.lastSeenLegCount !== pastLegs;
+    var entryBarChanged = sh.lastSeenEntryBarIdx !== entryBarIdx;
+
+    if (simChanged || legCountChanged || entryBarChanged){
+      // New leg boundary detected.
+      _resetShadowForNewLeg(sh);
+      sh.lastSeenSim = sim;
+      sh.lastSeenLegCount = pastLegs;
+      sh.lastSeenEntryBarIdx = entryBarIdx;
+
+      // Paint leg-entry marker for the current leg.
+      var entryDate = sim.entry && sim.entry.date;
+      if (entryDate){
+        _safe('addLegEntryMarker', function(){
+          window.PortSim.CardChart.addLegEntryMarker(entry.card, currentLegNum, entryDate);
+        });
+        // Highlight entry bar IF it's the latest bar on the chart (LWC v3.8
+        // requires bar.time >= last bar's time). After Ctrl appends bars and
+        // calls _renderAll, the most recent appended date == current unified
+        // date. The entry bar is the latest bar iff entry.date equals the
+        // current unified date OR the card hasn't advanced past it.
+        var curDate = window.PortSim._state && window.PortSim._state.unifiedDates &&
+                      window.PortSim._state.unifiedDates[window.PortSim._state.playIdx];
+        if (curDate && entryDate === curDate){
+          var bar = _findBarByDate(entry, entryDate);
+          if (bar){
+            _safe('highlightEntryBar', function(){
+              window.PortSim.CardChart.highlightEntryBar(entry.card, bar);
+            });
+          }
+        }
+      }
+
+      // Reset stop-line state — the next render pass will repaint it for the
+      // active leg. Initial stop will be painted once below.
+      _safe('clearStopLines (new leg)', function(){
+        window.PortSim.CardChart.clearStopLines(entry.card);
+      });
+    }
+
+    // Detect newly-fired stop / close events by walking eventsLog past our
+    // last-seen pointer. This is the cleanest way to catch leg-exit boundaries
+    // from outside the Ctrl IIFE.
+    var log = sim.eventsLog || [];
+    if (log.length > sh.lastSeenEventCount){
+      for (var i = sh.lastSeenEventCount; i < log.length; i++){
+        var ev = log[i];
+        if (!ev) continue;
+        if (ev.type === 'stop' && ev.qty > 0){
+          var legNum = currentLegNum; // stop fires while current leg is open
+          _safe('addLegExitMarker (stop)', function(){
+            window.PortSim.CardChart.addLegExitMarker(entry.card, legNum, ev.date, ev.price, 'stop');
+          });
+        } else if (ev.type === 'close' && ev.qty > 0){
+          var legNumC = currentLegNum;
+          _safe('addLegExitMarker (close)', function(){
+            window.PortSim.CardChart.addLegExitMarker(entry.card, legNumC, ev.date, ev.price, 'close');
+          });
+        }
+      }
+      sh.lastSeenEventCount = log.length;
+    }
+
+    sh.lastSeenStoppedOut = !!sim.stoppedOut;
+    sh.lastSeenClosed = !!sim.closed;
+  }
+
+  // ----------------------------------------------------------------
+  // Job 3 — Active + initial stop lines
+  // ----------------------------------------------------------------
+  function _refreshStopLines(entry){
+    var sh = _ensureShadow(entry);
+    var sim = entry.sim;
+    if (!sim || sim.qty <= 0 || sim.between){
+      // No live position → clear lines.
+      _safe('clearStopLines (idle)', function(){
+        window.PortSim.CardChart.clearStopLines(entry.card);
+      });
+      sh.initialStopPlaced = false;
+      return;
+    }
+    // Initial stop (paint once per leg).
+    if (!sh.initialStopPlaced){
+      var initPx = sim.entry && +sim.entry.stop;
+      if (Number.isFinite(initPx) && initPx > 0){
+        _safe('setInitialStopLine', function(){
+          window.PortSim.CardChart.setInitialStopLine(entry.card, initPx);
+        });
+      }
+      sh.initialStopPlaced = true;
+    }
+    // Active stop = highest non-fired in stopLevels.
+    var activeStops = (sim.stopLevels || []).filter(function(s){ return !s.fired; });
+    if (!activeStops.length){
+      // No active stop → clear active line (keep initial as reference).
+      var slot = entry.card._portsimStopLines;
+      if (slot && slot.active){
+        _safe('clear active only', function(){
+          try { entry.card.candleSeries.removePriceLine(slot.active); } catch(e){}
+          slot.active = null;
+        });
+      }
+      return;
+    }
+    activeStops.sort(function(a, b){ return b.price - a.price; });
+    var top = activeStops[0];
+    // Compute day count for label.
+    var entryBarIdx = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : 0;
+    var stopBarIdx = (top.barIdx != null) ? top.barIdx : entryBarIdx;
+    var day = stopBarIdx - entryBarIdx;
+    var label = 'STOP $' + Number(top.price).toFixed(2) + ' (D' + day + ')';
+    _safe('setActiveStopLine', function(){
+      window.PortSim.CardChart.setActiveStopLine(entry.card, +top.price, label);
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // Job 4 — Extended stats payload
+  // ----------------------------------------------------------------
+  function _refreshExtendedStats(entry){
+    var sim = entry.sim;
+    if (!sim){
+      _safe('setExtendedStats (idle)', function(){
+        window.PortSim.CardPanel.setExtendedStats(entry.card, {});
+      });
+      return;
+    }
+    var derived = null;
+    _safe('computeDerived', function(){
+      derived = window.Sim.computeDerived(sim, entry.bars);
+    });
+    if (!derived){
+      _safe('setExtendedStats (no derived)', function(){
+        window.PortSim.CardPanel.setExtendedStats(entry.card, {});
+      });
+      return;
+    }
+    var stats = {
+      mfe: derived.mfe,
+      mae: derived.mae,
+      r: derived.rCurrent,
+      giveBack: derived.giveBack,
+      days: derived.dayCount,
+      cumulativePnL: derived.cumulativePnL,
+      cumulativeR: derived.cumulativeR,
+      // legCount in derived = past finished legs; legIndex = legs.length + (between?0:1)
+      legCount: derived.legIndex
+    };
+    _safe('setExtendedStats', function(){
+      window.PortSim.CardPanel.setExtendedStats(entry.card, stats);
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // Job 5 — Toolbar handlers (Legs / Stops / CSV) + popovers
+  // ----------------------------------------------------------------
+  function _buildLegsForPopover(entry){
+    var sim = entry.sim;
+    if (!sim) return [];
+    var derived = null;
+    _safe('computeDerived (legs popover)', function(){
+      derived = window.Sim.computeDerived(sim, entry.bars);
+    });
+    if (!derived) return [];
+    // Mirror single-ticker pattern: include current (in-progress) leg.
+    var out = (derived.legsSummary || []).slice();
+    if (!derived.between){
+      out.push({
+        index: out.length + 1,
+        entryPrice: Math.round((sim.entry ? sim.entry.price : 0) * 100) / 100,
+        entryDate: sim.entry ? sim.entry.date : null,
+        entryBarIdx: sim.entry ? sim.entry.barIdx : null,
+        exitBarIdx: null,
+        exitReason: derived.stoppedOut ? 'stop' : (derived.closed ? 'close' : 'active'),
+        realizedPnL: Math.round((derived.totalPnL || 0) * 100) / 100,
+        rMultiple: derived.rCurrent || 0,
+        active: !derived.stoppedOut && !derived.closed,
+        eventsLog: (sim.eventsLog || []).slice()
+      });
+    }
+    return out;
+  }
+
+  function _buildStopHistory(entry){
+    var sim = entry.sim;
+    if (!sim || !sim.stopLevels) return [];
+    var entryBarIdx = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : 0;
+    return sim.stopLevels.map(function(s){
+      var isInitial = s.id && /^stop_initial/.test(s.id);
+      var stopBarIdx = (s.barIdx != null) ? s.barIdx : entryBarIdx;
+      return {
+        id: s.id,             // CardPanel passes this back to onSave/onDelete
+        simStopId: s.id,
+        price: s.price,
+        barIdx: stopBarIdx,
+        day: stopBarIdx - entryBarIdx,
+        pct: (s.pct != null ? s.pct : 1.0),
+        type: isInitial ? 'initial' : 'moved',
+        fired: !!s.fired
+      };
+    });
+  }
+
+  function _onLegsClick(entry){
+    if (!_isCardOk(entry.card)) return;
+    _safe('openLegsPopover', function(){
+      var legs = _buildLegsForPopover(entry);
+      window.PortSim.CardPanel.openLegsPopover(entry.card, legs);
+    });
+  }
+
+  function _onStopsClick(entry){
+    if (!_isCardOk(entry.card)) return;
+    if (!entry.sim){
+      // Open popover with empty list so user gets feedback.
+      _safe('openManageStopsPopover (idle)', function(){
+        window.PortSim.CardPanel.openManageStopsPopover(entry.card, null, [], {});
+      });
+      return;
+    }
+    _safe('openManageStopsPopover', function(){
+      var hist = _buildStopHistory(entry);
+      window.PortSim.CardPanel.openManageStopsPopover(entry.card, entry.sim, hist, {
+        onSave: function(historyId, newPrice, newPct){
+          var ok = false;
+          _safe('Sim.editStop', function(){
+            ok = !!window.Sim.editStop(entry.sim, historyId, newPrice, newPct);
+          });
+          if (ok){
+            _refreshStopLines(entry);
+            _refreshExtendedStats(entry);
+          }
+          return ok;
+        },
+        onDelete: function(historyId){
+          var ok = false;
+          _safe('Sim.deleteStop', function(){
+            ok = !!window.Sim.deleteStop(entry.sim, historyId);
+          });
+          if (ok){
+            _refreshStopLines(entry);
+          }
+          return ok;
+        }
+      });
+    });
+  }
+
+  // Job 6 — CSV export.
+  // v1: export the events log (one row per event) — information-rich and
+  // accurate. Per-bar P&L curve replay is deferred (would require re-running
+  // the engine forward).
+  function _onCsvClick(entry){
+    if (!entry || !entry.sim){
+      alert('No active simulation for ' + (entry && entry.symbol || '?') + '.');
+      return;
+    }
+    var sim = entry.sim;
+    var entryBarIdx = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : 0;
+    var rows = [];
+    rows.push(['# port_sim events export'].join(','));
+    rows.push(['# symbol', _csvEscape(entry.symbol)].join(','));
+    rows.push(['# entry_date', _csvEscape(sim.entry ? sim.entry.date : '')].join(','));
+    rows.push(['# entry_price', _csvEscape(sim.entry ? sim.entry.price : '')].join(','));
+    rows.push(['# initial_stop', _csvEscape(sim.entry ? sim.entry.stop : '')].join(','));
+    rows.push(['# generated', _csvEscape(new Date().toISOString())].join(','));
+    rows.push(['leg','day','barIdx','date','type','qty','price','newStop','pct','note'].join(','));
+
+    // Past legs first.
+    (sim.legs || []).forEach(function(leg, i){
+      var legNum = i + 1;
+      var legEntryBarIdx = (leg.entry && leg.entry.barIdx != null) ? leg.entry.barIdx : entryBarIdx;
+      (leg.eventsLog || []).forEach(function(ev){
+        var day = (ev.barIdx != null) ? (ev.barIdx - legEntryBarIdx) : '';
+        rows.push([
+          legNum,
+          day,
+          ev.barIdx != null ? ev.barIdx : '',
+          _csvEscape(ev.date || ''),
+          _csvEscape(ev.type || ''),
+          ev.qty != null ? ev.qty : '',
+          ev.price != null ? ev.price : '',
+          ev.newStop != null ? ev.newStop : '',
+          ev.pct != null ? ev.pct : '',
+          _csvEscape(ev.note || '')
+        ].join(','));
+      });
+    });
+    // Current leg.
+    var currentLegNum = (sim.legs || []).length + 1;
+    (sim.eventsLog || []).forEach(function(ev){
+      var day = (ev.barIdx != null) ? (ev.barIdx - entryBarIdx) : '';
+      rows.push([
+        currentLegNum,
+        day,
+        ev.barIdx != null ? ev.barIdx : '',
+        _csvEscape(ev.date || ''),
+        _csvEscape(ev.type || ''),
+        ev.qty != null ? ev.qty : '',
+        ev.price != null ? ev.price : '',
+        ev.newStop != null ? ev.newStop : '',
+        ev.pct != null ? ev.pct : '',
+        _csvEscape(ev.note || '')
+      ].join(','));
+    });
+
+    var dateTag = (window.PortSim._state && window.PortSim._state.unifiedDates &&
+                   window.PortSim._state.unifiedDates[window.PortSim._state.playIdx]) ||
+                  (new Date().toISOString().slice(0, 10));
+    var fname = 'port_sim_' + entry.symbol + '_' + dateTag + '.csv';
+    _downloadCSV(fname, rows.join('\n'));
+  }
+
+  function _ensureToolbarForEntry(entry){
+    var sh = _ensureShadow(entry);
+    if (sh.toolbarReady) return;
+    if (!_isCardOk(entry.card)) return;
+    _safe('ensureToolbar', function(){
+      window.PortSim.CardPanel.ensureToolbar(entry.card, {
+        onLegsClick: function(){ _onLegsClick(entry); },
+        onStopsClick: function(){ _onStopsClick(entry); },
+        onCsvClick: function(){ _onCsvClick(entry); }
+      });
+      sh.toolbarReady = true;
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // Per-tick + per-render hooks
+  // ----------------------------------------------------------------
+  function _afterAdvance(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active) return;
+    var basket = st.basket || [];
+    for (var i = 0; i < basket.length; i++){
+      var entry = basket[i];
+      if (!entry || !_isCardOk(entry.card)) continue;
+      // Detect leg boundaries (paints entry / exit markers as needed).
+      _safe('detectLegBoundaryAndMark', function(){ _detectLegBoundaryAndMark(entry); });
+      // Then check R-stars on the just-appended bar.
+      _safe('checkRHitsForEntry', function(){ _checkRHitsForEntry(entry); });
+    }
+  }
+
+  function _afterRender(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active) return;
+    var basket = st.basket || [];
+    for (var i = 0; i < basket.length; i++){
+      var entry = basket[i];
+      if (!entry || !_isCardOk(entry.card)) continue;
+      // Toolbar attach (idempotent).
+      _safe('ensureToolbarForEntry', function(){ _ensureToolbarForEntry(entry); });
+      // Detect leg boundaries here too — initial pre-entry sims are created
+      // BEFORE the first _advanceAll, so _afterRender is the first chance to
+      // paint them.
+      _safe('detectLegBoundaryAndMark (render)', function(){ _detectLegBoundaryAndMark(entry); });
+      // Stop lines + extended stats are pure-state reads — refresh on every render.
+      _safe('refreshStopLines', function(){ _refreshStopLines(entry); });
+      _safe('refreshExtendedStats', function(){ _refreshExtendedStats(entry); });
+    }
+  }
+
+  // ----------------------------------------------------------------
+  // Bootstrap: wrap Ctrl._advanceAll / Ctrl._renderAll AND watch _state.
+  //
+  // IMPORTANT: The Ctrl IIFE calls its OWN closure-bound _advanceAll /
+  // _renderAll internally (e.g. timer at line ~12717, fwd handler at ~12658,
+  // and _renderAll inside _advanceAll itself). Those closure calls bypass
+  // our wraps on the public Ctrl._* aliases. So in addition to wrapping the
+  // public methods (still useful for devtools / scripted tests), we install a
+  // lightweight watcher that polls _state.playIdx + per-entry sim/event
+  // signatures and fires _afterAdvance / _afterRender when they change.
+  // ----------------------------------------------------------------
+  var _watchTimer = null;
+  var _lastWatchSig = '';
+  var _simIdCounter = 0;
+  var _lastPlayIdx = -1;
+
+  function _stateSignature(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active) return '';
+    var basket = st.basket || [];
+    // Build a compact signature: playIdx + per-entry sim ref id + eventsLog
+    // length + qty + stopLevels length. Sim ref id is approximated via a
+    // monotonic stamp we attach the first time we see a sim instance.
+    var parts = [String(st.playIdx)];
+    for (var i = 0; i < basket.length; i++){
+      var e = basket[i];
+      if (!e) { parts.push('-'); continue; }
+      var sim = e.sim;
+      if (!sim){ parts.push('0'); continue; }
+      if (sim._trkjId == null){
+        _simIdCounter = (_simIdCounter || 0) + 1;
+        sim._trkjId = _simIdCounter;
+      }
+      var evLen = (sim.eventsLog && sim.eventsLog.length) || 0;
+      var stopLen = (sim.stopLevels && sim.stopLevels.length) || 0;
+      var firedCount = (sim.stopLevels || []).reduce(function(acc, s){ return acc + (s.fired ? 1 : 0); }, 0);
+      var entryBar = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : -1;
+      parts.push(sim._trkjId + ':' + evLen + ':' + stopLen + ':' + firedCount + ':' + sim.qty + ':' + entryBar +
+                 ':' + (sim.between?'B':'-') + (sim.closed?'C':'-') + (sim.stoppedOut?'S':'-'));
+    }
+    return parts.join('|');
+  }
+
+  function _watchTick(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st){ return; }
+    var sig = _stateSignature();
+    if (sig === _lastWatchSig) return;
+    var prevPlayIdx = _lastPlayIdx;
+    _lastWatchSig = sig;
+    var newPlayIdx = st.playIdx;
+    var advanced = (st.active && (newPlayIdx !== prevPlayIdx));
+    _lastPlayIdx = newPlayIdx;
+    // Always run "render" pass on any state change (covers initial bootstrap,
+    // sim creation, action queues, stop edits, etc.).
+    if (advanced){
+      _safe('afterAdvance (watch)', _afterAdvance);
+    }
+    _safe('afterRender (watch)', _afterRender);
+  }
+
+  function _wireOnce(){
+    var Ctrl = window.PortSim && window.PortSim.Ctrl;
+    if (!Ctrl) return false;
+    if (Ctrl._trackJWired) return true;
+
+    // Wrap public aliases — these still get called for devtools / scripted
+    // tests AND for the Ctrl methods that callers reach through the public
+    // surface (e.g. external integrations). Internal closure calls bypass
+    // these, which is why we ALSO have the watcher below.
+    if (typeof Ctrl._advanceAll === 'function'){
+      var origAdvance = Ctrl._advanceAll;
+      Ctrl._advanceAll = function(){
+        var ret = origAdvance.apply(this, arguments);
+        _safe('afterAdvance (alias)', _afterAdvance);
+        return ret;
+      };
+    }
+    if (typeof Ctrl._renderAll === 'function'){
+      var origRender = Ctrl._renderAll;
+      Ctrl._renderAll = function(){
+        var ret = origRender.apply(this, arguments);
+        _safe('afterRender (alias)', _afterRender);
+        return ret;
+      };
+    }
+
+    Ctrl._trackJWired = true;
+    if (window.console) console.log('[Track J] Ctrl parity wiring active (alias wrap + state watcher).');
+
+    // Start the watcher loop. ~120ms is fast enough to feel instant during
+    // playback (default tick is 600ms / speed) and cheap enough to be free.
+    if (_watchTimer == null){
+      _watchTimer = setInterval(_watchTick, 120);
+    }
+    return true;
+  }
+
+  function _bootstrap(){
+    if (_wireOnce()) return;
+    // Poll briefly for late Ctrl init (controller IIFE runs at script load,
+    // but this ordering is tolerant of future refactors).
+    var tries = 0;
+    var iv = setInterval(function(){
+      tries++;
+      if (_wireOnce() || tries >= 50){
+        clearInterval(iv);
+      }
+    }, 100);
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _bootstrap);
+  } else {
+    _bootstrap();
+  }
+
+  // Public hook for devtools / future portfolio aggregate export.
+  window.PortSim.TrackJ = {
+    rewire: _wireOnce,
+    afterAdvance: _afterAdvance,
+    afterRender: _afterRender,
+    exportEntryCSV: _onCsvClick,
+    forceTick: _watchTick
+  };
+})();
+// ============ PORTSIM TRACK J: Ctrl Parity Wiring — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
