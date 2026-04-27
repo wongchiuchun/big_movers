@@ -9067,6 +9067,355 @@ Sim.Ctrl = (function(){
 
   return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null) };
 })();
+
+// ============ PORTSIM TRACK A: Cash Ledger — START ============
+// Pure cash bookkeeping helpers for the upcoming Portfolio Sim mode.
+// Single source of truth for cash deltas, decoupled from any DOM/UI/chart state.
+// The state object passed in is mutated in-place so multiple call sites can
+// share the same ledger without re-wrapping.
+//
+// State shape (only `cash` and `realizedPnL` are touched here):
+//   { cash: number, realizedPnL: number, ...other fields untouched }
+//
+// Event shape (matches Sim.advanceTo(...).eventsFired entries):
+//   { barIdx, date, type, qty, price, note, ... }
+(function(){
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+
+  const r2 = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+
+  // Apply one or many engine events to cash + realizedPnL.
+  // Filters out the synthetic close(qty=0) bookkeeping marker emitted when a
+  // sell zeros out the position (the cash credit was already posted on `sell`).
+  function fold(state, eventOrEvents) {
+    if (!state) return state;
+    const events = Array.isArray(eventOrEvents)
+      ? eventOrEvents
+      : (eventOrEvents ? [eventOrEvents] : []);
+    for (const ev of events) {
+      if (!ev || !ev.type) continue;
+      const qty = Number(ev.qty);
+      const price = Number(ev.price);
+      switch (ev.type) {
+        case 'add': {
+          if (!Number.isFinite(qty) || qty <= 0) continue;
+          if (!Number.isFinite(price)) continue;
+          state.cash = r2(state.cash - qty * price);
+          break;
+        }
+        case 'sell': {
+          if (!Number.isFinite(qty) || qty <= 0) continue;
+          if (!Number.isFinite(price)) continue;
+          state.cash = r2(state.cash + qty * price);
+          break;
+        }
+        case 'stop': {
+          // engine already computed price = min(bar.open, stop.price)
+          if (!Number.isFinite(qty) || qty <= 0) continue;
+          if (!Number.isFinite(price)) continue;
+          state.cash = r2(state.cash + qty * price);
+          break;
+        }
+        case 'close': {
+          // Filter out the bookkeeping close(qty=0) emitted after a full sell —
+          // cash was already credited on the `sell` event.
+          if (!Number.isFinite(qty) || qty <= 0) continue;
+          if (!Number.isFinite(price)) continue;
+          // Force-close at endBarIdx (qty>0): credit cash at bar.close.
+          state.cash = r2(state.cash + qty * price);
+          break;
+        }
+        case 'entry':
+        case 'movestop':
+        default:
+          // entry is debited synchronously by debitInitialEntry / new-leg path;
+          // movestop has no cash impact. Ignore here.
+          break;
+      }
+    }
+    return state;
+  }
+
+  // Returns true iff the state has enough cash to fund a buy of `shares` at `price`.
+  function preflight(state, shares, price) {
+    if (!state) return false;
+    const cost = Number(shares) * Number(price);
+    if (!Number.isFinite(cost) || cost < 0) return false;
+    return Number(state.cash) >= cost - 1e-9;
+  }
+
+  // Synchronous debit: used by Sim.createSim / Sim.startNewLeg wrappers.
+  // Returns the dollar amount debited.
+  function debitInitialEntry(state, shares, price) {
+    const cost = Number(shares) * Number(price);
+    if (!Number.isFinite(cost) || cost < 0) return 0;
+    state.cash = r2(state.cash - cost);
+    return r2(cost);
+  }
+
+  // Synchronous credit: used by Sim.closeAt wrapper. Returns the dollar amount credited.
+  function creditManualClose(state, qty, price) {
+    const proceeds = Number(qty) * Number(price);
+    if (!Number.isFinite(proceeds) || proceeds < 0) return 0;
+    state.cash = r2(state.cash + proceeds);
+    return r2(proceeds);
+  }
+
+  window.PortSim.Cash = { fold, preflight, debitInitialEntry, creditManualClose };
+
+  // ----- Headless test harness -----
+  // Exercises the existing pure Sim core against synthetic OHLCV.
+  // No DOM dependencies; safe to call from a browser console or a Node sandbox.
+  window.PortSim.Test = window.PortSim.Test || {};
+  window.PortSim.Test.runAll = function runAll() {
+    const Sim = (typeof window !== 'undefined' && window.Sim) ? window.Sim : null;
+    if (!Sim || !Sim.createSim || !Sim.advanceTo) {
+      console.error('[PortSim.Test] Sim core not available — cannot run.');
+      return false;
+    }
+
+    // Build synthetic bars: 10-bar ramp.
+    // close: 100, 102, 101, 99, 100, 103, 105, 104, 106, 110
+    // bar 3 (idx=3) is the gap-down stop-test bar: open=99, low=97
+    const baseDate = new Date('2024-01-02');
+    function addDays(d, n) { const dt = new Date(d); dt.setUTCDate(dt.getUTCDate() + n); return dt.toISOString().slice(0, 10); }
+    const closes = [100, 102, 101, 99, 100, 103, 105, 104, 106, 110];
+    const bars = closes.map((c, i) => {
+      // generic bar: open ~= prevClose, high/low straddle close, vol fixed
+      const prev = i === 0 ? c : closes[i - 1];
+      let open = prev;
+      let high = Math.max(open, c) + 1;
+      let low = Math.min(open, c) - 1;
+      // bar 3 is the gap-down: open=99 (prev close was 101), low=97 to trip an $98 stop
+      if (i === 3) { open = 99; high = 100; low = 97; }
+      return {
+        time: addDays(baseDate, i),
+        open: open, high: high, low: low, close: c, volume: 1000000
+      };
+    });
+
+    const initialCash = 100000;
+    let passed = 0, total = 0;
+    const results = [];
+
+    function makeState() {
+      return { cash: initialCash, realizedPnL: 0 };
+    }
+
+    // Equity invariant check: cash + qty*markPrice == initialCash + realizedPnL + unrealizedPnL
+    function assertInvariant(state, sim, bar, label) {
+      const dir = sim.direction === 'long' ? 1 : -1;
+      const unreal = sim.qty > 0 && bar ? sim.qty * (bar.close - sim.avgCost) * dir : 0;
+      const equity = state.cash + (sim.qty > 0 && bar ? sim.qty * bar.close : 0);
+      const expected = initialCash + sim.realizedPnL + unreal;
+      const diff = Math.abs(equity - expected);
+      if (diff > 0.01) {
+        throw new Error(`equity invariant violated @ ${label}: cash=${state.cash} qty=${sim.qty} bar.close=${bar && bar.close} realized=${sim.realizedPnL} unreal=${unreal} → equity=${equity} expected=${expected} diff=${diff.toFixed(4)}`);
+      }
+    }
+
+    function record(name, fn) {
+      total++;
+      const slot = total;
+      try {
+        fn();
+        passed++;
+        const line = `[PortSim.Test] ${slot}/7 ${name}: PASS`;
+        console.log(line);
+        results.push({ slot, name, ok: true });
+      } catch (e) {
+        const line = `[PortSim.Test] ${slot}/7 ${name}: FAIL — ${e && e.message ? e.message : e}`;
+        console.error(line);
+        results.push({ slot, name, ok: false, error: String(e && e.message ? e.message : e) });
+      }
+    }
+
+    // -------- Scenario 1: initial entry only --------
+    record('initial-entry', () => {
+      const state = makeState();
+      const sim = Sim.createSim({
+        moveKey: 'TEST_2024',
+        direction: 'long',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 98 }
+      });
+      const debited = window.PortSim.Cash.debitInitialEntry(state, sim.shares0, sim.entry.price);
+      if (Math.abs(debited - 10000) > 0.01) throw new Error(`debit expected 10000 got ${debited}`);
+      if (Math.abs(state.cash - (initialCash - 10000)) > 0.01) throw new Error(`cash expected ${initialCash - 10000} got ${state.cash}`);
+      // advance through bar 1 then 2 — no exits planned, stop=98 below all lows on bars 1,2 (lows >= 99 except bar 3)
+      // To avoid the bar-3 gap-down stop, only advance to bar 2.
+      const r1 = Sim.advanceTo(sim, bars, 2);
+      window.PortSim.Cash.fold(state, r1.eventsFired);
+      if (sim.qty !== 100) throw new Error(`qty expected 100 got ${sim.qty}`);
+      assertInvariant(state, sim, bars[sim.playIdx], 'after advance to 2');
+    });
+
+    // -------- Scenario 2: pyramid add --------
+    record('pyramid-add', () => {
+      const state = makeState();
+      const sim = Sim.createSim({
+        moveKey: 'TEST_2024',
+        direction: 'long',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 98 }
+      });
+      window.PortSim.Cash.debitInitialEntry(state, sim.shares0, sim.entry.price);
+      // queue add 50 shares; will execute on next bar (bar 1) at bar 1 open
+      Sim.queueAction(sim, { type: 'add', qty: 50 });
+      const r1 = Sim.advanceTo(sim, bars, 2);
+      window.PortSim.Cash.fold(state, r1.eventsFired);
+      // bar 1 open should be 100 (prev close = 100)
+      const expectedAddCost = 50 * bars[1].open;
+      const expectedCash = initialCash - 10000 - expectedAddCost;
+      if (Math.abs(state.cash - expectedCash) > 0.01) throw new Error(`cash expected ${expectedCash} got ${state.cash}`);
+      if (sim.qty !== 150) throw new Error(`qty expected 150 got ${sim.qty}`);
+      // avg cost: (100*100 + 50*bar1.open) / 150
+      const expectedAvg = (100 * 100 + 50 * bars[1].open) / 150;
+      if (Math.abs(sim.avgCost - expectedAvg) > 0.01) throw new Error(`avgCost expected ${expectedAvg} got ${sim.avgCost}`);
+      assertInvariant(state, sim, bars[sim.playIdx], 'after pyramid-add');
+    });
+
+    // -------- Scenario 3: stop fired on gap-down --------
+    record('stop-fired-gap-down', () => {
+      const state = makeState();
+      const sim = Sim.createSim({
+        moveKey: 'TEST_2024',
+        direction: 'long',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 98 }
+      });
+      window.PortSim.Cash.debitInitialEntry(state, sim.shares0, sim.entry.price);
+      // advance through bar 3 (gap-down: open=99, low=97). Stop=98. fillPx = min(99, 98) = 98.
+      const r1 = Sim.advanceTo(sim, bars, 3);
+      window.PortSim.Cash.fold(state, r1.eventsFired);
+      const stopEvents = r1.eventsFired.filter(e => e.type === 'stop');
+      if (stopEvents.length !== 1) throw new Error(`expected 1 stop event got ${stopEvents.length}`);
+      const ev = stopEvents[0];
+      if (Math.abs(ev.price - 98) > 0.01) throw new Error(`stop fill price expected 98 got ${ev.price}`);
+      if (ev.qty !== 100) throw new Error(`stop qty expected 100 got ${ev.qty}`);
+      if (sim.qty !== 0) throw new Error(`qty expected 0 got ${sim.qty}`);
+      const expectedCash = initialCash - 10000 + 100 * 98;
+      if (Math.abs(state.cash - expectedCash) > 0.01) throw new Error(`cash expected ${expectedCash} got ${state.cash}`);
+      // realizedPnL = (98 - 100) * 100 = -200
+      if (Math.abs(sim.realizedPnL - (-200)) > 0.01) throw new Error(`realizedPnL expected -200 got ${sim.realizedPnL}`);
+      assertInvariant(state, sim, bars[sim.playIdx], 'after stop-fired');
+    });
+
+    // -------- Scenario 4: partial sell (no close(qty=0) emitted) --------
+    record('partial-sell', () => {
+      const state = makeState();
+      const sim = Sim.createSim({
+        moveKey: 'TEST_2024',
+        direction: 'long',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 90 }
+      });
+      window.PortSim.Cash.debitInitialEntry(state, sim.shares0, sim.entry.price);
+      // queue sell 40 @ 103 (a.price overrides bar.open). Execute on next bar.
+      Sim.queueAction(sim, { type: 'sell', qty: 40, price: 103 });
+      const r1 = Sim.advanceTo(sim, bars, 1);
+      window.PortSim.Cash.fold(state, r1.eventsFired);
+      const sellEvents = r1.eventsFired.filter(e => e.type === 'sell');
+      const closeEvents = r1.eventsFired.filter(e => e.type === 'close');
+      if (sellEvents.length !== 1) throw new Error(`expected 1 sell got ${sellEvents.length}`);
+      if (closeEvents.length !== 0) throw new Error(`expected 0 close events for partial sell got ${closeEvents.length}`);
+      if (sim.qty !== 60) throw new Error(`qty expected 60 got ${sim.qty}`);
+      const expectedCash = initialCash - 10000 + 40 * 103;
+      if (Math.abs(state.cash - expectedCash) > 0.01) throw new Error(`cash expected ${expectedCash} got ${state.cash}`);
+      // realizedPnL = (103 - 100) * 40 = 120
+      if (Math.abs(sim.realizedPnL - 120) > 0.01) throw new Error(`realizedPnL expected 120 got ${sim.realizedPnL}`);
+      assertInvariant(state, sim, bars[sim.playIdx], 'after partial-sell');
+    });
+
+    // -------- Scenario 5: full sell zeros position (close(qty=0) emitted, must be ignored by fold) --------
+    record('full-sell-zeros-position', () => {
+      const state = makeState();
+      const sim = Sim.createSim({
+        moveKey: 'TEST_2024',
+        direction: 'long',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 90 }
+      });
+      window.PortSim.Cash.debitInitialEntry(state, sim.shares0, sim.entry.price);
+      // sell 40 @ 103 on bar 1, then sell remaining 60 @ 105 on bar 2
+      Sim.queueAction(sim, { type: 'sell', qty: 40, price: 103 });
+      const r1 = Sim.advanceTo(sim, bars, 1);
+      window.PortSim.Cash.fold(state, r1.eventsFired);
+      Sim.queueAction(sim, { type: 'sell', qty: 60, price: 105 });
+      const r2 = Sim.advanceTo(sim, bars, 2);
+      window.PortSim.Cash.fold(state, r2.eventsFired);
+      const sellEvents = r2.eventsFired.filter(e => e.type === 'sell');
+      const closeEvents = r2.eventsFired.filter(e => e.type === 'close');
+      if (sellEvents.length !== 1) throw new Error(`expected 1 sell got ${sellEvents.length}`);
+      if (closeEvents.length !== 1) throw new Error(`expected 1 close(qty=0) got ${closeEvents.length}`);
+      if (closeEvents[0].qty !== 0) throw new Error(`close should be qty=0 got qty=${closeEvents[0].qty}`);
+      if (sim.qty !== 0) throw new Error(`qty expected 0 got ${sim.qty}`);
+      // expected cash: initial - 10000 + 40*103 + 60*105
+      const expectedCash = initialCash - 10000 + 40 * 103 + 60 * 105;
+      if (Math.abs(state.cash - expectedCash) > 0.01) throw new Error(`cash expected ${expectedCash} got ${state.cash} (would be off if close(qty=0) were folded)`);
+      // realizedPnL = (103 - 100)*40 + (105 - 100)*60 = 120 + 300 = 420
+      if (Math.abs(sim.realizedPnL - 420) > 0.01) throw new Error(`realizedPnL expected 420 got ${sim.realizedPnL}`);
+      assertInvariant(state, sim, bars[sim.playIdx], 'after full-sell');
+    });
+
+    // -------- Scenario 6: manual closeAt (sync credit, NOT via fold) --------
+    record('manual-closeAt', () => {
+      const state = makeState();
+      const sim = Sim.createSim({
+        moveKey: 'TEST_2024',
+        direction: 'long',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 90 }
+      });
+      window.PortSim.Cash.debitInitialEntry(state, sim.shares0, sim.entry.price);
+      // advance to bar 5 (close=103) then manual close at 110
+      const r1 = Sim.advanceTo(sim, bars, 5);
+      window.PortSim.Cash.fold(state, r1.eventsFired);
+      // No fired events (no actions queued, no stops hit) → cash unchanged from advance.
+      const cashBefore = state.cash;
+      // closeAt: synchronously credit at user-entered price 110.
+      const cashCount = sim.qty;
+      Sim.closeAt(sim, bars, 110);
+      const credited = window.PortSim.Cash.creditManualClose(state, cashCount, 110);
+      if (Math.abs(credited - cashCount * 110) > 0.01) throw new Error(`credit expected ${cashCount * 110} got ${credited}`);
+      if (sim.qty !== 0) throw new Error(`qty expected 0 got ${sim.qty}`);
+      if (Math.abs(state.cash - (cashBefore + cashCount * 110)) > 0.01) throw new Error(`cash expected ${cashBefore + cashCount * 110} got ${state.cash}`);
+      // realizedPnL = (110 - 100) * 100 = 1000
+      if (Math.abs(sim.realizedPnL - 1000) > 0.01) throw new Error(`realizedPnL expected 1000 got ${sim.realizedPnL}`);
+      // closeAt does NOT push an event into eventsFired (it returns no fired list).
+      // Verify our fold would NOT also be invoked here — the close event lives in eventsLog only.
+      assertInvariant(state, sim, bars[sim.playIdx], 'after manual closeAt');
+    });
+
+    // -------- Scenario 7: force-close on endBarIdx (synthetic close(qty>0)) --------
+    record('force-close-endBarIdx', () => {
+      const state = makeState();
+      const sim = Sim.createSim({
+        moveKey: 'TEST_2024',
+        direction: 'long',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 90, endBarIdx: 9 }
+      });
+      window.PortSim.Cash.debitInitialEntry(state, sim.shares0, sim.entry.price);
+      // advance past endBarIdx — engine should force-close at bar 9 close = 110
+      const r1 = Sim.advanceTo(sim, bars, 9);
+      window.PortSim.Cash.fold(state, r1.eventsFired);
+      const closeEvents = r1.eventsFired.filter(e => e.type === 'close');
+      if (closeEvents.length !== 1) throw new Error(`expected 1 close event got ${closeEvents.length}`);
+      const ev = closeEvents[0];
+      if (ev.qty !== 100) throw new Error(`force-close qty expected 100 got ${ev.qty}`);
+      if (Math.abs(ev.price - 110) > 0.01) throw new Error(`force-close price expected 110 got ${ev.price}`);
+      if (sim.qty !== 0) throw new Error(`qty expected 0 got ${sim.qty}`);
+      const expectedCash = initialCash - 10000 + 100 * 110;
+      if (Math.abs(state.cash - expectedCash) > 0.01) throw new Error(`cash expected ${expectedCash} got ${state.cash}`);
+      // realizedPnL = (110 - 100) * 100 = 1000
+      if (Math.abs(sim.realizedPnL - 1000) > 0.01) throw new Error(`realizedPnL expected 1000 got ${sim.realizedPnL}`);
+      assertInvariant(state, sim, bars[sim.playIdx], 'after force-close');
+    });
+
+    if (passed === total) {
+      console.log(`[PortSim.Test] All ${total} scenarios passed.`);
+    } else {
+      console.log(`[PortSim.Test] ${passed}/${total} scenarios passed (${total - passed} failed).`);
+    }
+    return { total, passed, results };
+  };
+})();
+// ============ PORTSIM TRACK A: Cash Ledger — END ============
 </script>
 </body>
 </html>
