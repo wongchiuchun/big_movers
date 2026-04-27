@@ -2438,6 +2438,337 @@
     color:#fff;
   }
   /* ============ PORTSIM TRACK E: Header Styles — END ============ */
+
+  /* ============ PORTSIM TRACK I: Card Panel Styles — START ============ */
+  /* Toolbar pinned to the right of .portcard-header (after sym + price + badge). */
+  .portcard-toolbar{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    margin-left:6px;
+    flex:0 0 auto;
+  }
+  .portcard-toolbar-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    height:22px;
+    min-width:22px;
+    padding:0 6px;
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:4px;
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:9px;
+    font-weight:600;
+    line-height:1;
+    cursor:pointer;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    transition:border-color 120ms ease, color 120ms ease, background 120ms ease;
+    user-select:none;
+  }
+  .portcard-toolbar-btn:hover{
+    color:var(--text);
+    border-color:var(--border-bright);
+    background:var(--bg3);
+  }
+  .portcard-toolbar-btn.is-active{
+    color:var(--accent);
+    border-color:var(--accent);
+    background:rgba(212,165,116,0.10);
+  }
+  .portcard-toolbar-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+  }
+
+  /* Extended stats row appended below the existing 6-field mini-panel. */
+  .portcard-extended{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:4px;
+    padding:4px 6px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg2);
+    flex:0 0 auto;
+  }
+  .portcard-extended:empty{display:none;}
+  .portcard-stat-chip{
+    display:inline-flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:1px;
+    padding:2px 6px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-family:var(--mono);
+    line-height:1.1;
+    min-width:0;
+  }
+  .portcard-stat-chip > .stat-label{
+    font-size:8px;
+    font-weight:500;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .portcard-stat-chip > .stat-value{
+    font-size:10px;
+    font-weight:700;
+    color:var(--text);
+  }
+  .portcard-stat-chip.is-up > .stat-value{color:var(--green);}
+  .portcard-stat-chip.is-down > .stat-value{color:var(--red);}
+  .portcard-stat-chip.is-muted > .stat-value{color:var(--muted);}
+  .portcard-stat-chip.is-accent > .stat-value{color:var(--accent);}
+
+  /* Popover container — absolute within .portcard. */
+  .portcard-popover{
+    position:absolute;
+    top:32px;
+    right:6px;
+    min-width:240px;
+    max-width:320px;
+    max-height:200px;
+    overflow:auto;
+    background:var(--bg3);
+    border:1px solid var(--border-bright);
+    border-radius:6px;
+    padding:8px;
+    z-index:100;
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--text);
+    box-shadow:0 6px 20px rgba(0,0,0,0.4);
+    box-sizing:border-box;
+  }
+  /* Flip popover to the left edge if the card sits at the right side of the grid
+     and would otherwise overflow. Caller may toggle .is-left to opt-in. */
+  .portcard-popover.is-left{
+    right:auto;
+    left:6px;
+  }
+  .portcard-popover-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    font-size:9px;
+    font-weight:600;
+    color:var(--accent);
+    text-transform:uppercase;
+    letter-spacing:0.10em;
+    padding-bottom:6px;
+    margin-bottom:6px;
+    border-bottom:1px solid var(--border);
+  }
+  .portcard-popover-title .portcard-popover-close{
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+    padding:0 2px;
+  }
+  .portcard-popover-title .portcard-popover-close:hover{color:var(--red);}
+  .portcard-popover-empty{
+    color:var(--muted);
+    font-style:italic;
+    padding:6px 0;
+  }
+
+  /* Cumulative row — Trade total · all legs */
+  .portcard-cum{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    padding:6px;
+    margin-bottom:6px;
+    background:var(--bg4);
+    border:1px solid var(--border);
+    border-radius:4px;
+  }
+  .portcard-cum-label{
+    color:var(--accent);
+    font-size:8px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.10em;
+  }
+  .portcard-cum-line{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .portcard-cum-value{
+    font-size:13px;
+    font-weight:700;
+    color:var(--text);
+  }
+  .portcard-cum-value.is-up{color:var(--green);}
+  .portcard-cum-value.is-down{color:var(--red);}
+  .portcard-cum-r{
+    font-size:10px;
+    font-weight:600;
+    color:var(--text-2);
+  }
+  .portcard-cum-meta{
+    font-size:9px;
+    color:var(--muted);
+    margin-left:auto;
+  }
+
+  /* Leg row inside legs popover. */
+  .portcard-legs-list{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .portcard-leg-row{
+    display:grid;
+    grid-template-columns:24px 60px 70px 1fr auto;
+    gap:4px;
+    align-items:center;
+    padding:3px 6px;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text-2);
+    font-size:10px;
+  }
+  .portcard-leg-row.is-active{border-color:var(--accent);}
+  .portcard-leg-row .leg-num{
+    color:var(--muted);
+    font-weight:600;
+    font-size:9px;
+  }
+  .portcard-leg-row .leg-entry{color:var(--text-2);}
+  .portcard-leg-row .leg-exit{
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .portcard-leg-row .leg-exit.is-stop{color:var(--red);}
+  .portcard-leg-row .leg-exit.is-close{color:var(--muted);}
+  .portcard-leg-row .leg-exit.is-active{color:var(--accent);}
+  .portcard-leg-row .leg-pnl{
+    text-align:right;
+    font-weight:600;
+    color:var(--text);
+  }
+  .portcard-leg-row .leg-pnl.is-up{color:var(--green);}
+  .portcard-leg-row .leg-pnl.is-down{color:var(--red);}
+  .portcard-leg-row .leg-r{
+    text-align:right;
+    color:var(--muted);
+    font-size:9px;
+  }
+
+  /* Stop edit row — analog of .sim-stop-row-edit but rescoped. */
+  .portcard-stops-list{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .portcard-stop-edit-row{
+    display:grid;
+    grid-template-columns:28px 1fr 60px 28px auto;
+    align-items:center;
+    gap:4px;
+    padding:3px 4px;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text);
+    font-size:10px;
+  }
+  .portcard-stop-edit-row.is-fired{opacity:0.45;}
+  .portcard-stop-edit-row.is-init{border-color:var(--accent);}
+  .portcard-stop-edit-row.is-dirty{
+    border-color:var(--accent);
+    background:rgba(212,165,116,0.08);
+  }
+  .portcard-stop-edit-row .stop-day{
+    color:var(--muted);
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    text-align:center;
+    line-height:1.1;
+  }
+  .portcard-stop-edit-row .stop-day .init-badge{
+    color:var(--accent);
+    font-size:8px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-left:2px;
+  }
+  .portcard-stop-edit-row .stop-input{
+    background:var(--bg4);
+    border:1px solid var(--border);
+    color:var(--text);
+    font:inherit;
+    font-weight:600;
+    padding:1px 4px;
+    border-radius:3px;
+    width:100%;
+    box-sizing:border-box;
+    text-align:right;
+  }
+  .portcard-stop-edit-row .stop-input:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  .portcard-stop-edit-row .stop-input:disabled{
+    opacity:0.6;
+    cursor:not-allowed;
+  }
+  .portcard-stop-edit-row .stop-pct-suffix{
+    color:var(--accent);
+    font-size:9px;
+    padding-left:1px;
+  }
+  .portcard-stop-edit-row .stop-actions{
+    display:inline-flex;
+    gap:2px;
+    align-items:center;
+  }
+  .portcard-stop-edit-row .stop-btn{
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    cursor:pointer;
+    padding:2px 5px;
+    border-radius:3px;
+    font-size:11px;
+    line-height:1;
+  }
+  .portcard-stop-edit-row .stop-btn:hover{
+    color:var(--text);
+    background:var(--bg4);
+  }
+  .portcard-stop-edit-row .stop-btn.stop-btn-save{
+    color:var(--accent);
+    font-weight:600;
+  }
+  .portcard-stop-edit-row .stop-btn.stop-btn-save:disabled{
+    opacity:0.3;
+    cursor:not-allowed;
+    color:var(--muted);
+  }
+  .portcard-stop-edit-row .stop-btn.stop-btn-del:hover{color:var(--red);}
+  .portcard-stop-edit-row .stop-fired-tag{
+    color:var(--muted);
+    font-size:9px;
+    margin-left:4px;
+  }
+  /* ============ PORTSIM TRACK I: Card Panel Styles — END ============ */
 </style>
 </head>
 <body>
@@ -12726,6 +13057,603 @@ Sim.Ctrl = (function(){
   };
 })();
 // ============ PORTSIM TRACK G: Controller — END ============
+
+// ============ PORTSIM TRACK I: Card Panel UI — START ============
+// Pure utility namespace. Methods take a `card` reference (returned by
+// PortSim.Cards.createCard) and act on its DOM via `card.cardEl.querySelector(...)`.
+// Append-only: never modifies card factory output, only injects siblings.
+//
+// API:
+//   setExtendedStats(card, stats)
+//   openLegsPopover(card, legs) / closeLegsPopover(card)
+//   openManageStopsPopover(card, sim, stopHistory, callbacks) / closeManageStopsPopover(card)
+//   ensureToolbar(card, handlers)
+(function(){
+  'use strict';
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.CardPanel) return; // idempotent module load
+
+  // ---------- Local formatters (mirror Sim.UI._fmt$ / fmtPct / fmtPrice) ----------
+  function _fmt$(n){
+    if (n == null || isNaN(n)) return '$0';
+    var sign = n < 0 ? '-' : '';
+    var v = Math.abs(Number(n));
+    return sign + '$' + v.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+  function _fmt$Signed(n){
+    if (n == null || isNaN(n)) return '$0';
+    var v = Number(n);
+    return (v >= 0 ? '+' : '-') + '$' + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+  function _fmtPrice(n){
+    if (n == null || isNaN(n)) return '—';
+    return '$' + Number(n).toFixed(2);
+  }
+  function _fmtR(r){
+    if (r == null || isNaN(r)) return '—';
+    var v = Number(r);
+    return (v >= 0 ? '+' : '') + v.toFixed(2) + 'R';
+  }
+  function _isCardOk(card){
+    return !!(card && card.cardEl && card.cardEl.querySelector);
+  }
+  function _clearChildren(el){
+    if (!el) return;
+    while (el.firstChild) el.removeChild(el.firstChild);
+  }
+
+  // ---------- Per-card popover plumbing ----------
+  // We attach { _legsPopover, _stopsPopover, _outsideHandler, _escHandler } via WeakMap
+  // so nothing leaks onto the public card object.
+  var _state = new WeakMap();
+  function _getState(card){
+    var s = _state.get(card);
+    if (!s){
+      s = { legs: null, stops: null, listeners: null };
+      _state.set(card, s);
+    }
+    return s;
+  }
+
+  function _bindOutsideClose(card, popoverEl, onClose){
+    // Click outside or ESC closes. We attach to document with a small delay
+    // so the click that opened us doesn't immediately close us.
+    function outsideHandler(ev){
+      try {
+        if (!popoverEl || !popoverEl.parentNode) return;
+        if (popoverEl.contains(ev.target)) return;
+        // If they clicked the toolbar button that owns this popover, the toggle
+        // logic in the button already calls close — so we ignore that here too.
+        if (card.cardEl && card.cardEl.contains(ev.target)){
+          // Allow toolbar buttons to toggle freely; otherwise close.
+          var inToolbar = ev.target.closest && ev.target.closest('.portcard-toolbar');
+          if (inToolbar) return;
+        }
+        onClose();
+      } catch(e){}
+    }
+    function escHandler(ev){
+      if (ev.key === 'Escape'){ onClose(); }
+    }
+    setTimeout(function(){
+      document.addEventListener('mousedown', outsideHandler, true);
+      document.addEventListener('keydown', escHandler, true);
+    }, 0);
+    return function unbind(){
+      document.removeEventListener('mousedown', outsideHandler, true);
+      document.removeEventListener('keydown', escHandler, true);
+    };
+  }
+
+  function _autoFlipPopover(card, popoverEl){
+    // If the popover would overflow the viewport on the right, flip to the left edge.
+    try {
+      var cardRect = card.cardEl.getBoundingClientRect();
+      var winW = window.innerWidth || document.documentElement.clientWidth || 0;
+      // Heuristic: if the right edge of the card is within ~340px of the viewport edge,
+      // flip the popover so it anchors to the left side of the card instead.
+      if (winW - cardRect.right < 320){
+        popoverEl.classList.add('is-left');
+      } else {
+        popoverEl.classList.remove('is-left');
+      }
+    } catch(e){}
+  }
+
+  // ---------- Toolbar ----------
+  function ensureToolbar(card, handlers){
+    if (!_isCardOk(card)) return null;
+    handlers = handlers || {};
+    try {
+      var header = card.cardEl.querySelector('.portcard-header');
+      if (!header) return null;
+      var existing = header.querySelector('.portcard-toolbar');
+      if (existing){
+        // Re-wire handlers (idempotent).
+        var btns = existing.querySelectorAll('button[data-tool]');
+        btns.forEach(function(btn){
+          var tool = btn.getAttribute('data-tool');
+          btn.onclick = function(ev){
+            ev.stopPropagation();
+            if (tool === 'legs' && typeof handlers.onLegsClick === 'function') handlers.onLegsClick(card);
+            else if (tool === 'stops' && typeof handlers.onStopsClick === 'function') handlers.onStopsClick(card);
+            else if (tool === 'csv' && typeof handlers.onCsvClick === 'function') handlers.onCsvClick(card);
+          };
+        });
+        return existing;
+      }
+
+      var bar = document.createElement('span');
+      bar.className = 'portcard-toolbar';
+
+      function mkBtn(tool, glyph, title){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'portcard-toolbar-btn';
+        b.setAttribute('data-tool', tool);
+        b.title = title;
+        b.textContent = glyph;
+        b.onclick = function(ev){
+          ev.stopPropagation();
+          if (tool === 'legs' && typeof handlers.onLegsClick === 'function') handlers.onLegsClick(card);
+          else if (tool === 'stops' && typeof handlers.onStopsClick === 'function') handlers.onStopsClick(card);
+          else if (tool === 'csv' && typeof handlers.onCsvClick === 'function') handlers.onCsvClick(card);
+        };
+        return b;
+      }
+
+      bar.appendChild(mkBtn('legs',  'Legs',  'Show per-leg breakdown'));
+      bar.appendChild(mkBtn('stops', 'Stops', 'Manage stop levels'));
+      bar.appendChild(mkBtn('csv',   'CSV',   'Export this trade as CSV'));
+      header.appendChild(bar);
+      return bar;
+    } catch(e){
+      return null;
+    }
+  }
+
+  // ---------- Extended stats ----------
+  function setExtendedStats(card, stats){
+    if (!_isCardOk(card)) return;
+    stats = stats || {};
+    try {
+      var mini = card.cardEl.querySelector('.portcard-mini-panel');
+      if (!mini || !mini.parentNode) return;
+      var ext = card.cardEl.querySelector('.portcard-extended');
+      if (!ext){
+        ext = document.createElement('div');
+        ext.className = 'portcard-extended';
+        // Insert directly after the existing mini-panel.
+        if (mini.nextSibling){
+          mini.parentNode.insertBefore(ext, mini.nextSibling);
+        } else {
+          mini.parentNode.appendChild(ext);
+        }
+      }
+      _clearChildren(ext);
+
+      function chip(label, value, mood){
+        var el = document.createElement('span');
+        el.className = 'portcard-stat-chip' + (mood ? (' is-' + mood) : '');
+        var lbl = document.createElement('span');
+        lbl.className = 'stat-label';
+        lbl.textContent = label;
+        var val = document.createElement('span');
+        val.className = 'stat-value';
+        val.textContent = value;
+        el.appendChild(lbl);
+        el.appendChild(val);
+        return el;
+      }
+
+      var addAny = false;
+      if (stats.mfe != null){
+        ext.appendChild(chip('MFE', _fmt$(Math.abs(stats.mfe)), 'up'));
+        addAny = true;
+      }
+      if (stats.mae != null){
+        ext.appendChild(chip('MAE', '-' + _fmt$(Math.abs(stats.mae)), 'down'));
+        addAny = true;
+      }
+      if (stats.r != null){
+        var rMood = stats.r >= 0 ? 'up' : 'down';
+        ext.appendChild(chip('R', _fmtR(stats.r), rMood));
+        addAny = true;
+      }
+      if (stats.giveBack != null && stats.giveBack > 0){
+        ext.appendChild(chip('GIVE', '-' + _fmt$(Math.abs(stats.giveBack)), 'down'));
+        addAny = true;
+      }
+      if (stats.days != null){
+        ext.appendChild(chip('DAYS', String(stats.days), 'muted'));
+        addAny = true;
+      }
+      if (stats.cumulativePnL != null){
+        var cMood = stats.cumulativePnL > 0 ? 'up' : (stats.cumulativePnL < 0 ? 'down' : 'muted');
+        ext.appendChild(chip('CUM P&L', _fmt$Signed(stats.cumulativePnL), cMood));
+        addAny = true;
+      }
+      if (stats.cumulativeR != null){
+        var crMood = stats.cumulativeR >= 0 ? 'up' : 'down';
+        ext.appendChild(chip('CUM R', _fmtR(stats.cumulativeR), crMood));
+        addAny = true;
+      }
+      if (stats.legCount != null){
+        ext.appendChild(chip('LEGS', String(stats.legCount), 'accent'));
+        addAny = true;
+      }
+
+      // Hide chrome if nothing to show.
+      ext.style.display = addAny ? '' : 'none';
+    } catch(e){}
+  }
+
+  // ---------- Legs popover ----------
+  function openLegsPopover(card, legs){
+    if (!_isCardOk(card)) return null;
+    legs = Array.isArray(legs) ? legs : [];
+    try {
+      // Close any existing legs popover first.
+      closeLegsPopover(card);
+
+      var pop = document.createElement('div');
+      pop.className = 'portcard-popover portcard-legs-popover';
+
+      var title = document.createElement('div');
+      title.className = 'portcard-popover-title';
+      var titleLbl = document.createElement('span');
+      titleLbl.textContent = 'Legs';
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'portcard-popover-close';
+      closeBtn.textContent = '×';
+      closeBtn.title = 'Close';
+      closeBtn.onclick = function(){ closeLegsPopover(card); };
+      title.appendChild(titleLbl);
+      title.appendChild(closeBtn);
+      pop.appendChild(title);
+
+      // ----- Cumulative row -----
+      var totalPnL = 0, totalR = 0, legCount = legs.length;
+      legs.forEach(function(l){
+        if (l && typeof l.realizedPnL === 'number') totalPnL += l.realizedPnL;
+        if (l && typeof l.rMultiple === 'number') totalR += l.rMultiple;
+      });
+
+      if (legCount > 0){
+        var cum = document.createElement('div');
+        cum.className = 'portcard-cum';
+        var cumLbl = document.createElement('span');
+        cumLbl.className = 'portcard-cum-label';
+        cumLbl.textContent = 'Trade total · all legs';
+        var cumLine = document.createElement('div');
+        cumLine.className = 'portcard-cum-line';
+        var cumVal = document.createElement('span');
+        cumVal.className = 'portcard-cum-value' + (totalPnL > 0 ? ' is-up' : (totalPnL < 0 ? ' is-down' : ''));
+        cumVal.textContent = _fmt$Signed(totalPnL);
+        var cumR = document.createElement('span');
+        cumR.className = 'portcard-cum-r';
+        cumR.textContent = _fmtR(totalR);
+        var cumMeta = document.createElement('span');
+        cumMeta.className = 'portcard-cum-meta';
+        cumMeta.textContent = legCount + (legCount === 1 ? ' leg' : ' legs');
+        cumLine.appendChild(cumVal);
+        cumLine.appendChild(cumR);
+        cumLine.appendChild(cumMeta);
+        cum.appendChild(cumLbl);
+        cum.appendChild(cumLine);
+        pop.appendChild(cum);
+      }
+
+      // ----- Leg rows -----
+      var list = document.createElement('div');
+      list.className = 'portcard-legs-list';
+      if (!legCount){
+        var empty = document.createElement('div');
+        empty.className = 'portcard-popover-empty';
+        empty.textContent = 'No legs yet.';
+        list.appendChild(empty);
+      } else {
+        legs.forEach(function(leg){
+          var row = document.createElement('div');
+          row.className = 'portcard-leg-row' + (leg.active ? ' is-active' : '');
+
+          var numEl = document.createElement('span');
+          numEl.className = 'leg-num';
+          numEl.textContent = 'L' + (leg.index != null ? leg.index : '?');
+          row.appendChild(numEl);
+
+          var entEl = document.createElement('span');
+          entEl.className = 'leg-entry';
+          entEl.textContent = '@ ' + (leg.entryPrice != null ? '$' + Number(leg.entryPrice).toFixed(2) : '—');
+          row.appendChild(entEl);
+
+          var exEl = document.createElement('span');
+          exEl.className = 'leg-exit';
+          if (leg.exitReason === 'stop'){ exEl.classList.add('is-stop'); exEl.textContent = '✕ stop'; }
+          else if (leg.exitReason === 'close'){ exEl.classList.add('is-close'); exEl.textContent = '● close'; }
+          else { exEl.classList.add('is-active'); exEl.textContent = '◉ active'; }
+          row.appendChild(exEl);
+
+          var pnlEl = document.createElement('span');
+          pnlEl.className = 'leg-pnl';
+          var pnl = (typeof leg.realizedPnL === 'number') ? leg.realizedPnL : 0;
+          if (pnl > 0) pnlEl.classList.add('is-up');
+          else if (pnl < 0) pnlEl.classList.add('is-down');
+          pnlEl.textContent = _fmt$Signed(pnl);
+          row.appendChild(pnlEl);
+
+          var rEl = document.createElement('span');
+          rEl.className = 'leg-r';
+          rEl.textContent = _fmtR(leg.rMultiple != null ? leg.rMultiple : 0);
+          row.appendChild(rEl);
+
+          list.appendChild(row);
+        });
+      }
+      pop.appendChild(list);
+
+      card.cardEl.appendChild(pop);
+      _autoFlipPopover(card, pop);
+
+      var s = _getState(card);
+      var unbind = _bindOutsideClose(card, pop, function(){ closeLegsPopover(card); });
+      s.legs = { el: pop, unbind: unbind };
+
+      // Mark toolbar button active if present.
+      var legsBtn = card.cardEl.querySelector('.portcard-toolbar-btn[data-tool="legs"]');
+      if (legsBtn) legsBtn.classList.add('is-active');
+
+      return pop;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function closeLegsPopover(card){
+    if (!_isCardOk(card)) return;
+    try {
+      var s = _state.get(card);
+      if (s && s.legs){
+        try { s.legs.unbind && s.legs.unbind(); } catch(e){}
+        var el = s.legs.el;
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        s.legs = null;
+      }
+      var btn = card.cardEl.querySelector('.portcard-toolbar-btn[data-tool="legs"]');
+      if (btn) btn.classList.remove('is-active');
+    } catch(e){}
+  }
+
+  // ---------- Manage Stops popover ----------
+  function openManageStopsPopover(card, sim, stopHistory, callbacks){
+    if (!_isCardOk(card)) return null;
+    callbacks = callbacks || {};
+    stopHistory = Array.isArray(stopHistory) ? stopHistory : [];
+    try {
+      closeManageStopsPopover(card);
+
+      var pop = document.createElement('div');
+      pop.className = 'portcard-popover portcard-stops-popover';
+
+      var title = document.createElement('div');
+      title.className = 'portcard-popover-title';
+      var titleLbl = document.createElement('span');
+      titleLbl.textContent = 'Manage stops';
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'portcard-popover-close';
+      closeBtn.textContent = '×';
+      closeBtn.title = 'Close';
+      closeBtn.onclick = function(){ closeManageStopsPopover(card); };
+      title.appendChild(titleLbl);
+      title.appendChild(closeBtn);
+      pop.appendChild(title);
+
+      var list = document.createElement('div');
+      list.className = 'portcard-stops-list';
+      pop.appendChild(list);
+
+      function renderRows(){
+        _clearChildren(list);
+        if (!stopHistory.length){
+          var empty = document.createElement('div');
+          empty.className = 'portcard-popover-empty';
+          empty.textContent = 'No stops yet.';
+          list.appendChild(empty);
+          return;
+        }
+        var simStopsById = {};
+        if (sim && sim.stopLevels){
+          try { sim.stopLevels.forEach(function(s){ simStopsById[s.id] = s; }); } catch(e){}
+        }
+        stopHistory.forEach(function(s){
+          var simStop = s.simStopId ? simStopsById[s.simStopId] : null;
+          var fired = s.fired || (simStop ? simStop.fired : false);
+          var orphaned = !simStop && !fired && s.simStopId;
+          var row = document.createElement('div');
+          row.className = 'portcard-stop-edit-row' +
+            (fired ? ' is-fired' : '') +
+            (s.type === 'initial' ? ' is-init' : '');
+
+          // Day cell
+          var dayCell = document.createElement('span');
+          dayCell.className = 'stop-day';
+          dayCell.textContent = 'D' + (s.day != null ? s.day : '?');
+          if (s.type === 'initial'){
+            var badge = document.createElement('span');
+            badge.className = 'init-badge';
+            badge.textContent = ' init';
+            dayCell.appendChild(badge);
+          }
+          row.appendChild(dayCell);
+
+          // Price input
+          var priceInput = document.createElement('input');
+          priceInput.type = 'number';
+          priceInput.step = '0.01';
+          priceInput.className = 'stop-input stop-input-price';
+          priceInput.value = Number(s.price).toFixed(2);
+          priceInput.disabled = !!fired || !!orphaned;
+          row.appendChild(priceInput);
+
+          // Pct input
+          var pctInput = document.createElement('input');
+          pctInput.type = 'number';
+          pctInput.step = '1';
+          pctInput.min = '1';
+          pctInput.max = '100';
+          pctInput.className = 'stop-input stop-input-pct';
+          pctInput.value = Math.round((Number.isFinite(s.pct) ? s.pct : 1.0) * 100);
+          pctInput.disabled = !!fired || !!orphaned;
+          row.appendChild(pctInput);
+
+          // Pct suffix
+          var pctSuf = document.createElement('span');
+          pctSuf.className = 'stop-pct-suffix';
+          pctSuf.textContent = '%';
+          row.appendChild(pctSuf);
+
+          // Actions
+          var actions = document.createElement('span');
+          actions.className = 'stop-actions';
+
+          if (fired){
+            var firedTag = document.createElement('span');
+            firedTag.className = 'stop-fired-tag';
+            firedTag.textContent = 'fired';
+            actions.appendChild(firedTag);
+          } else if (orphaned){
+            var orphTag = document.createElement('span');
+            orphTag.className = 'stop-fired-tag';
+            orphTag.textContent = 'line only';
+            actions.appendChild(orphTag);
+          }
+
+          var saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.className = 'stop-btn stop-btn-save';
+          saveBtn.textContent = '✓';
+          saveBtn.title = 'Save changes';
+          saveBtn.disabled = true;
+          actions.appendChild(saveBtn);
+
+          var delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'stop-btn stop-btn-del';
+          delBtn.textContent = '×';
+          delBtn.title = 'Delete this stop';
+          actions.appendChild(delBtn);
+
+          row.appendChild(actions);
+
+          function checkDirty(){
+            var newPx = parseFloat(priceInput.value);
+            var newPct = parseFloat(pctInput.value);
+            var dirty = (Number.isFinite(newPx) && Math.abs(newPx - s.price) > 1e-6) ||
+                        (Number.isFinite(newPct) && Math.round(newPct) !== Math.round((Number.isFinite(s.pct) ? s.pct : 1.0) * 100));
+            saveBtn.disabled = !dirty || fired || orphaned;
+            if (dirty) row.classList.add('is-dirty'); else row.classList.remove('is-dirty');
+          }
+          priceInput.oninput = checkDirty;
+          pctInput.oninput = checkDirty;
+          [priceInput, pctInput].forEach(function(inp){
+            inp.onkeydown = function(e){
+              if (e.key === 'Enter' && !saveBtn.disabled){
+                e.preventDefault();
+                saveBtn.click();
+              }
+            };
+          });
+          saveBtn.onclick = function(){
+            var newPx = parseFloat(priceInput.value);
+            var newPctNum = parseFloat(pctInput.value);
+            if (!Number.isFinite(newPx) || newPx <= 0) return;
+            if (!Number.isFinite(newPctNum) || newPctNum < 1 || newPctNum > 100) return;
+            var ok = false;
+            try {
+              if (typeof callbacks.onSave === 'function'){
+                ok = !!callbacks.onSave(s.id, newPx, newPctNum / 100);
+              }
+            } catch(e){ ok = false; }
+            if (ok){
+              // Optimistic local sync — caller-provided list is the source of truth,
+              // but in case the controller doesn't re-render us, reflect locally.
+              s.price = newPx;
+              s.pct = newPctNum / 100;
+              row.classList.remove('is-dirty');
+              saveBtn.disabled = true;
+            }
+          };
+          delBtn.onclick = function(){
+            if (s.type === 'initial'){
+              if (!confirm('Delete the initial stop? Position will have no floor below until a new stop is added.')) return;
+            } else if (!fired){
+              if (!confirm('Delete this stop?')) return;
+            } else {
+              return; // fired stops can't be deleted via this UI
+            }
+            var ok = false;
+            try {
+              if (typeof callbacks.onDelete === 'function'){
+                ok = !!callbacks.onDelete(s.id);
+              }
+            } catch(e){ ok = false; }
+            if (ok){
+              // Local cleanup if caller doesn't trigger a re-render
+              var idx = stopHistory.indexOf(s);
+              if (idx >= 0) stopHistory.splice(idx, 1);
+              renderRows();
+            }
+          };
+
+          list.appendChild(row);
+        });
+      }
+      renderRows();
+
+      card.cardEl.appendChild(pop);
+      _autoFlipPopover(card, pop);
+
+      var s2 = _getState(card);
+      var unbind = _bindOutsideClose(card, pop, function(){ closeManageStopsPopover(card); });
+      s2.stops = { el: pop, unbind: unbind, rerender: renderRows };
+
+      var stopsBtn = card.cardEl.querySelector('.portcard-toolbar-btn[data-tool="stops"]');
+      if (stopsBtn) stopsBtn.classList.add('is-active');
+
+      return pop;
+    } catch(e){
+      return null;
+    }
+  }
+
+  function closeManageStopsPopover(card){
+    if (!_isCardOk(card)) return;
+    try {
+      var s = _state.get(card);
+      if (s && s.stops){
+        try { s.stops.unbind && s.stops.unbind(); } catch(e){}
+        var el = s.stops.el;
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+        s.stops = null;
+      }
+      var btn = card.cardEl.querySelector('.portcard-toolbar-btn[data-tool="stops"]');
+      if (btn) btn.classList.remove('is-active');
+    } catch(e){}
+  }
+
+  // ---------- Public API ----------
+  window.PortSim.CardPanel = {
+    setExtendedStats: setExtendedStats,
+    openLegsPopover: openLegsPopover,
+    closeLegsPopover: closeLegsPopover,
+    openManageStopsPopover: openManageStopsPopover,
+    closeManageStopsPopover: closeManageStopsPopover,
+    ensureToolbar: ensureToolbar,
+  };
+})();
+// ============ PORTSIM TRACK I: Card Panel UI — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
