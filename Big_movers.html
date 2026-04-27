@@ -10307,6 +10307,51 @@ Sim.Ctrl = (function(){
   return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null) };
 })();
 
+// ============ PORTSIM TRACK N: Sim Action Helpers — START ============
+// In-place sim action helpers used by Portfolio Sim's UI. The Sim core's
+// queueAction() defers processing to the NEXT advanceTo() call — that's
+// fine for the single-ticker sim (which always _stepForward(1) right
+// after queueing), but Portfolio Sim wants stop edits and similar to
+// take effect immediately so the chart's stop line updates the moment
+// the user submits the modal, not on the next play tick.
+//
+// Each helper mirrors what _processActionsOnBar inside the Sim IIFE
+// would do for that action, but at the current playIdx — so eventsLog
+// and stopLevels stay consistent with what the engine would have
+// produced naturally.
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.Util && window.PortSim.Util.applyMoveStopNow) return;
+  window.PortSim.Util = window.PortSim.Util || {};
+
+  function _r2(n){ return Math.round((+n || 0) * 100) / 100; }
+
+  // Add a new active stop at sim.playIdx. Mirrors the "movestop" branch in
+  // Sim core's _processActionsOnBar (Big_movers.html:8113-8121). Returns
+  // the new stop id on success, false otherwise.
+  window.PortSim.Util.applyMoveStopNow = function(sim, bars, newStop, pct){
+    if (!sim || sim.closed || sim.stoppedOut) return false;
+    var ns = +newStop;
+    if (!isFinite(ns) || ns <= 0) return false;
+    var p = isFinite(+pct) ? Math.max(0, Math.min(1, +pct)) : 1.0;
+    if (p <= 0) return false;
+    var bar = bars && bars[sim.playIdx];
+    if (!bar) return false;
+    var stopId = 'stop_' + Math.random().toString(36).slice(2, 8);
+    sim.stopLevels.push({ id: stopId, price: ns, pct: p, fired: false, barIdx: sim.playIdx });
+    var rounded = _r2(ns);
+    sim.eventsLog.push({
+      barIdx: sim.playIdx, date: bar.time, type: 'movestop',
+      qty: sim.qty, price: null, newStop: rounded, pct: p, stopId: stopId,
+      note: 'stop ' + rounded + ' added (' + Math.round(p * 100) + '%)'
+    });
+    return stopId;
+  };
+})();
+// ============ PORTSIM TRACK N: Sim Action Helpers — END ============
+
 // ============ PORTSIM TRACK A: Cash Ledger — START ============
 // Pure cash bookkeeping helpers for the upcoming Portfolio Sim mode.
 // Single source of truth for cash deltas, decoupled from any DOM/UI/chart state.
@@ -13289,7 +13334,16 @@ Sim.Ctrl = (function(){
         const ns = +form.newStop;
         const pct = isFinite(+form.pct) ? +form.pct : 1.0;
         if (!isFinite(ns) || ns <= 0) return;
-        window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+        // Apply at the current bar so the stop line updates immediately on
+        // the chart, instead of waiting for the next advance to drain the
+        // pending-actions queue.
+        const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
+          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct)
+          : false;
+        if (!ok){
+          // Fallback: queue + advance like the single-ticker sim does.
+          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+        }
         _renderAll();
       });
     } else if (action === 'close'){
@@ -16044,9 +16098,19 @@ Sim.Ctrl = (function(){
             var ns = +form.newStop;
             var pct = isFinite(+form.pct) ? +form.pct : 1.0;
             if (!isFinite(ns) || ns <= 0) return;
-            try { window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct }); }
-            catch(e){ console.error('[PortSim.Positions] movestop:', e); }
-            // Refresh on next render — the controller's _renderAll will fire.
+            try {
+              // Apply at the current bar so the stop line updates immediately;
+              // queueAction would defer until the next advanceTo() and the
+              // change wouldn't show up on a paused chart.
+              var ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
+                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct)
+                : false;
+              if (!ok){
+                window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+              }
+            } catch(e){ console.error('[PortSim.Positions] movestop:', e); }
+            // Track J's 120ms watcher will pick up the new stopLevels entry
+            // and repaint the chart line within the next tick.
           });
         }
       });
@@ -16060,6 +16124,10 @@ Sim.Ctrl = (function(){
   var _positionSeries  = {};       // { symbol: ISeriesApi }
   var _curveLastDate   = null;     // last date appended (avoid same-date duplicates)
   var _lastBootstrapMarker = null; // detect new sim → reset chart
+  // Persistent in-memory record of every (date, port-pnl, per-position-pnl)
+  // tuple appended during the run. Track O reads this for CSV export so we
+  // don't have to re-replay the engine.
+  var _curve = [];
   var POS_PALETTE = ['#6ee7b7','#fb7185','#60a5fa','#facc15','#a78bfa','#fb923c','#34d399','#f472b6'];
 
   function _ensureEquityChart(){
@@ -16135,6 +16203,7 @@ Sim.Ctrl = (function(){
     // Future tickers get fresh series; old ones we keep around so colors stay
     // stable if the user re-runs with the same symbols.
     _curveLastDate = null;
+    _curve = [];
   }
 
   // Per-position cumulative P&L (realized + unrealized at current mark).
@@ -16171,19 +16240,27 @@ Sim.Ctrl = (function(){
 
     // Portfolio total P&L
     var p = _portfolioSnap();
-    if (p && _portfolioSeries){
-      try { _portfolioSeries.update({ time: date, value: parseFloat(p.totalPnL.toFixed(2)) }); }
-      catch(e){}
+    var pt = { date: date, port: 0, equity: 0, cash: 0, openCount: 0, positions: {} };
+    if (p){
+      pt.port      = parseFloat(p.totalPnL.toFixed(2));
+      pt.equity    = parseFloat(p.equity.toFixed(2));
+      pt.cash      = parseFloat(p.cash.toFixed(2));
+      pt.openCount = p.openCount | 0;
+      if (_portfolioSeries){
+        try { _portfolioSeries.update({ time: date, value: pt.port }); } catch(e){}
+      }
     }
 
     // Per-position cumulative P&L
     (st.basket || []).forEach(function(e){
       if (!e || !e.sim) return;
       var s = _ensurePositionSeries(e.symbol);
-      if (!s) return;
       var v = _positionTotalPnL(e);
-      try { s.update({ time: date, value: parseFloat(v.toFixed(2)) }); } catch(err){}
+      pt.positions[e.symbol] = parseFloat(v.toFixed(2));
+      if (!s) return;
+      try { s.update({ time: date, value: pt.positions[e.symbol] }); } catch(err){}
     });
+    _curve.push(pt);
   }
 
   function _renderEquityLegend(){
@@ -16255,7 +16332,13 @@ Sim.Ctrl = (function(){
     _renderEquityLegend();
   }
 
-  window.PortSim.Positions = { update: update };
+  window.PortSim.Positions = {
+    update: update,
+    // Snapshot of the live equity-curve points captured during this sim run.
+    // Each entry: { date, port, equity, cash, openCount, positions: {SYM: pnl} }.
+    // Track O (export) reads from here so it doesn't have to re-replay events.
+    curve: function(){ return _curve.slice(); }
+  };
 
   // We can't reliably piggyback on PortSim.TrackJ.afterRender because Track
   // J's internal 120ms watcher invokes its closure-bound _afterRender —
@@ -16426,6 +16509,278 @@ Sim.Ctrl = (function(){
   }
 })();
 // ============ PORTSIM TRACK M: Section Resize + Index Toggle — END ============
+
+// ============ PORTSIM TRACK O: Portfolio Export — START ============
+// Mirrors the single-ticker _exportSimulation() (Big_movers.html:9571) but
+// emits a multi-section CSV that covers the whole portfolio:
+//   1. Header — generation timestamp, sim window, current playIdx
+//   2. Portfolio summary — initial / cash / equity / total P&L $ + %, peak,
+//      max DD $ + %, realized vs. unrealized split, open / basket counts
+//   3. Per-position summary — one row per ticker (state, qty, avg, mark,
+//      stop, cumulative P&L, R, MFE, MAE, give-back, leg count, entry date)
+//   4. Equity curve — one row per unified date (date, port-pnl, equity,
+//      cash, open-count, plus a P&L column per basket symbol)
+//   5. Event log — combined across tickers, sorted by date then symbol,
+//      tagged with leg # and the bar-day offset within that leg
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.Export) return;
+
+  function _csvEscape(v){
+    if (v == null) return '';
+    var s = String(v);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function _r2(n){ return Math.round((Number.isFinite(+n) ? +n : 0) * 100) / 100; }
+  function _sgn(n){
+    if (n == null || !isFinite(n)) return '';
+    var s = +n >= 0 ? '+' : '';
+    return s + _r2(n);
+  }
+  function _sgnPct(n){
+    if (n == null || !isFinite(n)) return '';
+    var s = +n >= 0 ? '+' : '';
+    return s + (+n).toFixed(2) + '%';
+  }
+
+  function _downloadCSV(filename, csv){
+    try {
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){
+        try { document.body.removeChild(a); } catch(e){}
+        try { URL.revokeObjectURL(url); } catch(e){}
+      }, 100);
+    } catch(e){
+      if (window.console) console.error('[Track O] csv download:', e);
+    }
+  }
+
+  function _activeStopPrice(sim){
+    if (!sim || !Array.isArray(sim.stopLevels)) return null;
+    var best = null;
+    for (var i = 0; i < sim.stopLevels.length; i++){
+      var s = sim.stopLevels[i];
+      if (s && !s.fired && (best == null || s.price > best)) best = +s.price;
+    }
+    return best;
+  }
+
+  function _exportPortfolio(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active){
+      alert('No active portfolio simulation to export.');
+      return;
+    }
+    var basket = st.basket || [];
+    var rows = [];
+
+    // ---- 1. Header ----
+    rows.push('# Portfolio Simulation Export');
+    rows.push('# generated,' + _csvEscape(new Date().toISOString()));
+    rows.push('# start_date,' + _csvEscape(st.startDate || ''));
+    rows.push('# end_date,' + _csvEscape(st.endDate || ''));
+    var curDate = st.unifiedDates && st.unifiedDates[st.playIdx];
+    rows.push('# current_date,' + _csvEscape(curDate || ''));
+    rows.push('# current_play_idx,' + (st.playIdx | 0));
+    rows.push('# index_benchmark,' + _csvEscape(st.index || 'SPX'));
+    rows.push('# basket_size,' + basket.length);
+
+    // ---- 2. Portfolio summary ----
+    var initial = +st.initialEquity || 0;
+    var cash = +st.cash || 0;
+    var realized = +st.realizedPnL || 0;
+    var unrealOpen = 0;
+    var openCount = 0;
+    var equity = cash;
+    basket.forEach(function(e){
+      if (!e || !e.sim) return;
+      if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
+        var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen))
+          ? +e.lastCloseSeen
+          : (e.sim.entry ? +e.sim.entry.price : 0);
+        equity += e.sim.qty * mark;
+        unrealOpen += e.sim.qty * (mark - e.sim.avgCost);
+        openCount += 1;
+      }
+    });
+    var totalPnL = equity - initial;
+    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
+    var peak = +st.eqPeak || initial;
+    var maxDDDol = +st.eqMaxDD || 0;
+    var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
+
+    rows.push('');
+    rows.push('# === Portfolio Summary ===');
+    rows.push('Initial Equity,'   + initial);
+    rows.push('Current Cash,'     + _r2(cash));
+    rows.push('Current Equity,'   + _r2(equity));
+    rows.push('Total P&L,'        + _sgn(totalPnL));
+    rows.push('Total Return %,'   + _sgnPct(totalPct));
+    rows.push('Realized P&L,'     + _sgn(realized));
+    rows.push('Unrealized P&L,'   + _sgn(unrealOpen));
+    rows.push('Peak Equity,'      + _r2(peak));
+    rows.push('Max Drawdown $,'   + _sgn(maxDDDol));
+    rows.push('Max Drawdown %,'   + _sgnPct(maxDDPct));
+    rows.push('Open Positions,'   + openCount);
+    rows.push('Basket Size,'      + basket.length);
+
+    // ---- 3. Per-position summary ----
+    rows.push('');
+    rows.push('# === Per-Position Summary ===');
+    rows.push([
+      'Symbol','State','Qty','AvgCost','LastMark','ActiveStop',
+      'CumulativePnL','R','MFE','MAE','GiveBack',
+      'LegCount','EntryDate','EntryPrice','InitialStop','InitialRisk'
+    ].join(','));
+    basket.forEach(function(e){
+      if (!e) return;
+      var sim = e.sim;
+      if (!sim){
+        rows.push([_csvEscape(e.symbol), 'idle', '', '', '', '', '', '', '', '', '', '0', '', '', '', ''].join(','));
+        return;
+      }
+      var derived = null;
+      try { derived = window.Sim && window.Sim.computeDerived ? window.Sim.computeDerived(sim, e.bars) : null; }
+      catch(err){}
+      var posState = sim.between ? 'between'
+                   : (sim.stoppedOut ? 'stoppedOut'
+                   : (sim.closed ? 'closed'
+                   : (sim.qty > 0 ? 'active' : 'idle')));
+      var stopVal = _activeStopPrice(sim);
+      var cumPnL = derived && derived.cumulativePnL != null ? derived.cumulativePnL : (sim.realizedPnL || 0);
+      var cumR  = derived && derived.cumulativeR != null ? derived.cumulativeR : '';
+      var give  = derived && derived.giveBack != null ? derived.giveBack : '';
+      rows.push([
+        _csvEscape(e.symbol),
+        posState,
+        sim.qty,
+        _r2(sim.avgCost),
+        e.lastCloseSeen != null ? _r2(e.lastCloseSeen) : '',
+        stopVal != null ? _r2(stopVal) : '',
+        _r2(cumPnL),
+        cumR,
+        _r2(sim._mfeVal || 0),
+        _r2(sim._maeVal || 0),
+        give === '' ? '' : _r2(give),
+        ((sim.legs || []).length + 1),
+        _csvEscape(sim.entry && sim.entry.date || ''),
+        sim.entry && sim.entry.price != null ? _r2(sim.entry.price) : '',
+        sim.entry && sim.entry.stop  != null ? _r2(sim.entry.stop)  : '',
+        sim.initialRisk != null ? _r2(sim.initialRisk) : ''
+      ].join(','));
+    });
+
+    // ---- 4. Equity curve ----
+    var curve = [];
+    if (window.PortSim.Positions && typeof window.PortSim.Positions.curve === 'function'){
+      curve = window.PortSim.Positions.curve();
+    }
+    if (curve && curve.length){
+      var symbols = basket.map(function(e){ return e.symbol; });
+      rows.push('');
+      rows.push('# === Equity Curve ===');
+      var head = ['Date','Portfolio P&L','Equity','Cash','Open Count'];
+      symbols.forEach(function(s){ head.push(s + ' P&L'); });
+      rows.push(head.join(','));
+      curve.forEach(function(pt){
+        var line = [
+          _csvEscape(pt.date),
+          _r2(pt.port),
+          _r2(pt.equity),
+          _r2(pt.cash),
+          pt.openCount | 0
+        ];
+        symbols.forEach(function(s){
+          line.push((pt.positions && pt.positions[s] != null) ? _r2(pt.positions[s]) : '');
+        });
+        rows.push(line.join(','));
+      });
+    }
+
+    // ---- 5. Combined event log ----
+    rows.push('');
+    rows.push('# === Event Log ===');
+    rows.push(['Symbol','Leg','Day','BarIdx','Date','Type','Qty','Price','NewStop','Pct','Note'].join(','));
+    var allEvents = [];
+    basket.forEach(function(e){
+      var sim = e && e.sim;
+      if (!sim) return;
+      var topEntryBar = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : 0;
+      // Past legs (closed/stopped) — each carries its own eventsLog + entry.barIdx.
+      (sim.legs || []).forEach(function(leg, i){
+        var legBar = (leg.entry && leg.entry.barIdx != null) ? leg.entry.barIdx : topEntryBar;
+        (leg.eventsLog || []).forEach(function(ev){
+          allEvents.push({
+            sym: e.symbol, leg: i + 1,
+            day: ev.barIdx != null ? (ev.barIdx - legBar) : '',
+            ev: ev
+          });
+        });
+      });
+      // Current (live) leg.
+      var curLeg = (sim.legs || []).length + 1;
+      (sim.eventsLog || []).forEach(function(ev){
+        allEvents.push({
+          sym: e.symbol, leg: curLeg,
+          day: ev.barIdx != null ? (ev.barIdx - topEntryBar) : '',
+          ev: ev
+        });
+      });
+    });
+    allEvents.sort(function(a, b){
+      var da = a.ev.date || '', db = b.ev.date || '';
+      if (da < db) return -1;
+      if (da > db) return  1;
+      return a.sym < b.sym ? -1 : (a.sym > b.sym ? 1 : 0);
+    });
+    allEvents.forEach(function(rec){
+      var ev = rec.ev;
+      rows.push([
+        _csvEscape(rec.sym),
+        rec.leg,
+        rec.day,
+        ev.barIdx != null ? ev.barIdx : '',
+        _csvEscape(ev.date || ''),
+        _csvEscape(ev.type || ''),
+        ev.qty != null ? ev.qty : '',
+        ev.price != null ? _r2(ev.price) : '',
+        ev.newStop != null ? _r2(ev.newStop) : '',
+        ev.pct != null ? ev.pct : '',
+        _csvEscape(ev.note || '')
+      ].join(','));
+    });
+
+    var ts = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+    var dateTag = (st.startDate || '').replace(/-/g, '') || 'sim';
+    var fname = 'portfolio_sim_' + dateTag + '_' + ts + '.csv';
+    _downloadCSV(fname, rows.join('\n'));
+  }
+
+  window.PortSim.Export = { portfolio: _exportPortfolio };
+
+  function _bind(){
+    var btn = document.getElementById('portsim-btn-export');
+    if (!btn || btn._portsimBound) return;
+    btn._portsimBound = true;
+    btn.addEventListener('click', _exportPortfolio);
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _bind);
+  } else {
+    _bind();
+  }
+})();
+// ============ PORTSIM TRACK O: Portfolio Export — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
@@ -16609,6 +16964,7 @@ Sim.Ctrl = (function(){
         <button class="portsim-spill" data-speed="5" type="button">5×</button>
       </span>
       <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
+      <button id="portsim-btn-export" class="portsim-tbtn" type="button" title="Export portfolio simulation results as CSV">↓ Export</button>
       <button id="portsim-btn-exit"   class="portsim-tbtn portsim-exit" type="button">✕ Exit</button>
     </div>
   </div>
