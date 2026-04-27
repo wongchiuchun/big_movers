@@ -34,6 +34,144 @@ STOCKS_DIRS = [
 SPY_HIST_CSV = os.path.join(SCRIPT_DIR, "SPY Historical Data.csv")
 _SPY_BARS_CACHE = None
 
+# ============ PORTSIM TRACK C: NDQ/QQQ data path — START ============
+# NDX/NDQ benchmark data source (Portfolio Sim "index strip" — Nasdaq 100 cash index).
+# Falls back to QQQ ETF (collected_stocks/QQQ.csv) which closely tracks NDX if no
+# locally-stored NDX historical CSV exists.
+NDX_HIST_CSV = os.path.join(SCRIPT_DIR, "NDQ Historical Data.csv")
+_NDQ_BARS_CACHE = None
+
+
+def _load_ndq_bars():
+    """Load NDX/NDQ index bars.
+
+    Order of precedence:
+      1. ``NDQ Historical Data.csv`` in project root (same format as SPY's CSV).
+      2. ``collected_stocks/QQQ.csv`` (QQQ ETF — close NDX proxy) parsed via the
+         same CSV format auto-detection used by /api/ohlcv.
+      3. Returns ``None`` if neither source exists (caller renders a 404).
+
+    A small in-memory cache mirrors ``_load_spy_bars``; it stores either the
+    parsed bars list or the sentinel ``"missing"`` so we don't hit the
+    filesystem on every request when the data is unavailable.
+    """
+    global _NDQ_BARS_CACHE
+    if _NDQ_BARS_CACHE is not None:
+        return None if _NDQ_BARS_CACHE == "missing" else _NDQ_BARS_CACHE
+
+    # Source 1: NDQ Historical Data.csv (same DictReader pattern as SPY)
+    if os.path.exists(NDX_HIST_CSV):
+        bars = []
+        try:
+            with open(NDX_HIST_CSV, "r", encoding="utf-8-sig", newline="") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    raw_date = row.get("Date") or row.get("DateTime")
+                    date_str = _normalize_date_maybe(raw_date)
+                    if not date_str:
+                        continue
+                    o = _parse_float_maybe(row.get("Open"))
+                    h = _parse_float_maybe(row.get("High"))
+                    l = _parse_float_maybe(row.get("Low"))
+                    c = _parse_float_maybe(row.get("Close"))
+                    if c is None:
+                        c = _parse_float_maybe(row.get("Price"))
+                    v = _parse_volume_maybe(row.get("Volume"))
+                    if not v:
+                        v = _parse_volume_maybe(row.get("Vol."))
+                    if c is None or c <= 0:
+                        continue
+                    if o is None or h is None or l is None:
+                        continue
+                    bars.append({
+                        "time": date_str,
+                        "open": o,
+                        "high": h,
+                        "low": l,
+                        "close": c,
+                        "volume": v,
+                    })
+        except Exception:
+            bars = []
+        if bars:
+            bars.sort(key=lambda x: x.get("time") or "")
+            _NDQ_BARS_CACHE = bars
+            return _NDQ_BARS_CACHE
+
+    # Source 2: collected_stocks/QQQ.csv via the same auto-detect parser
+    qqq_path = None
+    for d in STOCKS_DIRS:
+        for fname in ("QQQ.csv", "qqq.csv"):
+            cand = os.path.join(d, fname)
+            if os.path.exists(cand):
+                qqq_path = cand
+                break
+        if qqq_path:
+            break
+
+    if qqq_path:
+        bars = _parse_collected_stocks_csv(qqq_path)
+        if bars:
+            _NDQ_BARS_CACHE = bars
+            return _NDQ_BARS_CACHE
+
+    # Neither source available
+    _NDQ_BARS_CACHE = "missing"
+    return None
+
+
+def _parse_collected_stocks_csv(path):
+    """Parse a CSV in collected_stocks/ using the same auto-detect logic as
+    /api/ohlcv. Returns a list of bar dicts (possibly empty) — never raises."""
+    bars = []
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            reader = csv.reader(f)
+            header = next(reader, None)
+            if not header:
+                return bars
+            if len(header) >= 2 and "date" in (header[1] or "").lower():
+                fmt = "new"
+            elif len(header) >= 1 and "date" in (header[0] or "").lower():
+                fmt = "noindex"
+            else:
+                fmt = "old"
+            for row in reader:
+                try:
+                    if fmt == "new":
+                        if len(row) < 7:
+                            continue
+                        t = row[1].strip()
+                        o = float(row[2]); h = float(row[3]); l = float(row[4])
+                        c = float(row[5]); v = float(row[6])
+                    elif fmt == "noindex":
+                        if len(row) < 6:
+                            continue
+                        raw_t = row[0].strip()
+                        if len(raw_t) == 10 and raw_t[2] == '/':
+                            parts = raw_t.split('/')
+                            t = f"{parts[2]}-{parts[0]:>02}-{parts[1]:>02}"
+                        else:
+                            t = raw_t
+                        o = float(row[1]); h = float(row[2]); l = float(row[3])
+                        c = float(row[4]); v = float(row[5])
+                    else:
+                        if len(row) < 6:
+                            continue
+                        t = row[0].strip()
+                        c = float(row[1]); o = float(row[2]); h = float(row[3])
+                        l = float(row[4]); v = float(row[5])
+                    if c <= 0:
+                        continue
+                    bars.append({"time": t, "open": o, "high": h, "low": l, "close": c, "volume": v})
+                except (ValueError, IndexError):
+                    continue
+    except Exception:
+        return bars
+    bars.sort(key=lambda x: x["time"])
+    return bars
+# ============ PORTSIM TRACK C: NDQ/QQQ data path — END ==============
+
 # Twelve Data API key (loaded from ../.env or ./.env)
 TWELVE_API_KEY = None
 for env_path in [
@@ -208,6 +346,22 @@ def api_ohlcv():
             return jsonify(_load_spy_bars())
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+
+    # ============ PORTSIM TRACK C: NDQ/QQQ data path — START ============
+    # Special-case NDQ / NDX (treated as aliases): prefer local NDX historical
+    # CSV; fall back to QQQ ETF in collected_stocks/. Both alias names route
+    # through _load_ndq_bars() — caller gets a clean 404 if neither exists.
+    if symbol in ("NDQ", "NDX"):
+        try:
+            bars = _load_ndq_bars()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        if bars is None:
+            return jsonify({
+                "error": "NDQ data not available. Place 'NDQ Historical Data.csv' in project root or 'QQQ.csv' in collected_stocks/."
+            }), 404
+        return jsonify(bars)
+    # ============ PORTSIM TRACK C: NDQ/QQQ data path — END ==============
 
     # Search configured directories
     path = None
@@ -866,9 +1020,15 @@ def api_review_save(move_key):
 
 
 if __name__ == "__main__":
-    print("Chart Studies: http://localhost:5051/")
+    # Port is overridable via PORTNUM env var (lets us run on a non-default port
+    # for parallel-track testing without editing source). Defaults to 5051.
+    try:
+        _port = int(os.environ.get("PORTNUM", "5051"))
+    except ValueError:
+        _port = 5051
+    print(f"Chart Studies: http://localhost:{_port}/")
     if TWELVE_API_KEY:
         print(f"  Twelve Data API: configured (key: ...{TWELVE_API_KEY[-4:]})")
     else:
         print("  Twelve Data API: NOT configured (no .env found)")
-    app.run(host="127.0.0.1", port=5051, debug=False)
+    app.run(host="127.0.0.1", port=_port, debug=False)
