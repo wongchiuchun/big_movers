@@ -1723,8 +1723,9 @@
   .sim-summary-leg-r { color: var(--muted); font-size: 10px; text-align: right; }
   .fetch-field input[type="number"], .fetch-field input[type="date"] { font-variant-numeric: tabular-nums; }
 
-  /* Start Sim button in topbar */
-  #sim-start-btn {
+  /* Start Sim / Port Sim buttons in topbar */
+  #sim-start-btn,
+  #portsim-start-btn {
     font-size: 10px;
     padding: 4px 12px;
     width: auto;
@@ -1736,8 +1737,10 @@
     font-weight: 600;
     letter-spacing: 0.04em;
     cursor: pointer;
+    margin-left: 6px;
   }
-  #sim-start-btn:hover { background: var(--accent); color: var(--bg); }
+  #sim-start-btn:hover,
+  #portsim-start-btn:hover { background: var(--accent); color: var(--bg); }
   .sim-input-with-pick { display: flex; gap: 6px; align-items: stretch; }
   .sim-input-with-pick input { flex: 1; }
   .sim-pick-btn {
