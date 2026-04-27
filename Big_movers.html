@@ -2491,12 +2491,41 @@
   /* ----- Open-positions panel (between index strip and card grid) ----- */
   .portsim-positions{
     flex:0 0 auto;
-    max-height:480px;
+    height:340px;
     overflow-y:auto;
     background:var(--bg2);
     border-bottom:1px solid var(--border);
     padding:6px 14px;
     box-sizing:border-box;
+  }
+  /* ----- Resize handles between sections ----- */
+  .portsim-resize-h{
+    flex:0 0 6px;
+    background:var(--border);
+    cursor:row-resize;
+    position:relative;
+    transition:background 0.14s ease;
+    z-index:5;
+  }
+  .portsim-resize-h::after{
+    content:'';
+    position:absolute;
+    left:50%; top:50%;
+    width:36px; height:2px;
+    transform:translate(-50%, -50%);
+    background:rgba(212,165,116,0.35);
+    border-radius:1px;
+    pointer-events:none;
+    transition:background 0.14s ease;
+  }
+  .portsim-resize-h:hover,
+  .portsim-resize-h.is-dragging{ background:var(--accent); }
+  .portsim-resize-h:hover::after,
+  .portsim-resize-h.is-dragging::after{ background:rgba(255,255,255,0.85); }
+  /* When the index strip is hidden, suppress its handle too. */
+  #portsim-shell.index-hidden #portsim-index-strip,
+  #portsim-shell.index-hidden .portsim-resize-h[data-resize="index"]{
+    display:none;
   }
   .portsim-equity-wrap{
     display:flex;
@@ -15938,12 +15967,14 @@ Sim.Ctrl = (function(){
       return '<div class="portsim-stat-cell"><label>' + label + '</label>' +
              '<strong' + (cls ? ' class="' + cls + '"' : '') + '>' + value + '</strong></div>';
     }
+    var totalPct = (p.initial > 0) ? (p.totalPnL / p.initial) * 100 : 0;
+    var totalPctSign = (totalPct > 0) ? '+' : '';
     return '<div class="portsim-stats-row">' +
       _cell('INITIAL',  _fmt$(p.initial)) +
       _cell('CASH',     _fmt$(p.cash)) +
       _cell('EQUITY',   _fmt$(p.equity)) +
       _cell('DAY P&L',  _fmt$Signed(p.dayPnL), dpCls) +
-      _cell('TOTAL P&L',_fmt$Signed(p.totalPnL), tpCls) +
+      _cell('TOTAL P&L',_fmt$Signed(p.totalPnL) + ' (' + totalPctSign + totalPct.toFixed(2) + '%)', tpCls) +
       _cell('DD',       _fmt$Signed(p.ddDollar) + ' (' + (p.ddPct).toFixed(2) + '%)', ddCls) +
       _cell('MAX DD',   _fmt$Signed(p.maxDDDollar) + ' (' + (p.maxDDPct).toFixed(2) + '%)', maxDDCls) +
       _cell('OPEN',     String(p.openCount|0)) +
@@ -16280,6 +16311,121 @@ Sim.Ctrl = (function(){
   }
 })();
 // ============ PORTSIM TRACK L: Open Positions Panel — END ============
+
+// ============ PORTSIM TRACK M: Section Resize + Index Toggle — START ============
+// User-resizable divider strips between #portsim-index-strip ↔ #portsim-positions
+// and #portsim-positions ↔ #portsim-grid. Plus a header button to collapse the
+// index strip entirely. Layout (heights + hidden state) persists to localStorage.
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.Resize) return; // idempotent
+
+  var STORAGE_KEY = 'bm_portsim_layout';
+  var DEFAULTS = { indexHeight: 300, positionsHeight: 340, indexHidden: false };
+  var MIN_INDEX_H = 80;
+  var MAX_INDEX_H = 800;
+  var MIN_POS_H = 80;
+  var MAX_POS_H = 1200;
+
+  var _state = (function _load(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      var loaded = raw ? JSON.parse(raw) : null;
+      return Object.assign({}, DEFAULTS, loaded || {});
+    } catch (e) { return Object.assign({}, DEFAULTS); }
+  })();
+  function _save(){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_state)); } catch (e) {}
+  }
+
+  function _applyLayout(){
+    var idx = document.getElementById('portsim-index-strip');
+    var pos = document.getElementById('portsim-positions');
+    var shell = document.getElementById('portsim-shell');
+    var btn = document.getElementById('portsim-toggle-index');
+    if (idx) idx.style.height = _state.indexHeight + 'px';
+    if (pos) pos.style.height = _state.positionsHeight + 'px';
+    if (shell){
+      if (_state.indexHidden) shell.classList.add('index-hidden');
+      else shell.classList.remove('index-hidden');
+    }
+    if (btn) btn.textContent = _state.indexHidden ? '▼ Index' : '▲ Index';
+  }
+
+  function _bindHandle(handle, target, key, minH, maxH){
+    if (!handle || !target) return;
+    handle.addEventListener('mousedown', function(e){
+      // Only react to primary button.
+      if (e.button !== 0) return;
+      e.preventDefault();
+      handle.classList.add('is-dragging');
+      var startY = e.clientY;
+      var startH = target.getBoundingClientRect().height;
+      var prevSelect = document.body.style.userSelect;
+      document.body.style.userSelect = 'none';
+
+      function onMove(ev){
+        var dy = ev.clientY - startY;
+        var newH = Math.max(minH, Math.min(maxH, startH + dy));
+        target.style.height = newH + 'px';
+        _state[key] = Math.round(newH);
+      }
+      function onUp(){
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        handle.classList.remove('is-dragging');
+        document.body.style.userSelect = prevSelect || '';
+        _save();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+    // Double-click resets that section to its default.
+    handle.addEventListener('dblclick', function(){
+      _state[key] = DEFAULTS[key];
+      _applyLayout();
+      _save();
+    });
+  }
+
+  function _toggleIndex(){
+    _state.indexHidden = !_state.indexHidden;
+    _applyLayout();
+    _save();
+  }
+
+  function init(){
+    _applyLayout();
+    var idxHandle = document.querySelector('.portsim-resize-h[data-resize="index"]');
+    var posHandle = document.querySelector('.portsim-resize-h[data-resize="positions"]');
+    var idxEl = document.getElementById('portsim-index-strip');
+    var posEl = document.getElementById('portsim-positions');
+    _bindHandle(idxHandle, idxEl, 'indexHeight', MIN_INDEX_H, MAX_INDEX_H);
+    _bindHandle(posHandle, posEl, 'positionsHeight', MIN_POS_H, MAX_POS_H);
+
+    var btn = document.getElementById('portsim-toggle-index');
+    if (btn && !btn._portsimBound){
+      btn._portsimBound = true;
+      btn.addEventListener('click', _toggleIndex);
+    }
+  }
+
+  window.PortSim.Resize = {
+    init: init,
+    apply: _applyLayout,
+    toggleIndex: _toggleIndex,
+    state: _state
+  };
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+// ============ PORTSIM TRACK M: Section Resize + Index Toggle — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
@@ -16462,6 +16608,7 @@ Sim.Ctrl = (function(){
         <button class="portsim-spill" data-speed="2" type="button">2×</button>
         <button class="portsim-spill" data-speed="5" type="button">5×</button>
       </span>
+      <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
       <button id="portsim-btn-exit"   class="portsim-tbtn portsim-exit" type="button">✕ Exit</button>
     </div>
   </div>
@@ -16476,6 +16623,7 @@ Sim.Ctrl = (function(){
     </div>
     <div class="portsim-idx-chart" id="portsim-idx-chart"></div>
   </div>
+  <div class="portsim-resize-h" data-resize="index" title="Drag to resize the index strip"></div>
   <div id="portsim-positions" class="portsim-positions">
     <div id="portsim-positions-stats"></div>
     <div id="portsim-equity-wrap" class="portsim-equity-wrap">
@@ -16484,6 +16632,7 @@ Sim.Ctrl = (function(){
     </div>
     <div id="portsim-positions-table"><div class="portsim-positions-empty">No open positions</div></div>
   </div>
+  <div class="portsim-resize-h" data-resize="positions" title="Drag to resize the positions panel"></div>
   <div id="portsim-grid" class="portsim-grid"></div>
 </div>
 <!-- ============ PORTSIM TRACK E: Header & Index Strip — END ============ -->
