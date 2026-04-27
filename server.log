@@ -31,3 +31,17 @@ Chart Studies: http://localhost:5051/
 127.0.0.1 - - [27/Apr/2026 18:22:24] "GET /api/ohlcv?symbol=ALAB&_=1777285344392 HTTP/1.1" 200 -
 127.0.0.1 - - [27/Apr/2026 18:22:24] "GET /api/indicators?symbol=ALAB HTTP/1.1" 200 -
 127.0.0.1 - - [27/Apr/2026 18:22:24] "GET /api/pivot?symbol=ALAB&year=2025 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:50] "GET /api/ohlcv?symbol=ALAB&_=1777286390369 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:50] "GET /api/indicators?symbol=ALAB HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:50] "GET /api/pivot?symbol=ALAB&year=2025 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:55] "GET /api/drawings HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:55] "GET /api/metadata HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:55] "GET /api/ai-classifications HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:55] "GET /api/results HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:57] "GET /api/ohlcv?symbol=APLD&_=1777286397270 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:57] "GET /api/indicators?symbol=APLD HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:39:57] "GET /api/pivot?symbol=APLD&year=2025 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:40:06] "GET /api/ohlcv?symbol=ARWR&_=1777286406269 HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:40:06] "GET /api/indicators?symbol=ARWR HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 18:40:06] "GET /api/pivot?symbol=ARWR&year=2025 HTTP/1.1" 200 -

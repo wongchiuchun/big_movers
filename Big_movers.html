@@ -2649,7 +2649,7 @@
           <div class="sim-transport-sep"></div>
           <div id="sim-date-readout">Day 0 · —</div>
           <div class="sim-transport-sep"></div>
-          <button id="sim-btn-export" class="sim-transport-btn" type="button" title="Export P&amp;L curve as CSV">↓ Export</button>
+          <button id="sim-btn-export" class="sim-transport-btn" type="button" title="Export simulation summary, per-leg breakdown, and event log as CSV">↓ Export</button>
           <button id="sim-btn-exit" class="sim-transport-btn" type="button" title="Exit simulator (Esc)">✕ Exit Sim</button>
         </div>
       </div>
@@ -8329,24 +8329,75 @@ Sim.Ctrl = (function(){
     else state._curve.push(point);
   }
 
-  function _downloadCurveCSV() {
-    if (!state.sim || !state._curve || !state._curve.length) { alert('No simulation data to export.'); return; }
-    const cols = ['barIdx','date','open','high','low','close','volume',
-      'qty','avgCost','currentStop',
-      'realizedPnL','unrealizedPnL','totalPnL',
-      'intradayLowPnL','intradayHighPnL',
-      'rCurrent','rIntradayLow','rIntradayHigh',
-      'positionValue','peakTotal','giveBack'];
-    const lines = [cols.join(',')];
-    state._curve.forEach(p => {
-      lines.push(cols.map(c => {
-        const v = p[c];
-        if (v == null || v === '') return '';
-        return String(v);
-      }).join(','));
+  function _exportSimulation() {
+    if (!state.sim) { alert('No simulation data to export.'); return; }
+    const sim = state.sim;
+    const d = Sim.computeDerived(sim, state.bars);
+    const sum = _deriveForSummary(d);
+
+    const lines = [];
+    const csvEscape = v => {
+      if (v == null) return '';
+      const s = String(v);
+      if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    };
+    const row = (...vals) => lines.push(vals.map(csvEscape).join(','));
+    const sgn = n => (n != null && Number(n) >= 0 ? '+' : '') + (n != null ? Math.round(n) : '');
+    const sgnR = n => (n != null && Number(n) >= 0 ? '+' : '') + (n != null ? Number(n).toFixed(2) : '');
+
+    // ---- Summary ----
+    row('# Simulation Summary');
+    row('Symbol', sim.moveKey || '—');
+    row('Direction', sim.direction || 'long');
+    row('R Multiple', sgnR(sum.rMultiple));
+    row('Cumulative P&L', sgn(sum.totalPnL));
+    row('Legs', sum.legCount);
+    row('Days Held', sum.daysHeld);
+    row('MFE', sgn(sum.mfe));
+    row('MAE', sgn(sum.mae));
+    row('Max Drawdown', sgn(sum.maxDrawdown));
+    row('# Entries', sum.numEntries);
+    row('# Sells', sum.numSells);
+    row('');
+
+    // ---- Per-Leg Breakdown ----
+    row('# Per-Leg Breakdown');
+    row('Leg', 'Entry Date', 'Entry Price', 'Exit Reason', 'Realized P&L', 'R Multiple');
+    (sum.legsSummary || []).forEach(leg => {
+      row(
+        'L' + leg.index,
+        leg.entryDate || '',
+        leg.entryPrice != null ? Number(leg.entryPrice).toFixed(2) : '',
+        leg.exitReason || '',
+        sgn(leg.realizedPnL),
+        sgnR(leg.rMultiple)
+      );
     });
+    row('');
+
+    // ---- Event Log ----
+    row('# Event Log');
+    row('Day', 'Date', 'Leg', 'Type', 'Price', 'Qty', 'Note');
+    const simStart = sim.simStartBarIdx != null ? sim.simStartBarIdx : sim.entry.barIdx;
+    // Tag each event with the leg it belongs to
+    const tagged = [];
+    (sim.legs || []).forEach((l, i) => {
+      (l.eventsLog || []).forEach(ev => tagged.push({ ev, legIdx: i + 1 }));
+    });
+    const currentLegIdx = (sim.legs || []).length + 1;
+    (d.eventsLog || []).forEach(ev => tagged.push({ ev, legIdx: currentLegIdx }));
+    tagged.forEach(({ ev, legIdx }) => {
+      const day = ev.barIdx != null ? (ev.barIdx - simStart) : '';
+      const date = (state.bars && state.bars[ev.barIdx]) ? state.bars[ev.barIdx].time : (ev.date || '');
+      const px = ev.price != null
+        ? Number(ev.price).toFixed(2)
+        : (ev.newStop != null ? Number(ev.newStop).toFixed(2) : '');
+      row(day, date, 'L' + legIdx, ev.type || '', px, ev.qty != null ? ev.qty : '', ev.note || '');
+    });
+
     const csv = lines.join('\n');
-    const sym = (state.sim.moveKey || 'sim').replace(/[^A-Za-z0-9_]/g, '_');
+    const sym = (sim.moveKey || 'sim').replace(/[^A-Za-z0-9_]/g, '_');
     const ts = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
     const fname = 'sim_' + sym + '_' + ts + '.csv';
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -9000,7 +9051,7 @@ Sim.Ctrl = (function(){
       ['sim-speed-1',   () => setSpeed(1)],
       ['sim-speed-2',   () => setSpeed(2)],
       ['sim-speed-5',   () => setSpeed(5)],
-      ['sim-btn-export', _downloadCurveCSV],
+      ['sim-btn-export', _exportSimulation],
       ['sim-btn-exit', exit],
       ['sim-btn-sell', onSellClick],
       ['sim-btn-add',  onAddClick],

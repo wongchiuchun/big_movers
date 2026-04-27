@@ -988,7 +988,7 @@
     {
       "color": "#fb7185",
       "id": 4,
-      "price": 15.5,
+      "price": 12.7994,
       "style": "dashed",
       "type": "hline",
       "width": 1
@@ -1220,11 +1220,11 @@
         }
       },
       "p2": {
-        "price": 14.0287,
+        "price": -5.4356,
         "time": {
-          "day": 5,
-          "month": 1,
-          "year": 2026
+          "day": 25,
+          "month": 11,
+          "year": 2025
         }
       },
       "style": "solid",
