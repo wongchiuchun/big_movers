@@ -2463,6 +2463,7 @@
     <div class="spacer"></div>
     <button id="add-ticker-btn" class="tb-btn" title="Fetch new ticker or extend existing" style="font-size:10px;padding:4px 12px;width:auto;border-radius:5px;">+ Add</button>
     <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
+    <button id="portsim-start-btn" class="tb-btn" title="Open Portfolio Simulator">▶ Port Sim</button>
     <div class="vsep"></div>
     <button id="theme-toggle" class="tb-btn" title="Toggle theme">☀ Light</button>
   </div>
@@ -11695,6 +11696,1003 @@ Sim.Ctrl = (function(){
   PortSim.Index  = Index;
 })();
 // ============ PORTSIM TRACK E: Header & Index — END ============
+
+// ============ PORTSIM TRACK G: Controller — START ============
+// Orchestrates the multi-card portfolio simulator. Wires together:
+//   - Setup wizard (PortSim.Setup) → publishes a config we consume
+//   - Card factory  (PortSim.Cards) → one per basket ticker
+//   - Cash ledger   (PortSim.Cash)  → folds engine events into cash deltas
+//   - Modal adapters (PortSim.Modal)→ per-card setup / add / sell / movestop
+//   - Header        (PortSim.Header)→ transport + stats
+//   - Index strip   (PortSim.Index) → SPX/NDQ benchmark
+//
+// State invariant (asserted on every step):
+//   equity = cash + Σ(qty × mark)
+//         = initialEquity + realizedPnL + unrealizedPnL
+(function(){
+  'use strict';
+  const PortSim = (window.PortSim = window.PortSim || {});
+  if (PortSim.Ctrl) return; // idempotent guard
+
+  // ---- helpers ----
+  function _byId(id){ return document.getElementById(id); }
+  function _r2(n){ return Math.round((Number.isFinite(+n) ? +n : 0) * 100) / 100; }
+  function _mkEl(tag, cls, txt){
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (txt != null) el.textContent = txt;
+    return el;
+  }
+  function _setStyle(el, css){ el.style.cssText = css; return el; }
+
+  // Find the bar index in `bars` whose time === date.
+  // Falls back to the largest bar with time <= date.
+  function _findBarIdxAtOrBefore(bars, date){
+    if (!Array.isArray(bars) || !bars.length || !date) return -1;
+    let lo = 0, hi = bars.length - 1, best = -1;
+    while (lo <= hi){
+      const mid = (lo + hi) >> 1;
+      const t = bars[mid].time;
+      if (t === date) return mid;
+      if (t < date){ best = mid; lo = mid + 1; }
+      else hi = mid - 1;
+    }
+    return best;
+  }
+
+  // Build a sorted union of all distinct trading dates across the basket + index,
+  // clipped to [startDate, endDate].
+  function _buildUnifiedDates(basket, indexBars, startDate, endDate){
+    const set = new Set();
+    function _ingest(arr){
+      if (!Array.isArray(arr)) return;
+      for (let i = 0; i < arr.length; i++){
+        const t = arr[i] && arr[i].time;
+        if (!t) continue;
+        if (startDate && t < startDate) continue;
+        if (endDate && t > endDate) continue;
+        set.add(t);
+      }
+    }
+    basket.forEach(b => _ingest(b.bars));
+    _ingest(indexBars);
+    return Array.from(set).sort();
+  }
+
+  // Slice bars to entries with time <= date.
+  function _sliceUpTo(bars, date){
+    if (!Array.isArray(bars) || !bars.length) return [];
+    const out = [];
+    for (let i = 0; i < bars.length; i++){
+      const t = bars[i] && bars[i].time;
+      if (!t) continue;
+      if (t > date) break;
+      out.push(bars[i]);
+    }
+    return out;
+  }
+
+  // For an entry: derive a small mini-panel snapshot from sim/derived.
+  function _miniPanelSnapshot(entry){
+    const sim = entry.sim;
+    if (!sim) {
+      return { posState: 'idle', qty: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
+    }
+    const bars = entry.bars;
+    let derived = null;
+    try { derived = window.Sim.computeDerived(sim, bars); } catch(e){ derived = null; }
+    if (!derived) {
+      return { posState: 'idle', qty: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
+    }
+    const closed = !!derived.closed;
+    const stoppedOut = !!derived.stoppedOut;
+    const between = !!derived.between;
+    let posState = 'active';
+    if (between) posState = 'between';
+    else if (stoppedOut) posState = 'stopped';
+    else if (closed) posState = 'closed';
+    else if (derived.qty <= 0) posState = 'idle';
+    return {
+      posState: posState,
+      qty: derived.qty,
+      avg: derived.avgCost,
+      stop: derived.currentStop,
+      legPnL: derived.totalPnL,
+      totalPnL: derived.cumulativePnL != null ? derived.cumulativePnL : derived.totalPnL
+    };
+  }
+
+  // Compute mark for an open position (lastCloseSeen, fallback to entry price).
+  function _markFor(entry){
+    if (!entry || !entry.sim) return null;
+    if (entry.lastCloseSeen != null && isFinite(entry.lastCloseSeen)) return +entry.lastCloseSeen;
+    if (entry.sim.entry && isFinite(entry.sim.entry.price)) return +entry.sim.entry.price;
+    return null;
+  }
+
+  // ---- internal state ----
+  const _state = {
+    active: false,
+    startDate: null,
+    endDate: null,
+    initialEquity: 0,
+    cash: 0,
+    realizedPnL: 0,
+    basket: [],         // [{ symbol, year, bars, dateToBarIdx, lastCloseSeen, sim, card }]
+    index: 'SPX',
+    indexBars: [],
+    indexDateMap: null,
+    playing: false,
+    speed: 1,
+    playTimer: null,
+    unifiedDates: [],
+    playIdx: 0,
+    prevEquity: null,
+    initialEntryRequest: [], // [{ symbol, entryPrice, stopPrice, sizeMode, sizeValue }]
+    eqMaxDD: 0,
+    eqPeak: 0
+  };
+  PortSim._state = _state;
+
+  // =====================================================================
+  // Lifecycle
+  // =====================================================================
+  function openSetup(){
+    if (window.PortSim && PortSim.Setup && typeof PortSim.Setup.open === 'function'){
+      PortSim.Setup.open();
+    } else {
+      console.error('[PortSim.Ctrl] Setup module unavailable.');
+    }
+  }
+
+  function _onWizardSubmit(cfg){
+    try { _bootstrapFromConfig(cfg); }
+    catch (e){
+      console.error('[PortSim.Ctrl] bootstrap failed:', e);
+      alert('Portfolio sim failed to start: ' + (e && e.message ? e.message : e));
+      _hardExit();
+    }
+  }
+
+  function _bootstrapFromConfig(cfg){
+    if (!cfg || !Array.isArray(cfg.tickers) || !cfg.tickers.length){
+      throw new Error('config missing tickers');
+    }
+    const fetched = cfg.fetchedBars || {};
+
+    // Reset internal state.
+    _state.active = true;
+    _state.startDate = cfg.startDate;
+    _state.endDate = cfg.endDate;
+    _state.initialEquity = +cfg.initialCash || 0;
+    _state.cash = _state.initialEquity;
+    _state.realizedPnL = 0;
+    _state.index = cfg.index || 'SPX';
+    _state.playing = false;
+    _state.speed = 1;
+    _clearTimer();
+    _state.unifiedDates = [];
+    _state.playIdx = 0;
+    _state.prevEquity = null;
+    _state.eqMaxDD = 0;
+    _state.eqPeak = _state.initialEquity;
+    _state.basket = [];
+    _state.initialEntryRequest = [];
+
+    // Clear and prepare the grid.
+    const grid = _byId('portsim-grid');
+    if (!grid) throw new Error('#portsim-grid not in DOM');
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+    grid.classList.remove('cols-1','cols-2','cols-3','cols-4','cols-5','cols-6','cols-7','cols-8','cols-9','cols-10');
+    const n = Math.max(1, Math.min(10, cfg.tickers.length));
+    grid.classList.add('cols-' + n);
+
+    // Build basket entries + cards.
+    cfg.tickers.forEach(function(tCfg){
+      const sym = (tCfg.symbol || '').toUpperCase();
+      const bars = Array.isArray(fetched[sym]) ? fetched[sym] : [];
+      const dateToBarIdx = new Map();
+      for (let i = 0; i < bars.length; i++){
+        const t = bars[i] && bars[i].time;
+        if (t) dateToBarIdx.set(t, i);
+      }
+      // Initial chart slice up to startDate so user sees pre-context.
+      const initSlice = _sliceUpTo(bars, _state.startDate);
+      const card = PortSim.Cards.createCard(grid, sym, initSlice, {});
+      const entry = {
+        symbol: sym,
+        year: null,
+        bars: bars,
+        dateToBarIdx: dateToBarIdx,
+        lastCloseSeen: initSlice.length ? +initSlice[initSlice.length - 1].close : null,
+        sim: null,
+        card: card,
+        cardEl: card.cardEl,
+        chart: card.chart,
+        candleSeries: card.candleSeries,
+        volSeries: card.volSeries,
+        _newLegBtn: null,
+        _actionBar: null
+      };
+      _state.basket.push(entry);
+
+      // Stash any pre-entry request for after-card-built cash debit.
+      if (tCfg.hasPreEntry){
+        _state.initialEntryRequest.push({
+          entry: entry,
+          entryPrice: +tCfg.entryPrice,
+          stopPrice: +tCfg.stopPrice,
+          sizeMode: tCfg.sizeMode || 'shares',
+          sizeValue: +tCfg.sizeValue
+        });
+      }
+
+      _attachCardActions(entry);
+
+      // Card-level click → pause + open per-card menu when paused.
+      card.cardEl.addEventListener('click', function(ev){
+        // Only react to bare clicks on the card (not on action buttons inside).
+        if (ev.target && ev.target.closest && ev.target.closest('.portcard-action-row')) return;
+        if (ev.target && ev.target.closest && ev.target.closest('.portcard-newleg-btn')) return;
+        _onCardBareClick(entry);
+      });
+    });
+
+    // Compute unified dates from union of basket + (later) index.
+    // Index bars added in fetchAndLoad — for now compute from basket only,
+    // we'll re-merge after the index resolves.
+    _state.unifiedDates = _buildUnifiedDates(_state.basket, [], _state.startDate, _state.endDate);
+    if (!_state.unifiedDates.length){
+      throw new Error('no overlapping trading days in [' + _state.startDate + ', ' + _state.endDate + ']');
+    }
+    // Find playIdx for startDate (first ≥ startDate).
+    _state.playIdx = 0;
+    for (let i = 0; i < _state.unifiedDates.length; i++){
+      if (_state.unifiedDates[i] >= _state.startDate){ _state.playIdx = i; break; }
+    }
+
+    // Now process pre-entries: instantiate sim + debit cash.
+    _state.initialEntryRequest.forEach(function(req){
+      _initialEntryFromConfig(req);
+    });
+
+    // Init index chart, fetch.
+    if (PortSim.Index && typeof PortSim.Index.init === 'function'){
+      PortSim.Index.init();
+      PortSim.Index.fetchAndLoad(_state.index).then(function(idxBars){
+        // Slice to start-end window for unified-date alignment.
+        const idxClipped = (idxBars || []).filter(function(b){
+          const t = b && b.time;
+          if (!t) return false;
+          if (_state.startDate && t < _state.startDate) return false;
+          if (_state.endDate && t > _state.endDate) return false;
+          return true;
+        });
+        _state.indexBars = idxClipped;
+        _state.indexDateMap = new Map();
+        for (let i = 0; i < idxClipped.length; i++){
+          _state.indexDateMap.set(idxClipped[i].time, i);
+        }
+        // Re-merge unified dates so index trading days are included.
+        _state.unifiedDates = _buildUnifiedDates(_state.basket, idxClipped, _state.startDate, _state.endDate);
+        // Reset playIdx to start.
+        _state.playIdx = 0;
+        for (let i = 0; i < _state.unifiedDates.length; i++){
+          if (_state.unifiedDates[i] >= _state.startDate){ _state.playIdx = i; break; }
+        }
+        // Trim index series to dates up to (and including) the start date.
+        const idxSlice = _sliceUpTo(idxClipped, _state.startDate);
+        if (PortSim.Index && typeof PortSim.Index.setData === 'function'){
+          PortSim.Index.setData(idxSlice, _state.index);
+        }
+        _renderAll();
+      }).catch(function(e){
+        console.warn('[PortSim.Ctrl] index load failed:', e && e.message || e);
+      });
+    }
+
+    // Show + wire header.
+    PortSim.Header.show();
+    PortSim.Header.setSpeed(_state.speed);
+    PortSim.Header.setPlaying(false);
+    PortSim.Header.onTransport(_onTransport);
+    PortSim.Header.onIndexToggle(_onIndexToggle);
+
+    _renderAll();
+  }
+
+  function _initialEntryFromConfig(req){
+    const entry = req.entry;
+    const bars = entry.bars;
+    if (!bars || !bars.length) return;
+    // Find the bar at startDate (or first ≥ startDate).
+    const sd = _state.startDate;
+    let entryBarIdx = entry.dateToBarIdx.get(sd);
+    if (entryBarIdx == null){
+      // Search forward.
+      for (let i = 0; i < bars.length; i++){
+        if (bars[i].time >= sd){ entryBarIdx = i; break; }
+      }
+    }
+    if (entryBarIdx == null) return;
+    // Instantiate sim.
+    let sim;
+    try {
+      sim = window.Sim.createSim({
+        moveKey: entry.symbol,
+        direction: 'long',
+        entry: {
+          barIdx: entryBarIdx,
+          date: bars[entryBarIdx].time,
+          price: req.entryPrice,
+          stop: req.stopPrice,
+          sizeMode: req.sizeMode,
+          sizeValue: req.sizeValue
+        }
+      });
+    } catch (e){
+      console.error('[PortSim.Ctrl] initial entry failed for ' + entry.symbol + ':', e);
+      return;
+    }
+    entry.sim = sim;
+    // Debit cash for shares × entry price.
+    PortSim.Cash.debitInitialEntry(_state, sim.shares0, sim.entry.price);
+    // Make the chart show data up to (and including) the entry bar.
+    const slice = bars.slice(0, entryBarIdx + 1);
+    entry.card.setData(slice);
+    entry.lastCloseSeen = +bars[entryBarIdx].close;
+    entry.card.setActive(true);
+    entry.card.setBadge('active', 'active');
+  }
+
+  // =====================================================================
+  // Per-card action UI (Add / Sell / Move Stop / Close All)
+  // =====================================================================
+  function _attachCardActions(entry){
+    // Append a small action row inside the mini-panel area.
+    const dom = entry.card._dom;
+    if (!dom) return;
+    const row = _mkEl('div', 'portcard-action-row');
+    _setStyle(row, 'display:none;gap:4px;padding:4px 8px 6px;flex-wrap:wrap;');
+    [
+      ['+ Add',     'add'],
+      ['– Sell',    'sell'],
+      ['↕ Stop',    'movestop'],
+      ['✕ Close',   'close']
+    ].forEach(function(pair){
+      const btn = _mkEl('button', 'portcard-action-btn', pair[0]);
+      btn.type = 'button';
+      btn.dataset.action = pair[1];
+      _setStyle(btn, 'font-family:var(--mono);font-size:10px;padding:3px 7px;background:var(--bg3);color:var(--text-2);border:1px solid var(--border);border-radius:4px;cursor:pointer;letter-spacing:0.04em;');
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        _onCardAction(entry, pair[1]);
+      });
+      row.appendChild(btn);
+    });
+    dom.root.insertBefore(row, dom.chartWrap);
+    entry._actionBar = row;
+
+    // Optional New Entry button (shown when between/stopped).
+    const newLeg = _mkEl('button', 'portcard-newleg-btn', '+ New Entry');
+    newLeg.type = 'button';
+    _setStyle(newLeg, 'display:none;font-family:var(--mono);font-size:10px;padding:3px 8px;background:var(--accent);color:var(--bg);border:none;border-radius:4px;cursor:pointer;letter-spacing:0.04em;margin:4px 8px;');
+    newLeg.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      _onNewLegClick(entry);
+    });
+    dom.root.insertBefore(newLeg, dom.chartWrap);
+    entry._newLegBtn = newLeg;
+  }
+
+  function _onCardBareClick(entry){
+    // Auto-pause.
+    _pause();
+    // No sim → setup. Sim closed/stoppedOut/between → newleg. Otherwise: toggle action row.
+    const sim = entry.sim;
+    if (!sim){
+      _onCardSetupClick(entry);
+      return;
+    }
+    if (sim.between || sim.stoppedOut || sim.closed){
+      _onNewLegClick(entry);
+      return;
+    }
+    // Toggle action row.
+    if (entry._actionBar){
+      const isShown = entry._actionBar.style.display !== 'none';
+      // Hide on all other cards.
+      _state.basket.forEach(function(e){
+        if (e._actionBar) e._actionBar.style.display = 'none';
+      });
+      entry._actionBar.style.display = isShown ? 'none' : 'flex';
+    }
+  }
+
+  function _currentBarForEntry(entry){
+    const date = _state.unifiedDates[_state.playIdx];
+    const idx = entry.dateToBarIdx.get(date);
+    if (idx != null) return entry.bars[idx];
+    // Fallback: the most recent bar ≤ date.
+    const fbIdx = _findBarIdxAtOrBefore(entry.bars, date);
+    return fbIdx >= 0 ? entry.bars[fbIdx] : null;
+  }
+
+  function _onCardSetupClick(entry){
+    const bar = _currentBarForEntry(entry);
+    if (!bar){
+      alert('No bar available for ' + entry.symbol + ' at the current date.');
+      return;
+    }
+    PortSim.Modal.openSetupForCard(entry, bar, function(card, form){
+      // form: { date, price, sizeMode, sizeValue, stop, endDate }
+      try {
+        const barIdx = entry.dateToBarIdx.get(form.date) != null
+          ? entry.dateToBarIdx.get(form.date)
+          : _findBarIdxAtOrBefore(entry.bars, form.date);
+        if (barIdx < 0) throw new Error('no bar at ' + form.date);
+        const shares = (form.sizeMode === 'shares')
+          ? Math.floor(+form.sizeValue)
+          : Math.floor((+form.sizeValue) / (+form.price));
+        if (!(shares > 0)) throw new Error('size resolves to 0 shares');
+        if (!PortSim.Cash.preflight(_state, shares, form.price)){
+          alert('Not enough cash for this entry. Need $' + (shares * form.price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
+          return;
+        }
+        const sim = window.Sim.createSim({
+          moveKey: entry.symbol,
+          direction: 'long',
+          entry: {
+            barIdx: barIdx,
+            date: entry.bars[barIdx].time,
+            price: +form.price,
+            stop: +form.stop,
+            sizeMode: form.sizeMode,
+            sizeValue: +form.sizeValue
+          }
+        });
+        entry.sim = sim;
+        PortSim.Cash.debitInitialEntry(_state, sim.shares0, sim.entry.price);
+        // Make sure the card's chart has data through the entry bar.
+        const upTo = entry.bars.slice(0, barIdx + 1);
+        entry.card.setData(upTo);
+        entry.lastCloseSeen = +entry.bars[barIdx].close;
+        entry.card.setActive(true);
+        entry.card.setBadge('active', 'active');
+        if (entry._newLegBtn) entry._newLegBtn.style.display = 'none';
+        _renderAll();
+      } catch (e){
+        console.error('[PortSim.Ctrl] setup submit failed:', e);
+        alert('Entry failed: ' + (e && e.message ? e.message : e));
+      }
+    });
+  }
+
+  function _onNewLegClick(entry){
+    const bar = _currentBarForEntry(entry);
+    if (!bar) return;
+    if (!entry.sim){ _onCardSetupClick(entry); return; }
+    // Promote stopped/closed to between if not already.
+    if ((entry.sim.stoppedOut || entry.sim.closed) && !entry.sim.between){
+      try { window.Sim.continueSim(entry.sim); } catch(e){}
+    }
+    const legNum = (entry.sim.legs ? entry.sim.legs.length : 0) + 1;
+    PortSim.Modal.openNewLegForCard(entry, bar, function(card, form){
+      try {
+        // form: { date, price, sizeMode, sizeValue, stop }
+        const fdate = form.date || bar.time;
+        const barIdx = entry.dateToBarIdx.get(fdate) != null
+          ? entry.dateToBarIdx.get(fdate)
+          : _findBarIdxAtOrBefore(entry.bars, fdate);
+        if (barIdx < 0) throw new Error('no bar at ' + fdate);
+        const shares = (form.sizeMode === 'shares')
+          ? Math.floor(+form.sizeValue)
+          : Math.floor((+form.sizeValue) / (+form.price));
+        if (!(shares > 0)) throw new Error('size resolves to 0 shares');
+        if (!PortSim.Cash.preflight(_state, shares, form.price)){
+          alert('Not enough cash for new leg. Need $' + (shares * form.price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
+          return;
+        }
+        window.Sim.startNewLeg(entry.sim, {
+          barIdx: barIdx,
+          date: entry.bars[barIdx].time,
+          price: +form.price,
+          stop: +form.stop,
+          sizeMode: form.sizeMode,
+          sizeValue: +form.sizeValue
+        });
+        PortSim.Cash.debitInitialEntry(_state, entry.sim.shares0, entry.sim.entry.price);
+        entry.lastCloseSeen = +entry.bars[barIdx].close;
+        entry.card.setActive(true);
+        entry.card.setBadge('active', 'active');
+        if (entry._newLegBtn) entry._newLegBtn.style.display = 'none';
+        _renderAll();
+      } catch (e){
+        console.error('[PortSim.Ctrl] new-leg submit failed:', e);
+        alert('New leg failed: ' + (e && e.message ? e.message : e));
+      }
+    }, { legNum: legNum });
+  }
+
+  function _onCardAction(entry, action){
+    if (!entry.sim) return;
+    const bar = _currentBarForEntry(entry);
+    if (!bar) return;
+    _pause();
+    if (action === 'add'){
+      PortSim.Modal.openAddForCard(entry, entry.sim, bar, function(card, form){
+        // form: { qty, price, newStop? }
+        const qty = Math.floor(+form.qty || 0);
+        const price = +form.price;
+        if (!(qty > 0) || !isFinite(price)) return;
+        if (!PortSim.Cash.preflight(_state, qty, price)){
+          alert('Not enough cash to add. Need $' + (qty * price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
+          return;
+        }
+        window.Sim.queueAction(entry.sim, { type: 'add', qty: qty, price: price });
+        if (form.newStop != null && isFinite(+form.newStop)){
+          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: +form.newStop, pct: 1.0 });
+        }
+        // Note: cash debit will fold on next tick when the action fires.
+        _renderAll();
+      });
+    } else if (action === 'sell'){
+      PortSim.Modal.openSellForCard(entry, entry.sim, bar, function(card, form){
+        const qty = Math.floor(+form.qty || 0);
+        const price = +form.price;
+        if (!(qty > 0) || !isFinite(price)) return;
+        window.Sim.queueAction(entry.sim, { type: 'sell', qty: qty, price: price });
+        _renderAll();
+      });
+    } else if (action === 'movestop'){
+      PortSim.Modal.openMoveStopForCard(entry, entry.sim, bar, function(card, form){
+        const ns = +form.newStop;
+        const pct = isFinite(+form.pct) ? +form.pct : 1.0;
+        if (!isFinite(ns) || ns <= 0) return;
+        window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+        _renderAll();
+      });
+    } else if (action === 'close'){
+      const px = +bar.close;
+      if (!isFinite(px) || entry.sim.qty <= 0){
+        if (entry._actionBar) entry._actionBar.style.display = 'none';
+        return;
+      }
+      const qty = entry.sim.qty;
+      try {
+        window.Sim.closeAt(entry.sim, entry.bars, px);
+        PortSim.Cash.creditManualClose(_state, qty, px);
+        _accumulateRealizedFromSim(entry);
+      } catch (e){
+        console.error('[PortSim.Ctrl] closeAt failed:', e);
+      }
+      if (entry._actionBar) entry._actionBar.style.display = 'none';
+      _renderAll();
+    }
+  }
+
+  // Track realizedPnL increments at state level.
+  function _accumulateRealizedFromSim(entry){
+    const sim = entry.sim;
+    if (!sim) return;
+    const totalRealizedAcrossLegs = (sim.legs || []).reduce(function(s, l){ return s + (l.realizedPnL || 0); }, 0);
+    const liveRealized = sim.realizedPnL || 0;
+    const totalNow = totalRealizedAcrossLegs + liveRealized;
+    const last = entry._lastRealized || 0;
+    const delta = totalNow - last;
+    if (isFinite(delta)){
+      _state.realizedPnL = _r2(_state.realizedPnL + delta);
+      entry._lastRealized = totalNow;
+    }
+  }
+
+  // =====================================================================
+  // Playback
+  // =====================================================================
+  function _onTransport(action, payload){
+    if (action === 'play')      _playToggle();
+    else if (action === 'fwd')  { _pause(); _advanceAll(1); }
+    else if (action === 'back') { _pause(); }  /* step back not supported in v1 */
+    else if (action === 'start'){ _pause(); }
+    else if (action === 'speed'){ _state.speed = +payload || 1; _scheduleTimer(); }
+    else if (action === 'exit') { _confirmExit(); }
+  }
+
+  function _onIndexToggle(name){
+    _state.index = name;
+    if (PortSim.Index && typeof PortSim.Index.fetchAndLoad === 'function'){
+      PortSim.Index.fetchAndLoad(name).then(function(idxBars){
+        const idxClipped = (idxBars || []).filter(function(b){
+          const t = b && b.time;
+          if (!t) return false;
+          if (_state.startDate && t < _state.startDate) return false;
+          if (_state.endDate && t > _state.endDate) return false;
+          return true;
+        });
+        _state.indexBars = idxClipped;
+        _state.indexDateMap = new Map();
+        for (let i = 0; i < idxClipped.length; i++) _state.indexDateMap.set(idxClipped[i].time, i);
+        const upTo = _sliceUpTo(idxClipped, _state.unifiedDates[_state.playIdx]);
+        if (PortSim.Index.setData) PortSim.Index.setData(upTo, name);
+      });
+    }
+  }
+
+  function _playToggle(){
+    if (_state.playing) _pause();
+    else _play();
+  }
+
+  function _play(){
+    if (_state.playIdx >= _state.unifiedDates.length - 1) return;
+    _state.playing = true;
+    PortSim.Header.setPlaying(true);
+    _scheduleTimer();
+  }
+
+  function _pause(){
+    _state.playing = false;
+    PortSim.Header.setPlaying(false);
+    _clearTimer();
+  }
+
+  function _clearTimer(){
+    if (_state.playTimer){
+      clearInterval(_state.playTimer);
+      _state.playTimer = null;
+    }
+  }
+
+  function _scheduleTimer(){
+    _clearTimer();
+    if (!_state.playing) return;
+    const baseMs = 600;
+    const ms = Math.max(40, baseMs / Math.max(0.05, _state.speed));
+    _state.playTimer = setInterval(function(){
+      if (!_state.playing){ _clearTimer(); return; }
+      _advanceAll(1);
+    }, ms);
+  }
+
+  function _confirmExit(){
+    _pause();
+    if (!confirm('Exit Portfolio Simulator? You can review the per-ticker summary first.')) return;
+    _showSummary();
+  }
+
+  function _hardExit(){
+    _pause();
+    if (PortSim.Header && PortSim.Header.hide) PortSim.Header.hide();
+    _state.basket.forEach(function(e){
+      try { e.card.destroy(); } catch(err){}
+    });
+    _state.basket = [];
+    _state.active = false;
+    if (PortSim.Index && PortSim.Index.reset) try { PortSim.Index.reset(); } catch(e){}
+  }
+
+  // =====================================================================
+  // Step engine
+  // =====================================================================
+  function _advanceAll(steps){
+    steps = Math.max(1, steps|0);
+    for (let s = 0; s < steps; s++){
+      if (_state.playIdx >= _state.unifiedDates.length - 1){
+        _pause();
+        _showSummary();
+        return;
+      }
+      _state.playIdx += 1;
+      const date = _state.unifiedDates[_state.playIdx];
+
+      // ---- Pass 1: collect engine events per basket entry ----
+      const allEvents = [];
+      for (let i = 0; i < _state.basket.length; i++){
+        const entry = _state.basket[i];
+        const barIdx = entry.dateToBarIdx.get(date);
+        if (barIdx == null){
+          if (entry.card.setBadge) entry.card.setBadge('stale', 'stale');
+          continue;
+        }
+        const bar = entry.bars[barIdx];
+        if (entry.sim){
+          let result = null;
+          try { result = window.Sim.advanceTo(entry.sim, entry.bars, barIdx); }
+          catch (e){ console.error('[PortSim.Ctrl] advanceTo ' + entry.symbol + ':', e); }
+          if (result && Array.isArray(result.eventsFired) && result.eventsFired.length){
+            allEvents.push({ symbol: entry.symbol, entry: entry, events: result.eventsFired });
+          }
+        }
+        entry.lastCloseSeen = +bar.close;
+        entry.card.appendBar(bar);
+      }
+
+      // ---- Pass 2: bucket events by type, fold cash in priority order ----
+      const buckets = { stop: [], sell: [], close: [], entry: [], add: [] };
+      allEvents.forEach(function(rec){
+        rec.events.forEach(function(ev){
+          const t = ev && ev.type;
+          if (buckets[t]) buckets[t].push({ ev: ev, entry: rec.entry, sym: rec.symbol });
+        });
+      });
+      ['stop','sell','close','entry','add'].forEach(function(t){
+        buckets[t].sort(function(a, b){ return a.sym < b.sym ? -1 : (a.sym > b.sym ? 1 : 0); });
+        buckets[t].forEach(function(rec){ PortSim.Cash.fold(_state, rec.ev); });
+      });
+
+      _recomputeRealizedFromCash();
+
+      // Detect newly-stopped-out cards → reveal '+ New Entry'.
+      _state.basket.forEach(function(e){
+        if (e.sim && (e.sim.stoppedOut || e.sim.closed) && !e.sim.between){
+          if (e._newLegBtn) e._newLegBtn.style.display = '';
+          e.card.setBadge('between', 'between');
+          e.card.setActive(false);
+        }
+      });
+
+      // ---- Index: append bar if available ----
+      if (_state.indexDateMap){
+        const ix = _state.indexDateMap.get(date);
+        if (ix != null && PortSim.Index && PortSim.Index.appendBar){
+          PortSim.Index.appendBar(_state.indexBars[ix]);
+        }
+      }
+    }
+
+    _renderAll();
+  }
+
+  function _recomputeRealizedFromCash(){
+    let totalRealized = 0;
+    _state.basket.forEach(function(e){
+      if (!e.sim) return;
+      const legSum = (e.sim.legs || []).reduce(function(s, l){ return s + (l.realizedPnL || 0); }, 0);
+      totalRealized += legSum + (e.sim.realizedPnL || 0);
+    });
+    _state.realizedPnL = _r2(totalRealized);
+  }
+
+  // =====================================================================
+  // Render + invariant assertion
+  // =====================================================================
+  function _renderAll(){
+    _state.basket.forEach(function(e){
+      const snap = _miniPanelSnapshot(e);
+      const px = e.lastCloseSeen;
+      e.card.setHeader({
+        ticker: e.symbol,
+        currentPrice: (px != null && isFinite(px)) ? +px : '',
+        posState: snap.posState,
+        qty: typeof snap.qty === 'number' ? snap.qty : '',
+        avg: typeof snap.avg === 'number' ? snap.avg : '',
+        stop: typeof snap.stop === 'number' ? snap.stop : '',
+        legPnL: typeof snap.legPnL === 'number' ? snap.legPnL : '',
+        totalPnL: typeof snap.totalPnL === 'number' ? snap.totalPnL : ''
+      });
+      if (snap.posState === 'active') e.card.setActive(true);
+      else e.card.setActive(false);
+    });
+
+    let unreal = 0;
+    let openCount = 0;
+    _state.basket.forEach(function(e){
+      if (!e.sim || e.sim.qty <= 0) return;
+      const mark = _markFor(e);
+      if (mark == null) return;
+      unreal += e.sim.qty * (mark - e.sim.avgCost);
+      openCount += 1;
+    });
+    const equity = _r2(_state.cash + _state.basket.reduce(function(s, e){
+      if (!e.sim || e.sim.qty <= 0) return s;
+      const mark = _markFor(e);
+      if (mark == null) return s;
+      return s + e.sim.qty * mark;
+    }, 0));
+
+    const expected = _r2(_state.initialEquity + _state.realizedPnL + unreal);
+    if (Math.abs(equity - expected) > 0.01){
+      console.error('[PortSim] equity invariant drifted:', { equity: equity, expected: expected, diff: _r2(equity - expected), cash: _state.cash, realizedPnL: _state.realizedPnL, unreal: _r2(unreal) });
+    }
+
+    const totalPnL = _r2(equity - _state.initialEquity);
+    const dayPnL = _state.prevEquity != null ? _r2(equity - _state.prevEquity) : 0;
+    _state.prevEquity = equity;
+
+    if (equity > _state.eqPeak) _state.eqPeak = equity;
+    const dd = _state.eqPeak > 0 ? (equity - _state.eqPeak) : 0;
+    if (dd < _state.eqMaxDD) _state.eqMaxDD = dd;
+
+    PortSim.Header.update({
+      initial: _state.initialEquity,
+      cash: _state.cash,
+      equity: equity,
+      dayPnL: dayPnL,
+      totalPnL: totalPnL,
+      openCount: openCount,
+      day: _state.playIdx,
+      date: _state.unifiedDates[_state.playIdx] || '—'
+    });
+  }
+
+  // =====================================================================
+  // Summary modal (minimal v1)
+  // =====================================================================
+  function _showSummary(){
+    let equity = _state.cash;
+    let unreal = 0;
+    const rows = _state.basket.map(function(e){
+      let realized = 0;
+      let stops = 0;
+      let legs = 0;
+      let rs = [];
+      let status = 'idle';
+      if (e.sim){
+        legs = (e.sim.legs || []).length + (e.sim.between ? 0 : 1);
+        (e.sim.legs || []).forEach(function(l){
+          realized += (l.realizedPnL || 0);
+          if (l.exitReason === 'stop') stops += 1;
+          if (e.sim.initialRisk > 0) rs.push((l.rMultiple || 0));
+        });
+        realized += (e.sim.realizedPnL || 0);
+        if (e.sim.qty > 0){
+          const mark = _markFor(e);
+          if (mark != null){
+            unreal += e.sim.qty * (mark - e.sim.avgCost);
+            equity += e.sim.qty * mark;
+          }
+          status = 'open';
+        } else if (e.sim.stoppedOut){
+          status = 'stopped';
+        } else if (e.sim.closed){
+          status = 'closed';
+        } else if (e.sim.between){
+          status = 'between';
+        }
+      }
+      const avgR = rs.length ? rs.reduce(function(s, x){ return s + x; }, 0) / rs.length : 0;
+      return {
+        symbol: e.symbol,
+        legs: legs,
+        realized: _r2(realized),
+        avgR: Math.round(avgR * 100) / 100,
+        stops: stops,
+        status: status
+      };
+    });
+    equity = _r2(equity);
+    const finalEquity = equity;
+    const totalReturn = _state.initialEquity > 0
+      ? ((finalEquity - _state.initialEquity) / _state.initialEquity) * 100
+      : 0;
+    const totalStops = rows.reduce(function(s, r){ return s + r.stops; }, 0);
+
+    let host = document.getElementById('portsim-summary-modal');
+    if (host) host.remove();
+    host = _mkEl('div');
+    host.id = 'portsim-summary-modal';
+    _setStyle(host, 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;font-family:var(--ui);');
+    const dialog = _mkEl('div');
+    _setStyle(dialog, 'background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:20px 24px;min-width:520px;max-width:80vw;max-height:80vh;overflow:auto;');
+    const h = _mkEl('h3', null, 'Portfolio Simulator — Summary');
+    _setStyle(h, 'margin:0 0 12px 0;font-family:var(--display);');
+    dialog.appendChild(h);
+
+    const summary = _mkEl('div');
+    _setStyle(summary, 'font-family:var(--mono);font-size:12px;line-height:1.7;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;');
+    function _addLine(parent, label, valueText, valueColor){
+      const lineDiv = _mkEl('div');
+      lineDiv.appendChild(document.createTextNode(label + ': '));
+      const b = _mkEl('b', null, valueText);
+      if (valueColor) b.style.color = valueColor;
+      lineDiv.appendChild(b);
+      parent.appendChild(lineDiv);
+    }
+    _addLine(summary, 'Initial', '$' + _state.initialEquity.toLocaleString());
+    _addLine(summary, 'Final equity', '$' + finalEquity.toLocaleString());
+    _addLine(summary, 'Total return',
+      (totalReturn >= 0 ? '+' : '') + totalReturn.toFixed(2) + '%',
+      totalReturn >= 0 ? 'var(--green)' : 'var(--red)');
+    _addLine(summary, 'Realized P&L', '$' + _state.realizedPnL.toLocaleString());
+    _addLine(summary, 'Max drawdown', '$' + _state.eqMaxDD.toLocaleString(), 'var(--red)');
+    _addLine(summary, 'Total stop-outs', String(totalStops));
+    dialog.appendChild(summary);
+
+    const table = _mkEl('table');
+    _setStyle(table, 'width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;');
+    const thead = _mkEl('thead');
+    const trh = _mkEl('tr');
+    _setStyle(trh, 'text-align:left;border-bottom:1px solid var(--border);');
+    ['Symbol','Legs','Realized P&L','Avg R','Stops','Status'].forEach(function(label){
+      const th = _mkEl('th', null, label);
+      _setStyle(th, 'padding:4px 8px;');
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+
+    const tbody = _mkEl('tbody');
+    rows.forEach(function(r){
+      const tr = _mkEl('tr');
+      _setStyle(tr, 'border-bottom:1px solid var(--border);');
+      const tdSym = _mkEl('td', null, r.symbol);
+      _setStyle(tdSym, 'padding:4px 8px;font-weight:600;');
+      const tdLegs = _mkEl('td', null, String(r.legs));
+      _setStyle(tdLegs, 'padding:4px 8px;');
+      const tdReal = _mkEl('td', null, '$' + r.realized.toLocaleString());
+      const realColor = r.realized > 0 ? 'var(--green)' : (r.realized < 0 ? 'var(--red)' : 'var(--text)');
+      _setStyle(tdReal, 'padding:4px 8px;color:' + realColor + ';');
+      const tdR = _mkEl('td', null, (r.avgR >= 0 ? '+' : '') + r.avgR + 'R');
+      _setStyle(tdR, 'padding:4px 8px;');
+      const tdStops = _mkEl('td', null, String(r.stops));
+      _setStyle(tdStops, 'padding:4px 8px;');
+      const tdStatus = _mkEl('td', null, r.status);
+      _setStyle(tdStatus, 'padding:4px 8px;color:var(--text-2);');
+      tr.appendChild(tdSym); tr.appendChild(tdLegs); tr.appendChild(tdReal);
+      tr.appendChild(tdR); tr.appendChild(tdStops); tr.appendChild(tdStatus);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    dialog.appendChild(table);
+
+    const actions = _mkEl('div');
+    _setStyle(actions, 'margin-top:16px;display:flex;justify-content:flex-end;gap:8px;');
+    const closeBtn = _mkEl('button', null, 'Close & Exit');
+    closeBtn.type = 'button';
+    _setStyle(closeBtn, 'font-family:var(--mono);font-size:11px;padding:6px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:5px;cursor:pointer;letter-spacing:0.04em;');
+    closeBtn.addEventListener('click', function(){
+      try { host.remove(); } catch(e){}
+      _hardExit();
+    });
+    actions.appendChild(closeBtn);
+    dialog.appendChild(actions);
+
+    host.appendChild(dialog);
+    document.body.appendChild(host);
+  }
+
+  // =====================================================================
+  // Wiring: topbar button + Setup subscription + global keys
+  // =====================================================================
+  function _wireOnce(){
+    const startBtn = _byId('portsim-start-btn');
+    if (startBtn && !startBtn._portsimBound){
+      startBtn._portsimBound = true;
+      startBtn.addEventListener('click', function(){ openSetup(); });
+    }
+    if (PortSim.Setup && typeof PortSim.Setup.onSubmit === 'function'){
+      PortSim.Setup.onSubmit(_onWizardSubmit);
+    }
+    document.addEventListener('keydown', function(ev){
+      if (!_state.active) return;
+      if (ev.key !== 'Escape') return;
+      const tag = ev.target && (ev.target.tagName || '');
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      const setupModal = _byId('portsim-setup-modal');
+      if (setupModal && setupModal.classList.contains('open')) return;
+      const sumModal = _byId('portsim-summary-modal');
+      if (sumModal) return;
+      if (_state.playing) _pause();
+    });
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wireOnce);
+  } else {
+    _wireOnce();
+  }
+
+  // ---- Public API ----
+  PortSim.Ctrl = {
+    openSetup: openSetup,
+    exit: _hardExit,
+    isActive: function(){ return _state.active; },
+    _state: _state,
+    _advanceAll: _advanceAll,
+    _renderAll: _renderAll
+  };
+})();
+// ============ PORTSIM TRACK G: Controller — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
