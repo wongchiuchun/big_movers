@@ -14144,6 +14144,17 @@ Sim.Ctrl = (function(){
       _safe('clearStopLines (new leg)', function(){
         window.PortSim.CardChart.clearStopLines(entry.card);
       });
+
+      // Clear prior leg's R-stars so the new leg can re-mark the same R-levels.
+      // CardChart.addRStarMarker dedups by _rLevel across the whole card, so
+      // without this reset the second leg silently never gets stars (codex
+      // review finding #4).
+      if (entry.card && entry.card._portsimMarkers && Array.isArray(entry.card._portsimMarkers.rStars)){
+        entry.card._portsimMarkers.rStars.length = 0;
+        _safe('applyMarkers (new leg)', function(){
+          if (window.PortSim.CardChart.applyMarkers) window.PortSim.CardChart.applyMarkers(entry.card);
+        });
+      }
     }
 
     // Detect newly-fired stop / close events by walking eventsLog past our
@@ -14314,6 +14325,7 @@ Sim.Ctrl = (function(){
     _safe('openLegsPopover', function(){
       var legs = _buildLegsForPopover(entry);
       window.PortSim.CardPanel.openLegsPopover(entry.card, legs);
+      entry.card._portsimOpenPopover = 'legs';
     });
   }
 
@@ -14323,10 +14335,12 @@ Sim.Ctrl = (function(){
       // Open popover with empty list so user gets feedback.
       _safe('openManageStopsPopover (idle)', function(){
         window.PortSim.CardPanel.openManageStopsPopover(entry.card, null, [], {});
+        entry.card._portsimOpenPopover = 'stops';
       });
       return;
     }
     _safe('openManageStopsPopover', function(){
+      entry.card._portsimOpenPopover = 'stops';
       var hist = _buildStopHistory(entry);
       window.PortSim.CardPanel.openManageStopsPopover(entry.card, entry.sim, hist, {
         onSave: function(historyId, newPrice, newPct){
@@ -14372,6 +14386,57 @@ Sim.Ctrl = (function(){
     rows.push(['# entry_price', _csvEscape(sim.entry ? sim.entry.price : '')].join(','));
     rows.push(['# initial_stop', _csvEscape(sim.entry ? sim.entry.stop : '')].join(','));
     rows.push(['# generated', _csvEscape(new Date().toISOString())].join(','));
+
+    // ---- Summary section (codex review finding #6 — parity with single-ticker) ----
+    try {
+      var derived = (window.Sim && window.Sim.computeDerived) ? window.Sim.computeDerived(sim, entry.bars) : null;
+      if (derived){
+        rows.push('');
+        rows.push('# === summary ===');
+        rows.push(['metric','value'].join(','));
+        rows.push(['cumulativePnL', derived.cumulativePnL != null ? derived.cumulativePnL : ''].join(','));
+        rows.push(['cumulativeR',   derived.cumulativeR != null ? derived.cumulativeR : ''].join(','));
+        rows.push(['legCount',      ((sim.legs || []).length + 1)].join(','));
+        rows.push(['mfe',           derived.mfe != null ? derived.mfe : ''].join(','));
+        rows.push(['mae',           derived.mae != null ? derived.mae : ''].join(','));
+        rows.push(['rCurrent',      derived.rCurrent != null ? derived.rCurrent : ''].join(','));
+        rows.push(['daysHeld',      derived.dayCount != null ? derived.dayCount : ''].join(','));
+        rows.push(['peakTotal',     derived.peakTotal != null ? derived.peakTotal : ''].join(','));
+        rows.push(['giveBack',      derived.giveBack != null ? derived.giveBack : ''].join(','));
+      }
+    } catch(e){ if (window.console) console.warn('[Track J] csv summary:', e); }
+
+    // ---- Per-leg breakdown ----
+    rows.push('');
+    rows.push('# === per-leg breakdown ===');
+    rows.push(['leg','entry_date','entry_price','exit_reason','realized_pnl','r_multiple','active'].join(','));
+    (sim.legs || []).forEach(function(leg, i){
+      rows.push([
+        i + 1,
+        _csvEscape(leg.entry && leg.entry.date || ''),
+        leg.entry && leg.entry.price != null ? leg.entry.price : '',
+        _csvEscape(leg.exitReason || ''),
+        leg.realizedPnL != null ? leg.realizedPnL : '',
+        leg.rMultiple != null ? leg.rMultiple : '',
+        'false'
+      ].join(','));
+    });
+    // Current (in-progress) leg — derive its realized + R from the live sim.
+    var curLegNum = (sim.legs || []).length + 1;
+    var curR = (sim.initialRisk && sim.initialRisk > 0) ? (sim.realizedPnL / sim.initialRisk) : 0;
+    rows.push([
+      curLegNum,
+      _csvEscape(sim.entry && sim.entry.date || ''),
+      sim.entry && sim.entry.price != null ? sim.entry.price : '',
+      _csvEscape(sim.stoppedOut ? 'stop' : (sim.closed ? 'close' : 'active')),
+      sim.realizedPnL != null ? sim.realizedPnL : '',
+      curR,
+      (sim.qty > 0 && !sim.closed && !sim.stoppedOut) ? 'true' : 'false'
+    ].join(','));
+
+    // ---- Event log (existing) ----
+    rows.push('');
+    rows.push('# === event log ===');
     rows.push(['leg','day','barIdx','date','type','qty','price','newStop','pct','note'].join(','));
 
     // Past legs first.
@@ -14467,6 +14532,9 @@ Sim.Ctrl = (function(){
       _safe('refreshStopLines', function(){ _refreshStopLines(entry); });
       _safe('refreshExtendedStats', function(){ _refreshExtendedStats(entry); });
     }
+    // Refresh any open popover content so it doesn't go stale as bars advance
+    // or stops are edited from elsewhere (codex review finding #2).
+    _safe('refreshOpenPopovers', _refreshOpenPopovers);
   }
 
   // ----------------------------------------------------------------
@@ -14484,6 +14552,8 @@ Sim.Ctrl = (function(){
   var _lastWatchSig = '';
   var _simIdCounter = 0;
   var _lastPlayIdx = -1;
+  var _resizeBound = false;
+  var _lastSeenActive = false;
 
   function _stateSignature(){
     var st = window.PortSim && window.PortSim._state;
@@ -14515,6 +14585,18 @@ Sim.Ctrl = (function(){
   function _watchTick(){
     var st = window.PortSim && window.PortSim._state;
     if (!st){ return; }
+    // Detect active→inactive transition (Exit clicked or basket emptied).
+    // When the controller's _hardExit flips _state.active to false, tear down
+    // the watcher + popovers + resize listener so we don't leak intervals
+    // (codex review finding #8).
+    var nowActive = !!st.active;
+    if (_lastSeenActive && !nowActive){
+      _lastSeenActive = false;
+      _trackJTeardown();
+      return;
+    }
+    _lastSeenActive = nowActive;
+    if (!nowActive) return;
     var sig = _stateSignature();
     if (sig === _lastWatchSig) return;
     var prevPlayIdx = _lastPlayIdx;
@@ -14564,7 +14646,75 @@ Sim.Ctrl = (function(){
     if (_watchTimer == null){
       _watchTimer = setInterval(_watchTick, 120);
     }
+    // Window-resize handler: re-flip popovers if the card column count
+    // changes mid-flight (codex review finding #10). Track I exposes
+    // _autoFlipPopover internally; we just re-call open* with the existing
+    // captured data, which is idempotent and runs the auto-flip again.
+    if (!_resizeBound){
+      window.addEventListener('resize', _onWindowResize, { passive: true });
+      _resizeBound = true;
+    }
     return true;
+  }
+
+  // Watcher cleanup helper — invoked when the controller exits or basket
+  // empties (codex review finding #8 — _watchTimer was never cleared).
+  function _trackJTeardown(){
+    if (_watchTimer != null){
+      try { clearInterval(_watchTimer); } catch(e){}
+      _watchTimer = null;
+    }
+    if (_resizeBound){
+      try { window.removeEventListener('resize', _onWindowResize); } catch(e){}
+      _resizeBound = false;
+    }
+    // Close any lingering popovers + clean up document listeners.
+    try {
+      var basket = (window.PortSim && PortSim._state && PortSim._state.basket) || [];
+      basket.forEach(function(e){
+        if (e && e.card){
+          try { if (window.PortSim.CardPanel.closeLegsPopover) window.PortSim.CardPanel.closeLegsPopover(e.card); } catch(err){}
+          try { if (window.PortSim.CardPanel.closeManageStopsPopover) window.PortSim.CardPanel.closeManageStopsPopover(e.card); } catch(err){}
+        }
+      });
+    } catch(e){}
+    // Clear the Ctrl-wired flag so a future Port-Sim launch can re-arm.
+    if (window.PortSim && PortSim.Ctrl) PortSim.Ctrl._trackJWired = false;
+  }
+
+  // Verify the popover element is still in the DOM; clear flag if not.
+  // (Track I auto-closes on ESC / click-outside, which this code doesn't observe.)
+  function _verifyOpenPopover(card){
+    if (!card || !card.cardEl) return null;
+    var openKind = card._portsimOpenPopover;
+    if (!openKind) return null;
+    var pop = card.cardEl.querySelector('.portcard-popover');
+    if (!pop){ card._portsimOpenPopover = null; return null; }
+    return openKind;
+  }
+
+  function _onWindowResize(){
+    // Re-call open* for any open popover so positioning + content stay current.
+    var basket = (window.PortSim && PortSim._state && PortSim._state.basket) || [];
+    basket.forEach(function(e){
+      if (!e || !e.card) return;
+      var openKind = _verifyOpenPopover(e.card);
+      if (openKind === 'legs') _safe('resize legs popover', function(){ _onLegsClick(e); });
+      else if (openKind === 'stops') _safe('resize stops popover', function(){ _onStopsClick(e); });
+    });
+  }
+
+  // Refresh open popover content on every render so live edits / advancing
+  // bars don't leave the popover stale (codex review finding #2).
+  function _refreshOpenPopovers(){
+    var basket = (window.PortSim && PortSim._state && PortSim._state.basket) || [];
+    basket.forEach(function(e){
+      if (!e || !e.card) return;
+      var openKind = _verifyOpenPopover(e.card);
+      if (!openKind) return;
+      if (openKind === 'legs')      _safe('refresh legs popover',  function(){ _onLegsClick(e); });
+      else if (openKind === 'stops') _safe('refresh stops popover', function(){ _onStopsClick(e); });
+    });
   }
 
   function _bootstrap(){
