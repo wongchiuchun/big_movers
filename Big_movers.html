@@ -12726,6 +12726,292 @@ Sim.Ctrl = (function(){
   };
 })();
 // ============ PORTSIM TRACK G: Controller — END ============
+
+// ============ PORTSIM TRACK H: Card Chart Visuals — START ============
+// Pure utility namespace that paints leg/exit/R-star markers, dashed stop-price
+// lines, and entry-bar highlight onto a PortSim.Cards card. The card factory
+// (Track B) is APPEND-ONLY — we never mutate it; instead we attach our private
+// state via card._portsimMarkers / card._portsimStopLines so the controller
+// (Track J) can inspect everything for debugging.
+//
+// Color and shape choices mirror the single-ticker Sim.Ctrl visual layer
+// (~line 8625 of this file) so the per-card and full-screen sims read alike.
+//
+// All methods are defensive: missing card / candleSeries / bar → silent return.
+// All LWC calls are wrapped in try/catch so a stale chart never throws past us.
+(function() {
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.CardChart) return; // idempotent — don't clobber
+
+  // ---------- Color constants (match single-ticker Sim) ----------
+  const ENTRY_COLOR        = '#6ee7b7'; // mint green ▲ below bar
+  const STOP_EXIT_COLOR    = '#fb7185'; // coral red ▼ above bar
+  const CLOSE_EXIT_COLOR   = '#9ca3af'; // muted gray ▼ above bar
+  const R_STAR_COLOR       = '#fbbf24'; // gold ★ above bar
+  const ACTIVE_STOP_COLOR  = '#fecdd3'; // light coral dashed line
+  const INITIAL_STOP_COLOR = '#6b7280'; // gray dotted line
+  const HIGHLIGHT_COLOR    = '#a7f3d0'; // entry-bar candle tint
+
+  // LWC v3.8 LineStyle: 0 Solid, 1 Dotted, 2 Dashed, 3 LargeDashed, 4 SparseDotted
+  const STYLE_DASHED = 2;
+  const STYLE_DOTTED = 3;
+
+  // ---------- Internal helpers ----------
+  function _getStore(card) {
+    if (!card) return null;
+    if (!card._portsimMarkers) {
+      card._portsimMarkers = { legs: [], rStars: [] };
+    }
+    if (!card._portsimStopLines) {
+      card._portsimStopLines = { active: null, initial: null };
+    }
+    return card._portsimMarkers;
+  }
+
+  function _hasSeries(card) {
+    return !!(card && card.candleSeries);
+  }
+
+  function _fmtPrice(p) {
+    if (p == null || !Number.isFinite(+p)) return '';
+    return '$' + Number(p).toFixed(2);
+  }
+
+  // Sort + push markers to candleSeries. LWC v3.8 setMarkers REPLACES, so we
+  // always merge legs + rStars into a single sorted list.
+  function _applyMarkers(card) {
+    if (!_hasSeries(card)) return;
+    const store = _getStore(card);
+    if (!store) return;
+    const merged = (store.legs || []).concat(store.rStars || []);
+    merged.sort(function(a, b) {
+      if (a.time === b.time) return 0;
+      return a.time < b.time ? -1 : 1;
+    });
+    try { card.candleSeries.setMarkers(merged); } catch(e) {}
+  }
+
+  // ---------- Public API ----------
+  const CardChart = {};
+
+  // ---- Markers ----
+  CardChart.addLegEntryMarker = function(card, legNum, time) {
+    if (!_hasSeries(card) || !time) return;
+    const store = _getStore(card);
+    store.legs.push({
+      time: time,
+      position: 'belowBar',
+      color: ENTRY_COLOR,
+      shape: 'arrowUp',
+      text: 'L' + (legNum != null ? legNum : '?') + ' entry',
+      size: 1
+    });
+    _applyMarkers(card);
+  };
+
+  CardChart.addLegExitMarker = function(card, legNum, time, exitPrice, exitReason) {
+    if (!_hasSeries(card) || !time) return;
+    const store = _getStore(card);
+    const isStop = exitReason === 'stop';
+    const sym = isStop ? '✕ ' : '● ';
+    const priceTxt = (exitPrice != null && Number.isFinite(+exitPrice))
+      ? _fmtPrice(exitPrice)
+      : (isStop ? 'stop' : 'close');
+    store.legs.push({
+      time: time,
+      position: 'aboveBar',
+      color: isStop ? STOP_EXIT_COLOR : CLOSE_EXIT_COLOR,
+      shape: 'arrowDown',
+      text: 'L' + (legNum != null ? legNum : '?') + ' ' + sym + priceTxt,
+      size: 1
+    });
+    _applyMarkers(card);
+  };
+
+  CardChart.addRStarMarker = function(card, time, rLevel) {
+    if (!_hasSeries(card) || !time) return;
+    const store = _getStore(card);
+    // De-dupe: don't add the same R-level twice for the same card.
+    const exists = (store.rStars || []).some(function(m) {
+      return m._rLevel === rLevel;
+    });
+    if (exists) return;
+    store.rStars.push({
+      _rLevel: rLevel,
+      time: time,
+      position: 'aboveBar',
+      color: R_STAR_COLOR,
+      shape: 'circle',
+      text: '★ +' + rLevel + 'R',
+      size: 1
+    });
+    _applyMarkers(card);
+  };
+
+  CardChart.clearAllMarkers = function(card) {
+    if (!card) return;
+    const store = _getStore(card);
+    if (!store) return;
+    store.legs = [];
+    store.rStars = [];
+    if (_hasSeries(card)) {
+      try { card.candleSeries.setMarkers([]); } catch(e) {}
+    }
+  };
+
+  // Exposed for manual repaint (controller may want to force a sync).
+  CardChart.applyMarkers = function(card) {
+    _applyMarkers(card);
+  };
+
+  // ---- Stop price lines ----
+  CardChart.setActiveStopLine = function(card, price, label, opts) {
+    if (!_hasSeries(card)) return;
+    if (price == null || !Number.isFinite(+price)) return;
+    _getStore(card); // ensure stop-line slot exists
+    opts = opts || {};
+    const color = opts.color || ACTIVE_STOP_COLOR;
+    const style = (opts.style != null) ? opts.style : STYLE_DASHED;
+    const title = (label != null) ? String(label) : ('STOP ' + _fmtPrice(price));
+
+    const slot = card._portsimStopLines;
+    if (slot.active) {
+      try {
+        slot.active.applyOptions({
+          price: +price,
+          color: color,
+          lineStyle: style,
+          title: title
+        });
+        return;
+      } catch(e) {
+        // If apply fails (e.g. stale handle), recreate.
+        try { card.candleSeries.removePriceLine(slot.active); } catch(e2) {}
+        slot.active = null;
+      }
+    }
+    try {
+      slot.active = card.candleSeries.createPriceLine({
+        price: +price,
+        color: color,
+        lineWidth: 1,
+        lineStyle: style,
+        axisLabelVisible: true,
+        title: title
+      });
+    } catch(e) { slot.active = null; }
+  };
+
+  CardChart.setInitialStopLine = function(card, price) {
+    if (!_hasSeries(card)) return;
+    if (price == null || !Number.isFinite(+price)) return;
+    _getStore(card);
+    const slot = card._portsimStopLines;
+    if (slot.initial) {
+      try {
+        slot.initial.applyOptions({ price: +price });
+        return;
+      } catch(e) {
+        try { card.candleSeries.removePriceLine(slot.initial); } catch(e2) {}
+        slot.initial = null;
+      }
+    }
+    try {
+      slot.initial = card.candleSeries.createPriceLine({
+        price: +price,
+        color: INITIAL_STOP_COLOR,
+        lineWidth: 1,
+        lineStyle: STYLE_DOTTED,
+        axisLabelVisible: true,
+        title: '−1R (init)'
+      });
+    } catch(e) { slot.initial = null; }
+  };
+
+  CardChart.clearStopLines = function(card) {
+    if (!_hasSeries(card)) return;
+    _getStore(card);
+    const slot = card._portsimStopLines;
+    if (slot.active) {
+      try { card.candleSeries.removePriceLine(slot.active); } catch(e) {}
+      slot.active = null;
+    }
+    if (slot.initial) {
+      try { card.candleSeries.removePriceLine(slot.initial); } catch(e) {}
+      slot.initial = null;
+    }
+  };
+
+  // ---- Entry-bar highlight ----
+  // Repaints a candle with the green-tint highlight color. LWC v3.8
+  // candleSeries.update() requires bar.time >= last bar's time, so this is
+  // only safe when the entry bar IS the latest bar on the card. Track J calls
+  // this immediately after the entry bar is appended via card.appendBar(), so
+  // the constraint is satisfied in normal use.
+  CardChart.highlightEntryBar = function(card, bar) {
+    if (!_hasSeries(card) || !bar) return;
+    const t = bar.time || bar.date || bar.Date || bar.datetime || bar.DateTime;
+    if (t == null) return;
+    const o = +bar.open, h = +bar.high, l = +bar.low, c = +bar.close;
+    if (![o, h, l, c].every(Number.isFinite)) return;
+    try {
+      card.candleSeries.update({
+        time: t,
+        open: o, high: h, low: l, close: c,
+        color: HIGHLIGHT_COLOR,
+        borderColor: HIGHLIGHT_COLOR,
+        wickColor: HIGHLIGHT_COLOR
+      });
+    } catch(e) {
+      if (window.console) console.warn('[PortSim.CardChart] highlightEntryBar:', e && e.message);
+    }
+  };
+
+  // ---- R-level helpers (pure math) ----
+  // Returns [{level, price}, ...] for r in [minR..maxR] given sim.entry.{price,stop}.
+  // Returns [] if risk is non-positive or sim.entry is missing.
+  CardChart.buildRLevels = function(sim, minR, maxR) {
+    const out = [];
+    if (!sim || !sim.entry) return out;
+    const entry = +sim.entry.price;
+    const stop  = +sim.entry.stop;
+    if (!Number.isFinite(entry) || !Number.isFinite(stop)) return out;
+    const risk = entry - stop;
+    if (risk <= 0) return out;
+    const lo = Number.isFinite(minR) ? minR : 3;
+    const hi = Number.isFinite(maxR) ? maxR : 15;
+    for (let r = lo; r <= hi; r++) {
+      out.push({ level: r, price: entry + r * risk });
+    }
+    return out;
+  };
+
+  // rState: { levels: [{level, price}, ...], hit: Set<number> }
+  // Mutates rState.hit to add newly-hit R-levels for this bar.
+  // Returns array of NEWLY-hit levels (sorted ascending).
+  CardChart.checkRHitsForBar = function(rState, bar) {
+    const newly = [];
+    if (!rState || !Array.isArray(rState.levels) || !bar) return newly;
+    const high = +bar.high;
+    if (!Number.isFinite(high)) return newly;
+    if (!rState.hit || typeof rState.hit.has !== 'function') {
+      rState.hit = new Set();
+    }
+    rState.levels.forEach(function(rl) {
+      if (rState.hit.has(rl.level)) return;
+      if (high >= rl.price) {
+        rState.hit.add(rl.level);
+        newly.push(rl.level);
+      }
+    });
+    newly.sort(function(a, b) { return a - b; });
+    return newly;
+  };
+
+  window.PortSim.CardChart = CardChart;
+})();
+// ============ PORTSIM TRACK H: Card Chart Visuals — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
