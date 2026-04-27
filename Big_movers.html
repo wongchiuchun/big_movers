@@ -1947,6 +1947,208 @@
     top:0;left:0;right:0;bottom:0;
   }
   /* ============ PORTSIM TRACK B: Card Styles — END ============ */
+
+  /* ============ PORTSIM TRACK D: Setup Wizard Styles — START ============ */
+  #portsim-setup-modal .fetch-modal{
+    width:680px;
+    max-width:96vw;
+    max-height:90vh;
+    overflow-y:auto;
+  }
+  #portsim-setup-modal h3{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .portsim-setup-row2{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  }
+  .portsim-setup-row3{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+  }
+  .portsim-section-title{
+    font-family:var(--mono);font-size:10px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.8px;
+    margin:14px 0 8px 0;padding-top:10px;
+    border-top:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .portsim-section-title .portsim-section-hint{
+    font-size:9px;color:var(--muted);text-transform:none;letter-spacing:0;
+  }
+  .portsim-index-pills{
+    display:flex;gap:6px;
+  }
+  .portsim-index-pill{
+    flex:1;
+    padding:6px 12px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-family:var(--mono);font-size:11px;font-weight:600;
+    color:var(--text-2);
+    cursor:pointer;outline:none;
+    text-transform:uppercase;letter-spacing:0.5px;
+  }
+  .portsim-index-pill:hover{border-color:var(--border-bright);color:var(--text);}
+  .portsim-index-pill.active{
+    background:var(--accent);
+    color:var(--bg);
+    border-color:var(--accent);
+  }
+  .portsim-basket-rows{
+    display:flex;flex-direction:column;gap:8px;
+    max-height:42vh;overflow-y:auto;
+    padding-right:4px;
+  }
+  .portsim-basket-row{
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .portsim-basket-row.has-error{
+    border-color:var(--red);
+    background:rgba(251,113,133,0.06);
+  }
+  .portsim-basket-row.has-warn{
+    border-color:#d4a574;
+  }
+  .portsim-basket-row-main{
+    display:grid;
+    grid-template-columns:30px minmax(0, 1fr) auto auto;
+    gap:8px;align-items:center;
+  }
+  .portsim-row-num{
+    font-family:var(--mono);font-size:10px;color:var(--muted);
+    text-align:center;
+  }
+  .portsim-row-sym{
+    width:100%;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--mono);font-size:12px;font-weight:600;
+    padding:6px 10px;border-radius:6px;outline:none;
+    text-transform:uppercase;
+  }
+  .portsim-row-sym:focus{border-color:var(--accent);}
+  .portsim-row-pre-toggle{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:10px;color:var(--text-2);
+    text-transform:uppercase;letter-spacing:0.5px;
+    cursor:pointer;user-select:none;
+    white-space:nowrap;
+  }
+  .portsim-row-pre-toggle input[type="checkbox"]{
+    width:14px;height:14px;cursor:pointer;
+    accent-color:var(--accent);
+  }
+  .portsim-row-remove{
+    width:28px;height:28px;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    color:var(--muted);
+    font-family:var(--mono);font-size:14px;
+    cursor:pointer;outline:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .portsim-row-remove:hover{
+    border-color:var(--red);color:var(--red);
+  }
+  .portsim-row-pre-fields{
+    display:none;
+    grid-template-columns:1fr 1fr 1fr 1fr;
+    gap:6px;
+    padding-top:6px;
+    border-top:1px dashed var(--border);
+  }
+  .portsim-basket-row.pre-on .portsim-row-pre-fields{
+    display:grid;
+  }
+  .portsim-row-pre-fields label{
+    font-family:var(--mono);font-size:9px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.5px;
+    display:block;margin-bottom:2px;
+  }
+  .portsim-row-pre-fields input{
+    width:100%;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--mono);font-size:11px;
+    padding:5px 8px;border-radius:5px;outline:none;
+  }
+  .portsim-row-pre-fields input:focus{border-color:var(--accent);}
+  .portsim-row-size-pills{
+    display:flex;gap:2px;margin-bottom:2px;
+  }
+  .portsim-row-size-pill{
+    flex:1;
+    padding:3px 4px;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    color:var(--muted);
+    font-family:var(--mono);font-size:9px;font-weight:600;
+    border-radius:4px;cursor:pointer;outline:none;
+    text-transform:uppercase;
+  }
+  .portsim-row-size-pill.active{
+    background:var(--accent);color:var(--bg);
+    border-color:var(--accent);
+  }
+  .portsim-row-error{
+    font-family:var(--mono);font-size:10px;color:var(--red);
+    padding:2px 0 0 0;
+    min-height:0;
+  }
+  .portsim-row-error:empty{display:none;}
+  .portsim-row-warn{
+    font-family:var(--mono);font-size:10px;color:#d4a574;
+    padding:2px 0 0 0;
+  }
+  .portsim-row-warn:empty{display:none;}
+  .portsim-add-row-btn{
+    width:100%;
+    background:var(--bg3);
+    border:1px dashed var(--border-bright);
+    color:var(--text-2);
+    font-family:var(--mono);font-size:11px;font-weight:600;
+    padding:8px;border-radius:6px;cursor:pointer;outline:none;
+    text-transform:uppercase;letter-spacing:0.5px;
+    margin-top:6px;
+  }
+  .portsim-add-row-btn:hover{
+    border-color:var(--accent);color:var(--accent);
+  }
+  .portsim-add-row-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .portsim-validation-summary{
+    font-family:var(--mono);font-size:10px;
+    margin-top:12px;padding:8px 10px;
+    border-radius:6px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    line-height:1.5;
+    display:none;
+  }
+  .portsim-validation-summary.has-errors{
+    background:rgba(251,113,133,0.08);
+    border-color:var(--red);
+    color:var(--red);
+    display:block;
+  }
+  .portsim-validation-summary.success{
+    background:rgba(110,231,183,0.06);
+    border-color:var(--green);
+    color:var(--green);
+    display:block;
+  }
+  .portsim-validation-summary ul{
+    margin:0;padding-left:18px;
+  }
+  .portsim-validation-summary li{margin:1px 0;}
+  /* ============ PORTSIM TRACK D: Setup Wizard Styles — END ============ */
 </style>
 </head>
 <body>
@@ -10065,6 +10267,775 @@ Sim.Ctrl = (function(){
   window.PortSim.Modal = Modal;
 })();
 // ============ PORTSIM TRACK F: Modal Adapters — END ============
+
+// ============ PORTSIM TRACK D: Setup Wizard — START ============
+// Setup wizard modal for the portfolio simulator. Owns:
+//   - the #portsim-setup-modal DOM (basket rows, dates, cash, index)
+//   - validation (cash > 0, dates, ≥1 ticker w/ pre-entry, stop<entry, cost ≤ cash)
+//   - parallel ticker OHLCV fetch & data-coverage checks
+//   - localStorage round-trip of the user-input config
+//   - public API window.PortSim.Setup.{open,close,onSubmit,publish, _*}
+// Track G's controller is expected to subscribe via PortSim.Setup.onSubmit.
+// If no subscriber is registered, submit logs to console + stores on _lastConfig.
+(function () {
+  'use strict';
+  var PortSim = (window.PortSim = window.PortSim || {});
+  if (PortSim.Setup) return; // idempotent
+
+  var STORAGE_KEY = 'bm_portsim_setup';
+  var MAX_ROWS = 10;
+  var MIN_ROWS = 1;
+  var INITIAL_ROWS = 4;
+
+  var Setup = {
+    _lastConfig: null,
+    _subscribers: [],
+    _state: {
+      open: false,
+      submitting: false,
+      rows: [],            // [{symbol, hasPreEntry, entryPrice, stopPrice, sizeMode, sizeValue}]
+      initialCash: 100000,
+      startDate: '',
+      endDate: '',
+      index: 'SPX'
+    }
+  };
+
+  // ------------------------------------------------------------ helpers ----
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  function safeNum(v) {
+    var n = Number(v);
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function isValidDate(s) {
+    if (!s || typeof s !== 'string') return false;
+    var d = new Date(s + 'T00:00:00');
+    return !isNaN(d.getTime());
+  }
+
+  function clearChildren(el) {
+    if (!el) return;
+    while (el.firstChild) el.removeChild(el.firstChild);
+  }
+
+  function defaultRow() {
+    return {
+      symbol: '',
+      hasPreEntry: false,
+      entryPrice: '',
+      stopPrice: '',
+      sizeMode: 'shares',
+      sizeValue: ''
+    };
+  }
+
+  // ----------------------------------------------------- localStorage ----
+  Setup._loadFromStorage = function () {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      return parsed;
+    } catch (e) {
+      console.warn('[PortSim.Setup] _loadFromStorage:', e && e.message);
+      return null;
+    }
+  };
+
+  Setup._saveToStorage = function (cfg) {
+    try {
+      // Strip out any volatile fields (fetchedBars/dataError/dataWarn) before persisting.
+      var pruned = {
+        initialCash: cfg.initialCash,
+        startDate: cfg.startDate,
+        endDate: cfg.endDate,
+        index: cfg.index,
+        tickers: (cfg.tickers || []).map(function (t) {
+          return {
+            symbol: t.symbol,
+            hasPreEntry: !!t.hasPreEntry,
+            entryPrice: t.entryPrice != null ? t.entryPrice : null,
+            stopPrice: t.stopPrice != null ? t.stopPrice : null,
+            sizeMode: t.sizeMode || 'shares',
+            sizeValue: t.sizeValue != null ? t.sizeValue : null
+          };
+        })
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pruned));
+      return true;
+    } catch (e) {
+      console.warn('[PortSim.Setup] _saveToStorage:', e && e.message);
+      return false;
+    }
+  };
+
+  // ----------------------------------------------------- pure validator ----
+  // Validates a *config object* (not the live form). Returns { ok, errors:[{path,msg}], rowErrors:{idx:msg} }.
+  // Note: data-coverage (per-ticker fetch) errors are NOT computed here — they're added during submit.
+  Setup._validate = function (cfg) {
+    var errors = [];
+    var rowErrors = {};
+    if (!cfg || typeof cfg !== 'object') {
+      errors.push({ path: 'config', msg: 'Missing setup configuration' });
+      return { ok: false, errors: errors, rowErrors: rowErrors };
+    }
+
+    var cash = safeNum(cfg.initialCash);
+    if (!Number.isFinite(cash) || cash <= 0) {
+      errors.push({ path: 'initialCash', msg: 'Initial cash must be a positive number' });
+    }
+
+    if (!isValidDate(cfg.startDate)) {
+      errors.push({ path: 'startDate', msg: 'Start date is required' });
+    }
+    if (!isValidDate(cfg.endDate)) {
+      errors.push({ path: 'endDate', msg: 'End date is required' });
+    }
+    if (isValidDate(cfg.startDate) && isValidDate(cfg.endDate)) {
+      if (cfg.startDate >= cfg.endDate) {
+        errors.push({ path: 'dateRange', msg: 'Start date must be before end date' });
+      }
+    }
+
+    if (cfg.index !== 'SPX' && cfg.index !== 'NDQ') {
+      errors.push({ path: 'index', msg: 'Index must be SPX or NDQ' });
+    }
+
+    var tickers = Array.isArray(cfg.tickers) ? cfg.tickers : [];
+    var nonEmpty = tickers.filter(function (t) { return t && t.symbol && t.symbol.trim().length > 0; });
+    if (nonEmpty.length === 0) {
+      errors.push({ path: 'tickers', msg: 'At least 1 ticker symbol is required' });
+    }
+    // Duplicate symbols
+    var seen = Object.create(null);
+    tickers.forEach(function (t, i) {
+      if (!t || !t.symbol) return;
+      var sym = String(t.symbol).trim().toUpperCase();
+      if (!sym) return;
+      if (seen[sym] != null) {
+        rowErrors[i] = (rowErrors[i] ? rowErrors[i] + '; ' : '') + 'Duplicate symbol (already on row ' + (seen[sym] + 1) + ')';
+      } else {
+        seen[sym] = i;
+      }
+    });
+
+    var preEntries = tickers.filter(function (t) { return t && t.symbol && t.hasPreEntry; });
+    if (nonEmpty.length > 0 && preEntries.length === 0) {
+      errors.push({ path: 'preEntry', msg: 'At least 1 ticker must have a pre-declared entry' });
+    }
+
+    // Per-row pre-entry validation + cost roll-up
+    var totalCost = 0;
+    tickers.forEach(function (t, i) {
+      if (!t || !t.hasPreEntry) return;
+      if (!t.symbol || !t.symbol.trim()) {
+        rowErrors[i] = (rowErrors[i] ? rowErrors[i] + '; ' : '') + 'Pre-entry needs a symbol';
+        return;
+      }
+      var entryPx = safeNum(t.entryPrice);
+      var stopPx = safeNum(t.stopPrice);
+      var sizeVal = safeNum(t.sizeValue);
+      var rowMsg = '';
+      if (!Number.isFinite(entryPx) || entryPx <= 0) rowMsg = 'Entry price must be > 0';
+      else if (!Number.isFinite(stopPx) || stopPx <= 0) rowMsg = 'Stop must be > 0';
+      else if (stopPx >= entryPx) rowMsg = 'Stop must be below entry price';
+      else if (!Number.isFinite(sizeVal) || sizeVal <= 0) rowMsg = 'Size must be > 0';
+
+      if (rowMsg) {
+        rowErrors[i] = (rowErrors[i] ? rowErrors[i] + '; ' : '') + rowMsg;
+        return;
+      }
+
+      // Convert to shares for cost
+      var shares;
+      if (t.sizeMode === 'dollars') {
+        shares = Math.floor(sizeVal / entryPx);
+      } else {
+        shares = Math.floor(sizeVal);
+      }
+      if (shares <= 0) {
+        rowErrors[i] = (rowErrors[i] ? rowErrors[i] + '; ' : '') + 'Computed shares = 0 (size too small)';
+        return;
+      }
+      totalCost += shares * entryPx;
+    });
+
+    // Cash sufficiency — use PortSim.Cash.preflight if available
+    if (Number.isFinite(cash) && cash > 0 && totalCost > 0) {
+      var cashOK = false;
+      try {
+        if (PortSim.Cash && typeof PortSim.Cash.preflight === 'function') {
+          // preflight(state, shares, price) checks state.cash >= shares*price.
+          // To check sum of pre-entry cost, we pass shares=1 and price=totalCost.
+          cashOK = PortSim.Cash.preflight({ cash: cash, realizedPnL: 0 }, 1, totalCost);
+        } else {
+          cashOK = cash >= totalCost - 1e-9;
+        }
+      } catch (e) {
+        cashOK = cash >= totalCost - 1e-9;
+      }
+      if (!cashOK) {
+        errors.push({
+          path: 'preEntryCost',
+          msg: 'Pre-entry cost $' + totalCost.toFixed(2) + ' exceeds initial cash $' + cash.toFixed(2)
+        });
+      }
+    }
+
+    return { ok: errors.length === 0 && Object.keys(rowErrors).length === 0, errors: errors, rowErrors: rowErrors, totalCost: totalCost };
+  };
+
+  // ----------------------------------------------------- data fetching ----
+  // Fetches /api/ohlcv?symbol=X for each non-empty ticker in parallel.
+  // Returns { perTicker: { SYM: {bars,error,warn} }, fetchedBars: { SYM: bars } }.
+  function fetchAllTickers(cfg) {
+    var tickers = (cfg.tickers || []).filter(function (t) { return t && t.symbol && t.symbol.trim(); });
+    var seen = Object.create(null);
+    var unique = [];
+    tickers.forEach(function (t) {
+      var sym = t.symbol.trim().toUpperCase();
+      if (seen[sym]) return;
+      seen[sym] = true;
+      unique.push(sym);
+    });
+
+    var startDate = cfg.startDate;
+    var endDate = cfg.endDate;
+
+    var promises = unique.map(function (sym) {
+      return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+        .then(function (resp) {
+          if (!resp.ok) {
+            if (resp.status === 404) {
+              return { sym: sym, bars: null, error: '✕ ' + sym + ' not found (404)' };
+            }
+            return { sym: sym, bars: null, error: '✕ ' + sym + ' fetch error (HTTP ' + resp.status + ')' };
+          }
+          return resp.json().then(function (json) {
+            // Server returns {symbol, bars: [...]} per Big_movers_server.py
+            var bars = (json && json.bars) || [];
+            if (!Array.isArray(bars) || bars.length === 0) {
+              return { sym: sym, bars: null, error: '✕ ' + sym + ' has no bars' };
+            }
+            // Normalize: bars items expected to have a date field. Server emits
+            // various shapes — collect the date string off whichever key exists.
+            var dateOf = function (b) {
+              if (!b) return null;
+              return b.date || b.time || b.t || b.Date || b.DateTime || null;
+            };
+            var firstDate = dateOf(bars[0]);
+            var lastDate = dateOf(bars[bars.length - 1]);
+            var warn = null;
+            // Coverage check: must have a bar at or before startDate
+            if (startDate && firstDate && firstDate > startDate) {
+              return {
+                sym: sym, bars: bars,
+                error: '✕ ' + sym + ' data starts ' + firstDate + ', after start date ' + startDate
+              };
+            }
+            // Soft warn: data ends before endDate
+            if (endDate && lastDate && lastDate < endDate) {
+              warn = '⚠ ' + sym + ' data ends ' + lastDate + ' (before end ' + endDate + ')';
+            }
+            return { sym: sym, bars: bars, error: null, warn: warn };
+          });
+        })
+        .catch(function (e) {
+          return { sym: sym, bars: null, error: '✕ ' + sym + ' network error: ' + (e && e.message ? e.message : e) };
+        });
+    });
+
+    return Promise.all(promises).then(function (results) {
+      var perTicker = {};
+      var fetchedBars = {};
+      results.forEach(function (r) {
+        perTicker[r.sym] = { bars: r.bars, error: r.error || null, warn: r.warn || null };
+        if (r.bars) fetchedBars[r.sym] = r.bars;
+      });
+      return { perTicker: perTicker, fetchedBars: fetchedBars };
+    });
+  }
+
+  // ----------------------------------------------------- form <-> state ----
+  function readFormToState() {
+    var s = Setup._state;
+    s.initialCash = safeNum($('#portsim-initial-cash').value);
+    s.startDate = $('#portsim-start-date').value || '';
+    s.endDate = $('#portsim-end-date').value || '';
+    var activeIdx = $('#portsim-index-pills .portsim-index-pill.active');
+    s.index = (activeIdx && activeIdx.getAttribute('data-index')) || 'SPX';
+
+    var rowEls = $$('#portsim-basket-rows .portsim-basket-row');
+    s.rows = rowEls.map(function (rowEl) {
+      var sym = ($('.portsim-row-sym', rowEl).value || '').trim().toUpperCase();
+      var pre = $('.portsim-row-pre-cb', rowEl).checked;
+      var entryPx = $('.portsim-row-price', rowEl).value;
+      var stopPx = $('.portsim-row-stop', rowEl).value;
+      var sizeVal = $('.portsim-row-size', rowEl).value;
+      var modeBtn = $('.portsim-row-size-pill.active', rowEl);
+      var sizeMode = (modeBtn && modeBtn.getAttribute('data-mode')) || 'shares';
+      return {
+        symbol: sym,
+        hasPreEntry: pre,
+        entryPrice: entryPx === '' ? '' : safeNum(entryPx),
+        stopPrice: stopPx === '' ? '' : safeNum(stopPx),
+        sizeMode: sizeMode,
+        sizeValue: sizeVal === '' ? '' : safeNum(sizeVal)
+      };
+    });
+  }
+
+  function buildConfigFromState(includeBars) {
+    var s = Setup._state;
+    var cfg = {
+      initialCash: safeNum(s.initialCash),
+      startDate: s.startDate,
+      endDate: s.endDate,
+      index: s.index,
+      tickers: s.rows
+        .filter(function (r) { return r.symbol && r.symbol.trim().length > 0; })
+        .map(function (r) {
+          var t = {
+            symbol: r.symbol.trim().toUpperCase(),
+            hasPreEntry: !!r.hasPreEntry
+          };
+          if (r.hasPreEntry) {
+            t.entryPrice = safeNum(r.entryPrice);
+            t.stopPrice = safeNum(r.stopPrice);
+            t.sizeMode = r.sizeMode || 'shares';
+            t.sizeValue = safeNum(r.sizeValue);
+          }
+          return t;
+        })
+    };
+    if (includeBars && Setup._fetchedBars) cfg.fetchedBars = Setup._fetchedBars;
+    return cfg;
+  }
+
+  // Returns the *raw* config including empty rows — for the validator's row indexing
+  // (so error indices map back to the form rows directly).
+  function buildRawConfigFromState() {
+    var s = Setup._state;
+    return {
+      initialCash: safeNum(s.initialCash),
+      startDate: s.startDate,
+      endDate: s.endDate,
+      index: s.index,
+      tickers: s.rows.map(function (r) {
+        var t = {
+          symbol: r.symbol ? r.symbol.trim().toUpperCase() : '',
+          hasPreEntry: !!r.hasPreEntry
+        };
+        if (r.hasPreEntry) {
+          t.entryPrice = safeNum(r.entryPrice);
+          t.stopPrice = safeNum(r.stopPrice);
+          t.sizeMode = r.sizeMode || 'shares';
+          t.sizeValue = safeNum(r.sizeValue);
+        }
+        return t;
+      })
+    };
+  }
+
+  // ----------------------------------------------------- DOM rendering ----
+  function makeRowEl(rowState) {
+    var tpl = document.getElementById('portsim-basket-row-template');
+    if (!tpl || !tpl.content) return null;
+    var node = tpl.content.firstElementChild.cloneNode(true);
+    var symEl = $('.portsim-row-sym', node);
+    var preCb = $('.portsim-row-pre-cb', node);
+    var priceEl = $('.portsim-row-price', node);
+    var stopEl = $('.portsim-row-stop', node);
+    var sizeEl = $('.portsim-row-size', node);
+    var pillBtns = $$('.portsim-row-size-pill', node);
+    var removeBtn = $('.portsim-row-remove', node);
+
+    if (rowState) {
+      symEl.value = rowState.symbol || '';
+      preCb.checked = !!rowState.hasPreEntry;
+      if (rowState.hasPreEntry) {
+        priceEl.value = (rowState.entryPrice != null && rowState.entryPrice !== '') ? rowState.entryPrice : '';
+        stopEl.value = (rowState.stopPrice != null && rowState.stopPrice !== '') ? rowState.stopPrice : '';
+        sizeEl.value = (rowState.sizeValue != null && rowState.sizeValue !== '') ? rowState.sizeValue : '';
+        var mode = rowState.sizeMode || 'shares';
+        pillBtns.forEach(function (b) {
+          if (b.getAttribute('data-mode') === mode) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      }
+      if (preCb.checked) node.classList.add('pre-on');
+    }
+
+    // -- handlers --
+    symEl.addEventListener('blur', function () {
+      symEl.value = (symEl.value || '').trim().toUpperCase();
+    });
+    symEl.addEventListener('input', clearRowErrorOnInput.bind(null, node));
+
+    preCb.addEventListener('change', function () {
+      if (preCb.checked) node.classList.add('pre-on');
+      else node.classList.remove('pre-on');
+    });
+
+    pillBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        pillBtns.forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+
+    removeBtn.addEventListener('click', function () {
+      var rows = $$('#portsim-basket-rows .portsim-basket-row');
+      if (rows.length <= MIN_ROWS) {
+        // Don't remove last row — just clear it
+        symEl.value = '';
+        preCb.checked = false;
+        node.classList.remove('pre-on');
+        priceEl.value = ''; stopEl.value = ''; sizeEl.value = '';
+        clearRowVisualState(node);
+        return;
+      }
+      node.parentNode && node.parentNode.removeChild(node);
+      renumberRows();
+      updateAddBtnState();
+    });
+
+    [priceEl, stopEl, sizeEl].forEach(function (el) {
+      el.addEventListener('input', clearRowErrorOnInput.bind(null, node));
+    });
+
+    return node;
+  }
+
+  function clearRowErrorOnInput(rowEl) {
+    rowEl.classList.remove('has-error');
+    var errEl = $('.portsim-row-error', rowEl);
+    if (errEl) errEl.textContent = '';
+  }
+
+  function clearRowVisualState(rowEl) {
+    rowEl.classList.remove('has-error', 'has-warn');
+    var errEl = $('.portsim-row-error', rowEl);
+    var warnEl = $('.portsim-row-warn', rowEl);
+    if (errEl) errEl.textContent = '';
+    if (warnEl) warnEl.textContent = '';
+  }
+
+  function renumberRows() {
+    $$('#portsim-basket-rows .portsim-basket-row').forEach(function (rowEl, i) {
+      var n = $('.portsim-row-num', rowEl);
+      if (n) n.textContent = String(i + 1);
+    });
+  }
+
+  function updateAddBtnState() {
+    var btn = $('#portsim-add-row-btn');
+    if (!btn) return;
+    var count = $$('#portsim-basket-rows .portsim-basket-row').length;
+    btn.disabled = count >= MAX_ROWS;
+    btn.textContent = count >= MAX_ROWS
+      ? '+ Add Ticker (max ' + MAX_ROWS + ' reached)'
+      : '+ Add Ticker (' + count + ' / ' + MAX_ROWS + ')';
+  }
+
+  function rebuildRowsFromState(rowsState) {
+    var host = $('#portsim-basket-rows');
+    if (!host) return;
+    clearChildren(host);
+    var rows = (rowsState && rowsState.length) ? rowsState.slice() : [];
+    while (rows.length < INITIAL_ROWS) rows.push(defaultRow());
+    if (rows.length > MAX_ROWS) rows.length = MAX_ROWS;
+    rows.forEach(function (rs) {
+      var el = makeRowEl(rs);
+      if (el) host.appendChild(el);
+    });
+    renumberRows();
+    updateAddBtnState();
+  }
+
+  function appendBlankRow() {
+    var host = $('#portsim-basket-rows');
+    if (!host) return;
+    var count = $$('#portsim-basket-rows .portsim-basket-row').length;
+    if (count >= MAX_ROWS) return;
+    var el = makeRowEl(defaultRow());
+    if (el) host.appendChild(el);
+    renumberRows();
+    updateAddBtnState();
+  }
+
+  // Renders validator output — toggles row error visuals + summary block.
+  function renderValidationResult(res, dataResults) {
+    var rowEls = $$('#portsim-basket-rows .portsim-basket-row');
+    rowEls.forEach(function (rowEl) { clearRowVisualState(rowEl); });
+
+    // Per-row errors from validator
+    if (res && res.rowErrors) {
+      Object.keys(res.rowErrors).forEach(function (idx) {
+        var rowEl = rowEls[Number(idx)];
+        if (!rowEl) return;
+        rowEl.classList.add('has-error');
+        var errEl = $('.portsim-row-error', rowEl);
+        if (errEl) errEl.textContent = res.rowErrors[idx];
+      });
+    }
+
+    // Per-row data errors / warns from fetch step
+    if (dataResults && dataResults.perTicker) {
+      rowEls.forEach(function (rowEl) {
+        var symEl = $('.portsim-row-sym', rowEl);
+        var sym = (symEl && symEl.value || '').trim().toUpperCase();
+        if (!sym) return;
+        var info = dataResults.perTicker[sym];
+        if (!info) return;
+        if (info.error) {
+          rowEl.classList.add('has-error');
+          var errEl = $('.portsim-row-error', rowEl);
+          if (errEl) errEl.textContent = (errEl.textContent ? errEl.textContent + ' · ' : '') + info.error;
+        }
+        if (info.warn) {
+          rowEl.classList.add('has-warn');
+          var warnEl = $('.portsim-row-warn', rowEl);
+          if (warnEl) warnEl.textContent = info.warn;
+        }
+      });
+    }
+
+    // Top-level summary
+    var sumEl = $('#portsim-validation-summary');
+    if (!sumEl) return;
+    sumEl.className = 'portsim-validation-summary';
+    clearChildren(sumEl);
+
+    var topErrs = (res && res.errors) ? res.errors.slice() : [];
+    // Aggregate data errors into the summary too
+    if (dataResults && dataResults.perTicker) {
+      Object.keys(dataResults.perTicker).forEach(function (sym) {
+        var info = dataResults.perTicker[sym];
+        if (info.error) topErrs.push({ path: sym, msg: info.error });
+      });
+    }
+
+    if (topErrs.length > 0) {
+      sumEl.classList.add('has-errors');
+      var ul = document.createElement('ul');
+      topErrs.forEach(function (e) {
+        var li = document.createElement('li');
+        li.textContent = e.msg;
+        ul.appendChild(li);
+      });
+      sumEl.appendChild(ul);
+    }
+  }
+
+  function setSubmitting(submitting) {
+    Setup._state.submitting = submitting;
+    var btn = $('#portsim-setup-submit');
+    if (btn) {
+      btn.disabled = !!submitting;
+      btn.textContent = submitting ? 'Validating…' : '▶ Start Simulation';
+    }
+    var statusEl = $('#portsim-setup-status');
+    if (statusEl) {
+      statusEl.className = 'fetch-status';
+      statusEl.textContent = submitting ? 'Fetching basket data…' : '';
+    }
+  }
+
+  function setStatus(msg, kind) {
+    var el = $('#portsim-setup-status');
+    if (!el) return;
+    el.className = 'fetch-status' + (kind ? ' ' + kind : '');
+    el.textContent = msg || '';
+  }
+
+  // ----------------------------------------------------- public API ----
+  Setup.open = function () {
+    var modal = $('#portsim-setup-modal');
+    if (!modal) {
+      console.error('[PortSim.Setup] #portsim-setup-modal not found in DOM');
+      return;
+    }
+
+    // Restore from storage if present, else seed defaults
+    var saved = Setup._loadFromStorage();
+    var s = Setup._state;
+    if (saved && typeof saved === 'object') {
+      s.initialCash = (saved.initialCash != null) ? saved.initialCash : 100000;
+      s.startDate = saved.startDate || '';
+      s.endDate = saved.endDate || '';
+      s.index = saved.index || 'SPX';
+      s.rows = Array.isArray(saved.tickers) ? saved.tickers.map(function (t) {
+        return {
+          symbol: t.symbol || '',
+          hasPreEntry: !!t.hasPreEntry,
+          entryPrice: t.entryPrice != null ? t.entryPrice : '',
+          stopPrice: t.stopPrice != null ? t.stopPrice : '',
+          sizeMode: t.sizeMode || 'shares',
+          sizeValue: t.sizeValue != null ? t.sizeValue : ''
+        };
+      }) : [];
+    } else {
+      s.initialCash = 100000;
+      s.startDate = '';
+      s.endDate = '';
+      s.index = 'SPX';
+      s.rows = [];
+    }
+
+    // Push state → form
+    $('#portsim-initial-cash').value = s.initialCash;
+    $('#portsim-start-date').value = s.startDate;
+    $('#portsim-end-date').value = s.endDate;
+    $$('#portsim-index-pills .portsim-index-pill').forEach(function (b) {
+      if (b.getAttribute('data-index') === s.index) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+    rebuildRowsFromState(s.rows);
+    setStatus('', '');
+    var sumEl = $('#portsim-validation-summary');
+    if (sumEl) {
+      sumEl.className = 'portsim-validation-summary';
+      clearChildren(sumEl);
+    }
+
+    modal.classList.add('open');
+    s.open = true;
+  };
+
+  Setup.close = function () {
+    var modal = $('#portsim-setup-modal');
+    if (modal) modal.classList.remove('open');
+    Setup._state.open = false;
+    setSubmitting(false);
+  };
+
+  Setup.onSubmit = function (cb) {
+    if (typeof cb !== 'function') return;
+    Setup._subscribers.push(cb);
+  };
+
+  Setup.publish = function (config) {
+    Setup._lastConfig = config;
+    if (Setup._subscribers.length === 0) {
+      console.log('[PortSim.Setup] publish — no subscribers, stored on _lastConfig:', config);
+      return;
+    }
+    Setup._subscribers.forEach(function (cb) {
+      try { cb(config); }
+      catch (e) { console.error('[PortSim.Setup] subscriber error:', e); }
+    });
+  };
+
+  // ----------------------------------------------------- submit handler ----
+  function handleSubmit() {
+    if (Setup._state.submitting) return;
+    readFormToState();
+
+    // 1) Pure validation against the raw form (preserves row indices)
+    var rawCfg = buildRawConfigFromState();
+    var res = Setup._validate(rawCfg);
+    if (!res.ok) {
+      renderValidationResult(res, null);
+      setStatus('Fix validation errors above.', 'error');
+      return;
+    }
+
+    // 2) Persist user-input config (no fetched bars) before fetch attempts
+    var pubCfg = buildConfigFromState(false);
+    Setup._saveToStorage(pubCfg);
+
+    // 3) Fetch all tickers in parallel
+    setSubmitting(true);
+    fetchAllTickers(pubCfg).then(function (dataResults) {
+      // Re-run row visualization with data errors
+      renderValidationResult(res, dataResults);
+
+      var hardErrors = [];
+      Object.keys(dataResults.perTicker).forEach(function (sym) {
+        if (dataResults.perTicker[sym].error) hardErrors.push(sym + ': ' + dataResults.perTicker[sym].error);
+      });
+      if (hardErrors.length > 0) {
+        setStatus('Some tickers failed data check. Fix and retry.', 'error');
+        setSubmitting(false);
+        return;
+      }
+
+      // 4) All-clear — publish
+      Setup._fetchedBars = dataResults.fetchedBars;
+      pubCfg.fetchedBars = dataResults.fetchedBars;
+
+      try {
+        Setup.publish(pubCfg);
+      } catch (e) {
+        console.error('[PortSim.Setup] publish threw:', e);
+      }
+
+      setStatus('Setup published. Subscribers: ' + Setup._subscribers.length, 'success');
+      setSubmitting(false);
+
+      // Close after a brief moment so the user sees the success message.
+      setTimeout(function () {
+        if (Setup._state.open) Setup.close();
+      }, 350);
+    }).catch(function (e) {
+      console.error('[PortSim.Setup] fetch failed:', e);
+      setStatus('Fetch failed: ' + (e && e.message ? e.message : e), 'error');
+      setSubmitting(false);
+    });
+  }
+
+  // ----------------------------------------------------- wire DOM events ----
+  function bindOnce() {
+    if (Setup._wired) return;
+    Setup._wired = true;
+
+    var addBtn = $('#portsim-add-row-btn');
+    if (addBtn) addBtn.addEventListener('click', appendBlankRow);
+
+    var cancelBtn = $('#portsim-setup-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', Setup.close);
+
+    var submitBtn = $('#portsim-setup-submit');
+    if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
+
+    // Index pill toggle
+    $$('#portsim-index-pills .portsim-index-pill').forEach(function (b) {
+      b.addEventListener('click', function () {
+        $$('#portsim-index-pills .portsim-index-pill').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+
+    // Click outside modal to close
+    var overlay = $('#portsim-setup-modal');
+    if (overlay) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) Setup.close();
+      });
+    }
+
+    // ESC to close (only when modal open)
+    document.addEventListener('keydown', function (e) {
+      if (!Setup._state.open) return;
+      if (e.key === 'Escape') Setup.close();
+    });
+  }
+
+  // Run binding either now (DOM ready) or after DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindOnce);
+  } else {
+    bindOnce();
+  }
+
+  PortSim.Setup = Setup;
+})();
+// ============ PORTSIM TRACK D: Setup Wizard — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
@@ -10086,5 +11057,92 @@ Sim.Ctrl = (function(){
   </div>
 </template>
 <!-- ============ PORTSIM TRACK B: Card Template — END ============ -->
+
+<!-- ============ PORTSIM TRACK D: Setup Wizard — START ============ -->
+<div class="fetch-modal-overlay" id="portsim-setup-modal">
+  <div class="fetch-modal" role="dialog" aria-labelledby="portsim-setup-title">
+    <h3 id="portsim-setup-title">
+      <span>▶ Portfolio Simulator — Setup</span>
+    </h3>
+
+    <div class="portsim-setup-row3">
+      <div class="fetch-field">
+        <label for="portsim-initial-cash">Initial cash ($)</label>
+        <input type="number" step="100" min="0" id="portsim-initial-cash" value="100000">
+      </div>
+      <div class="fetch-field">
+        <label for="portsim-start-date">Start date</label>
+        <input type="date" id="portsim-start-date">
+      </div>
+      <div class="fetch-field">
+        <label for="portsim-end-date">End date</label>
+        <input type="date" id="portsim-end-date">
+      </div>
+    </div>
+
+    <div class="fetch-field">
+      <label>Index benchmark</label>
+      <div class="portsim-index-pills" id="portsim-index-pills">
+        <button type="button" class="portsim-index-pill active" data-index="SPX">SPX</button>
+        <button type="button" class="portsim-index-pill" data-index="NDQ">NDQ</button>
+      </div>
+    </div>
+
+    <div class="portsim-section-title">
+      <span>Basket</span>
+      <span class="portsim-section-hint">Up to 10 tickers · at least 1 needs a pre-declared entry</span>
+    </div>
+
+    <div class="portsim-basket-rows" id="portsim-basket-rows"><!-- populated by JS --></div>
+    <button type="button" class="portsim-add-row-btn" id="portsim-add-row-btn">+ Add Ticker</button>
+
+    <div class="portsim-validation-summary" id="portsim-validation-summary"></div>
+
+    <div class="fetch-actions">
+      <button type="button" class="fetch-btn-cancel" id="portsim-setup-cancel">Cancel</button>
+      <button type="button" class="fetch-btn-primary" id="portsim-setup-submit">▶ Start Simulation</button>
+    </div>
+    <div class="fetch-status" id="portsim-setup-status"></div>
+  </div>
+</div>
+
+<template id="portsim-basket-row-template">
+  <div class="portsim-basket-row" data-pre="0">
+    <div class="portsim-basket-row-main">
+      <div class="portsim-row-num"></div>
+      <input type="text" class="portsim-row-sym" placeholder="SYMBOL" maxlength="10" autocomplete="off" spellcheck="false">
+      <label class="portsim-row-pre-toggle">
+        <input type="checkbox" class="portsim-row-pre-cb">
+        <span>Pre-entry</span>
+      </label>
+      <button type="button" class="portsim-row-remove" title="Remove row">×</button>
+    </div>
+    <div class="portsim-row-pre-fields">
+      <div>
+        <label>Entry Price</label>
+        <input type="number" step="0.01" min="0" class="portsim-row-price" placeholder="0.00">
+      </div>
+      <div>
+        <label>Stop Price</label>
+        <input type="number" step="0.01" min="0" class="portsim-row-stop" placeholder="0.00">
+      </div>
+      <div>
+        <label>Size</label>
+        <input type="number" step="any" min="0" class="portsim-row-size" placeholder="0">
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <div class="portsim-row-size-pills">
+          <button type="button" class="portsim-row-size-pill active" data-mode="shares">Shares</button>
+          <button type="button" class="portsim-row-size-pill" data-mode="dollars">$</button>
+        </div>
+      </div>
+    </div>
+    <div class="portsim-row-error"></div>
+    <div class="portsim-row-warn"></div>
+  </div>
+</template>
+<!-- ============ PORTSIM TRACK D: Setup Wizard — END ============ -->
+
 </body>
 </html>
