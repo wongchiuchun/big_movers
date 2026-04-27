@@ -10508,15 +10508,31 @@ Sim.Ctrl = (function(){
     }
   };
 
+  // Read live position state directly from the sim object — avoids
+  // Sim.computeDerived(sim, bars) which dereferences bars[sim.playIdx].
+  function _readSimState(sim) {
+    if (!sim) return {};
+    const activeStop = (sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price)[0];
+    const riskPerShare = (sim.entry && sim.entry.price != null && sim.entry.stop != null)
+      ? (sim.entry.price - sim.entry.stop) : NaN;
+    return {
+      qty: sim.qty || 0,
+      avgCost: sim.avgCost || 0,
+      shares0: sim.shares0 || 0,
+      currentStop: activeStop ? activeStop.price : (sim.entry ? sim.entry.stop : NaN),
+      riskPerShare: riskPerShare
+    };
+  }
+
   // Pyramid add into an active position.
   Modal.openAddForCard = function(card, sim, currentBar, onSubmit) {
     const bar = _safeBar(currentBar);
-    const derived = (window.Sim && Sim.computeDerived && sim) ? Sim.computeDerived(sim) : {};
+    const s = _readSimState(sim);
     const ctx = {
       portMode: true,
-      currentQty: derived.currentQty != null ? derived.currentQty : 0,
-      avgCost: derived.avgCost != null ? derived.avgCost : 0,
-      currentPrice: bar.close != null ? bar.close : (derived.lastClose != null ? derived.lastClose : 0)
+      currentQty: s.qty,
+      avgCost: s.avgCost,
+      currentPrice: bar.close != null ? bar.close : 0
     };
     if (window.Sim && Sim.UI && typeof Sim.UI.showAddModal === 'function') {
       Sim.UI.showAddModal(ctx, _wrap(card, onSubmit));
@@ -10526,13 +10542,13 @@ Sim.Ctrl = (function(){
   // Partial / full sell.
   Modal.openSellForCard = function(card, sim, currentBar, onSubmit) {
     const bar = _safeBar(currentBar);
-    const derived = (window.Sim && Sim.computeDerived && sim) ? Sim.computeDerived(sim) : {};
+    const s = _readSimState(sim);
     const ctx = {
       portMode: true,
-      currentQty: derived.currentQty != null ? derived.currentQty : 0,
-      avgCost: derived.avgCost != null ? derived.avgCost : 0,
-      currentPrice: bar.close != null ? bar.close : (derived.lastClose != null ? derived.lastClose : 0),
-      riskPerShare: derived.riskPerShare != null ? derived.riskPerShare : NaN
+      currentQty: s.qty,
+      avgCost: s.avgCost,
+      currentPrice: bar.close != null ? bar.close : 0,
+      riskPerShare: s.riskPerShare
     };
     if (window.Sim && Sim.UI && typeof Sim.UI.showSellModal === 'function') {
       Sim.UI.showSellModal(ctx, _wrap(card, onSubmit));
@@ -10542,12 +10558,12 @@ Sim.Ctrl = (function(){
   // Edit current stop.
   Modal.openMoveStopForCard = function(card, sim, currentBar, onSubmit) {
     const bar = _safeBar(currentBar);
-    const derived = (window.Sim && Sim.computeDerived && sim) ? Sim.computeDerived(sim) : {};
+    const s = _readSimState(sim);
     const ctx = {
       portMode: true,
-      currentPrice: bar.close != null ? bar.close : (derived.lastClose != null ? derived.lastClose : NaN),
-      currentStop: derived.currentStop != null ? derived.currentStop : NaN,
-      shares0: derived.shares0 != null ? derived.shares0 : (derived.currentQty != null ? derived.currentQty : NaN)
+      currentPrice: bar.close != null ? bar.close : NaN,
+      currentStop: s.currentStop,
+      shares0: s.shares0 || s.qty
     };
     if (window.Sim && Sim.UI && typeof Sim.UI.showMoveStopModal === 'function') {
       Sim.UI.showMoveStopModal(ctx, _wrap(card, onSubmit));
@@ -11874,6 +11890,16 @@ Sim.Ctrl = (function(){
     _state.playing = false;
     _state.speed = 1;
     _clearTimer();
+    // Destroy any existing card chart instances before resetting basket so we
+    // don't leak LWC chart instances when the user re-opens the wizard while
+    // a sim is already active.
+    if (Array.isArray(_state.basket)){
+      _state.basket.forEach(function(prev){
+        if (prev && prev.card && typeof prev.card.destroy === 'function'){
+          try { prev.card.destroy(); } catch (e){ /* ignore */ }
+        }
+      });
+    }
     _state.unifiedDates = [];
     _state.playIdx = 0;
     _state.prevEquity = null;
@@ -12224,10 +12250,13 @@ Sim.Ctrl = (function(){
     _pause();
     if (action === 'add'){
       PortSim.Modal.openAddForCard(entry, entry.sim, bar, function(card, form){
-        // form: { qty, price, newStop? }
-        const qty = Math.floor(+form.qty || 0);
+        // form: { sizeMode: 'shares'|'dollars', sizeValue, price, newStop? }
         const price = +form.price;
-        if (!(qty > 0) || !isFinite(price)) return;
+        if (!isFinite(price) || price <= 0) return;
+        const sv = +form.sizeValue;
+        if (!isFinite(sv) || sv <= 0) return;
+        const qty = (form.sizeMode === 'dollars') ? Math.floor(sv / price) : Math.floor(sv);
+        if (!(qty > 0)) return;
         if (!PortSim.Cash.preflight(_state, qty, price)){
           alert('Not enough cash to add. Need $' + (qty * price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
           return;
@@ -12241,6 +12270,7 @@ Sim.Ctrl = (function(){
       });
     } else if (action === 'sell'){
       PortSim.Modal.openSellForCard(entry, entry.sim, bar, function(card, form){
+        // showSellModal submits { qty, price }
         const qty = Math.floor(+form.qty || 0);
         const price = +form.price;
         if (!(qty > 0) || !isFinite(price)) return;
