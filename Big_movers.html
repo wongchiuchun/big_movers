@@ -11129,6 +11129,57 @@ Sim.Ctrl = (function(){
   // ----------------------------------------------------- data fetching ----
   // Fetches /api/ohlcv?symbol=X for each non-empty ticker in parallel.
   // Returns { perTicker: { SYM: {bars,error,warn} }, fetchedBars: { SYM: bars } }.
+  // Shift a YYYY-MM-DD date by N months, clamped at month-end.
+  function _shiftMonths(dateStr, monthDelta) {
+    if (!dateStr) return dateStr;
+    var d = new Date(dateStr + 'T00:00:00Z');
+    if (isNaN(d.getTime())) return dateStr;
+    var y = d.getUTCFullYear(), m = d.getUTCMonth() + monthDelta, day = d.getUTCDate();
+    var nd = new Date(Date.UTC(y, m, day));
+    return nd.toISOString().slice(0, 10);
+  }
+
+  // Server-fetch a ticker we don't have locally. Pulls a wider window
+  // (start - 6mo, end + 6mo) so future plays around this date range have
+  // pre/post context for the chart.
+  function _autoFetchTicker(sym, startDate, endDate) {
+    var fetchStart = _shiftMonths(startDate, -6);
+    var todayStr = new Date().toISOString().slice(0, 10);
+    var fetchEnd = _shiftMonths(endDate, 6);
+    if (fetchEnd > todayStr) fetchEnd = todayStr; // can't fetch future bars
+    return fetch('/api/fetch-ticker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: sym, start_date: fetchStart, end_date: fetchEnd })
+    }).then(function (resp) {
+      return resp.json().then(function (data) {
+        if (!resp.ok || (data && data.error)) {
+          return { ok: false, error: data && data.error ? data.error : ('HTTP ' + resp.status) };
+        }
+        return { ok: true, barsAdded: data.bars_added != null ? data.bars_added : '?' };
+      });
+    }).catch(function (e) {
+      return { ok: false, error: e && e.message ? e.message : String(e) };
+    });
+  }
+
+  // Normalize the array-or-object response from /api/ohlcv. Real server returns
+  // a raw JSON array; defensive fallback handles {bars:[...]} wrapper too.
+  function _normalizeOhlcvResponse(json) {
+    if (Array.isArray(json)) return json;
+    if (json && Array.isArray(json.bars)) return json.bars;
+    return [];
+  }
+
+  function _fetchOneTicker(sym, startDate, endDate) {
+    return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+      .then(function (resp) {
+        if (resp.status === 404) return { _status: 404 };
+        if (!resp.ok) return { _status: resp.status, _httpErr: 'HTTP ' + resp.status };
+        return resp.json().then(function (json) { return { _status: 200, json: json }; });
+      });
+  }
+
   function fetchAllTickers(cfg) {
     var tickers = (cfg.tickers || []).filter(function (t) { return t && t.symbol && t.symbol.trim(); });
     var seen = Object.create(null);
@@ -11142,48 +11193,67 @@ Sim.Ctrl = (function(){
 
     var startDate = cfg.startDate;
     var endDate = cfg.endDate;
+    var statusEl = $('#portsim-setup-status');
+
+    function processBars(sym, json) {
+      var bars = _normalizeOhlcvResponse(json);
+      if (!Array.isArray(bars) || bars.length === 0) {
+        return { sym: sym, bars: null, error: '✕ ' + sym + ' has no bars' };
+      }
+      var dateOf = function (b) {
+        if (!b) return null;
+        return b.date || b.time || b.t || b.Date || b.DateTime || null;
+      };
+      var firstDate = dateOf(bars[0]);
+      var lastDate = dateOf(bars[bars.length - 1]);
+      var warn = null;
+      if (startDate && firstDate && firstDate > startDate) {
+        return {
+          sym: sym, bars: bars,
+          error: '✕ ' + sym + ' data starts ' + firstDate + ', after start date ' + startDate
+        };
+      }
+      if (endDate && lastDate && lastDate < endDate) {
+        warn = '⚠ ' + sym + ' data ends ' + lastDate + ' (before end ' + endDate + ')';
+      }
+      return { sym: sym, bars: bars, error: null, warn: warn };
+    }
 
     var promises = unique.map(function (sym) {
-      return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
-        .then(function (resp) {
-          if (!resp.ok) {
-            if (resp.status === 404) {
-              return { sym: sym, bars: null, error: '✕ ' + sym + ' not found (404)' };
-            }
-            return { sym: sym, bars: null, error: '✕ ' + sym + ' fetch error (HTTP ' + resp.status + ')' };
+      return _fetchOneTicker(sym, startDate, endDate).then(function (first) {
+        if (first._status === 404) {
+          // Auto-fetch from Twelve Data with extended date range, then retry.
+          if (statusEl) {
+            statusEl.textContent = 'Fetching ' + sym + ' from Twelve Data (start − 6mo … end + 6mo)…';
+            statusEl.className = 'fetch-status';
           }
-          return resp.json().then(function (json) {
-            // Server returns {symbol, bars: [...]} per Big_movers_server.py
-            var bars = (json && json.bars) || [];
-            if (!Array.isArray(bars) || bars.length === 0) {
-              return { sym: sym, bars: null, error: '✕ ' + sym + ' has no bars' };
-            }
-            // Normalize: bars items expected to have a date field. Server emits
-            // various shapes — collect the date string off whichever key exists.
-            var dateOf = function (b) {
-              if (!b) return null;
-              return b.date || b.time || b.t || b.Date || b.DateTime || null;
-            };
-            var firstDate = dateOf(bars[0]);
-            var lastDate = dateOf(bars[bars.length - 1]);
-            var warn = null;
-            // Coverage check: must have a bar at or before startDate
-            if (startDate && firstDate && firstDate > startDate) {
+          return _autoFetchTicker(sym, startDate, endDate).then(function (af) {
+            if (!af.ok) {
               return {
-                sym: sym, bars: bars,
-                error: '✕ ' + sym + ' data starts ' + firstDate + ', after start date ' + startDate
+                sym: sym, bars: null,
+                error: '✕ ' + sym + ' auto-fetch failed: ' + af.error
               };
             }
-            // Soft warn: data ends before endDate
-            if (endDate && lastDate && lastDate < endDate) {
-              warn = '⚠ ' + sym + ' data ends ' + lastDate + ' (before end ' + endDate + ')';
-            }
-            return { sym: sym, bars: bars, error: null, warn: warn };
+            // Retry the OHLCV read now that the CSV exists on disk.
+            return _fetchOneTicker(sym, startDate, endDate).then(function (second) {
+              if (second._status !== 200) {
+                return { sym: sym, bars: null, error: '✕ ' + sym + ' still missing after auto-fetch (' + (second._httpErr || ('HTTP ' + second._status)) + ')' };
+              }
+              var r = processBars(sym, second.json);
+              if (!r.error) {
+                r.warn = (r.warn ? r.warn + ' · ' : '') + '↓ auto-fetched ' + af.barsAdded + ' bars';
+              }
+              return r;
+            });
           });
-        })
-        .catch(function (e) {
-          return { sym: sym, bars: null, error: '✕ ' + sym + ' network error: ' + (e && e.message ? e.message : e) };
-        });
+        }
+        if (first._status !== 200) {
+          return { sym: sym, bars: null, error: '✕ ' + sym + ' fetch error (' + (first._httpErr || ('HTTP ' + first._status)) + ')' };
+        }
+        return processBars(sym, first.json);
+      }).catch(function (e) {
+        return { sym: sym, bars: null, error: '✕ ' + sym + ' network error: ' + (e && e.message ? e.message : e) };
+      });
     });
 
     return Promise.all(promises).then(function (results) {
@@ -11193,6 +11263,8 @@ Sim.Ctrl = (function(){
         perTicker[r.sym] = { bars: r.bars, error: r.error || null, warn: r.warn || null };
         if (r.bars) fetchedBars[r.sym] = r.bars;
       });
+      // Refresh the autocomplete datalist now that potentially-new symbols exist.
+      try { Setup._tickerList = null; populateTickerDatalist(); } catch (e) {}
       return { perTicker: perTicker, fetchedBars: fetchedBars };
     });
   }
@@ -11540,9 +11612,46 @@ Sim.Ctrl = (function(){
       clearChildren(sumEl);
     }
 
+    // Populate the autocomplete datalist with all known tickers from /api/results.
+    // Lazy-fetched once per page session; cached on Setup._tickerList.
+    populateTickerDatalist();
+
     modal.classList.add('open');
     s.open = true;
   };
+
+  // ---- Autocomplete datalist for free-entry symbol input ----
+  function populateTickerDatalist() {
+    var dl = $('#portsim-ticker-options');
+    if (!dl) return;
+    if (Setup._tickerList && Setup._tickerList.length) {
+      // Already populated this session.
+      return;
+    }
+    fetch('/api/results').then(function (resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    }).then(function (rows) {
+      var seen = Object.create(null);
+      var symbols = [];
+      (Array.isArray(rows) ? rows : []).forEach(function (r) {
+        var s = (r && (r.symbol || r.Symbol) || '').toString().toUpperCase().trim();
+        if (!s || seen[s]) return;
+        seen[s] = true;
+        symbols.push(s);
+      });
+      symbols.sort();
+      Setup._tickerList = symbols;
+      clearChildren(dl);
+      symbols.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s;
+        dl.appendChild(opt);
+      });
+    }).catch(function (e) {
+      console.warn('[PortSim.Setup] datalist fetch failed:', e && e.message);
+    });
+  }
 
   Setup.close = function () {
     var modal = $('#portsim-setup-modal');
@@ -14803,6 +14912,8 @@ Sim.Ctrl = (function(){
       <span class="portsim-section-hint">Up to 10 tickers · at least 1 needs a pre-declared entry</span>
     </div>
 
+    <datalist id="portsim-ticker-options"><!-- populated lazily on Setup.open() from /api/results --></datalist>
+
     <div class="portsim-basket-rows" id="portsim-basket-rows"><!-- populated by JS --></div>
     <button type="button" class="portsim-add-row-btn" id="portsim-add-row-btn">+ Add Ticker</button>
 
@@ -14820,7 +14931,7 @@ Sim.Ctrl = (function(){
   <div class="portsim-basket-row" data-pre="0">
     <div class="portsim-basket-row-main">
       <div class="portsim-row-num"></div>
-      <input type="text" class="portsim-row-sym" placeholder="SYMBOL" maxlength="10" autocomplete="off" spellcheck="false">
+      <input type="text" class="portsim-row-sym" placeholder="SYMBOL" maxlength="10" autocomplete="off" spellcheck="false" list="portsim-ticker-options">
       <label class="portsim-row-pre-toggle">
         <input type="checkbox" class="portsim-row-pre-cb">
         <span>Pre-entry</span>
