@@ -2149,6 +2149,292 @@
   }
   .portsim-validation-summary li{margin:1px 0;}
   /* ============ PORTSIM TRACK D: Setup Wizard Styles — END ============ */
+
+  /* ============ PORTSIM TRACK E: Header Styles — START ============ */
+  /* Full-screen overlay shell. Hidden by default; Track G's controller flips
+     display:'' to show. Sits above the regular .app via z-index. */
+  #portsim-shell{
+    position:fixed;
+    top:0;left:0;right:0;bottom:0;
+    z-index:200;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    font-family:var(--ui);
+    color:var(--text);
+  }
+
+  /* ----- Header bar ----- */
+  #portsim-header{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    height:56px;
+    padding:6px 14px;
+    background:var(--bg2);
+    border-bottom:1px solid var(--border);
+    flex:0 0 auto;
+    box-sizing:border-box;
+  }
+  .portsim-h-left{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    flex:0 0 auto;
+    min-width:200px;
+  }
+  .portsim-h-title{
+    font-family:var(--display, var(--ui));
+    font-style:italic;
+    font-weight:600;
+    font-size:18px;
+    color:var(--accent-cream);
+    letter-spacing:0.01em;
+    white-space:nowrap;
+  }
+  .portsim-h-day{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:500;
+    color:var(--muted);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .portsim-h-day strong{
+    font-weight:700;
+    color:var(--text);
+    margin:0 2px;
+  }
+  #portsim-day-date{
+    color:var(--text-2);
+    margin-left:4px;
+  }
+
+  .portsim-h-stats{
+    display:flex;
+    align-items:center;
+    gap:0;
+    flex:1 1 auto;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .portsim-stat{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    padding:4px 14px;
+    border-right:1px solid var(--border);
+    min-width:0;
+  }
+  .portsim-stat:last-child{border-right:none;}
+  .portsim-stat label{
+    font-family:var(--mono);
+    font-size:8px;
+    font-weight:600;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    line-height:1.2;
+  }
+  .portsim-stat strong{
+    font-family:var(--mono);
+    font-size:13px;
+    font-weight:700;
+    color:var(--text);
+    line-height:1.2;
+    font-feature-settings:"tnum";
+    white-space:nowrap;
+  }
+  .portsim-stat strong.is-pos,
+  .portsim-stat strong.pos{color:var(--green);}
+  .portsim-stat strong.is-neg,
+  .portsim-stat strong.neg{color:var(--red);}
+
+  .portsim-h-transport{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:0 0 auto;
+  }
+  .portsim-tbtn{
+    height:28px;
+    min-width:30px;
+    padding:0 10px;
+    font-family:var(--mono);
+    font-size:10px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--text-2);
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:6px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    transition:all 0.14s ease;
+  }
+  .portsim-tbtn:hover{
+    background:var(--bg4);
+    color:var(--text);
+    border-color:var(--border-bright);
+  }
+  #portsim-btn-play{
+    color:var(--text);
+    border-color:var(--border-bright);
+    background:var(--bg3);
+  }
+  #portsim-btn-play.is-playing{
+    color:var(--accent);
+    border-color:var(--accent);
+  }
+  .portsim-tbtn.portsim-exit{
+    color:var(--red);
+    border-color:rgba(251,113,133,0.32);
+    margin-left:6px;
+  }
+  .portsim-tbtn.portsim-exit:hover{
+    background:rgba(251,113,133,0.08);
+    color:var(--red);
+    border-color:var(--red);
+  }
+  .portsim-speed{
+    display:inline-flex;
+    align-items:center;
+    gap:2px;
+    margin:0 4px;
+    padding:2px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:7px;
+  }
+  .portsim-spill{
+    height:22px;
+    min-width:32px;
+    padding:0 7px;
+    font-family:var(--mono);
+    font-size:10px;
+    font-weight:600;
+    color:var(--muted);
+    background:transparent;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    transition:all 0.14s ease;
+  }
+  .portsim-spill:hover{color:var(--text);}
+  .portsim-spill.is-active{
+    background:var(--accent);
+    color:var(--bg);
+  }
+
+  /* ----- Index strip ----- */
+  #portsim-index-strip{
+    display:flex;
+    align-items:stretch;
+    gap:0;
+    height:90px;
+    flex:0 0 auto;
+    background:var(--bg2);
+    border-bottom:1px solid var(--border);
+    box-sizing:border-box;
+  }
+  .portsim-idx-toggle{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:stretch;
+    gap:4px;
+    width:80px;
+    padding:8px 10px;
+    border-right:1px solid var(--border);
+    flex:0 0 auto;
+  }
+  .portsim-idx-pill{
+    height:24px;
+    padding:0 8px;
+    font-family:var(--mono);
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:5px;
+    cursor:pointer;
+    transition:all 0.14s ease;
+  }
+  .portsim-idx-pill:hover{
+    color:var(--text);
+    border-color:var(--border-bright);
+  }
+  .portsim-idx-pill.is-active{
+    color:var(--bg);
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+
+  .portsim-idx-readout{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:flex-start;
+    gap:3px;
+    width:140px;
+    padding:8px 14px;
+    border-right:1px solid var(--border);
+    flex:0 0 auto;
+  }
+  .portsim-idx-px{
+    font-family:var(--mono);
+    font-size:18px;
+    font-weight:700;
+    color:var(--text);
+    line-height:1.1;
+    font-feature-settings:"tnum";
+  }
+  .portsim-idx-chg{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:600;
+    color:var(--muted);
+    line-height:1.1;
+    font-feature-settings:"tnum";
+  }
+  .portsim-idx-chg.is-up{color:var(--green);}
+  .portsim-idx-chg.is-down{color:var(--red);}
+
+  .portsim-idx-chart{
+    flex:1 1 auto;
+    min-width:0;
+    position:relative;
+    height:100%;
+    background:var(--bg2);
+    overflow:hidden;
+  }
+
+  /* ----- Grid host (Track G fills with .portcard nodes) ----- */
+  #portsim-shell #portsim-grid{
+    flex:1 1 auto;
+    min-height:0;
+    overflow:auto;
+  }
+
+  /* Light-theme accommodations */
+  [data-theme="light"] #portsim-shell{
+    background:var(--bg);
+  }
+  [data-theme="light"] .portsim-spill.is-active{
+    color:#fff;
+  }
+  [data-theme="light"] .portsim-idx-pill.is-active{
+    color:#fff;
+  }
+  /* ============ PORTSIM TRACK E: Header Styles — END ============ */
 </style>
 </head>
 <body>
@@ -11036,6 +11322,379 @@ Sim.Ctrl = (function(){
   PortSim.Setup = Setup;
 })();
 // ============ PORTSIM TRACK D: Setup Wizard — END ============
+
+// ============ PORTSIM TRACK E: Header & Index — START ============
+(function(){
+  'use strict';
+
+  // Resolve namespace lazily so order with sibling PortSim modules doesn't matter.
+  const PortSim = (window.PortSim = window.PortSim || {});
+
+  // ---------- Format helpers (local, lightweight) ----------
+  function _fmtMoney(n){
+    if (n == null || !isFinite(n)) return '$0';
+    const sign = n < 0 ? '-' : '';
+    const a = Math.abs(n);
+    if (a >= 1000000) return sign + '$' + (a / 1000).toFixed(0) + 'k';
+    if (a >= 10000)   return sign + '$' + a.toFixed(0);
+    return sign + '$' + a.toFixed(2);
+  }
+  function _fmtPnL(n){
+    if (n == null || !isFinite(n)) return '$0';
+    const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
+    const a = Math.abs(n);
+    if (a >= 1000000) return sign + '$' + (a / 1000).toFixed(0) + 'k';
+    if (a >= 10000)   return sign + '$' + a.toFixed(0);
+    return sign + '$' + a.toFixed(2);
+  }
+  function _fmtPx(n){
+    if (n == null || !isFinite(n)) return '—';
+    const a = Math.abs(n);
+    if (a >= 10000) return n.toFixed(0);
+    if (a >= 1000)  return n.toFixed(1);
+    return n.toFixed(2);
+  }
+  function _fmtPct(n){
+    if (n == null || !isFinite(n)) return '—';
+    const sign = n > 0 ? '+' : '';
+    return sign + n.toFixed(2) + '%';
+  }
+  function _signClass(n){
+    if (n == null || !isFinite(n) || n === 0) return '';
+    return n > 0 ? 'is-pos' : 'is-neg';
+  }
+  function _signClassChg(n){
+    if (n == null || !isFinite(n) || n === 0) return '';
+    return n > 0 ? 'is-up' : 'is-down';
+  }
+
+  function _q(id){ return document.getElementById(id); }
+
+  // =====================================================================
+  // PortSim.Header — header DOM controller
+  // =====================================================================
+  const Header = (function(){
+    let _transportHandler = null;
+    let _indexHandler = null;
+    let _wired = false;
+
+    function _ensureWired(){
+      if (_wired) return;
+      const shell = _q('portsim-shell');
+      if (!shell) return; // DOM not present yet; will retry next call
+      // Transport buttons
+      const wireBtn = (id, action) => {
+        const btn = _q(id);
+        if (btn && !btn._portsimBound){
+          btn._portsimBound = true;
+          btn.addEventListener('click', () => {
+            if (typeof _transportHandler === 'function') _transportHandler(action);
+          });
+        }
+      };
+      wireBtn('portsim-btn-start', 'start');
+      wireBtn('portsim-btn-back',  'back');
+      wireBtn('portsim-btn-play',  'play');
+      wireBtn('portsim-btn-fwd',   'fwd');
+      wireBtn('portsim-btn-exit',  'exit');
+
+      // Speed pills
+      const speedPills = shell.querySelectorAll('.portsim-spill[data-speed]');
+      speedPills.forEach(pill => {
+        if (pill._portsimBound) return;
+        pill._portsimBound = true;
+        pill.addEventListener('click', () => {
+          const sp = parseFloat(pill.getAttribute('data-speed'));
+          if (!isFinite(sp)) return;
+          setSpeed(sp);
+          if (typeof _transportHandler === 'function') _transportHandler('speed', sp);
+        });
+      });
+
+      // Index toggle pills
+      const idxPills = shell.querySelectorAll('.portsim-idx-pill[data-index]');
+      idxPills.forEach(pill => {
+        if (pill._portsimBound) return;
+        pill._portsimBound = true;
+        pill.addEventListener('click', () => {
+          const name = pill.getAttribute('data-index');
+          if (!name) return;
+          // Update active class
+          idxPills.forEach(p => p.classList.toggle('is-active', p === pill));
+          if (typeof _indexHandler === 'function') _indexHandler(name);
+        });
+      });
+
+      _wired = true;
+    }
+
+    function show(){
+      const sh = _q('portsim-shell');
+      if (sh){ sh.style.display = ''; }
+      _ensureWired();
+    }
+
+    function hide(){
+      const sh = _q('portsim-shell');
+      if (sh){ sh.style.display = 'none'; }
+    }
+
+    function update(stats){
+      stats = stats || {};
+      const initEl   = _q('portsim-stat-initial');
+      const cashEl   = _q('portsim-stat-cash');
+      const eqEl     = _q('portsim-stat-equity');
+      const dayPnLEl = _q('portsim-stat-daypnl');
+      const totPnLEl = _q('portsim-stat-totalpnl');
+      const openEl   = _q('portsim-stat-open');
+      const dayNumEl = _q('portsim-day-num');
+      const dayDtEl  = _q('portsim-day-date');
+
+      if (initEl   && stats.initial   != null) initEl.textContent   = _fmtMoney(+stats.initial);
+      if (cashEl   && stats.cash      != null) cashEl.textContent   = _fmtMoney(+stats.cash);
+      if (eqEl     && stats.equity    != null) eqEl.textContent     = _fmtMoney(+stats.equity);
+
+      if (dayPnLEl && stats.dayPnL    != null){
+        dayPnLEl.textContent = _fmtPnL(+stats.dayPnL);
+        dayPnLEl.classList.remove('is-pos','is-neg');
+        const c = _signClass(+stats.dayPnL);
+        if (c) dayPnLEl.classList.add(c);
+      }
+      if (totPnLEl && stats.totalPnL  != null){
+        totPnLEl.textContent = _fmtPnL(+stats.totalPnL);
+        totPnLEl.classList.remove('is-pos','is-neg');
+        const c = _signClass(+stats.totalPnL);
+        if (c) totPnLEl.classList.add(c);
+      }
+      if (openEl   && stats.openCount != null) openEl.textContent   = String(stats.openCount|0);
+
+      if (dayNumEl && stats.day       != null) dayNumEl.textContent = String(stats.day|0);
+      if (dayDtEl  && stats.date      != null) dayDtEl.textContent  = String(stats.date || '—');
+    }
+
+    function setPlaying(isPlaying){
+      const btn = _q('portsim-btn-play');
+      if (!btn) return;
+      if (isPlaying){
+        btn.textContent = '⏸ Pause';
+        btn.classList.add('is-playing');
+      } else {
+        btn.textContent = '▶ Play';
+        btn.classList.remove('is-playing');
+      }
+    }
+
+    function setSpeed(speed){
+      const sh = _q('portsim-shell');
+      if (!sh) return;
+      const target = +speed;
+      const pills = sh.querySelectorAll('.portsim-spill[data-speed]');
+      pills.forEach(p => {
+        const sp = parseFloat(p.getAttribute('data-speed'));
+        p.classList.toggle('is-active', isFinite(sp) && Math.abs(sp - target) < 1e-9);
+      });
+    }
+
+    function onTransport(handler){
+      _transportHandler = (typeof handler === 'function') ? handler : null;
+      _ensureWired();
+    }
+    function onIndexToggle(handler){
+      _indexHandler = (typeof handler === 'function') ? handler : null;
+      _ensureWired();
+    }
+
+    return { show, hide, update, setPlaying, setSpeed, onTransport, onIndexToggle };
+  })();
+
+  // =====================================================================
+  // PortSim.Index — slim line chart for SPX / NDQ
+  // =====================================================================
+  const Index = (function(){
+    let _chart = null;
+    let _series = null;
+    let _resizeObs = null;
+    let _firstClose = null; // for day-change basis if controller doesn't supply one
+
+    function _cssVar(name, fallback){
+      try{
+        const v = getComputedStyle(document.documentElement).getPropertyValue(name);
+        const t = (v || '').trim();
+        return t || fallback;
+      }catch(e){ return fallback; }
+    }
+
+    function _host(){ return _q('portsim-idx-chart'); }
+
+    function init(){
+      const host = _host();
+      if (!host) return null;
+      if (_chart) return _chart; // idempotent
+      if (!window.LightweightCharts){
+        console.warn('[PortSim.Index] LightweightCharts not loaded yet');
+        return null;
+      }
+
+      const accent = _cssVar('--accent', '#d4a574');
+      const text   = _cssVar('--text-2', '#888');
+
+      const w = Math.max(host.clientWidth || 0, 1);
+      const h = Math.max(host.clientHeight || 90, 60);
+
+      _chart = LightweightCharts.createChart(host, {
+        width: w,
+        height: h,
+        layout: {
+          background: { color: 'transparent' },
+          textColor: text,
+        },
+        rightPriceScale: { visible: false },
+        leftPriceScale:  { visible: false },
+        timeScale: {
+          visible: false,
+          borderVisible: false,
+        },
+        grid: {
+          horzLines: { visible: false },
+          vertLines: { visible: false },
+        },
+        crosshair: { mode: 0 },
+        handleScroll: false,
+        handleScale: false,
+      });
+
+      _series = _chart.addLineSeries({
+        color: accent,
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      });
+
+      // Resize on host size changes
+      if (typeof ResizeObserver !== 'undefined'){
+        _resizeObs = new ResizeObserver(entries => {
+          for (const ent of entries){
+            const cr = ent.contentRect;
+            if (_chart && cr && cr.width > 0 && cr.height > 0){
+              try{ _chart.resize(Math.floor(cr.width), Math.floor(cr.height)); }catch(e){}
+            }
+          }
+        });
+        _resizeObs.observe(host);
+      }
+
+      return _chart;
+    }
+
+    function _normalize(bars){
+      if (!Array.isArray(bars) || !bars.length) return [];
+      const out = [];
+      for (let i = 0; i < bars.length; i++){
+        const b = bars[i] || {};
+        const t = b.time || b.date || b.Date || b.datetime || b.DateTime;
+        const c = (b.close != null) ? +b.close : (b.value != null ? +b.value : NaN);
+        if (!t || !isFinite(c)) continue;
+        out.push({ time: t, value: c });
+      }
+      return out;
+    }
+
+    function setData(bars, _name){
+      if (!_chart) init();
+      if (!_series) return;
+      const data = _normalize(bars);
+      _series.setData(data);
+      _firstClose = data.length ? +data[0].value : null;
+      try{ _chart.timeScale().fitContent(); }catch(e){}
+      // Live readout: show last close + change since first
+      if (data.length){
+        const last = data[data.length - 1].value;
+        const pct = (_firstClose && isFinite(_firstClose) && _firstClose !== 0)
+          ? ((last - _firstClose) / _firstClose) * 100
+          : null;
+        updateReadout(last, pct);
+      } else {
+        updateReadout(null, null);
+      }
+    }
+
+    function appendBar(bar){
+      if (!_chart) init();
+      if (!_series || !bar) return;
+      const t = bar.time || bar.date || bar.Date || bar.datetime || bar.DateTime;
+      const c = (bar.close != null) ? +bar.close : (bar.value != null ? +bar.value : NaN);
+      if (!t || !isFinite(c)) return;
+      try{ _series.update({ time: t, value: c }); }catch(e){}
+    }
+
+    function reset(){
+      if (_series){ try{ _series.setData([]); }catch(e){} }
+      _firstClose = null;
+      updateReadout(null, null);
+    }
+
+    function updateReadout(price, dayChangePct){
+      const pxEl  = _q('portsim-idx-px');
+      const chgEl = _q('portsim-idx-chg');
+      if (pxEl){
+        pxEl.textContent = (price != null && isFinite(+price)) ? _fmtPx(+price) : '—';
+      }
+      if (chgEl){
+        if (dayChangePct == null || !isFinite(+dayChangePct)){
+          chgEl.textContent = '—';
+          chgEl.classList.remove('is-up','is-down');
+        } else {
+          chgEl.textContent = _fmtPct(+dayChangePct);
+          chgEl.classList.remove('is-up','is-down');
+          const c = _signClassChg(+dayChangePct);
+          if (c) chgEl.classList.add(c);
+        }
+      }
+    }
+
+    function fetchAndLoad(name){
+      // SPX maps to SPY for the OHLCV endpoint; NDQ stays NDQ.
+      const sym = (name === 'SPX') ? 'SPY' : (name || 'SPY');
+      return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+        .then(res => {
+          if (!res.ok){
+            // Graceful degrade if NDQ data is missing on the server.
+            throw new Error('HTTP ' + res.status + ' for ' + sym);
+          }
+          return res.json();
+        })
+        .then(json => {
+          // /api/ohlcv returns either an array of bars or {bars: [...]}.
+          const bars = Array.isArray(json) ? json
+                     : (json && Array.isArray(json.bars) ? json.bars
+                     : (json && Array.isArray(json.data) ? json.data : []));
+          setData(bars, name);
+          return bars;
+        })
+        .catch(err => {
+          console.warn('[PortSim.Index] fetchAndLoad failed:', err && err.message || err);
+          reset();
+          return [];
+        });
+    }
+
+    function destroy(){
+      try{ if (_resizeObs) _resizeObs.disconnect(); }catch(e){}
+      _resizeObs = null;
+      try{ if (_chart) _chart.remove(); }catch(e){}
+      _chart = null;
+      _series = null;
+      _firstClose = null;
+    }
+
+    return { init, setData, appendBar, reset, updateReadout, fetchAndLoad, destroy };
+  })();
+
+  // Export
+  PortSim.Header = Header;
+  PortSim.Index  = Index;
+})();
+// ============ PORTSIM TRACK E: Header & Index — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
@@ -11144,5 +11803,50 @@ Sim.Ctrl = (function(){
 </template>
 <!-- ============ PORTSIM TRACK D: Setup Wizard — END ============ -->
 
+
+<!-- ============ PORTSIM TRACK E: Header & Index Strip — START ============ -->
+<div id="portsim-shell" style="display:none;">
+  <div id="portsim-header">
+    <div class="portsim-h-left">
+      <span class="portsim-h-title">▶ Portfolio Sim</span>
+      <span class="portsim-h-day">Day <strong id="portsim-day-num">0</strong> · <span id="portsim-day-date">—</span></span>
+    </div>
+    <div class="portsim-h-stats">
+      <span class="portsim-stat"><label>INITIAL</label><strong id="portsim-stat-initial">$0</strong></span>
+      <span class="portsim-stat"><label>CASH</label><strong id="portsim-stat-cash">$0</strong></span>
+      <span class="portsim-stat"><label>EQUITY</label><strong id="portsim-stat-equity">$0</strong></span>
+      <span class="portsim-stat"><label>DAY P&amp;L</label><strong id="portsim-stat-daypnl">$0</strong></span>
+      <span class="portsim-stat"><label>TOTAL P&amp;L</label><strong id="portsim-stat-totalpnl">$0</strong></span>
+      <span class="portsim-stat"><label>OPEN</label><strong id="portsim-stat-open">0</strong></span>
+    </div>
+    <div class="portsim-h-transport">
+      <button id="portsim-btn-start"  class="portsim-tbtn" type="button" title="Jump to start">⏮</button>
+      <button id="portsim-btn-back"   class="portsim-tbtn" type="button" title="Step back">◀</button>
+      <button id="portsim-btn-play"   class="portsim-tbtn" type="button" title="Play/Pause">▶ Play</button>
+      <button id="portsim-btn-fwd"    class="portsim-tbtn" type="button" title="Step forward">▶+</button>
+      <span class="portsim-speed">
+        <button class="portsim-spill" data-speed="0.25" type="button">0.25×</button>
+        <button class="portsim-spill" data-speed="0.5" type="button">0.5×</button>
+        <button class="portsim-spill is-active" data-speed="1" type="button">1×</button>
+        <button class="portsim-spill" data-speed="2" type="button">2×</button>
+        <button class="portsim-spill" data-speed="5" type="button">5×</button>
+      </span>
+      <button id="portsim-btn-exit"   class="portsim-tbtn portsim-exit" type="button">✕ Exit</button>
+    </div>
+  </div>
+  <div id="portsim-index-strip">
+    <div class="portsim-idx-toggle">
+      <button class="portsim-idx-pill is-active" data-index="SPX" type="button">SPX</button>
+      <button class="portsim-idx-pill" data-index="NDQ" type="button">NDQ</button>
+    </div>
+    <div class="portsim-idx-readout">
+      <span class="portsim-idx-px" id="portsim-idx-px">—</span>
+      <span class="portsim-idx-chg" id="portsim-idx-chg">—</span>
+    </div>
+    <div class="portsim-idx-chart" id="portsim-idx-chart"></div>
+  </div>
+  <div id="portsim-grid"></div>
+</div>
+<!-- ============ PORTSIM TRACK E: Header & Index Strip — END ============ -->
 </body>
 </html>
