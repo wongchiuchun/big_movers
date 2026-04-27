@@ -51,13 +51,15 @@ def _load_ndq_bars():
          same CSV format auto-detection used by /api/ohlcv.
       3. Returns ``None`` if neither source exists (caller renders a 404).
 
-    A small in-memory cache mirrors ``_load_spy_bars``; it stores either the
-    parsed bars list or the sentinel ``"missing"`` so we don't hit the
-    filesystem on every request when the data is unavailable.
+    A small in-memory cache mirrors ``_load_spy_bars`` — but ONLY for the
+    success path. When the data is missing we re-check the filesystem on
+    every call; the frontend's NDQ→QQQ auto-fetch path writes
+    ``collected_stocks/QQQ.csv`` mid-session, and a sticky "missing" sentinel
+    would otherwise keep returning 404 even after the file lands.
     """
     global _NDQ_BARS_CACHE
-    if _NDQ_BARS_CACHE is not None:
-        return None if _NDQ_BARS_CACHE == "missing" else _NDQ_BARS_CACHE
+    if _NDQ_BARS_CACHE is not None and _NDQ_BARS_CACHE != "missing":
+        return _NDQ_BARS_CACHE
 
     # Source 1: NDQ Historical Data.csv (same DictReader pattern as SPY)
     if os.path.exists(NDX_HIST_CSV):

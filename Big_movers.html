@@ -1812,16 +1812,17 @@
     background:var(--bg);
     box-sizing:border-box;
   }
+  /* Cap at 2 cols max — bigger candlesticks/MAs so user can read each chart cleanly. */
   .portsim-grid.cols-1{grid-template-columns:repeat(1,1fr);}
-  .portsim-grid.cols-2{grid-template-columns:repeat(2,1fr);}
-  .portsim-grid.cols-3{grid-template-columns:repeat(2,1fr);} /* 3-4 → 2 cols */
-  .portsim-grid.cols-4{grid-template-columns:repeat(2,1fr);}
-  .portsim-grid.cols-5{grid-template-columns:repeat(3,1fr);} /* 5-6 → 3 cols */
-  .portsim-grid.cols-6{grid-template-columns:repeat(3,1fr);}
-  .portsim-grid.cols-7{grid-template-columns:repeat(4,1fr);} /* 7-8 → 4 cols (cap) */
-  .portsim-grid.cols-8{grid-template-columns:repeat(4,1fr);}
-  .portsim-grid.cols-9{grid-template-columns:repeat(4,1fr);} /* 9-10 → 4 cols (cap at 4 per spec) */
-  .portsim-grid.cols-10{grid-template-columns:repeat(4,1fr);}
+  .portsim-grid.cols-2,
+  .portsim-grid.cols-3,
+  .portsim-grid.cols-4,
+  .portsim-grid.cols-5,
+  .portsim-grid.cols-6,
+  .portsim-grid.cols-7,
+  .portsim-grid.cols-8,
+  .portsim-grid.cols-9,
+  .portsim-grid.cols-10{grid-template-columns:repeat(2,1fr);}
 
   .portcard{
     display:flex;
@@ -1830,7 +1831,7 @@
     border:1px solid var(--border);
     border-radius:10px;
     overflow:hidden;
-    min-height:280px;
+    min-height:380px;
     transition:border-color 0.18s ease, box-shadow 0.18s ease;
     position:relative;
   }
@@ -2286,12 +2287,9 @@
   }
 
   .portsim-h-stats{
-    display:flex;
-    align-items:center;
-    gap:0;
-    flex:1 1 auto;
-    justify-content:center;
-    overflow:hidden;
+    /* Stats migrated to the open-positions panel below; keep the DOM nodes
+       so PortSim.Header.update doesn't error out, but hide visually. */
+    display:none;
   }
   .portsim-stat{
     display:flex;
@@ -2410,7 +2408,7 @@
     display:flex;
     align-items:stretch;
     gap:0;
-    height:90px;
+    height:300px;
     flex:0 0 auto;
     background:var(--bg2);
     border-bottom:1px solid var(--border);
@@ -2489,6 +2487,164 @@
     background:var(--bg2);
     overflow:hidden;
   }
+
+  /* ----- Open-positions panel (between index strip and card grid) ----- */
+  .portsim-positions{
+    flex:0 0 auto;
+    max-height:480px;
+    overflow-y:auto;
+    background:var(--bg2);
+    border-bottom:1px solid var(--border);
+    padding:6px 14px;
+    box-sizing:border-box;
+  }
+  .portsim-equity-wrap{
+    display:flex;
+    align-items:stretch;
+    gap:8px;
+    padding:6px 0 8px;
+    margin-bottom:6px;
+    border-bottom:1px solid var(--border);
+  }
+  .portsim-equity-chart{
+    flex:1 1 auto;
+    min-width:0;
+    height:160px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:5px;
+    position:relative;
+  }
+  .portsim-equity-legend{
+    flex:0 0 180px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    padding:4px 8px;
+    overflow-y:auto;
+    max-height:160px;
+    font-family:var(--mono);
+    font-size:10px;
+  }
+  .portsim-equity-legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:var(--text-2);
+    line-height:1.4;
+  }
+  .portsim-equity-legend-swatch{
+    display:inline-block;
+    width:14px;
+    height:3px;
+    flex:0 0 14px;
+    border-radius:1px;
+  }
+  .portsim-equity-legend-sym{
+    flex:0 0 50px;
+    font-weight:700;
+    color:var(--text);
+    letter-spacing:0.02em;
+  }
+  .portsim-equity-legend-val{
+    flex:1 1 auto;
+    text-align:right;
+    font-feature-settings:"tnum";
+  }
+  .portsim-equity-legend-val.is-pos{ color:var(--green); font-weight:600; }
+  .portsim-equity-legend-val.is-neg{ color:var(--red); font-weight:600; }
+  .portsim-positions-empty{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    padding:6px 0;
+    text-align:center;
+    letter-spacing:0.05em;
+  }
+  .portsim-stats-row{
+    display:flex;
+    align-items:stretch;
+    gap:0;
+    padding:4px 0 8px;
+    margin-bottom:6px;
+    border-bottom:1px solid var(--border);
+  }
+  .portsim-stats-row .portsim-stat-cell{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    padding:2px 14px;
+    border-right:1px solid var(--border);
+    flex:1 1 0;
+    min-width:0;
+  }
+  .portsim-stats-row .portsim-stat-cell:last-child{ border-right:none; }
+  .portsim-stats-row label{
+    font-family:var(--mono);
+    font-size:8px;
+    font-weight:600;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    line-height:1.2;
+  }
+  .portsim-stats-row strong{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:700;
+    color:var(--text);
+    line-height:1.2;
+    font-feature-settings:"tnum";
+    white-space:nowrap;
+  }
+  .portsim-stats-row strong.is-pos{ color:var(--green); }
+  .portsim-stats-row strong.is-neg{ color:var(--red); }
+  .portsim-pos-table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:11px;
+  }
+  .portsim-pos-table thead th{
+    font-size:9px;
+    font-weight:600;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    padding:4px 8px;
+    text-align:right;
+    border-bottom:1px solid var(--border);
+  }
+  .portsim-pos-table thead th:first-child,
+  .portsim-pos-table tbody td:first-child{ text-align:left; }
+  .portsim-pos-table tbody td{
+    padding:5px 8px;
+    color:var(--text-2);
+    text-align:right;
+    border-bottom:1px solid var(--border);
+    font-feature-settings:"tnum";
+  }
+  .portsim-pos-table tbody tr:last-child td{ border-bottom:none; }
+  .portsim-pos-sym{
+    font-weight:700;
+    color:var(--accent-cream);
+    letter-spacing:0.02em;
+  }
+  .portsim-pos-stop-btn{
+    font-family:var(--mono);
+    font-size:11px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:3px;
+    padding:2px 8px;
+    color:var(--text);
+    cursor:pointer;
+    transition:border-color 0.14s ease, background 0.14s ease;
+  }
+  .portsim-pos-stop-btn:hover{ border-color:var(--accent); background:var(--bg4); }
+  .portsim-pos-pnl-pos{ color:var(--green); font-weight:600; }
+  .portsim-pos-pnl-neg{ color:var(--red); font-weight:600; }
 
   /* ----- Grid host (Track G fills with .portcard nodes) ----- */
   #portsim-shell #portsim-grid{
@@ -8135,6 +8291,12 @@ const Sim = (function(){
   return { createSim, queueAction, advanceTo, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg };
 })();
 
+// Expose the Sim core on window so cross-module code (PortSim.Ctrl, Track J,
+// etc.) can call window.Sim.createSim / advanceTo / … without relying on the
+// closure-scoped `Sim` const being in their lexical scope.
+// (Top-level const does not auto-attach to window in non-module scripts.)
+window.Sim = Sim;
+
 /* ---------- Sim.UI: DOM helpers + hero panel render ---------- */
 (function(){
   window.Sim = window.Sim || {};
@@ -10672,12 +10834,90 @@ Sim.Ctrl = (function(){
       color: 'rgba(120,140,160,0.4)',
     });
 
+    // EMA overlays (10 / 20 / 50) — same palette as Peek modal so the visual
+    // language stays consistent.  Incremental updates via the closure-scoped
+    // _emaState[] track the last EMA value and the running bar count for each
+    // period; appendBar then applies the standard EMA recurrence in O(1).
+    const EMA_DEFS = [
+      { p: 10, color: '#d4a574' }, // gold
+      { p: 20, color: '#6ee7b7' }, // mint
+      { p: 50, color: '#fb7185' }, // coral
+    ];
+    const _emaSeries = EMA_DEFS.map(function(def){
+      return chart.addLineSeries({
+        color: def.color,
+        lineWidth: 1.5,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+    });
+    const _emaState = EMA_DEFS.map(function(def){
+      return { p: def.p, k: 2 / (def.p + 1), last: null, count: 0 };
+    });
+
+    function _refreshEMAs(candles){
+      if (typeof window.calcEMA !== 'function') return;
+      _emaState.forEach(function(st, i){
+        const data = window.calcEMA(candles, st.p);
+        try { _emaSeries[i].setData(data); } catch(e){}
+        st.last = data.length ? +data[data.length - 1].value : null;
+        st.count = candles.length;
+      });
+    }
+
+    function _extendEMAs(t, c){
+      _emaState.forEach(function(st, i){
+        st.count += 1;
+        if (st.last == null) return; // not yet seeded; ignored until next setData
+        const next = c * st.k + st.last * (1 - st.k);
+        st.last = next;
+        try { _emaSeries[i].update({ time: t, value: parseFloat(next.toFixed(4)) }); } catch(e){}
+      });
+    }
+
+    // Default visible window: last ~130 trading days (≈ 6 months) on the right
+    // edge so the entry bar (most recent after setData) sits near the right
+    // with prior context to the left. Older history stays scrollable.
+    const DEFAULT_VISIBLE_BARS = 130;
+    let _barCount = 0;
+
+    // Apply the "last N bars" visible window. Uses time-based setVisibleRange
+    // (proven to stick in this codebase, ref Big_movers.html:6736) and defers
+    // to the next animation frame so it lands AFTER LWC's internal post-setData
+    // fit pass — otherwise our range gets clobbered.
+    function _applyDefaultRange(candles){
+      if (!candles || !candles.length) return;
+      const lastIdx = candles.length - 1;
+      const fromIdx = Math.max(0, lastIdx - (DEFAULT_VISIBLE_BARS - 1));
+      const fromT = candles[fromIdx] && candles[fromIdx].time;
+      const toT   = candles[lastIdx] && candles[lastIdx].time;
+      if (!fromT || !toT) return;
+      const apply = function(){
+        try { chart.timeScale().setVisibleRange({ from: fromT, to: toT }); }
+        catch(e){
+          if (window.console) console.warn('[PortSim.Cards] setVisibleRange:', e && e.message);
+        }
+      };
+      // Run immediately AND on the next frame — first call wins normally; the
+      // RAF call insures we override LWC's auto-fit if it ran async.
+      apply();
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(apply);
+      else setTimeout(apply, 0);
+    }
+
     // Set initial data if provided.
     function _applyData(rawBars){
       const norm = _toLWCBars(rawBars);
       candleSeries.setData(norm.candles);
       volSeries.setData(norm.vols);
-      try { chart.timeScale().fitContent(); } catch(e){}
+      _refreshEMAs(norm.candles);
+      _barCount = norm.candles.length;
+      if (_barCount > 0){
+        _applyDefaultRange(norm.candles);
+      } else {
+        try { chart.timeScale().fitContent(); } catch(e){}
+      }
     }
     if (Array.isArray(bars) && bars.length){
       _applyData(bars);
@@ -10718,6 +10958,20 @@ Sim.Ctrl = (function(){
           value: isFinite(v) ? v : 0,
           color: (c >= o) ? 'rgba(38,166,154,0.45)' : 'rgba(239,83,80,0.45)',
         });
+        if (isFinite(c)) _extendEMAs(t, c);
+        _barCount += 1;
+        // If the user is following the latest bar (visible range covers the
+        // newest logical index), slide the window forward by 1 so the chart
+        // stays in lock-step with the simulation. If the user has scrolled
+        // back to inspect prior bars (cur.to << latest), leave them alone.
+        const ts = chart.timeScale();
+        const cur = ts.getVisibleLogicalRange();
+        if (cur){
+          const latest = _barCount - 1;
+          if (cur.to >= latest - 0.5){
+            ts.setVisibleLogicalRange({ from: cur.from + 1, to: cur.to + 1 });
+          }
+        }
       } catch(e){
         // .update() throws if `time` < last bar; caller is responsible for ordering.
         if (window.console) console.warn('[PortSim.Cards] appendBar:', e && e.message);
@@ -11805,6 +12059,45 @@ Sim.Ctrl = (function(){
     });
   }
 
+  // ----------------------------------------------------- clear / reset ----
+  // Wipes form fields, basket rows, validation state, and the persisted
+  // localStorage setup so the user can start a fresh sim from scratch.
+  function resetForm() {
+    // Cash & dates
+    var cashEl = $('#portsim-initial-cash');
+    if (cashEl) cashEl.value = '100000';
+    var sdEl = $('#portsim-start-date');
+    if (sdEl) sdEl.value = '';
+    var edEl = $('#portsim-end-date');
+    if (edEl) edEl.value = '';
+
+    // Index pill back to SPX
+    $$('#portsim-index-pills .portsim-index-pill').forEach(function (p) {
+      p.classList.toggle('active', p.getAttribute('data-index') === 'SPX');
+    });
+
+    // Basket: blow away all rows + reseed with INITIAL_ROWS empty rows.
+    var host = $('#portsim-basket-rows');
+    if (host) clearChildren(host);
+    rebuildRowsFromState([]);
+
+    // Wipe validation summary + status line
+    var summary = $('#portsim-validation-summary');
+    if (summary) { clearChildren(summary); summary.className = 'portsim-validation-summary'; }
+    setStatus('Form cleared.', '');
+
+    // Update internal state cache
+    Setup._state.initialCash = 100000;
+    Setup._state.startDate = '';
+    Setup._state.endDate = '';
+    Setup._state.index = 'SPX';
+    Setup._state.rows = [];
+
+    // Persisted setup is no longer relevant — drop it so a future Open()
+    // doesn't repopulate stale data.
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  }
+
   // ----------------------------------------------------- wire DOM events ----
   function bindOnce() {
     if (Setup._wired) return;
@@ -11815,6 +12108,9 @@ Sim.Ctrl = (function(){
 
     var cancelBtn = $('#portsim-setup-cancel');
     if (cancelBtn) cancelBtn.addEventListener('click', Setup.close);
+
+    var clearBtn = $('#portsim-setup-clear');
+    if (clearBtn) clearBtn.addEventListener('click', resetForm);
 
     var submitBtn = $('#portsim-setup-submit');
     if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
@@ -12038,13 +12334,21 @@ Sim.Ctrl = (function(){
   })();
 
   // =====================================================================
-  // PortSim.Index — slim line chart for SPX / NDQ
+  // PortSim.Index — full candle panel for SPX / NDQ (matches card style)
   // =====================================================================
   const Index = (function(){
     let _chart = null;
     let _series = null;
     let _resizeObs = null;
     let _firstClose = null; // for day-change basis if controller doesn't supply one
+    let _emaSeries = [];
+    let _emaState  = [];
+    const EMA_DEFS = [
+      { p: 10, color: '#d4a574' },
+      { p: 20, color: '#6ee7b7' },
+      { p: 50, color: '#fb7185' },
+    ];
+    const DEFAULT_VISIBLE_BARS = 90; // ~4.5 months daily
 
     function _cssVar(name, fallback){
       try{
@@ -12065,11 +12369,12 @@ Sim.Ctrl = (function(){
         return null;
       }
 
-      const accent = _cssVar('--accent', '#d4a574');
       const text   = _cssVar('--text-2', '#888');
+      const grid   = _cssVar('--chart-grid', '#1a1c22');
+      const border = _cssVar('--border', '#262932');
 
       const w = Math.max(host.clientWidth || 0, 1);
-      const h = Math.max(host.clientHeight || 90, 60);
+      const h = Math.max(host.clientHeight || 280, 60);
 
       _chart = LightweightCharts.createChart(host, {
         width: w,
@@ -12078,26 +12383,44 @@ Sim.Ctrl = (function(){
           background: { color: 'transparent' },
           textColor: text,
         },
-        rightPriceScale: { visible: false },
+        rightPriceScale: { borderColor: border, scaleMargins: { top: 0.05, bottom: 0.08 } },
         leftPriceScale:  { visible: false },
         timeScale: {
-          visible: false,
-          borderVisible: false,
+          borderColor: border,
+          timeVisible: false,
+          rightOffset: 4,
         },
         grid: {
-          horzLines: { visible: false },
-          vertLines: { visible: false },
+          horzLines: { color: grid, visible: true },
+          vertLines: { color: grid, visible: true },
         },
-        crosshair: { mode: 0 },
-        handleScroll: false,
-        handleScale: false,
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+        handleScale:  { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
       });
 
-      _series = _chart.addLineSeries({
-        color: accent,
-        lineWidth: 2,
+      _series = _chart.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickVisible: true,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
         priceLineVisible: false,
         lastValueVisible: false,
+      });
+
+      _emaSeries = EMA_DEFS.map(function(def){
+        return _chart.addLineSeries({
+          color: def.color,
+          lineWidth: 1.5,
+          priceLineVisible: false,
+          lastValueVisible: false,
+          crosshairMarkerVisible: false,
+        });
+      });
+      _emaState = EMA_DEFS.map(function(def){
+        return { p: def.p, k: 2 / (def.p + 1), last: null, count: 0 };
       });
 
       // Resize on host size changes
@@ -12122,11 +12445,49 @@ Sim.Ctrl = (function(){
       for (let i = 0; i < bars.length; i++){
         const b = bars[i] || {};
         const t = b.time || b.date || b.Date || b.datetime || b.DateTime;
-        const c = (b.close != null) ? +b.close : (b.value != null ? +b.value : NaN);
-        if (!t || !isFinite(c)) continue;
-        out.push({ time: t, value: c });
+        const o = +b.open, h = +b.high, l = +b.low, c = +b.close;
+        if (!t || !isFinite(c) || !isFinite(o) || !isFinite(h) || !isFinite(l)) continue;
+        out.push({ time: t, open: o, high: h, low: l, close: c });
       }
       return out;
+    }
+
+    function _refreshEMAs(candles){
+      if (typeof window.calcEMA !== 'function' || !_emaSeries.length) return;
+      _emaState.forEach(function(st, i){
+        const data = window.calcEMA(candles, st.p);
+        try { _emaSeries[i].setData(data); } catch(e){}
+        st.last = data.length ? +data[data.length - 1].value : null;
+        st.count = candles.length;
+      });
+    }
+    function _extendEMAs(t, c){
+      if (!_emaState.length) return;
+      _emaState.forEach(function(st, i){
+        st.count += 1;
+        if (st.last == null) return;
+        const next = c * st.k + st.last * (1 - st.k);
+        st.last = next;
+        try { _emaSeries[i].update({ time: t, value: parseFloat(next.toFixed(4)) }); } catch(e){}
+      });
+    }
+
+    // Default visible window: last ~90 trading days (≈ 4.5 months) so the
+    // user sees plenty of pre-sim context. Time-based + RAF-deferred to
+    // override LWC's post-setData auto-fit (same pattern as the per-card chart).
+    function _applyDefaultRange(candles){
+      if (!_chart || !candles || !candles.length) return;
+      const lastIdx = candles.length - 1;
+      const fromIdx = Math.max(0, lastIdx - (DEFAULT_VISIBLE_BARS - 1));
+      const fromT = candles[fromIdx] && candles[fromIdx].time;
+      const toT   = candles[lastIdx] && candles[lastIdx].time;
+      if (!fromT || !toT) return;
+      const apply = function(){
+        try { _chart.timeScale().setVisibleRange({ from: fromT, to: toT }); } catch(e){}
+      };
+      apply();
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(apply);
+      else setTimeout(apply, 0);
     }
 
     function setData(bars, _name){
@@ -12134,11 +12495,13 @@ Sim.Ctrl = (function(){
       if (!_series) return;
       const data = _normalize(bars);
       _series.setData(data);
-      _firstClose = data.length ? +data[0].value : null;
-      try{ _chart.timeScale().fitContent(); }catch(e){}
+      _refreshEMAs(data);
+      _firstClose = data.length ? +data[0].close : null;
+      if (data.length) _applyDefaultRange(data);
+      else { try{ _chart.timeScale().fitContent(); }catch(e){} }
       // Live readout: show last close + change since first
       if (data.length){
-        const last = data[data.length - 1].value;
+        const last = data[data.length - 1].close;
         const pct = (_firstClose && isFinite(_firstClose) && _firstClose !== 0)
           ? ((last - _firstClose) / _firstClose) * 100
           : null;
@@ -12152,9 +12515,10 @@ Sim.Ctrl = (function(){
       if (!_chart) init();
       if (!_series || !bar) return;
       const t = bar.time || bar.date || bar.Date || bar.datetime || bar.DateTime;
-      const c = (bar.close != null) ? +bar.close : (bar.value != null ? +bar.value : NaN);
-      if (!t || !isFinite(c)) return;
-      try{ _series.update({ time: t, value: c }); }catch(e){}
+      const o = +bar.open, h = +bar.high, l = +bar.low, c = +bar.close;
+      if (!t || !isFinite(c) || !isFinite(o) || !isFinite(h) || !isFinite(l)) return;
+      try{ _series.update({ time: t, open: o, high: h, low: l, close: c }); }catch(e){}
+      _extendEMAs(t, c);
     }
 
     function reset(){
@@ -12182,27 +12546,71 @@ Sim.Ctrl = (function(){
       }
     }
 
-    function fetchAndLoad(name){
-      // SPX maps to SPY for the OHLCV endpoint; NDQ stays NDQ.
-      const sym = (name === 'SPX') ? 'SPY' : (name || 'SPY');
+    function _shiftMonths(dateStr, months){
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        d.setMonth(d.getMonth() + months);
+        return d.toISOString().slice(0, 10);
+      } catch (e){ return dateStr; }
+    }
+
+    function _fetchOhlcvOnce(sym){
       return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
         .then(res => {
-          if (!res.ok){
-            // Graceful degrade if NDQ data is missing on the server.
-            throw new Error('HTTP ' + res.status + ' for ' + sym);
-          }
+          if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + sym);
           return res.json();
         })
         .then(json => {
-          // /api/ohlcv returns either an array of bars or {bars: [...]}.
           const bars = Array.isArray(json) ? json
                      : (json && Array.isArray(json.bars) ? json.bars
                      : (json && Array.isArray(json.data) ? json.data : []));
-          setData(bars, name);
           return bars;
-        })
+        });
+    }
+
+    // When NDQ is requested but no NDX/QQQ CSV exists, the server 404s. Try to
+    // populate QQQ via the existing /api/fetch-ticker pipe (Twelve Data) using
+    // the active sim window with a ±6-month buffer, then retry the OHLCV read.
+    function _autoFetchQQQ(){
+      const st = window.PortSim && window.PortSim._state;
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let start = (st && st.startDate) || '2010-01-01';
+      let end   = (st && st.endDate)   || todayStr;
+      start = _shiftMonths(start, -6);
+      end   = _shiftMonths(end,   +6);
+      if (end > todayStr) end = todayStr;
+      console.log('[PortSim.Index] auto-fetching QQQ via Twelve Data (' + start + ' → ' + end + ')…');
+      return fetch('/api/fetch-ticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: 'QQQ', start_date: start, end_date: end })
+      }).then(res => {
+        if (!res.ok) throw new Error('fetch-ticker QQQ HTTP ' + res.status);
+        return res.json();
+      });
+    }
+
+    function fetchAndLoad(name){
+      // SPX maps to SPY for the OHLCV endpoint; NDQ stays NDQ.
+      const sym = (name === 'SPX') ? 'SPY' : (name || 'SPY');
+      const isNdq = (name === 'NDQ' || name === 'NDX');
+      return _fetchOhlcvOnce(sym)
+        .then(bars => { setData(bars, name); return bars; })
         .catch(err => {
-          console.warn('[PortSim.Index] fetchAndLoad failed:', err && err.message || err);
+          // NDQ-specific fallback: pre-warm QQQ via fetch-ticker, retry once.
+          const msg = (err && err.message) || String(err || '');
+          if (isNdq && /HTTP\s+404/.test(msg)){
+            return _autoFetchQQQ()
+              .then(() => _fetchOhlcvOnce(sym))
+              .then(bars => { setData(bars, name); return bars; })
+              .catch(err2 => {
+                console.warn('[PortSim.Index] NDQ auto-fetch failed:', err2 && err2.message || err2);
+                reset();
+                return [];
+              });
+          }
+          console.warn('[PortSim.Index] fetchAndLoad failed:', msg);
           reset();
           return [];
         });
@@ -12491,36 +12899,74 @@ Sim.Ctrl = (function(){
     }
 
     // Now process pre-entries: instantiate sim + debit cash.
+    _state._initialEntryErrors = [];
+    console.log('[PortSim.Ctrl] bootstrap basket:',
+      _state.basket.map(function(e){
+        return {
+          symbol: e.symbol,
+          bars: (e.bars || []).length,
+          firstDate: e.bars && e.bars[0] && e.bars[0].time,
+          lastDate:  e.bars && e.bars[e.bars.length-1] && e.bars[e.bars.length-1].time,
+          hasPreEntryRequest: _state.initialEntryRequest.some(function(r){ return r.entry === e; })
+        };
+      }),
+      'startDate=' + _state.startDate, 'endDate=' + _state.endDate);
     _state.initialEntryRequest.forEach(function(req){
       _initialEntryFromConfig(req);
     });
+    if (_state._initialEntryErrors.length){
+      console.warn('[PortSim.Ctrl] pre-entry failures:', _state._initialEntryErrors);
+      const summary = _state._initialEntryErrors.map(function(e){
+        return ' • ' + e.symbol + ': ' + e.reason;
+      }).join('\n');
+      // Defer alert so we don't block the rest of bootstrap rendering.
+      setTimeout(function(){
+        alert('Some pre-declared entries did not start:\n' + summary +
+              '\n\nThe affected cards will show as idle. You can still click them to enter manually once playback starts.');
+      }, 50);
+    }
+
+    // Show + wire header FIRST so the index strip's host element has real
+    // dimensions before LightweightCharts.createChart measures it. (Initing
+    // the chart while the shell is still display:none gives it 1×90 dims and
+    // the resize observer doesn't always recover.)
+    PortSim.Header.show();
+    PortSim.Header.setSpeed(_state.speed);
+    PortSim.Header.setPlaying(false);
+    PortSim.Header.onTransport(_onTransport);
+    PortSim.Header.onIndexToggle(_onIndexToggle);
 
     // Init index chart, fetch.
     if (PortSim.Index && typeof PortSim.Index.init === 'function'){
       PortSim.Index.init();
       PortSim.Index.fetchAndLoad(_state.index).then(function(idxBars){
-        // Slice to start-end window for unified-date alignment.
-        const idxClipped = (idxBars || []).filter(function(b){
+        // Keep the FULL bar array (not pre-clipped to startDate) so the user
+        // sees ~4 months of pre-sim context on the index chart.
+        // _buildUnifiedDates clips its own input to [startDate, endDate].
+        // indexDateMap is keyed by date so unifiedDates lookups work for any
+        // sim-window date regardless of whether earlier bars are present.
+        const idxAll = (idxBars || []).filter(function(b){
           const t = b && b.time;
           if (!t) return false;
-          if (_state.startDate && t < _state.startDate) return false;
           if (_state.endDate && t > _state.endDate) return false;
           return true;
         });
-        _state.indexBars = idxClipped;
+        _state.indexBars = idxAll;
         _state.indexDateMap = new Map();
-        for (let i = 0; i < idxClipped.length; i++){
-          _state.indexDateMap.set(idxClipped[i].time, i);
+        for (let i = 0; i < idxAll.length; i++){
+          _state.indexDateMap.set(idxAll[i].time, i);
         }
         // Re-merge unified dates so index trading days are included.
-        _state.unifiedDates = _buildUnifiedDates(_state.basket, idxClipped, _state.startDate, _state.endDate);
+        _state.unifiedDates = _buildUnifiedDates(_state.basket, idxAll, _state.startDate, _state.endDate);
         // Reset playIdx to start.
         _state.playIdx = 0;
         for (let i = 0; i < _state.unifiedDates.length; i++){
           if (_state.unifiedDates[i] >= _state.startDate){ _state.playIdx = i; break; }
         }
-        // Trim index series to dates up to (and including) the start date.
-        const idxSlice = _sliceUpTo(idxClipped, _state.startDate);
+        // Initial chart paint shows everything up to (and including) startDate
+        // — so the user sees the lead-in. Track E's setData applies its own
+        // ~90-bar default visible range on top of this.
+        const idxSlice = _sliceUpTo(idxAll, _state.startDate);
         if (PortSim.Index && typeof PortSim.Index.setData === 'function'){
           PortSim.Index.setData(idxSlice, _state.index);
         }
@@ -12530,20 +12976,30 @@ Sim.Ctrl = (function(){
       });
     }
 
-    // Show + wire header.
-    PortSim.Header.show();
-    PortSim.Header.setSpeed(_state.speed);
-    PortSim.Header.setPlaying(false);
-    PortSim.Header.onTransport(_onTransport);
-    PortSim.Header.onIndexToggle(_onIndexToggle);
-
     _renderAll();
+
+    // Force Track J's marker/stop-line paint synchronously so pre-declared
+    // entries show their entry marker, R-stars, and stop lines on the very
+    // first paint. Without this the 120ms state-watcher would pick it up but
+    // the user briefly sees an "active" position with no visual cues on the
+    // chart.
+    if (window.PortSim && PortSim.TrackJ && typeof PortSim.TrackJ.afterRender === 'function'){
+      try { PortSim.TrackJ.afterRender(); } catch (e){
+        if (window.console) console.warn('[PortSim.Ctrl] forced afterRender failed:', e);
+      }
+    }
   }
 
   function _initialEntryFromConfig(req){
     const entry = req.entry;
     const bars = entry.bars;
-    if (!bars || !bars.length) return;
+    if (!bars || !bars.length){
+      const msg = 'no bars loaded for ' + (entry && entry.symbol);
+      console.warn('[PortSim.Ctrl] initial entry skipped:', msg, req);
+      _state._initialEntryErrors = _state._initialEntryErrors || [];
+      _state._initialEntryErrors.push({ symbol: entry && entry.symbol, reason: msg });
+      return;
+    }
     // Find the bar at startDate (or first ≥ startDate).
     const sd = _state.startDate;
     let entryBarIdx = entry.dateToBarIdx.get(sd);
@@ -12553,7 +13009,13 @@ Sim.Ctrl = (function(){
         if (bars[i].time >= sd){ entryBarIdx = i; break; }
       }
     }
-    if (entryBarIdx == null) return;
+    if (entryBarIdx == null){
+      const msg = 'no bar at or after ' + sd + ' (latest bar: ' + (bars[bars.length-1] && bars[bars.length-1].time) + ')';
+      console.warn('[PortSim.Ctrl] initial entry skipped for ' + entry.symbol + ':', msg);
+      _state._initialEntryErrors = _state._initialEntryErrors || [];
+      _state._initialEntryErrors.push({ symbol: entry.symbol, reason: msg });
+      return;
+    }
     // Instantiate sim.
     let sim;
     try {
@@ -12570,7 +13032,10 @@ Sim.Ctrl = (function(){
         }
       });
     } catch (e){
+      const msg = (e && e.message) || String(e);
       console.error('[PortSim.Ctrl] initial entry failed for ' + entry.symbol + ':', e);
+      _state._initialEntryErrors = _state._initialEntryErrors || [];
+      _state._initialEntryErrors.push({ symbol: entry.symbol, reason: msg });
       return;
     }
     entry.sim = sim;
@@ -12582,6 +13047,9 @@ Sim.Ctrl = (function(){
     entry.lastCloseSeen = +bars[entryBarIdx].close;
     entry.card.setActive(true);
     entry.card.setBadge('active', 'active');
+    console.log('[PortSim.Ctrl] pre-entry created:', entry.symbol,
+      'qty=' + sim.shares0, '@$' + sim.entry.price,
+      'stop=$' + sim.entry.stop, 'barIdx=' + entryBarIdx, 'date=' + sim.entry.date);
   }
 
   // =====================================================================
@@ -15301,6 +15769,517 @@ Sim.Ctrl = (function(){
   }
 })();
 // ============ PORTSIM TRACK K: Chart Peek — END ============
+
+// ============ PORTSIM TRACK L: Open Positions Panel — START ============
+// Renders a per-position summary table between the index strip and the card
+// grid. Refreshes from PortSim._state on every Ctrl render. Stop edits route
+// through PortSim.Modal.openMoveStopForCard so they share validation /
+// queueAction logic with the cards' inline action row.
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.Positions) return; // idempotent
+
+  function _host(){ return document.getElementById('portsim-positions'); }
+
+  function _fmt$(n){
+    if (n == null || !isFinite(n)) return '—';
+    var sign = n < 0 ? '-' : '';
+    var a = Math.abs(n);
+    if (a >= 1e6) return sign + '$' + (a/1e3).toFixed(0) + 'k';
+    if (a >= 1e4) return sign + '$' + a.toFixed(0);
+    return sign + '$' + a.toFixed(2);
+  }
+  function _fmt$Signed(n){
+    if (n == null || !isFinite(n)) return '—';
+    var s = n > 0 ? '+' : (n < 0 ? '-' : '');
+    var a = Math.abs(n);
+    if (a >= 1e4) return s + '$' + a.toFixed(0);
+    return s + '$' + a.toFixed(2);
+  }
+  function _fmtR(n){
+    if (n == null || !isFinite(n)) return '—';
+    var s = n > 0 ? '+' : '';
+    return s + n.toFixed(2) + 'R';
+  }
+  function _fmtPx(n){
+    if (n == null || !isFinite(n)) return '—';
+    return '$' + (+n).toFixed(2);
+  }
+  function _fmtQty(n){
+    if (n == null || !isFinite(n)) return '—';
+    return String(Math.round(n));
+  }
+  function _pnlClass(n){
+    if (n == null || !isFinite(n) || n === 0) return '';
+    return n > 0 ? 'portsim-pos-pnl-pos' : 'portsim-pos-pnl-neg';
+  }
+
+  // Highest non-fired stop on the sim, if any.
+  function _activeStopPrice(sim){
+    if (!sim || !Array.isArray(sim.stopLevels)) return null;
+    var best = null;
+    for (var i = 0; i < sim.stopLevels.length; i++){
+      var s = sim.stopLevels[i];
+      if (s && !s.fired && (best == null || s.price > best)) best = +s.price;
+    }
+    return best;
+  }
+
+  function _markFor(entry){
+    if (!entry) return null;
+    if (entry.lastCloseSeen != null && isFinite(entry.lastCloseSeen)) return +entry.lastCloseSeen;
+    if (entry.sim && entry.sim.entry && isFinite(entry.sim.entry.price)) return +entry.sim.entry.price;
+    return null;
+  }
+
+  // Snapshot one open position for the table.
+  function _snap(entry){
+    var sim = entry && entry.sim;
+    if (!sim || sim.qty <= 0 || sim.between || sim.closed || sim.stoppedOut) return null;
+    var mark = _markFor(entry);
+    var unreal = (mark != null && isFinite(mark)) ? sim.qty * (mark - sim.avgCost) : 0;
+    var realized = sim.realizedPnL || 0;
+    var totalPnL = realized + unreal;
+    var rUnits = (sim.initialRisk && sim.initialRisk > 0) ? totalPnL / sim.initialRisk : 0;
+    // Days held — count bars from entry.barIdx to current playIdx-equivalent.
+    var entryBarIdx = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : 0;
+    var curIdx = entryBarIdx;
+    var st = window.PortSim && window.PortSim._state;
+    if (st && st.unifiedDates && entry.dateToBarIdx){
+      var curDate = st.unifiedDates[st.playIdx];
+      var idx = curDate ? entry.dateToBarIdx.get(curDate) : null;
+      if (idx != null) curIdx = idx;
+    }
+    var days = Math.max(0, curIdx - entryBarIdx);
+    // Per-position give-back: drop from intraleg peak P&L. Sim core tracks
+    // _mfeVal (max favorable excursion) over the leg; give-back = MFE − P&L.
+    // Only meaningful when MFE > 0 and current P&L < MFE.
+    var giveBack = 0;
+    if ((sim._mfeVal || 0) > 0 && totalPnL < sim._mfeVal){
+      giveBack = sim._mfeVal - totalPnL;
+    }
+    return {
+      entry: entry,
+      symbol: entry.symbol,
+      qty: sim.qty,
+      avg: sim.avgCost,
+      mark: mark,
+      stop: _activeStopPrice(sim),
+      pnl: totalPnL,
+      r: rUnits,
+      mfe: sim._mfeVal || 0,
+      mae: sim._maeVal || 0,
+      giveBack: giveBack,
+      days: days
+    };
+  }
+
+  // Compute portfolio-level snapshot: mirrors what the header used to show
+  // and adds drawdown from the running peak equity. Reads from _state and
+  // re-derives unrealized P&L from open positions; this keeps the panel
+  // honest even if Header.update isn't being called.
+  function _portfolioSnap(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st) return null;
+    var initial = +st.initialEquity || 0;
+    var cash = +st.cash || 0;
+    var realized = +st.realizedPnL || 0;
+    var unreal = 0;
+    var openCount = 0;
+    var basket = st.basket || [];
+    basket.forEach(function(e){
+      if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
+      var mark = _markFor(e);
+      if (mark == null) return;
+      unreal += e.sim.qty * (mark - e.sim.avgCost);
+      openCount += 1;
+    });
+    var equity = cash + initial + (realized + unreal) - initial; // = cash + realized + unreal + cash deficit
+    // Simpler / equivalent: equity = cash + Σ(qty × mark)
+    equity = cash;
+    basket.forEach(function(e){
+      if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
+      var mark = _markFor(e);
+      if (mark != null) equity += e.sim.qty * mark;
+    });
+    var totalPnL = equity - initial;
+    var dayPnL = (st.prevEquity != null && isFinite(st.prevEquity)) ? (equity - st.prevEquity) : 0;
+    // Drawdown from running peak — both as $ and %.
+    var peak = +st.eqPeak || initial || 0;
+    var ddDollar = peak > 0 ? (equity - peak) : 0;     // ≤ 0
+    var ddPct = peak > 0 ? (ddDollar / peak) * 100 : 0;
+    var maxDDDollar = +st.eqMaxDD || 0;                  // ≤ 0
+    var maxDDPct = peak > 0 ? (maxDDDollar / Math.max(peak, initial)) * 100 : 0;
+    return {
+      initial: initial, cash: cash, equity: equity,
+      dayPnL: dayPnL, totalPnL: totalPnL,
+      openCount: openCount,
+      ddDollar: ddDollar, ddPct: ddPct,
+      maxDDDollar: maxDDDollar, maxDDPct: maxDDPct
+    };
+  }
+
+  // The stats row lives inside .portsim-stats-row whose <strong> rules are
+  // keyed off .is-pos / .is-neg. _pnlClass returns .portsim-pos-pnl-* (used
+  // in the table). Re-map for the stats row so the totals colour properly.
+  function _statsCls(n){
+    if (n == null || !isFinite(n) || n === 0) return '';
+    return n > 0 ? 'is-pos' : 'is-neg';
+  }
+  function _renderStatsRow(p){
+    if (!p) return '';
+    var dpCls = _statsCls(p.dayPnL);
+    var tpCls = _statsCls(p.totalPnL);
+    var ddCls = (p.ddDollar < 0) ? 'is-neg' : '';
+    var maxDDCls = (p.maxDDDollar < 0) ? 'is-neg' : '';
+    function _cell(label, value, cls){
+      return '<div class="portsim-stat-cell"><label>' + label + '</label>' +
+             '<strong' + (cls ? ' class="' + cls + '"' : '') + '>' + value + '</strong></div>';
+    }
+    return '<div class="portsim-stats-row">' +
+      _cell('INITIAL',  _fmt$(p.initial)) +
+      _cell('CASH',     _fmt$(p.cash)) +
+      _cell('EQUITY',   _fmt$(p.equity)) +
+      _cell('DAY P&L',  _fmt$Signed(p.dayPnL), dpCls) +
+      _cell('TOTAL P&L',_fmt$Signed(p.totalPnL), tpCls) +
+      _cell('DD',       _fmt$Signed(p.ddDollar) + ' (' + (p.ddPct).toFixed(2) + '%)', ddCls) +
+      _cell('MAX DD',   _fmt$Signed(p.maxDDDollar) + ' (' + (p.maxDDPct).toFixed(2) + '%)', maxDDCls) +
+      _cell('OPEN',     String(p.openCount|0)) +
+    '</div>';
+  }
+
+  function _renderTable(snaps){
+    var rows = [];
+    rows.push(
+      '<table class="portsim-pos-table">' +
+      '<thead><tr>' +
+        '<th>SYM</th><th>QTY</th><th>AVG</th><th>MARK</th>' +
+        '<th>STOP</th><th>P&amp;L</th><th>R</th>' +
+        '<th>MFE</th><th>MAE</th><th>GIVE</th><th>DAYS</th>' +
+      '</tr></thead>' +
+      '<tbody>'
+    );
+    snaps.forEach(function(s){
+      var pnlCls = _pnlClass(s.pnl);
+      var rCls = _pnlClass(s.r);
+      var giveCls = s.giveBack > 0 ? 'portsim-pos-pnl-neg' : '';
+      rows.push(
+        '<tr data-symbol="' + s.symbol + '">' +
+          '<td class="portsim-pos-sym">' + s.symbol + '</td>' +
+          '<td>' + _fmtQty(s.qty) + '</td>' +
+          '<td>' + _fmtPx(s.avg) + '</td>' +
+          '<td>' + _fmtPx(s.mark) + '</td>' +
+          '<td><button type="button" class="portsim-pos-stop-btn" data-action="movestop">' +
+            (s.stop != null ? _fmtPx(s.stop) : '—') +
+          '</button></td>' +
+          '<td class="' + pnlCls + '">' + _fmt$Signed(s.pnl) + '</td>' +
+          '<td class="' + rCls + '">' + _fmtR(s.r) + '</td>' +
+          '<td>' + _fmt$(s.mfe) + '</td>' +
+          '<td>' + _fmt$(s.mae) + '</td>' +
+          '<td class="' + giveCls + '">' + (s.giveBack > 0 ? '-' + _fmt$(s.giveBack) : '—') + '</td>' +
+          '<td>' + s.days + '</td>' +
+        '</tr>'
+      );
+    });
+    rows.push('</tbody></table>');
+    return rows.join('');
+  }
+
+  function _wireStopButtons(host, snaps){
+    var btns = host.querySelectorAll('.portsim-pos-stop-btn[data-action="movestop"]');
+    btns.forEach(function(btn, i){
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var snap = snaps[i];
+        if (!snap || !snap.entry) return;
+        var entry = snap.entry;
+        var Ctrl = window.PortSim && window.PortSim.Ctrl;
+        // Pause the sim (best-effort) so the user isn't ticking under the modal.
+        if (Ctrl && typeof Ctrl._pause === 'function'){ try { Ctrl._pause(); } catch(e){} }
+        // Find current bar.
+        var st = window.PortSim && window.PortSim._state;
+        var curDate = st && st.unifiedDates && st.unifiedDates[st.playIdx];
+        var bar = null;
+        if (curDate && entry.dateToBarIdx){
+          var idx = entry.dateToBarIdx.get(curDate);
+          if (idx != null) bar = entry.bars[idx];
+        }
+        if (!bar) bar = entry.bars && entry.bars[entry.bars.length - 1];
+        if (!bar) return;
+        if (window.PortSim.Modal && typeof window.PortSim.Modal.openMoveStopForCard === 'function'){
+          window.PortSim.Modal.openMoveStopForCard(entry, entry.sim, bar, function(card, form){
+            var ns = +form.newStop;
+            var pct = isFinite(+form.pct) ? +form.pct : 1.0;
+            if (!isFinite(ns) || ns <= 0) return;
+            try { window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct }); }
+            catch(e){ console.error('[PortSim.Positions] movestop:', e); }
+            // Refresh on next render — the controller's _renderAll will fire.
+          });
+        }
+      });
+    });
+  }
+
+  // ----- Equity chart (live line chart in the panel) -----
+  var _equityChart = null;
+  var _equityResizeObs = null;
+  var _portfolioSeries = null;
+  var _positionSeries  = {};       // { symbol: ISeriesApi }
+  var _curveLastDate   = null;     // last date appended (avoid same-date duplicates)
+  var _lastBootstrapMarker = null; // detect new sim → reset chart
+  var POS_PALETTE = ['#6ee7b7','#fb7185','#60a5fa','#facc15','#a78bfa','#fb923c','#34d399','#f472b6'];
+
+  function _ensureEquityChart(){
+    if (_equityChart) return _equityChart;
+    var host = document.getElementById('portsim-equity-chart');
+    if (!host) return null;
+    if (typeof LightweightCharts === 'undefined' || !LightweightCharts.createChart) return null;
+    var w = Math.max(host.clientWidth || 0, 1);
+    var h = Math.max(host.clientHeight || 160, 60);
+    var grid = '#1a1c22', border = '#262932', text = '#888';
+    try {
+      grid = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || grid;
+      border = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || border;
+      text = getComputedStyle(document.documentElement).getPropertyValue('--text-2').trim() || text;
+    } catch(e){}
+    _equityChart = LightweightCharts.createChart(host, {
+      width: w, height: h,
+      layout: { background: { color: 'transparent' }, textColor: text },
+      rightPriceScale: { borderColor: border, scaleMargins: { top: 0.08, bottom: 0.08 } },
+      leftPriceScale:  { visible: false },
+      timeScale: { borderColor: border, timeVisible: false, rightOffset: 4 },
+      grid: {
+        horzLines: { color: grid, visible: true },
+        vertLines: { color: grid, visible: false },
+      },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      handleScroll: false,
+      handleScale:  false,
+    });
+    _portfolioSeries = _equityChart.addLineSeries({
+      color: '#d4a574',
+      lineWidth: 2.5,
+      priceLineVisible: false,
+      lastValueVisible: true,
+      title: 'Portfolio',
+    });
+    if (typeof ResizeObserver !== 'undefined'){
+      _equityResizeObs = new ResizeObserver(function(){
+        var r = host.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0){
+          try { _equityChart.resize(Math.floor(r.width), Math.floor(r.height)); } catch(e){}
+        }
+      });
+      _equityResizeObs.observe(host);
+    }
+    return _equityChart;
+  }
+
+  function _ensurePositionSeries(symbol){
+    if (_positionSeries[symbol]) return _positionSeries[symbol];
+    if (!_equityChart) return null;
+    var idx = Object.keys(_positionSeries).length % POS_PALETTE.length;
+    var color = POS_PALETTE[idx];
+    var s = _equityChart.addLineSeries({
+      color: color,
+      lineWidth: 1.25,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      title: symbol,
+    });
+    s._color = color;
+    _positionSeries[symbol] = s;
+    return s;
+  }
+
+  function _resetEquityChart(){
+    // Wipe series data in place (don't tear down the chart instance — a fresh
+    // createChart() during render thrash flickers).
+    try { if (_portfolioSeries) _portfolioSeries.setData([]); } catch(e){}
+    Object.keys(_positionSeries).forEach(function(sym){
+      try { _positionSeries[sym].setData([]); } catch(e){}
+    });
+    // Future tickers get fresh series; old ones we keep around so colors stay
+    // stable if the user re-runs with the same symbols.
+    _curveLastDate = null;
+  }
+
+  // Per-position cumulative P&L (realized + unrealized at current mark).
+  // Captures closed/stoppedOut legs too so the line keeps its final value.
+  function _positionTotalPnL(entry){
+    var sim = entry && entry.sim;
+    if (!sim) return 0;
+    var realized = sim.realizedPnL || 0;
+    if (sim.qty > 0 && !sim.between && !sim.closed && !sim.stoppedOut){
+      var mark = _markFor(entry);
+      if (mark != null && isFinite(mark)){
+        realized += sim.qty * (mark - sim.avgCost);
+      }
+    }
+    // Roll in any prior-leg realized P&L stored on sim.legs.
+    var pastLegs = (sim.legs || []).reduce(function(s, l){ return s + (l.realizedPnL || 0); }, 0);
+    return realized + pastLegs;
+  }
+
+  function _appendCurves(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active) return;
+    if (!_ensureEquityChart()) return;
+    // Reset on new sim — detect via _state ref + initialEquity + startDate.
+    var marker = (st.initialEquity || 0) + '|' + (st.startDate || '') + '|' + (st.basket && st.basket.length || 0);
+    if (marker !== _lastBootstrapMarker){
+      _lastBootstrapMarker = marker;
+      _resetEquityChart();
+    }
+    var date = st.unifiedDates && st.unifiedDates[st.playIdx];
+    if (!date) return;
+    if (date === _curveLastDate) return; // already appended this tick
+    _curveLastDate = date;
+
+    // Portfolio total P&L
+    var p = _portfolioSnap();
+    if (p && _portfolioSeries){
+      try { _portfolioSeries.update({ time: date, value: parseFloat(p.totalPnL.toFixed(2)) }); }
+      catch(e){}
+    }
+
+    // Per-position cumulative P&L
+    (st.basket || []).forEach(function(e){
+      if (!e || !e.sim) return;
+      var s = _ensurePositionSeries(e.symbol);
+      if (!s) return;
+      var v = _positionTotalPnL(e);
+      try { s.update({ time: date, value: parseFloat(v.toFixed(2)) }); } catch(err){}
+    });
+  }
+
+  function _renderEquityLegend(){
+    var legend = document.getElementById('portsim-equity-legend');
+    if (!legend) return;
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active){ legend.innerHTML = ''; return; }
+    var rows = [];
+    var p = _portfolioSnap();
+    if (p){
+      var cls = _statsCls(p.totalPnL);
+      rows.push(
+        '<div class="portsim-equity-legend-item">' +
+          '<span class="portsim-equity-legend-swatch" style="background:#d4a574"></span>' +
+          '<span class="portsim-equity-legend-sym">PORT</span>' +
+          '<span class="portsim-equity-legend-val ' + cls + '">' + _fmt$Signed(p.totalPnL) + '</span>' +
+        '</div>'
+      );
+    }
+    (st.basket || []).forEach(function(e){
+      if (!e || !e.sim) return;
+      var s = _positionSeries[e.symbol];
+      var color = (s && s._color) || '#888';
+      var v = _positionTotalPnL(e);
+      var cls = _statsCls(v);
+      rows.push(
+        '<div class="portsim-equity-legend-item">' +
+          '<span class="portsim-equity-legend-swatch" style="background:' + color + '"></span>' +
+          '<span class="portsim-equity-legend-sym">' + e.symbol + '</span>' +
+          '<span class="portsim-equity-legend-val ' + cls + '">' + _fmt$Signed(v) + '</span>' +
+        '</div>'
+      );
+    });
+    legend.innerHTML = rows.join('');
+  }
+
+  function update(){
+    var host = _host();
+    if (!host) return;
+    var st = window.PortSim && window.PortSim._state;
+    var statsHost = document.getElementById('portsim-positions-stats');
+    var tableHost = document.getElementById('portsim-positions-table');
+    if (!st || !st.active){
+      if (statsHost) statsHost.innerHTML = '';
+      if (tableHost) tableHost.innerHTML = '';
+      var legend = document.getElementById('portsim-equity-legend');
+      if (legend) legend.innerHTML = '';
+      _resetEquityChart();
+      _lastBootstrapMarker = null;
+      return;
+    }
+    var basket = st.basket || [];
+    var snaps = [];
+    basket.forEach(function(e){
+      var s = _snap(e);
+      if (s) snaps.push(s);
+    });
+    var portfolio = _portfolioSnap();
+    if (statsHost) statsHost.innerHTML = _renderStatsRow(portfolio);
+    if (tableHost){
+      if (!snaps.length){
+        tableHost.innerHTML = '<div class="portsim-positions-empty">No open positions</div>';
+      } else {
+        tableHost.innerHTML = _renderTable(snaps);
+        _wireStopButtons(tableHost, snaps);
+      }
+    }
+    _appendCurves();
+    _renderEquityLegend();
+  }
+
+  window.PortSim.Positions = { update: update };
+
+  // We can't reliably piggyback on PortSim.TrackJ.afterRender because Track
+  // J's internal 120ms watcher invokes its closure-bound _afterRender —
+  // bypassing the public hook. So Track L runs its own state-change watcher,
+  // mirroring Track J's signature-diff approach. Cheap (only re-renders on
+  // change) and decoupled from Ctrl IIFE internals.
+  var _watchTimer = null;
+  var _lastSig = '';
+
+  function _stateSignature(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active) return '';
+    var basket = st.basket || [];
+    // Compact sig: playIdx | cash | realizedPnL | per-entry { qty | avgCost |
+    // lastCloseSeen | stopLevels.length | firedCount | between/closed/stopped }
+    var parts = [String(st.playIdx), String(st.cash), String(st.realizedPnL),
+                 String(st.eqPeak), String(st.eqMaxDD)];
+    for (var i = 0; i < basket.length; i++){
+      var e = basket[i];
+      var sim = e && e.sim;
+      if (!sim){ parts.push('-'); continue; }
+      var stopLen = (sim.stopLevels && sim.stopLevels.length) || 0;
+      var firedCount = (sim.stopLevels || []).reduce(function(a, s){ return a + (s.fired ? 1 : 0); }, 0);
+      parts.push(
+        e.symbol + ':' + sim.qty + ':' + sim.avgCost + ':' + (e.lastCloseSeen || 0) +
+        ':' + stopLen + ':' + firedCount +
+        ':' + (sim.between ? 'B' : '-') + (sim.closed ? 'C' : '-') + (sim.stoppedOut ? 'S' : '-')
+      );
+    }
+    return parts.join('|');
+  }
+
+  function _watchTick(){
+    var sig = _stateSignature();
+    if (sig === _lastSig) return;
+    _lastSig = sig;
+    try { update(); }
+    catch(e){ if (window.console) console.warn('[PortSim.Positions] update:', e && e.message); }
+  }
+
+  function _bootstrap(){
+    if (_watchTimer != null) return;
+    // 120ms polling — same cadence as Track J's watcher.
+    _watchTimer = setInterval(_watchTick, 120);
+    // Also do an immediate render in case the panel is already populated.
+    setTimeout(_watchTick, 50);
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _bootstrap);
+  } else {
+    _bootstrap();
+  }
+})();
+// ============ PORTSIM TRACK L: Open Positions Panel — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
@@ -15367,6 +16346,7 @@ Sim.Ctrl = (function(){
 
     <div class="fetch-actions">
       <button type="button" class="fetch-btn-cancel" id="portsim-setup-cancel">Cancel</button>
+      <button type="button" class="fetch-btn-cancel" id="portsim-setup-clear" title="Reset all fields to defaults">Clear</button>
       <button type="button" class="fetch-btn-primary" id="portsim-setup-submit">▶ Start Simulation</button>
     </div>
     <div class="fetch-status" id="portsim-setup-status"></div>
@@ -15496,7 +16476,15 @@ Sim.Ctrl = (function(){
     </div>
     <div class="portsim-idx-chart" id="portsim-idx-chart"></div>
   </div>
-  <div id="portsim-grid"></div>
+  <div id="portsim-positions" class="portsim-positions">
+    <div id="portsim-positions-stats"></div>
+    <div id="portsim-equity-wrap" class="portsim-equity-wrap">
+      <div id="portsim-equity-chart" class="portsim-equity-chart"></div>
+      <div id="portsim-equity-legend" class="portsim-equity-legend"></div>
+    </div>
+    <div id="portsim-positions-table"><div class="portsim-positions-empty">No open positions</div></div>
+  </div>
+  <div id="portsim-grid" class="portsim-grid"></div>
 </div>
 <!-- ============ PORTSIM TRACK E: Header & Index Strip — END ============ -->
 </body>
