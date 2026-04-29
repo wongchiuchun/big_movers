@@ -1827,6 +1827,32 @@
      reflow into the existing grid columns automatically (CSS grid skips
      display:none items but keeps the column count fixed). */
   .portsim-grid.hide-inactive .portcard:not(.is-active){display:none;}
+  /* Per-card hide (×): toggled by the hide button. Restored individually
+     or in bulk via the transport-bar "Hidden (N)" pill. */
+  .portcard.is-hidden{display:none;}
+  /* Drag affordance: the entire card is draggable, but we cue the user with
+     a subtle grab cursor on the header where the grip naturally lives. */
+  .portcard{cursor:auto;}
+  .portcard-header{cursor:grab;}
+  .portcard-header:active{cursor:grabbing;}
+  .portcard.is-dragging{opacity:0.45;}
+  .portcard.is-drop-target{outline:2px dashed var(--accent);outline-offset:-2px;}
+  /* Hide button (×) sits at the far right of the header. */
+  .portcard-hide-btn{
+    width:20px;height:20px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:transparent;border:1px solid var(--border);border-radius:4px;
+    color:var(--muted);font-family:var(--mono);font-size:13px;line-height:1;
+    cursor:pointer;flex:0 0 auto;padding:0;
+    transition:all 0.12s ease;
+  }
+  .portcard-hide-btn:hover{
+    color:var(--red);border-color:var(--red);background:rgba(251,113,133,0.08);
+  }
+  /* Restored-cards pill (the "Hidden (N)" transport-bar button) only
+     surfaces when there are hidden cards to bring back. */
+  #portsim-toggle-hidden{display:none;}
+  #portsim-toggle-hidden.has-hidden{display:inline-flex;}
 
   .portcard{
     display:flex;
@@ -11099,6 +11125,11 @@ Sim.Ctrl = (function(){
     const root = document.createElement('div');
     root.className = 'portcard';
     root.setAttribute('data-symbol', ticker || '');
+    // Native HTML5 drag-and-drop for reordering. Wired below; the grip is
+    // the symbol+badge area of the header so the user grabs the obvious
+    // "card title" zone — toolbars and form controls get isolated via
+    // dragstart-cancel handlers in PortSim.Reorder.
+    root.setAttribute('draggable', 'true');
 
     // Header
     const header = document.createElement('div');
@@ -11122,9 +11153,30 @@ Sim.Ctrl = (function(){
     const badgeEl = document.createElement('span');
     badgeEl.className = 'portcard-badge';
 
+    // Hide button — collapses just this single card. Restored via the
+    // "Hidden (N)" pill in the transport bar.
+    const hideBtn = document.createElement('button');
+    hideBtn.type = 'button';
+    hideBtn.className = 'portcard-hide-btn';
+    hideBtn.title = 'Hide this card (restore from transport bar)';
+    hideBtn.textContent = '×';
+    hideBtn.setAttribute('draggable', 'false');
+    hideBtn.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      ev.preventDefault();
+      try {
+        if (window.PortSim && PortSim.Reorder && typeof PortSim.Reorder.hide === 'function'){
+          PortSim.Reorder.hide(root);
+        } else {
+          root.classList.add('is-hidden');
+        }
+      } catch(e){}
+    });
+
     header.appendChild(symEl);
     header.appendChild(priceWrap);
     header.appendChild(badgeEl);
+    header.appendChild(hideBtn);
 
     // Mini panel
     const mini = document.createElement('div');
@@ -11132,6 +11184,7 @@ Sim.Ctrl = (function(){
     const fields = [
       ['STATE',    'posState', 'idle'],
       ['QTY',      'qty',      '—'],
+      ['VALUE',    'value',    '—'],
       ['AVG',      'avg',      '—'],
       ['STOP',     'stop',     '—'],
       ['LEG P&L',  'legPnL',   '—'],
@@ -18271,6 +18324,222 @@ Sim.Ctrl = (function(){
 })();
 // ============ PORTSIM TRACK P: Trade Review Modal — END ============
 
+// ============ PORTSIM TRACK R: Card Reorder + Hide — START ============
+// Drag-and-drop card reordering inside #portsim-grid, plus per-card hide
+// with a "N Hidden ▾" transport-bar pill that brings them back.
+//
+// Reorder is purely DOM-level: dragging a .portcard reorders its position
+// among its siblings, and CSS grid auto-flows visible items into row slots.
+// The basket array (PortSim._state.basket) is also mirrored so future
+// renders, exports, and Track P review tabs see the same order.
+//
+// Hide is just a class flip (.is-hidden → display:none from Track B
+// styles). The transport pill exposes an inline list of hidden symbols
+// so the user can restore individually or all at once.
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.Reorder) return; // idempotent
+
+  function _grid(){ return document.getElementById('portsim-grid'); }
+  function _hiddenBtn(){ return document.getElementById('portsim-toggle-hidden'); }
+  function _hiddenCountEl(){ return document.getElementById('portsim-hidden-count'); }
+
+  // ---- Hide / restore ----
+  function _hiddenSymbols(){
+    var grid = _grid();
+    if (!grid) return [];
+    var out = [];
+    var cards = grid.querySelectorAll('.portcard.is-hidden');
+    cards.forEach(function(c){ out.push(c.getAttribute('data-symbol') || ''); });
+    return out.filter(Boolean);
+  }
+  function _refreshHiddenPill(){
+    var btn = _hiddenBtn();
+    var cnt = _hiddenCountEl();
+    var hidden = _hiddenSymbols();
+    if (cnt) cnt.textContent = String(hidden.length);
+    if (btn){
+      btn.classList.toggle('has-hidden', hidden.length > 0);
+      btn.title = hidden.length
+        ? 'Hidden cards: ' + hidden.join(', ') + ' (click to restore all)'
+        : 'No hidden cards';
+    }
+  }
+  function hide(cardEl){
+    if (!cardEl) return;
+    cardEl.classList.add('is-hidden');
+    _refreshHiddenPill();
+  }
+  function restoreAll(){
+    var grid = _grid();
+    if (!grid) return;
+    grid.querySelectorAll('.portcard.is-hidden').forEach(function(c){
+      c.classList.remove('is-hidden');
+    });
+    _refreshHiddenPill();
+  }
+
+  // ---- Drag-and-drop reorder ----
+  // Insert `dragged` either before or after `target` based on cursor Y
+  // relative to the target's vertical midpoint. We do the same for the
+  // X axis when the grid is multi-column so the user can drop into the
+  // right column slot intuitively.
+  function _shouldInsertAfter(target, ev){
+    var rect = target.getBoundingClientRect();
+    // Pick the dominant axis based on grid layout — multi-col uses
+    // X, single-col uses Y.
+    var grid = _grid();
+    var multi = !!(grid && /cols-(2|3|4|5|6|7|8|9|10)/.test(grid.className));
+    if (multi){
+      var midX = rect.left + rect.width / 2;
+      return ev.clientX > midX;
+    }
+    var midY = rect.top + rect.height / 2;
+    return ev.clientY > midY;
+  }
+  function _syncBasketOrder(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !Array.isArray(st.basket)) return;
+    var grid = _grid();
+    if (!grid) return;
+    var domSyms = [];
+    grid.querySelectorAll('.portcard').forEach(function(c){
+      var s = c.getAttribute('data-symbol');
+      if (s) domSyms.push(s);
+    });
+    if (!domSyms.length) return;
+    // Stable reorder: pull each entry out of the original basket in DOM order.
+    var bySym = {};
+    st.basket.forEach(function(e){ if (e && e.symbol) bySym[e.symbol] = e; });
+    var next = [];
+    domSyms.forEach(function(s){ if (bySym[s]) next.push(bySym[s]); });
+    // Append any basket entries that weren't found in the DOM (defensive).
+    st.basket.forEach(function(e){
+      if (e && e.symbol && next.indexOf(e) < 0) next.push(e);
+    });
+    st.basket = next;
+  }
+
+  var _dragSrc = null;
+
+  function _onDragStart(ev){
+    var card = ev.target && ev.target.closest && ev.target.closest('.portcard');
+    if (!card) return;
+    // Don't start a drag if the user grabbed an interactive element inside
+    // the card (input, button, anchor, contenteditable) — those have their
+    // own click/focus semantics.
+    var src = ev.target;
+    if (src && src !== card){
+      var tag = (src.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'select' || tag === 'textarea' || tag === 'button' || tag === 'a' || src.isContentEditable){
+        ev.preventDefault();
+        return;
+      }
+      // Don't drag from the toolbar or hide button (covered above) — but
+      // be defensive in case styling changes.
+      if (src.closest && (src.closest('.portcard-toolbar') || src.closest('.portcard-hide-btn'))){
+        ev.preventDefault();
+        return;
+      }
+    }
+    _dragSrc = card;
+    card.classList.add('is-dragging');
+    if (ev.dataTransfer){
+      try {
+        ev.dataTransfer.effectAllowed = 'move';
+        // Some browsers require setData() to actually start a drag.
+        ev.dataTransfer.setData('text/plain', card.getAttribute('data-symbol') || '');
+      } catch(e){}
+    }
+  }
+  function _onDragOver(ev){
+    if (!_dragSrc) return;
+    var card = ev.target && ev.target.closest && ev.target.closest('.portcard');
+    if (!card || card === _dragSrc) return;
+    ev.preventDefault(); // permit drop
+    if (ev.dataTransfer) try { ev.dataTransfer.dropEffect = 'move'; } catch(e){}
+    // Highlight current target.
+    var grid = _grid();
+    if (!grid) return;
+    grid.querySelectorAll('.portcard.is-drop-target').forEach(function(c){
+      if (c !== card) c.classList.remove('is-drop-target');
+    });
+    card.classList.add('is-drop-target');
+  }
+  function _onDragLeave(ev){
+    var card = ev.target && ev.target.closest && ev.target.closest('.portcard');
+    if (card) card.classList.remove('is-drop-target');
+  }
+  function _onDrop(ev){
+    if (!_dragSrc) return;
+    var card = ev.target && ev.target.closest && ev.target.closest('.portcard');
+    if (!card || card === _dragSrc){ _onDragEnd(); return; }
+    ev.preventDefault();
+    var insertAfter = _shouldInsertAfter(card, ev);
+    var parent = card.parentNode;
+    if (!parent) { _onDragEnd(); return; }
+    if (insertAfter){
+      if (card.nextSibling) parent.insertBefore(_dragSrc, card.nextSibling);
+      else parent.appendChild(_dragSrc);
+    } else {
+      parent.insertBefore(_dragSrc, card);
+    }
+    _syncBasketOrder();
+    _onDragEnd();
+  }
+  function _onDragEnd(){
+    var grid = _grid();
+    if (grid){
+      grid.querySelectorAll('.portcard.is-drop-target').forEach(function(c){
+        c.classList.remove('is-drop-target');
+      });
+    }
+    if (_dragSrc) _dragSrc.classList.remove('is-dragging');
+    _dragSrc = null;
+  }
+
+  function _wire(){
+    var grid = _grid();
+    if (!grid) return;
+    if (grid._reorderWired) return;
+    grid._reorderWired = true;
+    grid.addEventListener('dragstart', _onDragStart);
+    grid.addEventListener('dragover',  _onDragOver);
+    grid.addEventListener('dragleave', _onDragLeave);
+    grid.addEventListener('drop',      _onDrop);
+    grid.addEventListener('dragend',   _onDragEnd);
+
+    var btn = _hiddenBtn();
+    if (btn && !btn._reorderWired){
+      btn._reorderWired = true;
+      btn.addEventListener('click', restoreAll);
+    }
+    _refreshHiddenPill();
+
+    // Re-check the pill when the grid mutates (cards added/hidden externally).
+    if (typeof MutationObserver !== 'undefined'){
+      var mo = new MutationObserver(function(){ _refreshHiddenPill(); });
+      mo.observe(grid, { childList: true, subtree: false, attributes: true, attributeFilter: ['class'] });
+    }
+  }
+
+  window.PortSim.Reorder = {
+    hide: hide,
+    restoreAll: restoreAll,
+    refreshPill: _refreshHiddenPill,
+    syncBasketOrder: _syncBasketOrder
+  };
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wire);
+  } else {
+    _wire();
+  }
+})();
+// ============ PORTSIM TRACK R: Card Reorder + Hide — END ============
+
 // ============ PORTSIM TRACK Q: Index Pre-Cache — START ============
 // Pre-fetches SPX (=SPY) and NDQ (=QQQ) once at app startup so the portfolio
 // sim's index chart always has data, regardless of which random window the
@@ -18612,6 +18881,7 @@ Sim.Ctrl = (function(){
       </span>
       <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
       <button id="portsim-toggle-inactive" class="portsim-tbtn" type="button" title="Hide cards with no active position">👁 Active Only</button>
+      <button id="portsim-toggle-hidden" class="portsim-tbtn" type="button" title="Restore hidden cards"><span id="portsim-hidden-count">0</span> Hidden ▾</button>
       <button id="portsim-btn-summary" class="portsim-tbtn" type="button" title="Show per-ticker summary (without exiting)">📊 Summary</button>
       <button id="portsim-btn-review" class="portsim-tbtn" type="button" title="Open trade review (charts + notes + export)">📝 Review</button>
       <button id="portsim-btn-export" class="portsim-tbtn" type="button" title="Export portfolio simulation results as CSV">↓ Export</button>
