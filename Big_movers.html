@@ -8598,6 +8598,13 @@ const Sim = (function(){
     sim.peakBarIdx = params.barIdx;
     sim._mfeVal = 0;
     sim._maeVal = 0;
+    // Anchor the playhead at the new entry bar. Without this, sim.playIdx
+    // would still point at the previous leg's exit (e.g. the bar where a
+    // stop fired several bars ago), and the very next advanceTo would walk
+    // those stale historical bars and check them against this new leg's
+    // stop level — almost guaranteed to fire on the first one whose low
+    // is under the new stop, even though the leg "happened" later.
+    sim.playIdx = params.barIdx;
     sim.eventsLog.push({
       barIdx: params.barIdx, date: params.date || null, type: 'entry',
       qty: shares, price: params.price,
