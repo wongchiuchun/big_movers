@@ -3193,6 +3193,17 @@
     text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;
   }
   .portsim-review-btn:hover{border-color:var(--accent);color:var(--accent);}
+  /* Save button flash states — ~1.8s after a save attempt. */
+  .portsim-review-btn.is-saved{
+    background:var(--green) !important;
+    border-color:var(--green) !important;
+    color:#0a0a0a !important;
+  }
+  .portsim-review-btn.is-saveerr{
+    background:var(--red) !important;
+    border-color:var(--red) !important;
+    color:#0a0a0a !important;
+  }
   .portsim-review-btn.portsim-review-close{
     background:transparent;border-color:transparent;color:var(--muted);
     font-size:14px;padding:6px 10px;
@@ -18364,15 +18375,52 @@ Sim.Ctrl = (function(){
     _dirty = true;
     _setStatus('Unsaved changes…', '');
   }
+  function _flashSaveBtn(label, kind){
+    var btn = document.getElementById('portsim-review-save');
+    if (!btn) return;
+    var orig = btn._origLabel || btn.textContent;
+    btn._origLabel = orig;
+    btn.textContent = label;
+    btn.classList.remove('is-saved', 'is-saveerr');
+    btn.classList.add(kind === 'err' ? 'is-saveerr' : 'is-saved');
+    if (btn._flashT) clearTimeout(btn._flashT);
+    btn._flashT = setTimeout(function(){
+      btn.textContent = orig;
+      btn.classList.remove('is-saved', 'is-saveerr');
+    }, 1800);
+  }
   function _onSave(){
-    if (!_runId) return;
+    // Flush focused textarea's pending input before snapshotting _data —
+    // browsers don't always fire 'input' before the click on Save (e.g. if
+    // the user clicks Save without blurring first).
+    try {
+      var af = document.activeElement;
+      if (af && (af.tagName === 'TEXTAREA' || af.tagName === 'INPUT')){
+        if (typeof af.dispatchEvent === 'function'){
+          af.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    } catch(e){}
+    if (!_runId){
+      // Recover gracefully — recompute from current state if possible
+      // rather than silently noop. This was the failure mode the user hit.
+      var st = window.PortSim && window.PortSim._state;
+      if (st) _runId = _computeRunId(st);
+    }
+    if (!_runId){
+      _setStatus('Cannot save — no active run id.', 'err');
+      _flashSaveBtn('✗ NO RUN', 'err');
+      return;
+    }
     _data.savedAt = new Date().toISOString();
     var ok = _saveData(_runId, _data);
     if (ok){
       _dirty = false;
       _setStatus('Saved · ' + _data.savedAt.replace('T',' ').slice(0,19), 'ok');
+      _flashSaveBtn('✓ SAVED', 'ok');
     } else {
       _setStatus('Save failed (storage full?)', 'err');
+      _flashSaveBtn('✗ FAILED', 'err');
     }
   }
 
