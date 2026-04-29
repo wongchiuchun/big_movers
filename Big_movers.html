@@ -2152,6 +2152,40 @@
     margin:0;padding-left:18px;
   }
   .portsim-validation-summary li{margin:1px 0;}
+  .portsim-randomize-panel{
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    margin:10px 0 4px 0;
+  }
+  .portsim-randomize-row{
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    gap:10px;align-items:end;
+  }
+  .portsim-randomize-row .fetch-field{margin:0;}
+  #portsim-rand-btn{
+    width:100%;
+    background:var(--bg3);
+    border:1px solid var(--border-bright);
+    color:var(--text);
+    font-family:var(--mono);font-size:11px;font-weight:600;
+    padding:7px 14px;border-radius:6px;cursor:pointer;outline:none;
+    text-transform:uppercase;letter-spacing:0.5px;
+    white-space:nowrap;
+  }
+  #portsim-rand-btn:hover{border-color:var(--accent);color:var(--accent);}
+  #portsim-rand-btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .portsim-randomize-hint{
+    margin-top:6px;
+    font-family:var(--mono);font-size:9px;
+    color:var(--muted);text-transform:none;
+    line-height:1.4;
+  }
+  .portsim-randomize-hint code{
+    background:var(--bg3);padding:1px 4px;border-radius:3px;
+  }
   /* ============ PORTSIM TRACK D: Setup Wizard Styles — END ============ */
 
   /* ============ PORTSIM TRACK K: Chart Peek Styles — START ============ */
@@ -2629,6 +2663,39 @@
   }
   .portsim-stats-row strong.is-pos{ color:var(--green); }
   .portsim-stats-row strong.is-neg{ color:var(--red); }
+  /* Hero cells: DD + MAX DD get visual prominence so the user *feels* the
+     drawdown — bigger value, slightly larger flex weight, accent border. */
+  .portsim-stats-row .portsim-stat-cell.is-hero{
+    flex:1.6 1 0;
+    background:rgba(251,113,133,0.04);
+    padding:6px 16px;
+  }
+  .portsim-stats-row .portsim-stat-cell.is-hero label{
+    font-size:9px;
+    color:var(--text-2);
+  }
+  .portsim-stats-row .portsim-stat-cell.is-hero strong{
+    font-size:20px;
+    line-height:1.15;
+    letter-spacing:0.01em;
+  }
+  .portsim-stats-row .portsim-stat-cell.is-hero strong.is-neg{
+    color:var(--red);
+  }
+  .portsim-stat-sub{
+    display:block;
+    font-family:var(--mono);
+    font-size:9px;
+    color:var(--muted);
+    margin-top:2px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    line-height:1.2;
+  }
+  .portsim-stats-row .portsim-stat-cell.is-hero .portsim-stat-sub{
+    color:var(--text-2);
+    font-size:10px;
+  }
   .portsim-pos-table{
     width:100%;
     border-collapse:collapse;
@@ -3024,6 +3091,244 @@
     margin-left:4px;
   }
   /* ============ PORTSIM TRACK I: Card Panel Styles — END ============ */
+
+  /* ============ PORTSIM TRACK P: Trade Review Modal Styles — START ============ */
+  .portsim-review-overlay{
+    position:fixed;inset:0;z-index:11000;
+    background:rgba(0,0,0,0.78);
+    display:none;
+    align-items:center;justify-content:center;
+    font-family:var(--ui);
+  }
+  .portsim-review-overlay.is-open{display:flex;}
+  .portsim-review-dialog{
+    width:min(96vw, 1240px);
+    height:min(94vh, 920px);
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(0,0,0,0.5);
+  }
+  .portsim-review-head{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg3);
+    flex-shrink:0;
+  }
+  .portsim-review-title{
+    font-family:var(--display);font-style:italic;
+    font-size:18px;color:var(--accent-cream);
+    flex-shrink:0;
+  }
+  .portsim-review-meta{
+    flex:1;
+    font-family:var(--mono);font-size:11px;
+    color:var(--text-2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .portsim-review-actions{display:flex;gap:6px;flex-shrink:0;}
+  .portsim-review-btn{
+    background:var(--bg4);
+    border:1px solid var(--border-bright);
+    color:var(--text);
+    font-family:var(--mono);font-size:10px;font-weight:600;
+    padding:6px 12px;border-radius:5px;cursor:pointer;outline:none;
+    text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;
+  }
+  .portsim-review-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .portsim-review-btn.portsim-review-close{
+    background:transparent;border-color:transparent;color:var(--muted);
+    font-size:14px;padding:6px 10px;
+  }
+  .portsim-review-btn.portsim-review-close:hover{color:var(--red);}
+
+  .portsim-review-tabs{
+    display:flex;gap:0;
+    padding:0 16px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg2);
+    overflow-x:auto;
+    flex-shrink:0;
+  }
+  .portsim-review-tab{
+    background:transparent;border:none;border-bottom:2px solid transparent;
+    color:var(--text-2);
+    font-family:var(--mono);font-size:11px;font-weight:600;
+    padding:10px 14px;cursor:pointer;outline:none;
+    text-transform:uppercase;letter-spacing:0.08em;
+    white-space:nowrap;
+  }
+  .portsim-review-tab:hover{color:var(--text);}
+  .portsim-review-tab.is-active{
+    color:var(--accent);
+    border-bottom-color:var(--accent);
+  }
+
+  .portsim-review-body{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 20px;
+    background:var(--bg2);
+  }
+  .portsim-review-empty{
+    color:var(--muted);font-family:var(--mono);font-size:12px;
+    padding:40px 20px;text-align:center;
+  }
+  .portsim-review-tickerhead{
+    display:flex;align-items:baseline;gap:14px;margin-bottom:10px;
+  }
+  .portsim-review-tickersym{
+    font-family:var(--mono);font-size:18px;font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--text);
+  }
+  .portsim-review-tickerstat{
+    font-family:var(--mono);font-size:10px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.08em;
+  }
+  .portsim-review-charthost{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    margin-bottom:14px;
+    padding:8px;
+    position:relative;
+  }
+  .portsim-review-chartlabel{
+    font-family:var(--mono);font-size:10px;color:var(--text-2);
+    text-transform:uppercase;letter-spacing:0.1em;
+    padding:2px 4px 6px;
+  }
+  .portsim-review-chart{
+    width:100%;height:380px;
+  }
+  .portsim-review-stats{
+    display:grid;grid-template-columns:repeat(4, 1fr);
+    gap:0;
+    margin-bottom:14px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:var(--bg);
+    padding:6px 0;
+  }
+  .portsim-review-stats > div{
+    padding:6px 14px;
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;gap:3px;
+    min-width:0;
+  }
+  .portsim-review-stats > div:nth-child(4n){border-right:none;}
+  .portsim-review-stats label{
+    font-family:var(--mono);font-size:8px;font-weight:600;
+    color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;
+  }
+  .portsim-review-stats strong{
+    font-family:var(--mono);font-size:14px;font-weight:700;
+    color:var(--text);font-feature-settings:"tnum";white-space:nowrap;
+  }
+  .portsim-review-stats strong.is-pos{color:var(--green);}
+  .portsim-review-stats strong.is-neg{color:var(--red);}
+  .portsim-review-table{
+    width:100%;border-collapse:collapse;
+    font-family:var(--mono);font-size:11px;
+    margin-bottom:14px;
+  }
+  .portsim-review-table thead th{
+    font-size:9px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.1em;
+    padding:6px 8px;text-align:left;
+    border-bottom:1px solid var(--border);
+    background:var(--bg3);
+  }
+  .portsim-review-table tbody td{
+    padding:5px 8px;border-bottom:1px solid var(--border);
+    color:var(--text);
+  }
+  .portsim-review-table tbody td.is-pos{color:var(--green);}
+  .portsim-review-table tbody td.is-neg{color:var(--red);}
+  .portsim-review-table tbody tr:hover{background:rgba(255,255,255,0.02);}
+  .portsim-review-notes{
+    margin-top:12px;
+    background:var(--bg3);border:1px solid var(--border);
+    border-radius:6px;padding:10px 12px;
+  }
+  .portsim-review-notes label{
+    display:block;
+    font-family:var(--mono);font-size:9px;
+    color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;
+    margin-bottom:6px;
+  }
+  .portsim-review-notes textarea{
+    width:100%;
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:5px;
+    color:var(--text);
+    font-family:var(--ui);font-size:13px;line-height:1.5;
+    padding:10px 12px;outline:none;resize:vertical;
+    box-sizing:border-box;
+  }
+  .portsim-review-notes textarea:focus{border-color:var(--accent);}
+  .portsim-review-status{
+    flex-shrink:0;
+    padding:6px 16px;
+    border-top:1px solid var(--border);
+    font-family:var(--mono);font-size:10px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.08em;
+    min-height:14px;
+    background:var(--bg3);
+  }
+  .portsim-review-status.ok{color:var(--green);}
+  .portsim-review-status.err{color:var(--red);}
+
+  /* Print stylesheet — strips chrome and lets the modal flow on its own page
+     for "Save as PDF" via the browser's print dialog. */
+  @media print{
+    body.portsim-printing > *{display:none !important;}
+    body.portsim-printing #portsim-review-modal{
+      display:flex !important;position:static !important;
+      background:#fff !important;
+    }
+    body.portsim-printing .portsim-review-overlay{
+      position:static !important;background:#fff !important;
+      display:block !important;height:auto !important;
+    }
+    body.portsim-printing .portsim-review-dialog{
+      width:100% !important;height:auto !important;
+      border:none !important;box-shadow:none !important;
+      background:#fff !important;color:#000 !important;
+    }
+    body.portsim-printing .portsim-review-head{
+      background:#fff !important;border-bottom:1px solid #999 !important;
+      color:#000 !important;
+    }
+    body.portsim-printing .portsim-review-title,
+    body.portsim-printing .portsim-review-meta{color:#000 !important;}
+    body.portsim-printing .portsim-review-actions{display:none !important;}
+    body.portsim-printing .portsim-review-tabs{display:none !important;}
+    body.portsim-printing .portsim-review-body{
+      overflow:visible !important;color:#000 !important;background:#fff !important;
+    }
+    body.portsim-printing .portsim-review-table thead th{
+      background:#eee !important;color:#000 !important;
+    }
+    body.portsim-printing .portsim-review-table tbody td{color:#000 !important;}
+    body.portsim-printing .portsim-review-notes{
+      background:#f9f9f9 !important;border:1px solid #ccc !important;color:#000 !important;
+    }
+    body.portsim-printing .portsim-review-notes textarea{
+      background:#fff !important;color:#000 !important;border:1px solid #ccc !important;
+    }
+    body.portsim-printing .portsim-review-stats{
+      background:#fff !important;border-color:#ccc !important;
+    }
+    body.portsim-printing .portsim-review-stats strong,
+    body.portsim-printing .portsim-review-stats label{color:#000 !important;}
+  }
+  /* ============ PORTSIM TRACK P: Trade Review Modal Styles — END ============ */
 </style>
 </head>
 <body>
@@ -10744,6 +11049,8 @@ Sim.Ctrl = (function(){
     if (n == null || !isFinite(n)) return '—';
     const sign = n < 0 ? '-' : '';
     const a = Math.abs(n);
+    if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
     if (a >= 10000) return sign + '$' + a.toFixed(0);
     return sign + '$' + a.toFixed(2);
   }
@@ -11953,6 +12260,120 @@ Sim.Ctrl = (function(){
     }
   }
 
+  // ----------------------------------------------------- randomize ----
+  function _randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function _shuffleInPlace(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function _toDateStr(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var da = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + da;
+  }
+
+  function _yearsAvailable(rows) {
+    var ys = Object.create(null);
+    rows.forEach(function (r) {
+      var y = parseInt(r && r.year, 10);
+      if (Number.isFinite(y)) ys[y] = true;
+    });
+    return Object.keys(ys).map(Number).sort(function (a, b) { return a - b; });
+  }
+
+  function _getResultRows() {
+    // Prefer in-memory allRows from the host page; fall back to /api/results.
+    try {
+      if (typeof allRows !== 'undefined' && Array.isArray(allRows) && allRows.length > 0) {
+        return Promise.resolve(allRows.slice());
+      }
+    } catch (e) { /* allRows may be in TDZ in some scopes */ }
+    return fetch('/api/results').then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (rows) { return Array.isArray(rows) ? rows : []; });
+  }
+
+  function handleRandomize() {
+    var yearEl = $('#portsim-rand-year');
+    var countEl = $('#portsim-rand-count');
+    var year = parseInt(yearEl && yearEl.value, 10);
+    var count = parseInt(countEl && countEl.value, 10);
+    if (!Number.isFinite(year)) { setStatus('Pick a year first.', 'error'); return; }
+    if (!Number.isFinite(count) || count < 1) count = 4;
+    count = Math.min(count, MAX_ROWS);
+
+    setStatus('Loading results for ' + year + '…', '');
+    _getResultRows().then(function (rows) {
+      var matches = rows.filter(function (r) { return parseInt(r && r.year, 10) === year; });
+      if (matches.length === 0) {
+        var ys = _yearsAvailable(rows);
+        setStatus('No tickers found for ' + year + '. Available years: ' + (ys.length ? ys.join(', ') : '(none)'), 'error');
+        return;
+      }
+
+      // Pick N unique random symbols from the year's matches
+      var shuffled = _shuffleInPlace(matches.slice());
+      var picked = [];
+      var seen = Object.create(null);
+      for (var i = 0; i < shuffled.length && picked.length < count; i++) {
+        var sym = String((shuffled[i] && shuffled[i].symbol) || '').trim().toUpperCase();
+        if (!sym || seen[sym]) continue;
+        seen[sym] = true;
+        picked.push(shuffled[i]);
+      }
+      if (picked.length === 0) {
+        setStatus('Could not pick any tickers for ' + year + '.', 'error');
+        return;
+      }
+
+      // Pick a random ~3-month window inside the year.
+      // Random start day in [Jan 1 .. Oct 1], window length 45–90 calendar days, clamp to year-end.
+      var startMonth = _randInt(0, 9);
+      var startDay = _randInt(1, 28);
+      var startD = new Date(year, startMonth, startDay);
+      var winLen = _randInt(45, 90);
+      var endD = new Date(year, startMonth, startDay + winLen);
+      var yearEnd = new Date(year, 11, 31);
+      if (endD.getTime() > yearEnd.getTime()) endD = yearEnd;
+
+      var sd = _toDateStr(startD);
+      var ed = _toDateStr(endD);
+
+      // Push directly to the form + state.
+      var sdEl = $('#portsim-start-date'); if (sdEl) sdEl.value = sd;
+      var edEl = $('#portsim-end-date');   if (edEl) edEl.value = ed;
+
+      var rowsState = picked.map(function (r) {
+        return {
+          symbol: String(r.symbol || '').trim().toUpperCase(),
+          hasPreEntry: false,
+          entryPrice: '',
+          stopPrice: '',
+          sizeMode: 'shares',
+          sizeValue: ''
+        };
+      });
+      Setup._state.startDate = sd;
+      Setup._state.endDate = ed;
+      Setup._state.rows = rowsState;
+      rebuildRowsFromState(rowsState);
+
+      var symList = rowsState.map(function (r) { return r.symbol; }).join(', ');
+      setStatus('🎲 ' + picked.length + ' tickers · ' + sd + ' → ' + ed + ' · ' + symList + ' · mark ≥1 as Pre-entry to start.', 'success');
+    }).catch(function (e) {
+      setStatus('Randomize failed: ' + (e && e.message ? e.message : e), 'error');
+    });
+  }
+
   function setStatus(msg, kind) {
     var el = $('#portsim-setup-status');
     if (!el) return;
@@ -12013,6 +12434,18 @@ Sim.Ctrl = (function(){
     // Populate the autocomplete datalist with all known tickers from /api/results.
     // Lazy-fetched once per page session; cached on Setup._tickerList.
     populateTickerDatalist();
+
+    // Prefill the randomize Year input with the latest year that has data,
+    // unless the user has already typed something in there this session.
+    try {
+      var yEl = $('#portsim-rand-year');
+      if (yEl && !yEl.value) {
+        if (typeof allRows !== 'undefined' && Array.isArray(allRows) && allRows.length) {
+          var ys = _yearsAvailable(allRows);
+          if (ys.length) yEl.value = String(ys[ys.length - 1]);
+        }
+      }
+    } catch (e) { /* allRows may not be defined yet */ }
 
     modal.classList.add('open');
     s.open = true;
@@ -12189,6 +12622,9 @@ Sim.Ctrl = (function(){
     var submitBtn = $('#portsim-setup-submit');
     if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
 
+    var randBtn = $('#portsim-rand-btn');
+    if (randBtn) randBtn.addEventListener('click', handleRandomize);
+
     // Index pill toggle
     $$('#portsim-index-pills .portsim-index-pill').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -12235,16 +12671,18 @@ Sim.Ctrl = (function(){
     if (n == null || !isFinite(n)) return '$0';
     const sign = n < 0 ? '-' : '';
     const a = Math.abs(n);
-    if (a >= 1000000) return sign + '$' + (a / 1000).toFixed(0) + 'k';
-    if (a >= 10000)   return sign + '$' + a.toFixed(0);
+    if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+    if (a >= 10000) return sign + '$' + a.toFixed(0);
     return sign + '$' + a.toFixed(2);
   }
   function _fmtPnL(n){
     if (n == null || !isFinite(n)) return '$0';
     const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
     const a = Math.abs(n);
-    if (a >= 1000000) return sign + '$' + (a / 1000).toFixed(0) + 'k';
-    if (a >= 10000)   return sign + '$' + a.toFixed(0);
+    if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+    if (a >= 10000) return sign + '$' + a.toFixed(0);
     return sign + '$' + a.toFixed(2);
   }
   function _fmtPx(n){
@@ -12669,6 +13107,48 @@ Sim.Ctrl = (function(){
       // SPX maps to SPY for the OHLCV endpoint; NDQ stays NDQ.
       const sym = (name === 'SPX') ? 'SPY' : (name || 'SPY');
       const isNdq = (name === 'NDQ' || name === 'NDX');
+
+      // Prefer pre-warmed cache from PortSim.IndexCache (Track Q). The cache is
+      // populated at app startup with the full SPX/NDQ history, so the typical
+      // case is a synchronous hit with no network round-trip.
+      const cache = window.PortSim && window.PortSim.IndexCache;
+      if (cache && typeof cache.ensure === 'function'){
+        return cache.ensure(name)
+          .then(slot => {
+            const bars = (slot && slot.bars) || [];
+            if (bars.length){
+              setData(bars, name);
+              return bars;
+            }
+            // Empty bars from a 404-swallow → fall through to the NDQ auto-fetch
+            // path below, otherwise paint an empty chart and bail.
+            if (isNdq){
+              return _autoFetchQQQ()
+                .then(() => _fetchOhlcvOnce(sym))
+                .then(bars2 => {
+                  setData(bars2, name);
+                  // Warm the cache so subsequent sims hit it.
+                  if (cache.set) cache.set(name, bars2);
+                  return bars2;
+                })
+                .catch(err2 => {
+                  console.warn('[PortSim.Index] NDQ auto-fetch failed:', err2 && err2.message || err2);
+                  reset();
+                  return [];
+                });
+            }
+            setData([], name);
+            return [];
+          })
+          .catch(err => {
+            console.warn('[PortSim.Index] cache miss → network fallback:', err && err.message || err);
+            return _fetchOhlcvOnce(sym)
+              .then(bars => { setData(bars, name); return bars; })
+              .catch(err2 => { reset(); return []; });
+          });
+      }
+
+      // No cache available — fall back to the original network-direct path.
       return _fetchOhlcvOnce(sym)
         .then(bars => { setData(bars, name); return bars; })
         .catch(err => {
@@ -12841,8 +13321,12 @@ Sim.Ctrl = (function(){
     prevEquity: null,
     initialEntryRequest: [], // [{ symbol, entryPrice, stopPrice, sizeMode, sizeValue }]
     eqMaxDD: 0,
-    eqPeak: 0
+    eqPeak: 0,
+    eqPeakIdx: 0,           // playIdx at which the current peak was set
+    maxDDDays: 0,           // longest streak under-water (in unifiedDates steps)
+    _history: []            // snapshot stack for step-back (capped at _HISTORY_MAX)
   };
+  const _HISTORY_MAX = 300;
   PortSim._state = _state;
 
   // =====================================================================
@@ -12897,6 +13381,9 @@ Sim.Ctrl = (function(){
     _state.prevEquity = null;
     _state.eqMaxDD = 0;
     _state.eqPeak = _state.initialEquity;
+    _state.eqPeakIdx = 0;
+    _state.maxDDDays = 0;
+    _state._history = [];
     _state.basket = [];
     _state.initialEntryRequest = [];
 
@@ -13386,7 +13873,7 @@ Sim.Ctrl = (function(){
   function _onTransport(action, payload){
     if (action === 'play')      _playToggle();
     else if (action === 'fwd')  { _pause(); _advanceAll(1); }
-    else if (action === 'back') { _pause(); }  /* step back not supported in v1 */
+    else if (action === 'back') { _pause(); _stepBack(1); }
     else if (action === 'start'){ _pause(); }
     else if (action === 'speed'){ _state.speed = +payload || 1; _scheduleTimer(); }
     else if (action === 'exit') { _confirmExit(); }
@@ -13468,6 +13955,122 @@ Sim.Ctrl = (function(){
   // =====================================================================
   // Step engine
   // =====================================================================
+
+  // ---- Snapshot stack for step-back ----
+  // Each snapshot captures the entire reversible state BEFORE a forward step
+  // is applied. To rewind, we pop the latest snapshot, restore the values,
+  // and rebuild card/index charts from each ticker's bar history.
+  function _cloneSim(sim){
+    if (!sim) return null;
+    // sim contains only plain values, arrays of plain objects, and nested
+    // objects (entry, legs, eventsLog, stopLevels, pendingActions). JSON
+    // round-trip is sufficient and matches what gets persisted by Track O.
+    try { return JSON.parse(JSON.stringify(sim)); }
+    catch(e){ console.warn('[PortSim.Ctrl] _cloneSim failed:', e); return null; }
+  }
+  function _pushSnapshot(){
+    const snap = {
+      playIdx: _state.playIdx,
+      cash: _state.cash,
+      realizedPnL: _state.realizedPnL,
+      prevEquity: _state.prevEquity,
+      eqPeak: _state.eqPeak,
+      eqPeakIdx: _state.eqPeakIdx,
+      eqMaxDD: _state.eqMaxDD,
+      maxDDDays: _state.maxDDDays,
+      entries: _state.basket.map(function(e){
+        return {
+          symbol: e.symbol,
+          sim: _cloneSim(e.sim),
+          lastCloseSeen: e.lastCloseSeen,
+          _lastRealized: e._lastRealized
+        };
+      })
+    };
+    _state._history.push(snap);
+    if (_state._history.length > _HISTORY_MAX) _state._history.shift();
+  }
+  function _stepBack(n){
+    n = Math.max(1, n|0);
+    if (!_state.active || !_state._history.length) return;
+    let snap = null;
+    while (n-- > 0 && _state._history.length){ snap = _state._history.pop(); }
+    if (!snap) return;
+
+    // Restore primitives.
+    _state.playIdx     = snap.playIdx;
+    _state.cash        = snap.cash;
+    _state.realizedPnL = snap.realizedPnL;
+    _state.prevEquity  = snap.prevEquity;
+    _state.eqPeak      = snap.eqPeak;
+    _state.eqPeakIdx   = snap.eqPeakIdx;
+    _state.eqMaxDD     = snap.eqMaxDD;
+    _state.maxDDDays   = snap.maxDDDays;
+
+    // Restore per-entry sim + reset Track J shadow + repaint chart history.
+    const date = _state.unifiedDates[_state.playIdx];
+    _state.basket.forEach(function(e, i){
+      const snapEntry = snap.entries.find(function(x){ return x.symbol === e.symbol; }) || snap.entries[i];
+      if (!snapEntry) return;
+      // Replace sim ref so Track J detects the change and rebuilds markers/stop lines.
+      e.sim = snapEntry.sim;
+      e.lastCloseSeen = snapEntry.lastCloseSeen;
+      e._lastRealized = snapEntry._lastRealized;
+      // Force Track J to rebuild its shadow on next render.
+      e._trkj = null;
+      // Clear any visual markers / stop lines / R-stars left over from the
+      // forward step we just rewound.
+      try {
+        if (window.PortSim && PortSim.CardChart){
+          if (PortSim.CardChart.clearAllMarkers) PortSim.CardChart.clearAllMarkers(e.card);
+          if (PortSim.CardChart.clearStopLines) PortSim.CardChart.clearStopLines(e.card);
+          if (e.card && e.card._portsimMarkers && Array.isArray(e.card._portsimMarkers.rStars)){
+            e.card._portsimMarkers.rStars.length = 0;
+          }
+        }
+      } catch(err){ console.warn('[PortSim.Ctrl] _stepBack clear:', err); }
+      // Rebuild chart bars from the ticker's full history up to (and including)
+      // the bar at the new playIdx (or the most recent bar ≤ that date).
+      const lastBarIdx = _findBarIdxAtOrBefore(e.bars, date);
+      const slice = (lastBarIdx >= 0) ? e.bars.slice(0, lastBarIdx + 1) : [];
+      try { e.card.setData(slice); }
+      catch(err){ console.warn('[PortSim.Ctrl] _stepBack setData ' + e.symbol + ':', err); }
+      // Reset card badge based on the restored sim's state.
+      const sim = e.sim;
+      if (!sim){
+        e.card.setBadge('idle', 'idle');
+        e.card.setActive(false);
+        if (e._newLegBtn) e._newLegBtn.style.display = 'none';
+      } else if (sim.between){
+        e.card.setBadge('between', 'between');
+        e.card.setActive(false);
+        if (e._newLegBtn) e._newLegBtn.style.display = '';
+      } else if (sim.stoppedOut || sim.closed){
+        e.card.setBadge('between', 'between');
+        e.card.setActive(false);
+        if (e._newLegBtn) e._newLegBtn.style.display = '';
+      } else if (sim.qty > 0){
+        e.card.setBadge('active', 'active');
+        e.card.setActive(true);
+        if (e._newLegBtn) e._newLegBtn.style.display = 'none';
+      } else {
+        e.card.setBadge('idle', 'idle');
+        e.card.setActive(false);
+        if (e._newLegBtn) e._newLegBtn.style.display = 'none';
+      }
+    });
+
+    // Rebuild index chart up to the restored date.
+    try {
+      if (PortSim.Index && PortSim.Index.setData && _state.indexBars){
+        const idxSlice = _sliceUpTo(_state.indexBars, date);
+        PortSim.Index.setData(idxSlice, _state.index);
+      }
+    } catch(err){ console.warn('[PortSim.Ctrl] _stepBack index setData:', err); }
+
+    _renderAll();
+  }
+
   function _advanceAll(steps){
     steps = Math.max(1, steps|0);
     for (let s = 0; s < steps; s++){
@@ -13476,6 +14079,8 @@ Sim.Ctrl = (function(){
         _showSummary();
         return;
       }
+      // Push snapshot BEFORE applying the step so step-back can restore it.
+      _pushSnapshot();
       _state.playIdx += 1;
       const date = _state.unifiedDates[_state.playIdx];
 
@@ -13593,9 +14198,16 @@ Sim.Ctrl = (function(){
     const dayPnL = _state.prevEquity != null ? _r2(equity - _state.prevEquity) : 0;
     _state.prevEquity = equity;
 
-    if (equity > _state.eqPeak) _state.eqPeak = equity;
+    if (equity > _state.eqPeak){
+      _state.eqPeak = equity;
+      _state.eqPeakIdx = _state.playIdx;
+    }
     const dd = _state.eqPeak > 0 ? (equity - _state.eqPeak) : 0;
     if (dd < _state.eqMaxDD) _state.eqMaxDD = dd;
+    // Track longest streak under-water (drawdown duration in days). Updated
+    // every tick while we're under the peak; capped against any prior max.
+    const _ddDays = (_state.eqPeakIdx != null) ? (_state.playIdx - _state.eqPeakIdx) : 0;
+    if (_ddDays > (_state.maxDDDays || 0)) _state.maxDDDays = _ddDays;
 
     PortSim.Header.update({
       initial: _state.initialEquity,
@@ -13612,7 +14224,9 @@ Sim.Ctrl = (function(){
   // =====================================================================
   // Summary modal (minimal v1)
   // =====================================================================
-  function _showSummary(){
+  function _showSummary(opts){
+    opts = opts || {};
+    const viewOnly = !!opts.viewOnly;
     let equity = _state.cash;
     let unreal = 0;
     const rows = _state.basket.map(function(e){
@@ -13731,14 +14345,41 @@ Sim.Ctrl = (function(){
 
     const actions = _mkEl('div');
     _setStyle(actions, 'margin-top:16px;display:flex;justify-content:flex-end;gap:8px;');
-    const closeBtn = _mkEl('button', null, 'Close & Exit');
-    closeBtn.type = 'button';
-    _setStyle(closeBtn, 'font-family:var(--mono);font-size:11px;padding:6px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:5px;cursor:pointer;letter-spacing:0.04em;');
-    closeBtn.addEventListener('click', function(){
-      try { host.remove(); } catch(e){}
-      _hardExit();
-    });
-    actions.appendChild(closeBtn);
+
+    // Always offer "Open Review" — opens the rich review modal (charts +
+    // notes) on top of the lightweight summary.
+    if (window.PortSim && PortSim.Review && typeof PortSim.Review.open === 'function'){
+      const reviewBtn = _mkEl('button', null, '📝 Review');
+      reviewBtn.type = 'button';
+      _setStyle(reviewBtn, 'font-family:var(--mono);font-size:11px;padding:6px 14px;background:var(--bg3);color:var(--text);border:1px solid var(--border-bright);border-radius:5px;cursor:pointer;letter-spacing:0.04em;');
+      reviewBtn.addEventListener('click', function(){
+        try { host.remove(); } catch(e){}
+        try { PortSim.Review.open(); } catch(e){ console.error('[PortSim.Review] open:', e); }
+      });
+      actions.appendChild(reviewBtn);
+    }
+
+    if (viewOnly){
+      // Non-destructive: just dismiss.
+      const dismissBtn = _mkEl('button', null, 'Close');
+      dismissBtn.type = 'button';
+      _setStyle(dismissBtn, 'font-family:var(--mono);font-size:11px;padding:6px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:5px;cursor:pointer;letter-spacing:0.04em;');
+      dismissBtn.addEventListener('click', function(){
+        try { host.remove(); } catch(e){}
+      });
+      actions.appendChild(dismissBtn);
+    } else {
+      // Destructive (end-of-sim or explicit exit): close + tear down sim.
+      const closeBtn = _mkEl('button', null, 'Close & Exit');
+      closeBtn.type = 'button';
+      _setStyle(closeBtn, 'font-family:var(--mono);font-size:11px;padding:6px 14px;background:var(--accent);color:var(--bg);border:none;border-radius:5px;cursor:pointer;letter-spacing:0.04em;');
+      closeBtn.addEventListener('click', function(){
+        try { host.remove(); } catch(e){}
+        _hardExit();
+      });
+      actions.appendChild(closeBtn);
+    }
+
     dialog.appendChild(actions);
 
     host.appendChild(dialog);
@@ -13783,7 +14424,13 @@ Sim.Ctrl = (function(){
     isActive: function(){ return _state.active; },
     _state: _state,
     _advanceAll: _advanceAll,
-    _renderAll: _renderAll
+    _renderAll: _renderAll,
+    showSummary: function(opts){
+      if (!_state.active){ alert('No active portfolio simulation.'); return; }
+      _pause();
+      _showSummary(opts || { viewOnly: true });
+    },
+    pause: _pause
   };
 })();
 // ============ PORTSIM TRACK G: Controller — END ============
@@ -15870,7 +16517,8 @@ Sim.Ctrl = (function(){
     if (n == null || !isFinite(n)) return '—';
     var sign = n < 0 ? '-' : '';
     var a = Math.abs(n);
-    if (a >= 1e6) return sign + '$' + (a/1e3).toFixed(0) + 'k';
+    if (a >= 1e9) return sign + '$' + (a/1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return sign + '$' + (a/1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
     if (a >= 1e4) return sign + '$' + a.toFixed(0);
     return sign + '$' + a.toFixed(2);
   }
@@ -15878,6 +16526,8 @@ Sim.Ctrl = (function(){
     if (n == null || !isFinite(n)) return '—';
     var s = n > 0 ? '+' : (n < 0 ? '-' : '');
     var a = Math.abs(n);
+    if (a >= 1e9) return s + '$' + (a/1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return s + '$' + (a/1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
     if (a >= 1e4) return s + '$' + a.toFixed(0);
     return s + '$' + a.toFixed(2);
   }
@@ -15995,12 +16645,48 @@ Sim.Ctrl = (function(){
     var ddPct = peak > 0 ? (ddDollar / peak) * 100 : 0;
     var maxDDDollar = +st.eqMaxDD || 0;                  // ≤ 0
     var maxDDPct = peak > 0 ? (maxDDDollar / Math.max(peak, initial)) * 100 : 0;
+    // Drawdown durations (in unifiedDates steps ≈ trading days).
+    // ddDays  = current run from peak to now (0 if at/above peak).
+    // maxDDDays = longest streak under-water across the whole sim.
+    var ddDays = 0;
+    if (st.eqPeakIdx != null && isFinite(st.playIdx) && ddDollar < 0){
+      ddDays = Math.max(0, (+st.playIdx) - (+st.eqPeakIdx));
+    }
+    var maxDDDays = +st.maxDDDays || 0;
+    if (ddDays > maxDDDays) maxDDDays = ddDays;
+
+    // Open risk = sum across open positions of qty × max(0, mark − activeStop).
+    // This is "how much equity would be lost if every open stop fired right
+    // now" — the live read on portfolio risk-on. Floor at zero because a
+    // negative distance means mark already dipped past the stop (stop is
+    // queued to fire on next open/touch).
+    var openRiskDollar = 0;
+    basket.forEach(function(e){
+      if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
+      var m = _markFor(e);
+      if (m == null) return;
+      var stopP = null;
+      if (Array.isArray(e.sim.stopLevels)){
+        for (var i = 0; i < e.sim.stopLevels.length; i++){
+          var sL = e.sim.stopLevels[i];
+          if (sL && !sL.fired && (stopP == null || sL.price > stopP)) stopP = +sL.price;
+        }
+      }
+      if (stopP == null || !isFinite(stopP)) return;
+      var dist = m - stopP;
+      if (dist < 0) dist = 0;
+      openRiskDollar += e.sim.qty * dist;
+    });
+    var openRiskPct = (equity > 0) ? (openRiskDollar / equity) * 100 : 0;
+
     return {
       initial: initial, cash: cash, equity: equity,
       dayPnL: dayPnL, totalPnL: totalPnL,
       openCount: openCount,
       ddDollar: ddDollar, ddPct: ddPct,
-      maxDDDollar: maxDDDollar, maxDDPct: maxDDPct
+      maxDDDollar: maxDDDollar, maxDDPct: maxDDPct,
+      ddDays: ddDays, maxDDDays: maxDDDays,
+      openRiskDollar: openRiskDollar, openRiskPct: openRiskPct
     };
   }
 
@@ -16013,25 +16699,41 @@ Sim.Ctrl = (function(){
   }
   function _renderStatsRow(p){
     if (!p) return '';
-    var dpCls = _statsCls(p.dayPnL);
     var tpCls = _statsCls(p.totalPnL);
     var ddCls = (p.ddDollar < 0) ? 'is-neg' : '';
     var maxDDCls = (p.maxDDDollar < 0) ? 'is-neg' : '';
-    function _cell(label, value, cls){
-      return '<div class="portsim-stat-cell"><label>' + label + '</label>' +
-             '<strong' + (cls ? ' class="' + cls + '"' : '') + '>' + value + '</strong></div>';
+    function _cell(label, value, cls, extraCellCls, sub){
+      var cellCls = 'portsim-stat-cell' + (extraCellCls ? ' ' + extraCellCls : '');
+      var subHTML = sub ? '<span class="portsim-stat-sub">' + sub + '</span>' : '';
+      return '<div class="' + cellCls + '"><label>' + label + '</label>' +
+             '<strong' + (cls ? ' class="' + cls + '"' : '') + '>' + value + '</strong>' +
+             subHTML + '</div>';
     }
     var totalPct = (p.initial > 0) ? (p.totalPnL / p.initial) * 100 : 0;
     var totalPctSign = (totalPct > 0) ? '+' : '';
+    var ddDays = p.ddDays || 0;
+    var maxDDDays = p.maxDDDays || 0;
+    var ddDayLbl = ddDays === 1 ? '1 day from peak' : ddDays + ' days from peak';
+    var maxDDDayLbl = maxDDDays === 1 ? 'longest 1 day' : 'longest ' + maxDDDays + ' days';
+    var riskDollar = +p.openRiskDollar || 0;
+    var riskPct    = +p.openRiskPct || 0;
+    var riskCls    = (riskDollar > 0) ? 'is-neg' : '';
+    var riskValue  = (p.openCount > 0)
+      ? '-' + _fmt$(riskDollar) + ' (' + riskPct.toFixed(2) + '%)'
+      : '—';
+    var riskSub    = (p.openCount > 0)
+      ? 'if all stops fire'
+      : 'no open positions';
+
     return '<div class="portsim-stats-row">' +
-      _cell('INITIAL',  _fmt$(p.initial)) +
-      _cell('CASH',     _fmt$(p.cash)) +
-      _cell('EQUITY',   _fmt$(p.equity)) +
-      _cell('DAY P&L',  _fmt$Signed(p.dayPnL), dpCls) +
-      _cell('TOTAL P&L',_fmt$Signed(p.totalPnL) + ' (' + totalPctSign + totalPct.toFixed(2) + '%)', tpCls) +
-      _cell('DD',       _fmt$Signed(p.ddDollar) + ' (' + (p.ddPct).toFixed(2) + '%)', ddCls) +
-      _cell('MAX DD',   _fmt$Signed(p.maxDDDollar) + ' (' + (p.maxDDPct).toFixed(2) + '%)', maxDDCls) +
-      _cell('OPEN',     String(p.openCount|0)) +
+      _cell('INITIAL',   _fmt$(p.initial)) +
+      _cell('CASH',      _fmt$(p.cash)) +
+      _cell('EQUITY',    _fmt$(p.equity)) +
+      _cell('TOTAL P&L', _fmt$Signed(p.totalPnL) + ' (' + totalPctSign + totalPct.toFixed(2) + '%)', tpCls) +
+      _cell('OPEN RISK', riskValue, riskCls, '', riskSub) +
+      _cell('DRAWDOWN',  _fmt$Signed(p.ddDollar) + ' (' + (p.ddPct).toFixed(2) + '%)', ddCls, 'is-hero', ddDayLbl) +
+      _cell('MAX DD',    _fmt$Signed(p.maxDDDollar) + ' (' + (p.maxDDPct).toFixed(2) + '%)', maxDDCls, 'is-hero', maxDDDayLbl) +
+      _cell('OPEN',      String(p.openCount|0)) +
     '</div>';
   }
 
@@ -16781,6 +17483,811 @@ Sim.Ctrl = (function(){
   }
 })();
 // ============ PORTSIM TRACK O: Portfolio Export — END ============
+
+// ============ PORTSIM TRACK P: Trade Review Modal — START ============
+// Rich review UI: per-ticker chart with leg/event markers, index chart,
+// portfolio overview, per-ticker notes textarea. Saves to localStorage
+// (keyed by run = startDate__endDate__sortedSymbols), exports as Markdown,
+// or hands off to window.print() so the user can "Save as PDF" through the
+// browser's print dialog. Wires the topbar's 📊 Summary + 📝 Review buttons.
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.Review) return;
+
+  var STORAGE_PREFIX = 'bm_portsim_review_';
+  var _modal = null;
+  var _activeTab = null;
+  var _tickerCharts = {};
+  var _indexChart = null;
+  var _runId = null;
+  var _data = { notes: {}, portfolio: '', savedAt: null };
+  var _dirty = false;
+
+  // ---------- helpers ----------
+  function _esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+  function _r2(n){ return Math.round((Number.isFinite(+n) ? +n : 0) * 100) / 100; }
+  function _money(n){
+    if (n == null || !isFinite(n)) return '—';
+    var s = n < 0 ? '-' : '';
+    var a = Math.abs(n);
+    if (a >= 1e9) return s + '$' + (a/1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return s + '$' + (a/1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+    if (a >= 1e4) return s + '$' + a.toFixed(0);
+    return s + '$' + a.toFixed(2);
+  }
+  function _moneyS(n){
+    if (n == null || !isFinite(n)) return '—';
+    var s = n > 0 ? '+' : (n < 0 ? '-' : '');
+    var a = Math.abs(n);
+    if (a >= 1e9) return s + '$' + (a/1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return s + '$' + (a/1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+    if (a >= 1e4) return s + '$' + a.toFixed(0);
+    return s + '$' + a.toFixed(2);
+  }
+  function _pctSigned(n){
+    if (n == null || !isFinite(n)) return '—';
+    var s = n > 0 ? '+' : '';
+    return s + n.toFixed(2) + '%';
+  }
+
+  // ---------- run id + persistence ----------
+  function _computeRunId(st){
+    if (!st) return STORAGE_PREFIX + 'default';
+    var sd = st.startDate || '';
+    var ed = st.endDate || '';
+    var syms = (st.basket || []).map(function(e){ return e.symbol; }).sort().join('-');
+    return STORAGE_PREFIX + sd + '__' + ed + '__' + syms;
+  }
+  function _loadData(runId){
+    try {
+      var raw = localStorage.getItem(runId);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) { return null; }
+  }
+  function _saveData(runId, data){
+    try {
+      localStorage.setItem(runId, JSON.stringify(data));
+      return true;
+    } catch(e) {
+      console.warn('[PortSim.Review] save failed:', e && e.message);
+      return false;
+    }
+  }
+
+  // ---------- collect leg/trade snapshots ----------
+  function _legSnapshots(entry){
+    if (!entry || !entry.sim) return [];
+    var sim = entry.sim;
+    var bars = entry.bars || [];
+    var out = [];
+    (sim.legs || []).forEach(function(l, i){
+      var entryBar = bars[(l.entry && l.entry.barIdx) | 0];
+      var exitBar = bars[l.exitBarIdx | 0];
+      out.push({
+        idx: i + 1,
+        entryDate: entryBar ? entryBar.time : (l.entry && l.entry.date) || null,
+        entryPrice: l.entry ? +l.entry.price : 0,
+        shares: l.shares0 || 0,
+        stop0: l.entry ? +l.entry.stop : 0,
+        risk0: l.initialRisk || 0,
+        exitDate: exitBar ? exitBar.time : null,
+        exitReason: l.exitReason || '—',
+        rPnL: l.realizedPnL || 0,
+        rMult: l.rMultiple || 0,
+        mfe: l.mfe || 0,
+        mae: l.mae || 0,
+        eventsLog: l.eventsLog || [],
+        active: false
+      });
+    });
+    if (sim.entry && !sim.between){
+      var entryBar2 = bars[sim.entry.barIdx | 0];
+      var st = window.PortSim && window.PortSim._state;
+      var curBarIdx = sim.playIdx;
+      if (st && st.unifiedDates && entry.dateToBarIdx){
+        var d = st.unifiedDates[st.playIdx];
+        var bi = d ? entry.dateToBarIdx.get(d) : null;
+        if (bi != null) curBarIdx = bi;
+      }
+      var curBar = bars[curBarIdx];
+      var realized = sim.realizedPnL || 0;
+      var unreal = 0;
+      if (sim.qty > 0 && curBar) unreal = sim.qty * (curBar.close - sim.avgCost);
+      var totalPnL = realized + unreal;
+      var rUnit = (sim.initialRisk > 0) ? totalPnL / sim.initialRisk : 0;
+      out.push({
+        idx: out.length + 1,
+        entryDate: entryBar2 ? entryBar2.time : (sim.entry.date || null),
+        entryPrice: +sim.entry.price,
+        shares: sim.shares0 || 0,
+        stop0: +sim.entry.stop,
+        risk0: sim.initialRisk || 0,
+        exitDate: null,
+        exitReason: sim.qty > 0 ? 'open' : (sim.closed ? 'closed' : (sim.stoppedOut ? 'stop' : 'idle')),
+        rPnL: realized,
+        rMult: rUnit,
+        mfe: sim._mfeVal || 0,
+        mae: sim._maeVal || 0,
+        eventsLog: sim.eventsLog || [],
+        active: true,
+        unreal: unreal,
+        qty: sim.qty,
+        avgCost: sim.avgCost
+      });
+    }
+    return out;
+  }
+
+  function _markersFromLegs(legs){
+    var mks = [];
+    legs.forEach(function(l){
+      if (l.entryDate){
+        mks.push({
+          time: l.entryDate, position: 'belowBar', color: '#6ee7b7', shape: 'arrowUp',
+          text: 'L' + l.idx + ' B ' + l.shares + '@' + _r2(l.entryPrice)
+        });
+      }
+      (l.eventsLog || []).forEach(function(ev){
+        if (!ev || !ev.date) return;
+        if (ev.type === 'add' && ev.qty > 0){
+          mks.push({ time: ev.date, position: 'belowBar', color: '#34d399', shape: 'arrowUp',
+            text: '+' + ev.qty + '@' + _r2(ev.price) });
+        } else if (ev.type === 'sell' && ev.qty > 0){
+          mks.push({ time: ev.date, position: 'aboveBar', color: '#facc15', shape: 'arrowDown',
+            text: 'S ' + ev.qty + '@' + _r2(ev.price) });
+        } else if (ev.type === 'stop'){
+          mks.push({ time: ev.date, position: 'aboveBar', color: '#fb7185', shape: 'arrowDown',
+            text: 'STOP ' + ev.qty + '@' + _r2(ev.price) });
+        } else if (ev.type === 'close' && ev.qty > 0){
+          mks.push({ time: ev.date, position: 'aboveBar', color: '#a78bfa', shape: 'arrowDown',
+            text: 'CLOSE ' + ev.qty + '@' + _r2(ev.price) });
+        }
+      });
+    });
+    mks.sort(function(a, b){ return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0); });
+    return mks;
+  }
+
+  // ---------- modal scaffold ----------
+  function _ensureModal(){
+    if (_modal) return _modal;
+    _modal = document.createElement('div');
+    _modal.id = 'portsim-review-modal';
+    _modal.className = 'portsim-review-overlay';
+    _modal.innerHTML = ''
+      + '<div class="portsim-review-dialog">'
+      +   '<div class="portsim-review-head">'
+      +     '<div class="portsim-review-title">📝 Trade Review</div>'
+      +     '<div class="portsim-review-meta" id="portsim-review-meta">—</div>'
+      +     '<div class="portsim-review-actions">'
+      +       '<button type="button" id="portsim-review-save"  class="portsim-review-btn">💾 Save</button>'
+      +       '<button type="button" id="portsim-review-md"    class="portsim-review-btn">↓ Markdown</button>'
+      +       '<button type="button" id="portsim-review-pdf"   class="portsim-review-btn">🖨 Print/PDF</button>'
+      +       '<button type="button" id="portsim-review-close" class="portsim-review-btn portsim-review-close">✕</button>'
+      +     '</div>'
+      +   '</div>'
+      +   '<div class="portsim-review-tabs" id="portsim-review-tabs"></div>'
+      +   '<div class="portsim-review-body" id="portsim-review-body"></div>'
+      +   '<div class="portsim-review-status" id="portsim-review-status"></div>'
+      + '</div>';
+    document.body.appendChild(_modal);
+
+    document.getElementById('portsim-review-close').addEventListener('click', close);
+    document.getElementById('portsim-review-save').addEventListener('click', _onSave);
+    document.getElementById('portsim-review-md').addEventListener('click', _onExportMD);
+    document.getElementById('portsim-review-pdf').addEventListener('click', _onPrint);
+    _modal.addEventListener('click', function(ev){ if (ev.target === _modal) close(); });
+    document.addEventListener('keydown', function(ev){
+      if (!_modal || !_modal.classList.contains('is-open')) return;
+      if (ev.key === 'Escape'){
+        var tag = ev.target && ev.target.tagName || '';
+        if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+        close();
+      }
+    });
+    return _modal;
+  }
+
+  function _populate(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active){
+      document.getElementById('portsim-review-meta').textContent = 'No active simulation.';
+      document.getElementById('portsim-review-tabs').innerHTML = '';
+      document.getElementById('portsim-review-body').innerHTML = '<div class="portsim-review-empty">Start a portfolio sim first to review trades.</div>';
+      return;
+    }
+    document.getElementById('portsim-review-meta').textContent =
+      (st.startDate || '?') + ' → ' + (st.endDate || '?')
+      + ' · ' + ((st.basket || []).length) + ' tickers'
+      + ' · index ' + (st.index || 'SPX');
+
+    var tabs = ['overview', 'index'];
+    (st.basket || []).forEach(function(e){ tabs.push('t:' + e.symbol); });
+    var tabsHost = document.getElementById('portsim-review-tabs');
+    tabsHost.innerHTML = tabs.map(function(t){
+      var label = t === 'overview' ? 'OVERVIEW'
+        : (t === 'index' ? (st.index || 'INDEX')
+        : t.slice(2));
+      return '<button type="button" class="portsim-review-tab" data-tab="' + _esc(t) + '">' + _esc(label) + '</button>';
+    }).join('');
+    Array.prototype.slice.call(tabsHost.querySelectorAll('.portsim-review-tab')).forEach(function(btn){
+      btn.addEventListener('click', function(){ _setTab(btn.getAttribute('data-tab')); });
+    });
+    _setTab('overview');
+  }
+
+  function _setTab(tab){
+    if (!_modal) return;
+    _activeTab = tab;
+    var tabsHost = document.getElementById('portsim-review-tabs');
+    Array.prototype.slice.call(tabsHost.querySelectorAll('.portsim-review-tab')).forEach(function(b){
+      if (b.getAttribute('data-tab') === tab) b.classList.add('is-active');
+      else b.classList.remove('is-active');
+    });
+    var body = document.getElementById('portsim-review-body');
+    body.innerHTML = '';
+    if (tab === 'overview') _renderOverview(body);
+    else if (tab === 'index') _renderIndexTab(body);
+    else if (/^t:/.test(tab)) _renderTickerTab(body, tab.slice(2));
+  }
+
+  // ---------- overview tab ----------
+  function _renderOverview(body){
+    var st = window.PortSim._state;
+    var basket = st.basket || [];
+    var initial = +st.initialEquity || 0;
+    var cash = +st.cash || 0;
+    var realized = +st.realizedPnL || 0;
+    var unreal = 0, openCount = 0, equity = cash;
+    basket.forEach(function(e){
+      if (!e.sim) return;
+      if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
+        var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
+          : (e.sim.entry ? +e.sim.entry.price : 0);
+        unreal += e.sim.qty * (mark - e.sim.avgCost);
+        equity += e.sim.qty * mark;
+        openCount += 1;
+      }
+    });
+    var totalPnL = equity - initial;
+    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
+    var peak = +st.eqPeak || initial;
+    var maxDDDol = +st.eqMaxDD || 0;
+    var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
+
+    var tickerRows = basket.map(function(e){
+      var legs = _legSnapshots(e);
+      var totalRealized = legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0);
+      var stops = legs.filter(function(l){ return l.exitReason === 'stop'; }).length;
+      var status = legs.length ? legs[legs.length - 1].exitReason : 'idle';
+      return { sym: e.symbol, legs: legs.length, realized: totalRealized, stops: stops, status: status };
+    });
+
+    body.innerHTML = ''
+      + '<div class="portsim-review-stats">'
+      +   '<div><label>INITIAL</label><strong>' + _money(initial) + '</strong></div>'
+      +   '<div><label>EQUITY</label><strong>'  + _money(equity)  + '</strong></div>'
+      +   '<div><label>TOTAL P&amp;L</label><strong class="' + (totalPnL>=0?'is-pos':'is-neg') + '">' + _moneyS(totalPnL) + ' (' + _pctSigned(totalPct) + ')</strong></div>'
+      +   '<div><label>REALIZED</label><strong>' + _moneyS(realized) + '</strong></div>'
+      +   '<div><label>UNREALIZED</label><strong>' + _moneyS(unreal) + '</strong></div>'
+      +   '<div><label>PEAK</label><strong>' + _money(peak) + '</strong></div>'
+      +   '<div><label>MAX DD</label><strong class="is-neg">' + _moneyS(maxDDDol) + ' (' + maxDDPct.toFixed(2) + '%)</strong></div>'
+      +   '<div><label>OPEN</label><strong>' + openCount + '</strong></div>'
+      + '</div>'
+      + '<table class="portsim-review-table">'
+      +   '<thead><tr><th>SYMBOL</th><th>LEGS</th><th>REALIZED P&amp;L</th><th>STOPS</th><th>STATUS</th></tr></thead>'
+      +   '<tbody>'
+      +     tickerRows.map(function(r){
+            var cls = r.realized > 0 ? 'is-pos' : (r.realized < 0 ? 'is-neg' : '');
+            return '<tr><td>' + _esc(r.sym) + '</td><td>' + r.legs + '</td>'
+              + '<td class="' + cls + '">' + _moneyS(r.realized) + '</td>'
+              + '<td>' + r.stops + '</td>'
+              + '<td>' + _esc(r.status) + '</td></tr>';
+            }).join('')
+      +   '</tbody>'
+      + '</table>'
+      + '<div class="portsim-review-notes">'
+      +   '<label for="portsim-review-portfolio-note">PORTFOLIO REVIEW NOTES</label>'
+      +   '<textarea id="portsim-review-portfolio-note" rows="6" placeholder="Overall review of this run — what went well, what didn&apos;t, lessons learned, sizing/timing observations…"></textarea>'
+      + '</div>';
+    var ta = document.getElementById('portsim-review-portfolio-note');
+    if (ta){
+      ta.value = _data.portfolio || '';
+      ta.addEventListener('input', function(){ _data.portfolio = ta.value; _markDirty(); });
+    }
+  }
+
+  // ---------- index tab ----------
+  function _renderIndexTab(body){
+    var st = window.PortSim._state;
+    body.innerHTML = ''
+      + '<div class="portsim-review-charthost">'
+      +   '<div class="portsim-review-chartlabel">' + _esc((st && st.index) || 'INDEX') + ' · ' + _esc(st.startDate || '') + ' → ' + _esc(st.endDate || '') + '</div>'
+      +   '<div class="portsim-review-chart" id="portsim-review-chart-index"></div>'
+      + '</div>';
+    setTimeout(function(){
+      var host = document.getElementById('portsim-review-chart-index');
+      if (host) _drawIndexChart(host);
+    }, 30);
+  }
+
+  function _drawIndexChart(host){
+    if (typeof LightweightCharts === 'undefined') return;
+    var st = window.PortSim._state;
+    var bars = (st && st.indexBars) || [];
+    if (!bars.length){ host.innerHTML = '<div class="portsim-review-empty">No index data.</div>'; return; }
+    var sd = st.startDate || '', ed = st.endDate || '';
+    var win = bars.filter(function(b){
+      var t = b.time;
+      return (!sd || t >= sd) && (!ed || t <= ed);
+    });
+    if (!win.length) win = bars;
+    if (_indexChart){ try { _indexChart.remove(); } catch(e){} _indexChart = null; }
+    var w = host.clientWidth || 900, h = host.clientHeight || 380;
+    _indexChart = LightweightCharts.createChart(host, {
+      width: w, height: h,
+      layout: { background: { color: 'transparent' }, textColor: '#888' },
+      grid: { horzLines: { color: '#1a1c22' }, vertLines: { color: '#1a1c22' } },
+      rightPriceScale: { borderColor: '#262932' },
+      timeScale: { borderColor: '#262932', timeVisible: false },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+    });
+    var s = _indexChart.addCandlestickSeries({
+      upColor: '#26a69a', downColor: '#ef5350',
+      borderVisible: false,
+      wickUpColor: '#26a69a', wickDownColor: '#ef5350'
+    });
+    s.setData(win.map(function(b){ return { time: b.time, open: +b.open, high: +b.high, low: +b.low, close: +b.close }; }));
+    try { _indexChart.timeScale().fitContent(); } catch(e){}
+  }
+
+  // ---------- per-ticker tab ----------
+  function _renderTickerTab(body, sym){
+    var st = window.PortSim._state;
+    var entry = (st.basket || []).filter(function(e){ return e.symbol === sym; })[0];
+    if (!entry){ body.innerHTML = '<div class="portsim-review-empty">No data for ' + _esc(sym) + '</div>'; return; }
+    var legs = _legSnapshots(entry);
+
+    body.innerHTML = ''
+      + '<div class="portsim-review-tickerhead">'
+      +   '<div class="portsim-review-tickersym">' + _esc(sym) + '</div>'
+      +   '<div class="portsim-review-tickerstat">' + legs.length + ' leg(s)</div>'
+      + '</div>'
+      + '<div class="portsim-review-charthost">'
+      +   '<div class="portsim-review-chartlabel">' + _esc(sym) + ' · sim window with trade markers</div>'
+      +   '<div class="portsim-review-chart" id="portsim-review-chart-' + _esc(sym) + '"></div>'
+      + '</div>'
+      + '<table class="portsim-review-table">'
+      +   '<thead><tr><th>LEG</th><th>ENTRY</th><th>SHARES</th><th>STOP&#8320;</th><th>RISK&#8320;</th><th>EXIT</th><th>REASON</th><th>P&amp;L</th><th>R</th><th>MFE</th><th>MAE</th></tr></thead>'
+      +   '<tbody>' + legs.map(function(l){
+          var cls = l.rPnL > 0 ? 'is-pos' : (l.rPnL < 0 ? 'is-neg' : '');
+          return '<tr>'
+            + '<td>L' + l.idx + (l.active ? ' (active)' : '') + '</td>'
+            + '<td>' + _esc(l.entryDate || '—') + ' @ ' + _r2(l.entryPrice) + '</td>'
+            + '<td>' + l.shares + '</td>'
+            + '<td>' + _r2(l.stop0) + '</td>'
+            + '<td>' + _money(l.risk0) + '</td>'
+            + '<td>' + _esc(l.exitDate || (l.active ? '—' : '?')) + '</td>'
+            + '<td>' + _esc(l.exitReason) + '</td>'
+            + '<td class="' + cls + '">' + _moneyS(l.rPnL) + (l.active && l.unreal ? ' (urz ' + _moneyS(l.unreal) + ')' : '') + '</td>'
+            + '<td>' + _r2(l.rMult) + 'R</td>'
+            + '<td>' + _money(l.mfe) + '</td>'
+            + '<td>' + _money(l.mae) + '</td>'
+            + '</tr>';
+        }).join('') + '</tbody>'
+      + '</table>'
+      + '<div class="portsim-review-notes">'
+      +   '<label for="portsim-review-note-' + _esc(sym) + '">REVIEW NOTES — ' + _esc(sym) + '</label>'
+      +   '<textarea id="portsim-review-note-' + _esc(sym) + '" rows="6" placeholder="What did you learn about ' + _esc(sym) + '? Entry timing, stop placement, sizing, hold discipline…"></textarea>'
+      + '</div>';
+
+    var note = document.getElementById('portsim-review-note-' + sym);
+    if (note){
+      note.value = (_data.notes && _data.notes[sym]) || '';
+      note.addEventListener('input', function(){
+        _data.notes = _data.notes || {};
+        _data.notes[sym] = note.value;
+        _markDirty();
+      });
+    }
+    setTimeout(function(){
+      var host = document.getElementById('portsim-review-chart-' + sym);
+      if (host) _drawTickerChart(host, entry, legs);
+    }, 30);
+  }
+
+  function _drawTickerChart(host, entry, legs){
+    if (typeof LightweightCharts === 'undefined') return;
+    var bars = entry.bars || [];
+    if (!bars.length){ host.innerHTML = '<div class="portsim-review-empty">No data.</div>'; return; }
+    var st = window.PortSim._state;
+    var sd = st.startDate || '', ed = st.endDate || '';
+    var win = bars.filter(function(b){
+      var t = b.time;
+      return (!sd || t >= sd) && (!ed || t <= ed);
+    });
+    if (!win.length) win = bars;
+    if (_tickerCharts[entry.symbol]){
+      try { _tickerCharts[entry.symbol].remove(); } catch(e){}
+      _tickerCharts[entry.symbol] = null;
+    }
+    var w = host.clientWidth || 900, h = host.clientHeight || 380;
+    var chart = LightweightCharts.createChart(host, {
+      width: w, height: h,
+      layout: { background: { color: 'transparent' }, textColor: '#888' },
+      grid: { horzLines: { color: '#1a1c22' }, vertLines: { color: '#1a1c22' } },
+      rightPriceScale: { borderColor: '#262932', scaleMargins: { top: 0.05, bottom: 0.18 } },
+      timeScale: { borderColor: '#262932', timeVisible: false },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+    });
+    _tickerCharts[entry.symbol] = chart;
+    var s = chart.addCandlestickSeries({
+      upColor: '#26a69a', downColor: '#ef5350',
+      borderVisible: false,
+      wickUpColor: '#26a69a', wickDownColor: '#ef5350'
+    });
+    s.setData(win.map(function(b){ return { time: b.time, open: +b.open, high: +b.high, low: +b.low, close: +b.close }; }));
+    var vol = chart.addHistogramSeries({
+      priceScaleId: '', priceFormat: { type: 'volume' },
+      scaleMargins: { top: 0.85, bottom: 0 },
+      color: 'rgba(120,140,160,0.4)'
+    });
+    vol.setData(win.map(function(b){ return { time: b.time, value: +b.volume || 0 }; }));
+    try { s.setMarkers(_markersFromLegs(legs)); } catch(e){ console.error('[Track P] setMarkers:', e); }
+    try { chart.timeScale().fitContent(); } catch(e){}
+  }
+
+  // ---------- save / export / print ----------
+  function _setStatus(msg, kind){
+    var el = document.getElementById('portsim-review-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.className = 'portsim-review-status' + (kind ? ' ' + kind : '');
+  }
+  function _markDirty(){
+    _dirty = true;
+    _setStatus('Unsaved changes…', '');
+  }
+  function _onSave(){
+    if (!_runId) return;
+    _data.savedAt = new Date().toISOString();
+    var ok = _saveData(_runId, _data);
+    if (ok){
+      _dirty = false;
+      _setStatus('Saved · ' + _data.savedAt.replace('T',' ').slice(0,19), 'ok');
+    } else {
+      _setStatus('Save failed (storage full?)', 'err');
+    }
+  }
+
+  function _buildMD(){
+    var st = window.PortSim._state;
+    var basket = st.basket || [];
+    var initial = +st.initialEquity || 0;
+    var cash = +st.cash || 0;
+    var realized = +st.realizedPnL || 0;
+    var unreal = 0, openCount = 0, equity = cash;
+    basket.forEach(function(e){
+      if (!e.sim) return;
+      if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
+        var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
+          : (e.sim.entry ? +e.sim.entry.price : 0);
+        unreal += e.sim.qty * (mark - e.sim.avgCost);
+        equity += e.sim.qty * mark;
+        openCount += 1;
+      }
+    });
+    var totalPnL = equity - initial;
+    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
+    var peak = +st.eqPeak || initial;
+    var maxDDDol = +st.eqMaxDD || 0;
+    var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
+
+    var L = [];
+    L.push('# Portfolio Simulation — Trade Review');
+    L.push('');
+    L.push('- **Window:** ' + (st.startDate || '?') + ' → ' + (st.endDate || '?'));
+    L.push('- **Index benchmark:** ' + (st.index || 'SPX'));
+    L.push('- **Tickers:** ' + basket.map(function(e){ return e.symbol; }).join(', '));
+    L.push('- **Generated:** ' + new Date().toISOString());
+    if (_data.savedAt) L.push('- **Last saved:** ' + _data.savedAt);
+    L.push('');
+    L.push('## Summary');
+    L.push('');
+    L.push('| Metric | Value |');
+    L.push('|---|---|');
+    L.push('| Initial | ' + _money(initial) + ' |');
+    L.push('| Equity | ' + _money(equity) + ' |');
+    L.push('| Total P&L | ' + _moneyS(totalPnL) + ' (' + _pctSigned(totalPct) + ') |');
+    L.push('| Realized | ' + _moneyS(realized) + ' |');
+    L.push('| Unrealized | ' + _moneyS(unreal) + ' |');
+    L.push('| Peak Equity | ' + _money(peak) + ' |');
+    L.push('| Max Drawdown | ' + _moneyS(maxDDDol) + ' (' + maxDDPct.toFixed(2) + '%) |');
+    L.push('| Open positions | ' + openCount + ' |');
+    L.push('');
+    if (_data.portfolio && _data.portfolio.trim()){
+      L.push('## Portfolio Review Notes');
+      L.push('');
+      L.push(_data.portfolio.trim());
+      L.push('');
+    }
+    L.push('## Per-Ticker Trades');
+    L.push('');
+    basket.forEach(function(e){
+      var legs = _legSnapshots(e);
+      var totalRealized = legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0);
+      L.push('### ' + e.symbol);
+      L.push('');
+      L.push('- Legs: ' + legs.length);
+      L.push('- Realized P&L: ' + _moneyS(totalRealized));
+      L.push('');
+      if (legs.length){
+        L.push('| Leg | Entry | Shares | Stop₀ | Risk₀ | Exit | Reason | P&L | R | MFE | MAE |');
+        L.push('|---|---|---|---|---|---|---|---|---|---|---|');
+        legs.forEach(function(l){
+          L.push('| L' + l.idx + (l.active ? ' (active)' : '') + ' | '
+            + (l.entryDate || '—') + ' @ ' + _r2(l.entryPrice) + ' | '
+            + l.shares + ' | '
+            + _r2(l.stop0) + ' | '
+            + _money(l.risk0) + ' | '
+            + (l.exitDate || (l.active ? '—' : '?')) + ' | '
+            + l.exitReason + ' | '
+            + _moneyS(l.rPnL) + ' | '
+            + _r2(l.rMult) + 'R | '
+            + _money(l.mfe) + ' | '
+            + _money(l.mae) + ' |');
+        });
+        L.push('');
+      }
+      var note = (_data.notes && _data.notes[e.symbol]) || '';
+      if (note.trim()){
+        L.push('**Notes:**');
+        L.push('');
+        L.push(note.trim());
+        L.push('');
+      }
+    });
+    return L.join('\n');
+  }
+
+  function _onExportMD(){
+    var st = window.PortSim._state;
+    var md = _buildMD();
+    try {
+      var blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var fn = 'portsim_review_' + (st.startDate || 'x') + '_' + (st.endDate || 'x') + '.md';
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = fn;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){
+        try { document.body.removeChild(a); } catch(e){}
+        try { URL.revokeObjectURL(url); } catch(e){}
+      }, 100);
+      _setStatus('Markdown exported · ' + fn, 'ok');
+    } catch(e) {
+      console.error('[PortSim.Review] MD export:', e);
+      _setStatus('Export failed: ' + (e && e.message ? e.message : e), 'err');
+    }
+  }
+
+  function _onPrint(){
+    document.body.classList.add('portsim-printing');
+    setTimeout(function(){
+      try { window.print(); }
+      catch(e){ console.error('[PortSim.Review] print:', e); }
+      setTimeout(function(){ document.body.classList.remove('portsim-printing'); }, 500);
+    }, 50);
+  }
+
+  // ---------- public open/close ----------
+  function open(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st || !st.active){
+      alert('No active portfolio simulation. Start one first.');
+      return;
+    }
+    if (window.PortSim.Ctrl && typeof window.PortSim.Ctrl.pause === 'function'){
+      try { window.PortSim.Ctrl.pause(); } catch(e){}
+    }
+    _runId = _computeRunId(st);
+    var loaded = _loadData(_runId);
+    _data = loaded || { notes: {}, portfolio: '', savedAt: null };
+    _ensureModal();
+    _modal.classList.add('is-open');
+    _populate();
+    _dirty = false;
+    if (_data.savedAt){
+      _setStatus('Loaded saved review · ' + _data.savedAt.replace('T',' ').slice(0,19), 'ok');
+    } else {
+      _setStatus('', '');
+    }
+  }
+  function close(){
+    if (!_modal) return;
+    _modal.classList.remove('is-open');
+    Object.keys(_tickerCharts).forEach(function(sym){
+      try { _tickerCharts[sym].remove(); } catch(e){}
+    });
+    _tickerCharts = {};
+    if (_indexChart){ try { _indexChart.remove(); } catch(e){} _indexChart = null; }
+  }
+
+  window.PortSim.Review = { open: open, close: close };
+
+  // ---------- topbar button wiring (Summary + Review) ----------
+  function _wireButtons(){
+    var sumBtn = document.getElementById('portsim-btn-summary');
+    if (sumBtn && !sumBtn._psBound){
+      sumBtn._psBound = true;
+      sumBtn.addEventListener('click', function(){
+        if (window.PortSim && window.PortSim.Ctrl && typeof window.PortSim.Ctrl.showSummary === 'function'){
+          window.PortSim.Ctrl.showSummary({ viewOnly: true });
+        }
+      });
+    }
+    var revBtn = document.getElementById('portsim-btn-review');
+    if (revBtn && !revBtn._psBound){
+      revBtn._psBound = true;
+      revBtn.addEventListener('click', function(){ open(); });
+    }
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wireButtons);
+  } else {
+    _wireButtons();
+  }
+})();
+// ============ PORTSIM TRACK P: Trade Review Modal — END ============
+
+// ============ PORTSIM TRACK Q: Index Pre-Cache — START ============
+// Pre-fetches SPX (=SPY) and NDQ (=QQQ) once at app startup so the portfolio
+// sim's index chart always has data, regardless of which random window the
+// user lands on. Lives in memory only (not localStorage — datasets are large
+// and the page reload is cheap). Survives across multiple sim runs.
+//
+// Public:
+//   PortSim.IndexCache.ensure(name) → Promise<{bars, dateMap}>
+//     Resolves with cached entry, kicking off a fetch if none in flight.
+//   PortSim.IndexCache.getBars(name) → bars[] | null  (sync; null if not ready)
+//   PortSim.IndexCache.set(name, bars)                (warm from outside, e.g.
+//                                                      after an NDQ auto-fetch)
+//   PortSim.IndexCache.prewarm()                      (kick both fetches; safe
+//                                                      to call repeatedly)
+(function(){
+  'use strict';
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.IndexCache) return; // idempotent guard
+
+  function _alias(name){
+    if (name === 'SPX' || name === 'SPY') return 'SPX';
+    if (name === 'NDQ' || name === 'NDX' || name === 'QQQ') return 'NDQ';
+    return null;
+  }
+
+  function _newSlot(){
+    return { bars: null, dateMap: null, fetchedAt: 0, error: null, promise: null };
+  }
+
+  var _cache = { SPX: _newSlot(), NDQ: _newSlot() };
+
+  function _buildDateMap(bars){
+    var m = new Map();
+    for (var i = 0; i < bars.length; i++){
+      var t = bars[i] && bars[i].time;
+      if (t) m.set(t, i);
+    }
+    return m;
+  }
+
+  function _normalize(json){
+    var bars = Array.isArray(json) ? json
+             : (json && Array.isArray(json.bars) ? json.bars
+             : (json && Array.isArray(json.data) ? json.data : []));
+    bars.sort(function(a, b){
+      var ta = a && a.time, tb = b && b.time;
+      return ta < tb ? -1 : (ta > tb ? 1 : 0);
+    });
+    return bars;
+  }
+
+  function _fetchOnce(key){
+    var sym = (key === 'SPX') ? 'SPY' : 'NDQ';
+    return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+      .then(function(res){
+        if (!res.ok){
+          var err = new Error('HTTP ' + res.status + ' for ' + sym);
+          err.status = res.status;
+          throw err;
+        }
+        return res.json();
+      })
+      .then(_normalize);
+  }
+
+  function ensure(name){
+    var key = _alias(name);
+    if (!key) return Promise.reject(new Error('Unknown index: ' + name));
+    var slot = _cache[key];
+    if (slot.bars && slot.bars.length) return Promise.resolve(slot);
+    if (slot.promise) return slot.promise;
+    slot.promise = _fetchOnce(key)
+      .then(function(bars){
+        slot.bars = bars;
+        slot.dateMap = _buildDateMap(bars);
+        slot.fetchedAt = Date.now();
+        slot.error = null;
+        slot.promise = null;
+        return slot;
+      })
+      .catch(function(err){
+        slot.error = err;
+        slot.promise = null;
+        // For NDQ specifically, swallow 404 to an empty result so callers can
+        // hit their own fallback path (e.g. /api/fetch-ticker → QQQ). SPX 404
+        // means SPY is missing entirely, which is a hard error worth surfacing.
+        if (key === 'NDQ' && (err && (err.status === 404 || /HTTP\s+404/.test(String(err.message || ''))))){
+          slot.bars = [];
+          slot.dateMap = new Map();
+          return slot;
+        }
+        throw err;
+      });
+    return slot.promise;
+  }
+
+  function getBars(name){
+    var key = _alias(name);
+    if (!key) return null;
+    var slot = _cache[key];
+    return (slot && slot.bars) ? slot.bars : null;
+  }
+
+  function setExternal(name, bars){
+    var key = _alias(name);
+    if (!key || !Array.isArray(bars)) return;
+    _cache[key].bars = _normalize(bars);
+    _cache[key].dateMap = _buildDateMap(_cache[key].bars);
+    _cache[key].fetchedAt = Date.now();
+    _cache[key].error = null;
+  }
+
+  function prewarm(){
+    ensure('SPX').catch(function(e){
+      console.warn('[PortSim.IndexCache] SPX prewarm failed:', e && e.message || e);
+    });
+    ensure('NDQ').catch(function(e){
+      console.warn('[PortSim.IndexCache] NDQ prewarm failed:', e && e.message || e);
+    });
+  }
+
+  window.PortSim.IndexCache = {
+    ensure: ensure,
+    getBars: getBars,
+    set: setExternal,
+    prewarm: prewarm
+  };
+
+  // Kick the prewarm asynchronously so it doesn't block any other DOMContentLoaded
+  // handler. By the time the user opens the Port Sim setup modal, both SPX and
+  // NDQ are typically resolved (~200ms each over localhost).
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(prewarm, 0); });
+  } else {
+    setTimeout(prewarm, 0);
+  }
+})();
+// ============ PORTSIM TRACK Q: Index Pre-Cache — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
@@ -16831,6 +18338,24 @@ Sim.Ctrl = (function(){
         <button type="button" class="portsim-index-pill active" data-index="SPX">SPX</button>
         <button type="button" class="portsim-index-pill" data-index="NDQ">NDQ</button>
       </div>
+    </div>
+
+    <div class="portsim-randomize-panel">
+      <div class="portsim-randomize-row">
+        <div class="fetch-field">
+          <label for="portsim-rand-year">Year</label>
+          <input type="number" min="2000" max="2099" step="1" id="portsim-rand-year" placeholder="2024">
+        </div>
+        <div class="fetch-field">
+          <label for="portsim-rand-count"># Tickers</label>
+          <input type="number" min="1" max="10" step="1" id="portsim-rand-count" value="4">
+        </div>
+        <div class="fetch-field">
+          <label>&nbsp;</label>
+          <button type="button" id="portsim-rand-btn" title="Pick N random tickers from this year and a random ~3-month window">🎲 Randomize</button>
+        </div>
+      </div>
+      <div class="portsim-randomize-hint">Picks N random tickers that had a big move in the chosen year (from <code>big_movers_result.csv</code>) plus a random ~45–90 day window inside the year. Replaces current basket rows and dates.</div>
     </div>
 
     <div class="portsim-section-title">
@@ -16947,7 +18472,6 @@ Sim.Ctrl = (function(){
       <span class="portsim-stat"><label>INITIAL</label><strong id="portsim-stat-initial">$0</strong></span>
       <span class="portsim-stat"><label>CASH</label><strong id="portsim-stat-cash">$0</strong></span>
       <span class="portsim-stat"><label>EQUITY</label><strong id="portsim-stat-equity">$0</strong></span>
-      <span class="portsim-stat"><label>DAY P&amp;L</label><strong id="portsim-stat-daypnl">$0</strong></span>
       <span class="portsim-stat"><label>TOTAL P&amp;L</label><strong id="portsim-stat-totalpnl">$0</strong></span>
       <span class="portsim-stat"><label>OPEN</label><strong id="portsim-stat-open">0</strong></span>
     </div>
@@ -16964,6 +18488,8 @@ Sim.Ctrl = (function(){
         <button class="portsim-spill" data-speed="5" type="button">5×</button>
       </span>
       <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
+      <button id="portsim-btn-summary" class="portsim-tbtn" type="button" title="Show per-ticker summary (without exiting)">📊 Summary</button>
+      <button id="portsim-btn-review" class="portsim-tbtn" type="button" title="Open trade review (charts + notes + export)">📝 Review</button>
       <button id="portsim-btn-export" class="portsim-tbtn" type="button" title="Export portfolio simulation results as CSV">↓ Export</button>
       <button id="portsim-btn-exit"   class="portsim-tbtn portsim-exit" type="button">✕ Exit</button>
     </div>
