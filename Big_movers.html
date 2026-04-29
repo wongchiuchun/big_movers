@@ -2259,6 +2259,12 @@
     background: #fb7185; color: #0c0d10; border-color: #fb7185;
   }
   .portsim-peek-spacer { flex: 1; }
+  /* Index-only view: hide picker UI and the save/clear actions. */
+  #portsim-peek-modal.is-view-only .portsim-peek-mode-label,
+  #portsim-peek-modal.is-view-only .portsim-peek-mode-btn,
+  #portsim-peek-modal.is-view-only .portsim-peek-readout,
+  #portsim-peek-modal.is-view-only #portsim-peek-clear,
+  #portsim-peek-modal.is-view-only #portsim-peek-save{ display:none !important; }
   .portsim-peek-readout { display: inline-flex; align-items: baseline; gap: 4px; }
   .portsim-peek-readout label {
     color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
@@ -16394,7 +16400,9 @@ Sim.Ctrl = (function(){
     chart.timeScale().fitContent();
 
     // Click handler: convert pixel y → price using priceToCoordinate inverse.
+    // Skip entirely in view-only mode (index peek) — no row to copy levels into.
     state.clickHandler = function(param){
+      if (!state.rowEl) return; // view-only
       if (!param || !param.point) return;
       var price = candleSeries.coordinateToPrice(param.point.y);
       if (price == null || !isFinite(price)) return;
@@ -16478,7 +16486,10 @@ Sim.Ctrl = (function(){
 
   function close(){
     var modal = $('#portsim-peek-modal');
-    if (modal) modal.classList.remove('open');
+    if (modal){
+      modal.classList.remove('open');
+      modal.classList.remove('is-view-only');
+    }
     destroyChart();
     state.rowEl = null; state.bars = null;
     state.entryPrice = null; state.stopPrice = null;
@@ -16657,9 +16668,79 @@ Sim.Ctrl = (function(){
     });
 
     window.PortSim.Peek = {
-      open: open, close: close, _wired: true, _state: state
+      open: open, openIndex: openIndex, close: close, _wired: true, _state: state
     };
+
+    var idxPeekBtn = $('#portsim-index-peek-btn');
+    if (idxPeekBtn && !idxPeekBtn._peekWired){
+      idxPeekBtn._peekWired = true;
+      idxPeekBtn.addEventListener('click', function(){
+        var active = $('#portsim-index-pills .portsim-index-pill.active');
+        var name = (active && active.getAttribute('data-index')) || 'SPX';
+        openIndex(name);
+      });
+    }
   }
+
+  // Index-only view of the peek modal: show the chart for SPX/NDQ over the
+  // window the user is about to simulate, but skip the entry/stop pickers
+  // (toolbar mode buttons hidden, save/clear hidden, click-to-pick disabled).
+  function openIndex(name){
+    var indexName = (name || 'SPX').toUpperCase();
+    var startDate = ($('#portsim-start-date') && $('#portsim-start-date').value) || '';
+    if (!startDate){
+      alert('Set a Start date first.');
+      return;
+    }
+
+    state.rowEl = null; // signals view-only mode
+    state.entryPrice = null;
+    state.stopPrice = null;
+
+    var modal = $('#portsim-peek-modal');
+    if (modal) modal.classList.add('open', 'is-view-only');
+
+    var titleText = $('#portsim-peek-title-text');
+    var subtitle  = $('#portsim-peek-subtitle');
+    if (titleText) titleText.textContent = '📊 ' + indexName + ' (Index)';
+    if (subtitle)  subtitle.textContent  = 'last 3 months before ' + startDate;
+    setStatus('Loading bars…', 'is-loading');
+
+    // Pull from the shared cache populated at app startup; fall back to the
+    // /api/ohlcv endpoint if the cache hasn't resolved yet (cold-start).
+    var sym = (indexName === 'SPX') ? 'SPY' : indexName;
+    var p;
+    if (window.PortSim && PortSim.IndexCache && typeof PortSim.IndexCache.ensure === 'function'){
+      p = PortSim.IndexCache.ensure(indexName).then(function(slot){
+        return (slot && slot.bars) || [];
+      }).catch(function(){ return fetchBarsForSymbol(sym); });
+    } else {
+      p = fetchBarsForSymbol(sym);
+    }
+
+    p.then(function(bars){
+      state.bars = bars;
+      var slice = sliceFor(bars, startDate);
+      var host = $('#portsim-peek-chart-wrap');
+      if (!host){ setStatus('chart host missing', 'is-error'); return; }
+      destroyChart();
+      while (host.firstChild) host.removeChild(host.firstChild);
+      if (!slice.length){
+        setStatus('No bars in window for ' + indexName + '. Try a later start date.', 'is-error');
+        return;
+      }
+      buildChart(host, slice);
+      setStatus(slice.length + ' bars · ' + slice[0].time + ' → ' + slice[slice.length - 1].time, '');
+      // No pick handler in view-only mode; buildChart wires one to copy
+      // levels into the row, but with rowEl=null the save() short-circuits.
+      // Belt-and-braces: if the chart's internal click handler is set,
+      // disabling it would require refactoring buildChart. The save button
+      // is hidden by CSS in view-only mode so accidental picks don't leak.
+    }).catch(function(e){
+      setStatus('Fetch failed: ' + (e && e.message ? e.message : e), 'is-error');
+    });
+  }
+
 
   if (document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', wire);
@@ -18833,6 +18914,7 @@ Sim.Ctrl = (function(){
       <div class="portsim-index-pills" id="portsim-index-pills">
         <button type="button" class="portsim-index-pill active" data-index="SPX">SPX</button>
         <button type="button" class="portsim-index-pill" data-index="NDQ">NDQ</button>
+        <button type="button" class="portsim-row-peek" id="portsim-index-peek-btn" title="Preview the active index over the simulation window">📊</button>
       </div>
     </div>
 
