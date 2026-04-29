@@ -69,6 +69,16 @@
   .filter-views select{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:4px 6px;border-radius:6px;outline:none;}
   .filter-views button{background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;padding:4px 8px;border-radius:6px;cursor:pointer;outline:none;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;transition:all 0.15s;}
   .filter-views button:hover{color:var(--accent);border-color:var(--accent);}
+  .idx-btn{
+    background:var(--bg3);border:1px solid var(--border);color:var(--muted);
+    font-family:var(--mono);font-size:9px;font-weight:600;
+    padding:4px 8px;border-radius:6px;cursor:pointer;outline:none;
+    text-transform:uppercase;letter-spacing:0.06em;
+    margin-left:2px;
+    transition:all 0.15s;
+  }
+  .idx-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .idx-btn.is-active{background:var(--accent);border-color:var(--accent);color:var(--bg);}
   .stat-badge{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);padding:6px 14px;border-radius:999px;white-space:nowrap;text-transform:uppercase;letter-spacing:0.08em;}
   .stat-badge span{color:var(--accent);font-weight:600;}
   .main{display:grid;grid-template-columns:clamp(340px,28vw,420px) 1fr;overflow:hidden;}
@@ -3739,6 +3749,8 @@
       <label>Min%</label><input id="f-gain" type="number" placeholder="0" style="width:4em">
       <label>Symbol</label><input id="f-sym" type="text" placeholder="AAPL" style="width:5em;text-transform:uppercase">
       <label>Year</label><input id="f-year" type="number" placeholder="2025" style="width:5.4em">
+      <button id="idx-spx-btn" class="idx-btn" type="button" title="Load SPX (SPY) into the chart for the year selected">📈 SPX</button>
+      <button id="idx-ndq-btn" class="idx-btn" type="button" title="Load NDQ (QQQ) into the chart for the year selected">📈 NDQ</button>
       <label>Tag</label><select id="f-tag" class="study-select" style="width:6.5em"><option value="">All</option></select>
       <label>Dir</label><select id="f-dir" class="study-select" style="width:5em"><option value="">All</option><option value="long">Long</option><option value="short">Short</option></select>
       <label>Min Rtg</label><select id="f-rating" class="study-select" style="width:4em"><option value="">All</option><option value="A">≥A</option><option value="B">≥B</option><option value="C">≥C</option><option value="D">≥D</option></select>
@@ -7448,6 +7460,8 @@ function applySort(){
   }
 }
 ['f-gain','f-sym','f-year'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
+document.getElementById('idx-spx-btn')?.addEventListener('click', () => loadIndexInChart('SPX'));
+document.getElementById('idx-ndq-btn')?.addEventListener('click', () => loadIndexInChart('NDQ'));
 ['f-tag','f-dir','f-rating','f-ai','f-src'].forEach(id=>document.getElementById(id)?.addEventListener('change',applyFilters));
 document.getElementById('table-header').addEventListener('click',e=>{
   const sp=e.target.closest('span[data-col]');if(!sp)return;
@@ -7524,6 +7538,93 @@ function renderTable(){
 // ==============================================
 // SELECT ROW
 // ==============================================
+// ============ INDEX LOADER (SPX / NDQ topbar buttons) ============
+// Loads the SPY (= SPX) or QQQ (= NDQ) OHLCV into the main chart for the
+// year selected in the topbar Year filter (falls back to currentMoveRow's
+// year, then current calendar year). Lightweight viewer — no markers,
+// no drawings, no AI overlays — just the candle + volume series for
+// quick context comparison.
+async function loadIndexInChart(idxName){
+  const sym = (idxName === 'NDQ' || idxName === 'NDX') ? 'QQQ' : 'SPY';
+  // Pick the year: explicit Year filter wins, then active row's year,
+  // then current calendar year.
+  let year = (document.getElementById('f-year') || {}).value;
+  year = year && String(year).trim();
+  if (!year && currentMoveRow && currentMoveRow.year) year = String(currentMoveRow.year);
+  if (!year) year = String(new Date().getFullYear());
+  year = year.replace(/[^0-9]/g, '').slice(0, 4);
+  if (!year || year.length !== 4){
+    alert('Enter a 4-digit year in the Year filter to load an index chart.');
+    return;
+  }
+  if (activeOhlcvController){
+    try { activeOhlcvController.abort(); } catch(e){}
+    activeOhlcvController = null;
+  }
+  const reqController = new AbortController();
+  activeOhlcvController = reqController;
+  document.getElementById('placeholder').classList.add('hidden');
+  document.getElementById('loading').classList.remove('hidden');
+  // Visual hint — flip button active state.
+  document.getElementById('idx-spx-btn').classList.toggle('is-active', idxName === 'SPX');
+  document.getElementById('idx-ndq-btn').classList.toggle('is-active', idxName === 'NDQ' || idxName === 'NDX');
+  try {
+    const resp = await fetch(`/api/ohlcv?symbol=${encodeURIComponent(sym)}&_=${Date.now()}`, { signal: reqController.signal });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const allBars = await resp.json();
+    if (allBars && allBars.error) throw new Error(allBars.error);
+    if (activeOhlcvController !== reqController) return;
+    // Slice to the year window: Jan 1 → Dec 31. Bar.time is YYYY-MM-DD.
+    const from = year + '-01-01', to = year + '-12-31';
+    const bars = (allBars || []).filter(b => {
+      const t = b && b.time;
+      return t && t >= from && t <= to;
+    });
+    if (!bars.length){
+      throw new Error(`No ${sym} bars in ${year}`);
+    }
+    // Detach any existing AI MA overlays — they're keyed to currentSymbol
+    // and will be wrong for the index.
+    try { clearIndicatorOverlays(); } catch(e){}
+    // Detach R-levels / sim adornments from the previous row.
+    try { if (typeof clearAllRLevels === 'function') clearAllRLevels(); } catch(e){}
+    extraCandleMarkers = [];
+    currentBars = bars;
+    currentSymbol = sym;
+    currentMoveRow = null;
+    // Update chart title strip
+    document.getElementById('ct-sym').textContent = idxName + ' (' + sym + ')';
+    document.getElementById('ct-cond').textContent = year;
+    document.getElementById('ct-gain').textContent = '';
+    if (bars.length){
+      const first = bars[0], last = bars[bars.length - 1];
+      const pct = first.close ? ((last.close - first.close) / first.close) * 100 : 0;
+      document.getElementById('ct-gain').textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+      document.getElementById('ct-range').textContent = `${first.time} → ${last.time}`;
+    }
+    document.getElementById('ct-vol').textContent = '';
+    candleSeries.setData(bars.map(b => ({ time: b.time, open: b.open, high: b.high, low: b.low, close: b.close })));
+    volSeries.setData(bars.map(b => {
+      const volUp = isLightTheme ? '#d4efe6' : '#1a3a35';
+      const volDown = isLightTheme ? '#f5d4d4' : '#3a1a1a';
+      return { time: b.time, value: b.volume, color: b.close >= b.open ? volUp : volDown };
+    }));
+    applyTimeframe();
+    (priceSeries || candleSeries).setMarkers([]);
+    try { chart.timeScale().fitContent(); } catch(e){}
+    // Drawings are keyed by moveKey — don't render them on a non-row index view.
+    try { redrawAll(); } catch(e){}
+    updateCrosshairInfo(null);
+  } catch (e){
+    if (e && e.name === 'AbortError') return;
+    console.error('[loadIndexInChart]', e);
+    alert(`Failed to load ${idxName} for ${year}: ${e.message}`);
+  } finally {
+    if (activeOhlcvController === reqController) activeOhlcvController = null;
+    document.getElementById('loading').classList.add('hidden');
+  }
+}
+
 async function selectRow(i){
   if (activeOhlcvController) {
     try { activeOhlcvController.abort(); } catch (e) {}
@@ -7534,6 +7635,9 @@ async function selectRow(i){
 
   activeIdx=i;renderTable();
   document.querySelector('.row.active')?.scrollIntoView({block:'nearest'});
+  // Clear any active SPX/NDQ index-view highlight — we're back to a row.
+  document.getElementById('idx-spx-btn')?.classList.remove('is-active');
+  document.getElementById('idx-ndq-btn')?.classList.remove('is-active');
   const r=filtered[i];
   currentMoveRow = r;
   currentSymbol=r.symbol;
