@@ -12853,6 +12853,9 @@ Sim.Ctrl = (function(){
     let _series = null;
     let _resizeObs = null;
     let _firstClose = null; // for day-change basis if controller doesn't supply one
+    let _leadInLeftTime = null; // time of the leftmost visible bar after setData;
+                                // pinned during appendBar so the ~4-month pre-sim
+                                // context stays on screen as new bars accumulate
     let _emaSeries = [];
     let _emaState  = [];
     const EMA_DEFS = [
@@ -12994,6 +12997,7 @@ Sim.Ctrl = (function(){
       const fromT = candles[fromIdx] && candles[fromIdx].time;
       const toT   = candles[lastIdx] && candles[lastIdx].time;
       if (!fromT || !toT) return;
+      _leadInLeftTime = fromT; // pin left edge so appendBar can keep it stable
       const apply = function(){
         try { _chart.timeScale().setVisibleRange({ from: fromT, to: toT }); } catch(e){}
       };
@@ -13031,11 +13035,20 @@ Sim.Ctrl = (function(){
       if (!t || !isFinite(c) || !isFinite(o) || !isFinite(h) || !isFinite(l)) return;
       try{ _series.update({ time: t, open: o, high: h, low: l, close: c }); }catch(e){}
       _extendEMAs(t, c);
+      // Slide the right edge to include the new bar, keeping the left edge
+      // pinned at the original lead-in (set by setData / _applyDefaultRange).
+      // This keeps ~4 months of pre-sim context visible alongside the bars
+      // that have played through, instead of drifting off the left of the
+      // viewport as the simulation progresses.
+      if (_leadInLeftTime && t > _leadInLeftTime){
+        try { _chart.timeScale().setVisibleRange({ from: _leadInLeftTime, to: t }); } catch(e){}
+      }
     }
 
     function reset(){
       if (_series){ try{ _series.setData([]); }catch(e){} }
       _firstClose = null;
+      _leadInLeftTime = null;
       updateReadout(null, null);
     }
 
