@@ -11433,6 +11433,7 @@ Sim.Ctrl = (function(){
       };
       mapField('posState', (v) => String(v));
       mapField('qty', (v) => typeof v === 'number' ? _fmtQty(v) : String(v));
+      mapField('value', (v) => typeof v === 'number' ? _fmtMoney(v) : String(v));
       mapField('avg', (v) => typeof v === 'number' ? _fmtPx(v) : String(v));
       mapField('stop', (v) => typeof v === 'number' ? _fmtPx(v) : String(v));
       mapField(
@@ -13280,13 +13281,13 @@ Sim.Ctrl = (function(){
   function _miniPanelSnapshot(entry){
     const sim = entry.sim;
     if (!sim) {
-      return { posState: 'idle', qty: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
+      return { posState: 'idle', qty: '', value: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
     }
     const bars = entry.bars;
     let derived = null;
     try { derived = window.Sim.computeDerived(sim, bars); } catch(e){ derived = null; }
     if (!derived) {
-      return { posState: 'idle', qty: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
+      return { posState: 'idle', qty: '', value: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
     }
     const closed = !!derived.closed;
     const stoppedOut = !!derived.stoppedOut;
@@ -13296,9 +13297,16 @@ Sim.Ctrl = (function(){
     else if (stoppedOut) posState = 'stopped';
     else if (closed) posState = 'closed';
     else if (derived.qty <= 0) posState = 'idle';
+    // Position value at current mark = qty × markPrice. Falls back to entry
+    // price if the ticker has no bar yet seen (e.g. position just opened).
+    const mark = _markFor(entry);
+    const value = (derived.qty > 0 && mark != null && isFinite(mark))
+      ? derived.qty * mark
+      : '';
     return {
       posState: posState,
       qty: derived.qty,
+      value: value,
       avg: derived.avgCost,
       stop: derived.currentStop,
       legPnL: derived.totalPnL,
@@ -14177,6 +14185,7 @@ Sim.Ctrl = (function(){
         currentPrice: (px != null && isFinite(px)) ? +px : '',
         posState: snap.posState,
         qty: typeof snap.qty === 'number' ? snap.qty : '',
+        value: typeof snap.value === 'number' ? snap.value : '',
         avg: typeof snap.avg === 'number' ? snap.avg : '',
         stop: typeof snap.stop === 'number' ? snap.stop : '',
         legPnL: typeof snap.legPnL === 'number' ? snap.legPnL : '',
@@ -16606,10 +16615,12 @@ Sim.Ctrl = (function(){
     if ((sim._mfeVal || 0) > 0 && totalPnL < sim._mfeVal){
       giveBack = sim._mfeVal - totalPnL;
     }
+    var value = (mark != null && isFinite(mark)) ? sim.qty * mark : null;
     return {
       entry: entry,
       symbol: entry.symbol,
       qty: sim.qty,
+      value: value,
       avg: sim.avgCost,
       mark: mark,
       stop: _activeStopPrice(sim),
@@ -16755,7 +16766,7 @@ Sim.Ctrl = (function(){
     rows.push(
       '<table class="portsim-pos-table">' +
       '<thead><tr>' +
-        '<th>SYM</th><th>QTY</th><th>AVG</th><th>MARK</th>' +
+        '<th>SYM</th><th>QTY</th><th>VALUE</th><th>AVG</th><th>MARK</th>' +
         '<th>STOP</th><th>P&amp;L</th><th>R</th>' +
         '<th>MFE</th><th>MAE</th><th>GIVE</th><th>DAYS</th>' +
       '</tr></thead>' +
@@ -16769,6 +16780,7 @@ Sim.Ctrl = (function(){
         '<tr data-symbol="' + s.symbol + '">' +
           '<td class="portsim-pos-sym">' + s.symbol + '</td>' +
           '<td>' + _fmtQty(s.qty) + '</td>' +
+          '<td>' + (s.value != null ? _fmt$(s.value) : '—') + '</td>' +
           '<td>' + _fmtPx(s.avg) + '</td>' +
           '<td>' + _fmtPx(s.mark) + '</td>' +
           '<td><button type="button" class="portsim-pos-stop-btn" data-action="movestop">' +
@@ -18313,6 +18325,7 @@ Sim.Ctrl = (function(){
     <div class="portcard-mini-panel">
       <span><label>STATE</label><strong data-field="posState">idle</strong></span>
       <span><label>QTY</label><strong data-field="qty">—</strong></span>
+      <span><label>VALUE</label><strong data-field="value">—</strong></span>
       <span><label>AVG</label><strong data-field="avg">—</strong></span>
       <span><label>STOP</label><strong data-field="stop">—</strong></span>
       <span><label>LEG P&amp;L</label><strong data-field="legPnL">—</strong></span>
