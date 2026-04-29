@@ -16703,6 +16703,48 @@ Sim.Ctrl = (function(){
     });
     var openRiskPct = (equity > 0) ? (openRiskDollar / equity) * 100 : 0;
 
+    // Trade-level performance stats — walk every CLOSED leg (sim.legs[])
+    // plus the active sim if it's currently in a closed/stoppedOut state
+    // (those legs only get pushed into sim.legs by continueSim on re-entry).
+    var trades = 0;
+    var wins   = 0;
+    var grossWin  = 0;
+    var grossLoss = 0;     // accumulated as positive magnitude
+    var rSum   = 0;
+    var rTrades = 0;        // count only legs with initialRisk > 0 (so R is meaningful)
+    function _foldLeg(leg){
+      if (!leg) return;
+      var pnl = +leg.realizedPnL;
+      if (!isFinite(pnl)) return;
+      trades += 1;
+      if (pnl > 0){ wins += 1; grossWin += pnl; }
+      else if (pnl < 0){ grossLoss += -pnl; }
+      var ir = +leg.initialRisk;
+      if (isFinite(ir) && ir > 0){
+        var r = (typeof leg.rMultiple === 'number' && isFinite(leg.rMultiple))
+                ? leg.rMultiple
+                : (pnl / ir);
+        rSum += r;
+        rTrades += 1;
+      }
+    }
+    basket.forEach(function(e){
+      if (!e || !e.sim) return;
+      var s = e.sim;
+      if (Array.isArray(s.legs)) s.legs.forEach(_foldLeg);
+      // Active sim is itself a "closed leg" if it's stopped/closed and not yet re-entered.
+      if (s.closed || s.stoppedOut){
+        _foldLeg({
+          realizedPnL: s.realizedPnL,
+          initialRisk: s.initialRisk,
+          rMultiple: (s.initialRisk > 0) ? s.realizedPnL / s.initialRisk : 0
+        });
+      }
+    });
+    var winRate      = trades > 0 ? (wins / trades) * 100 : 0;
+    var profitFactor = (grossLoss > 0) ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
+    var avgR         = rTrades > 0 ? (rSum / rTrades) : 0;
+
     return {
       initial: initial, cash: cash, equity: equity,
       dayPnL: dayPnL, totalPnL: totalPnL,
@@ -16710,7 +16752,9 @@ Sim.Ctrl = (function(){
       ddDollar: ddDollar, ddPct: ddPct,
       maxDDDollar: maxDDDollar, maxDDPct: maxDDPct,
       ddDays: ddDays, maxDDDays: maxDDDays,
-      openRiskDollar: openRiskDollar, openRiskPct: openRiskPct
+      openRiskDollar: openRiskDollar, openRiskPct: openRiskPct,
+      trades: trades, wins: wins, winRate: winRate,
+      profitFactor: profitFactor, avgR: avgR
     };
   }
 
@@ -16749,6 +16793,31 @@ Sim.Ctrl = (function(){
       ? 'if all stops fire'
       : 'no open positions';
 
+    // ---- Trade-level performance cells ----
+    var tradesN  = p.trades || 0;
+    var winsN    = p.wins   || 0;
+    var winRate  = +p.winRate || 0;
+    var pf       = p.profitFactor;
+    var avgR     = +p.avgR   || 0;
+
+    var winRateValue = (tradesN > 0) ? winRate.toFixed(1) + '%' : '—';
+    var winRateSub   = (tradesN > 0) ? (winsN + 'W / ' + tradesN + ' closed') : 'no closed trades';
+    var winRateCls   = (tradesN > 0)
+      ? (winRate >= 50 ? 'is-pos' : (winRate < 40 ? 'is-neg' : ''))
+      : '';
+
+    var pfValue, pfCls;
+    if (tradesN === 0){ pfValue = '—'; pfCls = ''; }
+    else if (!isFinite(pf)){ pfValue = '∞'; pfCls = 'is-pos'; }
+    else { pfValue = pf.toFixed(2); pfCls = (pf >= 1 ? 'is-pos' : 'is-neg'); }
+
+    var avgRValue = (tradesN > 0)
+      ? ((avgR > 0 ? '+' : '') + avgR.toFixed(2) + 'R')
+      : '—';
+    var avgRCls   = (tradesN > 0)
+      ? (avgR > 0 ? 'is-pos' : (avgR < 0 ? 'is-neg' : ''))
+      : '';
+
     return '<div class="portsim-stats-row">' +
       _cell('INITIAL',   _fmt$(p.initial)) +
       _cell('CASH',      _fmt$(p.cash)) +
@@ -16757,6 +16826,9 @@ Sim.Ctrl = (function(){
       _cell('OPEN RISK', riskValue, riskCls, '', riskSub) +
       _cell('DRAWDOWN',  _fmt$Signed(p.ddDollar) + ' (' + (p.ddPct).toFixed(2) + '%)', ddCls, 'is-hero', ddDayLbl) +
       _cell('MAX DD',    _fmt$Signed(p.maxDDDollar) + ' (' + (p.maxDDPct).toFixed(2) + '%)', maxDDCls, 'is-hero', maxDDDayLbl) +
+      _cell('WIN RATE',  winRateValue, winRateCls, '', winRateSub) +
+      _cell('PROFIT FACTOR', pfValue, pfCls, '', 'gross W / gross L') +
+      _cell('AVG R',     avgRValue, avgRCls, '', 'per closed trade') +
       _cell('OPEN',      String(p.openCount|0)) +
     '</div>';
   }
