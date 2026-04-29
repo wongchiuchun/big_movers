@@ -13995,17 +13995,19 @@ Sim.Ctrl = (function(){
     _state.index = name;
     if (PortSim.Index && typeof PortSim.Index.fetchAndLoad === 'function'){
       PortSim.Index.fetchAndLoad(name).then(function(idxBars){
-        const idxClipped = (idxBars || []).filter(function(b){
+        // Keep the FULL bar array (not clipped to startDate) so the user keeps
+        // the ~4-month pre-sim context after toggling, mirroring initial load.
+        const idxAll = (idxBars || []).filter(function(b){
           const t = b && b.time;
           if (!t) return false;
-          if (_state.startDate && t < _state.startDate) return false;
           if (_state.endDate && t > _state.endDate) return false;
           return true;
         });
-        _state.indexBars = idxClipped;
+        _state.indexBars = idxAll;
         _state.indexDateMap = new Map();
-        for (let i = 0; i < idxClipped.length; i++) _state.indexDateMap.set(idxClipped[i].time, i);
-        const upTo = _sliceUpTo(idxClipped, _state.unifiedDates[_state.playIdx]);
+        for (let i = 0; i < idxAll.length; i++) _state.indexDateMap.set(idxAll[i].time, i);
+        const currentDate = _state.unifiedDates[_state.playIdx] || _state.startDate;
+        const upTo = _sliceUpTo(idxAll, currentDate);
         if (PortSim.Index.setData) PortSim.Index.setData(upTo, name);
       });
     }
