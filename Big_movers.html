@@ -14243,6 +14243,39 @@ Sim.Ctrl = (function(){
           PortSim.Index.appendBar(_state.indexBars[ix]);
         }
       }
+
+      // ---- End-of-sim force close ----
+      // When we just landed on the very last unified date, flat every
+      // still-open position at the most recent observed close so the
+      // realized P&L (and therefore the headline total return / win
+      // rate / profit factor / avg R) reflects every dollar — no leftover
+      // unrealized P&L masquerading as "open" through to the summary.
+      if (_state.playIdx === _state.unifiedDates.length - 1){
+        _state.basket.forEach(function(e){
+          if (!e || !e.sim) return;
+          const sim = e.sim;
+          if (sim.closed || sim.stoppedOut || sim.between) return;
+          if (!(sim.qty > 0)) return;
+          const px = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen : null;
+          if (px == null) return;
+          const soldQty = sim.qty;
+          try {
+            window.Sim.closeAt(sim, e.bars, px);
+            // closeAt doesn't touch the cash ledger — credit it here, same
+            // pattern as the manual close flow uses.
+            PortSim.Cash.creditManualClose(_state, soldQty, px);
+            // Reflect the now-closed state on the card.
+            if (e.card){
+              e.card.setBadge('closed', 'between');
+              e.card.setActive(false);
+            }
+            if (e._newLegBtn) e._newLegBtn.style.display = '';
+          } catch (err){
+            console.warn('[PortSim.Ctrl] end-of-sim force-close ' + e.symbol + ':', err);
+          }
+        });
+        _recomputeRealizedFromCash();
+      }
     }
 
     _renderAll();
@@ -14335,6 +14368,34 @@ Sim.Ctrl = (function(){
   function _showSummary(opts){
     opts = opts || {};
     const viewOnly = !!opts.viewOnly;
+    // Defensive: if this is the final summary (not a viewOnly peek) AND
+    // we're at the end of the unified timeline, sweep up any positions
+    // still open. Normally _advanceAll's end-of-sim hook already closed
+    // them when we landed on the last bar — but a manual entry made AT
+    // the last bar (after auto-close fired) wouldn't get caught.
+    if (!viewOnly &&
+        _state.playIdx >= _state.unifiedDates.length - 1 &&
+        _state.basket.some(function(e){ return e && e.sim && e.sim.qty > 0 && !e.sim.closed && !e.sim.stoppedOut && !e.sim.between; })){
+      _state.basket.forEach(function(e){
+        if (!e || !e.sim) return;
+        const sim = e.sim;
+        if (sim.closed || sim.stoppedOut || sim.between) return;
+        if (!(sim.qty > 0)) return;
+        const px = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen : null;
+        if (px == null) return;
+        const soldQty = sim.qty;
+        try {
+          window.Sim.closeAt(sim, e.bars, px);
+          PortSim.Cash.creditManualClose(_state, soldQty, px);
+          if (e.card){ e.card.setBadge('closed', 'between'); e.card.setActive(false); }
+          if (e._newLegBtn) e._newLegBtn.style.display = '';
+        } catch (err){
+          console.warn('[PortSim.Ctrl] _showSummary force-close ' + e.symbol + ':', err);
+        }
+      });
+      _recomputeRealizedFromCash();
+      _renderAll();
+    }
     let equity = _state.cash;
     let unreal = 0;
     const rows = _state.basket.map(function(e){
