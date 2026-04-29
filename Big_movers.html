@@ -3349,78 +3349,262 @@
   .portsim-review-status.ok{color:var(--green);}
   .portsim-review-status.err{color:var(--red);}
 
-  /* Print stylesheet — strips chrome and lets the modal flow on its own page
-     for "Save as PDF" via the browser's print dialog. */
+  /* ===== Print stylesheet — clean light theme, one section per page.
+     Charts are converted to <img> by JS before print fires (LWC canvases
+     don't survive the print engine reliably). ===== */
+  @page { size: A4 portrait; margin: 0.45in 0.5in; }
   @media print{
+    /* Hide everything that isn't the review modal. */
     body.portsim-printing > *{display:none !important;}
     body.portsim-printing #portsim-review-modal{
-      display:flex !important;position:static !important;
+      display:block !important;
+      position:static !important;
       background:#fff !important;
     }
     body.portsim-printing .portsim-review-overlay{
-      position:static !important;background:#fff !important;
-      display:block !important;height:auto !important;
+      position:static !important;
+      display:block !important;
+      background:#fff !important;
+      height:auto !important;width:auto !important;padding:0 !important;
     }
     body.portsim-printing .portsim-review-dialog{
-      width:100% !important;height:auto !important;
+      display:block !important;
+      position:static !important;
+      width:100% !important;max-width:none !important;
+      height:auto !important;max-height:none !important;
+      min-height:0 !important;
       border:none !important;box-shadow:none !important;
-      background:#fff !important;color:#000 !important;
+      background:#fff !important;color:#111 !important;
+      font-family:'Plus Jakarta Sans',-apple-system,sans-serif;
     }
-    body.portsim-printing .portsim-review-head{
-      background:#fff !important;border-bottom:1px solid #999 !important;
-      color:#000 !important;
+    /* Strip modal chrome — head, tabs, status, action buttons. */
+    body.portsim-printing .portsim-review-head,
+    body.portsim-printing .portsim-review-tabs,
+    body.portsim-printing .portsim-review-status,
+    body.portsim-printing .portsim-review-actions{
+      display:none !important;
     }
-    body.portsim-printing .portsim-review-title,
-    body.portsim-printing .portsim-review-meta{color:#000 !important;}
-    body.portsim-printing .portsim-review-actions{display:none !important;}
-    body.portsim-printing .portsim-review-tabs{display:none !important;}
+    /* Body becomes flowing print canvas. */
     body.portsim-printing .portsim-review-body{
-      overflow:visible !important;color:#000 !important;background:#fff !important;
+      display:block !important;
+      overflow:visible !important;
+      height:auto !important;max-height:none !important;
+      background:#fff !important;color:#111 !important;
+      padding:0 !important;
     }
-    body.portsim-printing .portsim-review-table thead th{
-      background:#eee !important;color:#000 !important;
+
+    /* ----- Cover header (top of first page) ----- */
+    .portsim-print-cover{
+      border-bottom:3px double #444;
+      padding:0 0 14px;
+      margin:0 0 18px;
+      page-break-after:avoid;
+      break-after:avoid;
     }
-    body.portsim-printing .portsim-review-table tbody td{color:#000 !important;}
-    body.portsim-printing .portsim-review-notes{
-      background:#f9f9f9 !important;border:1px solid #ccc !important;color:#000 !important;
+    .portsim-print-cover-title{
+      font-family:'Fraunces','Times New Roman',serif;
+      font-style:italic;
+      font-size:30px;
+      font-weight:500;
+      color:#1a1a1a !important;
+      margin:0 0 10px;
+      letter-spacing:-0.01em;
     }
-    body.portsim-printing .portsim-review-notes textarea{
-      background:#fff !important;color:#000 !important;border:1px solid #ccc !important;
+    .portsim-print-cover-meta{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:4px 24px;
+      font-size:11px;
+      color:#444 !important;
     }
-    body.portsim-printing .portsim-review-stats{
-      background:#fff !important;border-color:#ccc !important;
+    .portsim-print-cover-meta strong{
+      color:#222 !important;
+      font-weight:600;
+      margin-right:4px;
     }
-    body.portsim-printing .portsim-review-stats strong,
-    body.portsim-printing .portsim-review-stats label{color:#000 !important;}
-    /* Print export renders ALL sections (overview + index + every ticker)
-       stacked. Force each section onto its own page so the PDF/paper
-       output is one section per page. The first section keeps its
-       page-break-before:auto so the document doesn't start with a blank
-       leading page. */
+
+    /* ----- Sections — one per printed page ----- */
     body.portsim-printing .portsim-print-section{
-      page-break-inside: avoid;
-      break-inside: avoid;
-      page-break-before: always;
-      break-before: page;
-      padding: 16px 8px 0;
+      page-break-before:always;
+      break-before:page;
+      page-break-inside:avoid;
+      break-inside:avoid-page;
+      padding:0;
+      margin:0 0 24px;
     }
     body.portsim-printing .portsim-print-section:first-of-type{
-      page-break-before: auto;
-      break-before: auto;
+      page-break-before:auto;
+      break-before:auto;
     }
     body.portsim-printing .portsim-print-h2{
-      font-family: var(--display, serif);
-      font-size: 22px;
-      margin: 0 0 12px;
-      color: #000 !important;
-      border-bottom: 2px solid #333;
-      padding-bottom: 6px;
+      font-family:'Fraunces','Times New Roman',serif;
+      font-style:italic;
+      font-size:22px;
+      font-weight:500;
+      margin:0 0 14px;
+      color:#1a1a1a !important;
+      border-bottom:2px solid #333;
+      padding-bottom:6px;
+      page-break-after:avoid;
+      break-after:avoid;
     }
-    body.portsim-printing .portsim-review-chart{
-      min-height: 380px !important;
+    body.portsim-printing .portsim-print-inner{
+      page-break-inside:avoid;
+    }
+
+    /* ----- Stats grid ----- */
+    body.portsim-printing .portsim-review-stats{
+      display:grid !important;
+      grid-template-columns:repeat(4, 1fr);
+      gap:0 !important;
+      background:#fff !important;
+      border:1px solid #999 !important;
+      border-radius:0 !important;
+      padding:0 !important;
+      margin:0 0 14px !important;
+    }
+    body.portsim-printing .portsim-review-stats > div{
+      border:none !important;
+      border-right:1px solid #ccc !important;
+      border-bottom:1px solid #ccc !important;
+      padding:8px 12px !important;
+    }
+    body.portsim-printing .portsim-review-stats > div:nth-child(4n){
+      border-right:none !important;
+    }
+    body.portsim-printing .portsim-review-stats > div:nth-last-child(-n+4){
+      border-bottom:none !important;
+    }
+    body.portsim-printing .portsim-review-stats label{
+      font-size:8.5px !important;
+      color:#666 !important;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      display:block;
+      margin-bottom:3px;
+    }
+    body.portsim-printing .portsim-review-stats strong{
+      font-size:14px !important;
+      color:#111 !important;
+      font-weight:600;
+      font-family:'JetBrains Mono','Courier New',monospace;
+    }
+    body.portsim-printing .portsim-review-stats strong.is-pos{color:#0a6b3b !important;}
+    body.portsim-printing .portsim-review-stats strong.is-neg{color:#a3231f !important;}
+
+    /* ----- Tables ----- */
+    body.portsim-printing .portsim-review-table{
+      width:100%;
+      border-collapse:collapse !important;
+      background:#fff !important;
+      font-size:10.5px;
+      margin:0 0 14px !important;
+      page-break-inside:avoid;
+    }
+    body.portsim-printing .portsim-review-table thead th{
+      background:#ececec !important;
+      color:#222 !important;
+      border:1px solid #999 !important;
+      padding:5px 7px !important;
+      text-align:left;
+      font-weight:600;
+      font-size:9.5px;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+    }
+    body.portsim-printing .portsim-review-table tbody td{
+      border:1px solid #ccc !important;
+      padding:4px 7px !important;
+      color:#111 !important;
+      font-family:'JetBrains Mono','Courier New',monospace;
+    }
+    body.portsim-printing .portsim-review-table tbody td.is-pos{color:#0a6b3b !important;}
+    body.portsim-printing .portsim-review-table tbody td.is-neg{color:#a3231f !important;}
+    body.portsim-printing .portsim-review-table tbody tr:nth-child(even) td{
+      background:#fafafa !important;
+    }
+
+    /* ----- Notes (textarea → printable block) ----- */
+    body.portsim-printing .portsim-review-notes{
+      background:#fafafa !important;
+      border:1px solid #bbb !important;
+      border-radius:0 !important;
+      color:#111 !important;
+      padding:12px 14px !important;
+      margin:14px 0 0 !important;
+      page-break-inside:avoid;
+    }
+    body.portsim-printing .portsim-review-notes label{
+      display:block;
+      font-size:9.5px !important;
+      color:#444 !important;
+      text-transform:uppercase;
+      letter-spacing:0.1em;
+      margin-bottom:6px;
+      font-weight:600;
     }
     body.portsim-printing .portsim-review-notes textarea{
-      min-height: 90px;
+      background:transparent !important;
+      border:none !important;
+      color:#111 !important;
+      font-family:Georgia,'Times New Roman',serif !important;
+      font-size:11.5px !important;
+      line-height:1.55 !important;
+      width:100% !important;
+      min-height:0 !important;
+      padding:0 !important;
+      resize:none !important;
+      overflow:visible !important;
+      white-space:pre-wrap !important;
+    }
+
+    /* ----- Charts (replaced with <img> by _convertChartsToImages) ----- */
+    body.portsim-printing .portsim-review-charthost{
+      background:#fff !important;
+      border:1px solid #bbb !important;
+      border-radius:0 !important;
+      margin:0 0 14px !important;
+      padding:8px !important;
+      page-break-inside:avoid;
+    }
+    body.portsim-printing .portsim-review-chartlabel{
+      color:#666 !important;
+      font-size:9px !important;
+      letter-spacing:0.1em;
+      margin-bottom:6px;
+    }
+    body.portsim-printing .portsim-review-chart{
+      width:100% !important;
+      height:auto !important;
+      min-height:0 !important;
+      max-height:380px;
+    }
+    body.portsim-printing .portsim-print-chart-img{
+      width:100% !important;
+      max-height:380px;
+      object-fit:contain;
+      display:block;
+    }
+
+    /* ----- Ticker header ----- */
+    body.portsim-printing .portsim-review-tickerhead{
+      display:flex;
+      align-items:baseline;
+      gap:14px;
+      margin:0 0 12px !important;
+      padding:0 0 6px !important;
+      border-bottom:1px solid #ccc;
+    }
+    body.portsim-printing .portsim-review-tickersym{
+      font-family:'JetBrains Mono','Courier New',monospace;
+      font-size:18px;font-weight:600;
+      color:#111 !important;
+      background:none !important;
+      padding:0 !important;
+    }
+    body.portsim-printing .portsim-review-tickerstat{
+      font-size:11px;
+      color:#666 !important;
     }
   }
   /* ============ PORTSIM TRACK P: Trade Review Modal Styles — END ============ */
@@ -18550,6 +18734,20 @@ Sim.Ctrl = (function(){
 
     body.innerHTML = '';
 
+    // Print cover header — appears on the first printed page.
+    var cover = document.createElement('header');
+    cover.className = 'portsim-print-cover';
+    cover.innerHTML = ''
+      + '<h1 class="portsim-print-cover-title">Portfolio Simulation Review</h1>'
+      + '<div class="portsim-print-cover-meta">'
+      +   '<div><strong>Window:</strong> ' + _esc(st.startDate || '?') + ' → ' + _esc(st.endDate || '?') + '</div>'
+      +   '<div><strong>Tickers:</strong> ' + basket.map(function(e){ return _esc(e.symbol); }).join(', ') + '</div>'
+      +   '<div><strong>Index:</strong> ' + _esc(st.index || 'SPX') + '</div>'
+      +   '<div><strong>Initial:</strong> ' + _money(+st.initialEquity || 0) + '</div>'
+      +   '<div><strong>Generated:</strong> ' + new Date().toLocaleString() + '</div>'
+      + '</div>';
+    body.appendChild(cover);
+
     function addSection(title, renderInto){
       var sec = document.createElement('section');
       sec.className = 'portsim-print-section';
@@ -18565,9 +18763,42 @@ Sim.Ctrl = (function(){
     }
 
     addSection('Overview', function(host){ _renderOverview(host); });
-    addSection('Index — ' + (st.index || 'SPX'), function(host){ _renderIndexTab(host); });
+    addSection('Index · ' + (st.index || 'SPX'), function(host){ _renderIndexTab(host); });
     basket.forEach(function(e){
       addSection(e.symbol, function(host){ _renderTickerTab(host, e.symbol); });
+    });
+  }
+
+  // Convert every LWC chart in the print body to a static PNG <img> so the
+  // browser's print engine has a paintable element instead of a deferred
+  // canvas. LWC's chart.takeScreenshot() returns a Canvas synchronously.
+  // We replace each chart container's contents with the resulting <img>.
+  function _convertChartsToImages(){
+    function _replaceWithImg(host, canvas){
+      if (!host || !canvas) return;
+      try {
+        var url = canvas.toDataURL('image/png');
+        if (!url) return;
+        var img = document.createElement('img');
+        img.src = url;
+        img.alt = host.id || 'chart';
+        img.className = 'portsim-print-chart-img';
+        // Replace LWC's canvas children with the snapshot image.
+        host.innerHTML = '';
+        host.appendChild(img);
+      } catch(e){ console.warn('[PortSim.Review] chart→png failed:', e && e.message); }
+    }
+    // Index chart
+    if (_indexChart && typeof _indexChart.takeScreenshot === 'function'){
+      var iHost = document.getElementById('portsim-review-chart-index');
+      try { _replaceWithImg(iHost, _indexChart.takeScreenshot()); } catch(e){}
+    }
+    // Per-ticker charts
+    Object.keys(_tickerCharts || {}).forEach(function(sym){
+      var ch = _tickerCharts[sym];
+      if (!ch || typeof ch.takeScreenshot !== 'function') return;
+      var host = document.getElementById('portsim-review-chart-' + sym);
+      try { _replaceWithImg(host, ch.takeScreenshot()); } catch(e){}
     });
   }
 
@@ -18577,30 +18808,32 @@ Sim.Ctrl = (function(){
     // Snapshot the currently visible tab so we can restore the normal single-
     // tab view after the print dialog is dismissed.
     var prevTab = _activeTab;
-    var savedHTML = body.innerHTML;
     document.body.classList.add('portsim-printing');
     _renderPrintAll();
     // Charts are drawn inside setTimeout(..., 30) blocks by the per-tab
-    // renderers, so wait long enough for the last one's LWC paint to settle
-    // before triggering the browser's print dialog.
-    var PRINT_DELAY = 600;
+    // renderers. Wait long enough for the last LWC paint to settle, then
+    // convert each chart to a PNG <img> so it prints reliably (canvases
+    // are notorious for not surviving the print engine).
+    var PAINT_DELAY = 700;
     var afterPrint = function(){
-      // Restore previous single-tab view. _setTab will re-render fresh, so
-      // the savedHTML restore is just a defensive reset for the rare case
-      // where _setTab fails (e.g. previously-active tab no longer exists).
-      try { body.innerHTML = savedHTML; } catch(e){}
       try { _setTab(prevTab || 'overview'); } catch(e){}
       document.body.classList.remove('portsim-printing');
       window.removeEventListener('afterprint', afterPrint);
     };
     window.addEventListener('afterprint', afterPrint);
     setTimeout(function(){
-      try { window.print(); }
-      catch(e){ console.error('[PortSim.Review] print:', e); afterPrint(); return; }
-      // Some browsers (notably Safari) don't fire `afterprint` reliably —
-      // belt-and-suspenders timeout restore.
-      setTimeout(afterPrint, 1500);
-    }, PRINT_DELAY);
+      try { _convertChartsToImages(); } catch(e){ console.warn('[PortSim.Review] convert charts:', e); }
+      // Give the browser one frame to lay out the freshly-injected <img>
+      // elements before triggering the print dialog.
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          try { window.print(); }
+          catch(e){ console.error('[PortSim.Review] print:', e); afterPrint(); return; }
+          // Safari doesn't fire `afterprint` reliably — belt-and-suspenders.
+          setTimeout(afterPrint, 2000);
+        });
+      });
+    }, PAINT_DELAY);
   }
 
   // ---------- public open/close ----------
