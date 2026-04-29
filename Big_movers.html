@@ -13133,6 +13133,13 @@ Sim.Ctrl = (function(){
       const sym = (name === 'SPX') ? 'SPY' : (name || 'SPY');
       const isNdq = (name === 'NDQ' || name === 'NDX');
 
+      // NOTE: This function fetches and resolves with bars but does NOT call
+      // setData itself. Both callers (Ctrl.openSetup, _onIndexToggle) want to
+      // pass a date-clipped slice into setData — calling it here too caused
+      // a double-setData where the first call's deferred-RAF visible-range
+      // apply could fire AFTER the second call, overriding the lead-in
+      // window so the chart looked like it was just showing the start bar.
+
       // Prefer pre-warmed cache from PortSim.IndexCache (Track Q). The cache is
       // populated at app startup with the full SPX/NDQ history, so the typical
       // case is a synchronous hit with no network round-trip.
@@ -13141,56 +13148,42 @@ Sim.Ctrl = (function(){
         return cache.ensure(name)
           .then(slot => {
             const bars = (slot && slot.bars) || [];
-            if (bars.length){
-              setData(bars, name);
-              return bars;
-            }
-            // Empty bars from a 404-swallow → fall through to the NDQ auto-fetch
-            // path below, otherwise paint an empty chart and bail.
+            if (bars.length) return bars;
+            // Empty bars from a 404-swallow → for NDQ try the auto-fetch path.
             if (isNdq){
               return _autoFetchQQQ()
                 .then(() => _fetchOhlcvOnce(sym))
                 .then(bars2 => {
-                  setData(bars2, name);
-                  // Warm the cache so subsequent sims hit it.
                   if (cache.set) cache.set(name, bars2);
                   return bars2;
                 })
                 .catch(err2 => {
                   console.warn('[PortSim.Index] NDQ auto-fetch failed:', err2 && err2.message || err2);
-                  reset();
                   return [];
                 });
             }
-            setData([], name);
             return [];
           })
           .catch(err => {
             console.warn('[PortSim.Index] cache miss → network fallback:', err && err.message || err);
-            return _fetchOhlcvOnce(sym)
-              .then(bars => { setData(bars, name); return bars; })
-              .catch(err2 => { reset(); return []; });
+            return _fetchOhlcvOnce(sym).catch(err2 => { return []; });
           });
       }
 
       // No cache available — fall back to the original network-direct path.
       return _fetchOhlcvOnce(sym)
-        .then(bars => { setData(bars, name); return bars; })
         .catch(err => {
           // NDQ-specific fallback: pre-warm QQQ via fetch-ticker, retry once.
           const msg = (err && err.message) || String(err || '');
           if (isNdq && /HTTP\s+404/.test(msg)){
             return _autoFetchQQQ()
               .then(() => _fetchOhlcvOnce(sym))
-              .then(bars => { setData(bars, name); return bars; })
               .catch(err2 => {
                 console.warn('[PortSim.Index] NDQ auto-fetch failed:', err2 && err2.message || err2);
-                reset();
                 return [];
               });
           }
           console.warn('[PortSim.Index] fetchAndLoad failed:', msg);
-          reset();
           return [];
         });
     }
