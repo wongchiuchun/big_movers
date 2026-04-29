@@ -3349,6 +3349,125 @@
   .portsim-review-status.ok{color:var(--green);}
   .portsim-review-status.err{color:var(--red);}
 
+  /* ----- Saved-review picker (📂 Load) ----- */
+  .portsim-review-picker{
+    display:none;
+    position:fixed;inset:0;
+    z-index:12000;
+    background:rgba(0,0,0,0.55);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    align-items:center;justify-content:center;
+    padding:40px 20px;
+  }
+  .portsim-review-picker.is-open{display:flex;}
+  .portsim-review-picker-dialog{
+    background:var(--bg2);
+    border:1px solid var(--border-bright);
+    border-radius:10px;
+    width:560px;max-width:100%;
+    max-height:80vh;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .portsim-review-picker-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg3);
+    font-family:var(--display);font-style:italic;
+    font-size:18px;color:var(--accent-cream);
+    flex-shrink:0;
+  }
+  .portsim-review-picker-close{
+    background:transparent;border:none;color:var(--muted);
+    font-size:16px;cursor:pointer;padding:4px 8px;
+  }
+  .portsim-review-picker-close:hover{color:var(--red);}
+  .portsim-review-picker-list{
+    overflow-y:auto;flex:1;
+    padding:8px;
+  }
+  .portsim-review-picker-empty{
+    padding:40px 20px;text-align:center;
+    color:var(--muted);font-family:var(--mono);font-size:11px;
+    line-height:1.6;
+  }
+  .portsim-review-picker-row{
+    display:flex;align-items:center;gap:10px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    margin-bottom:6px;
+    cursor:pointer;
+    transition:all 0.12s ease;
+    outline:none;
+  }
+  .portsim-review-picker-row:hover,
+  .portsim-review-picker-row:focus{
+    border-color:var(--accent);
+    background:rgba(212,165,116,0.05);
+  }
+  .portsim-review-picker-info{flex:1;min-width:0;}
+  .portsim-review-picker-title{
+    font-family:var(--mono);font-size:12px;font-weight:600;
+    color:var(--text);
+    margin-bottom:4px;
+    display:flex;align-items:center;gap:8px;
+    flex-wrap:wrap;
+  }
+  .portsim-review-picker-pnl{
+    font-family:var(--mono);font-size:11px;
+    font-weight:600;
+  }
+  .portsim-review-picker-pnl.is-pos{color:var(--green);}
+  .portsim-review-picker-pnl.is-neg{color:var(--red);}
+  .portsim-review-picker-syms{
+    font-family:var(--mono);font-size:10px;
+    color:var(--accent);
+    margin-bottom:3px;
+    word-break:break-word;
+  }
+  .portsim-review-picker-meta{
+    font-family:var(--mono);font-size:9px;
+    color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.05em;
+  }
+  .portsim-review-picker-del{
+    flex-shrink:0;
+    background:transparent;border:1px solid var(--border);
+    color:var(--muted);
+    width:32px;height:32px;
+    border-radius:5px;cursor:pointer;
+    font-size:14px;
+    transition:all 0.12s ease;
+  }
+  .portsim-review-picker-del:hover{
+    color:var(--red);border-color:var(--red);
+    background:rgba(251,113,133,0.08);
+  }
+
+  /* View-only banner — shown when a saved review is loaded but the
+     active sim doesn't match it (or there's no active sim). */
+  #portsim-review-modal.is-viewonly .portsim-review-dialog{
+    border-color:var(--accent);
+  }
+  #portsim-review-modal.is-viewonly .portsim-review-head{
+    background:linear-gradient(180deg, rgba(212,165,116,0.12) 0%, var(--bg3) 100%);
+  }
+  /* Chart placeholder for view-only mode (we don't store bars). */
+  .portsim-review-chart-placeholder{
+    display:flex;align-items:center;justify-content:center;
+    width:100%;height:100%;min-height:200px;
+    background:var(--bg);
+    color:var(--muted);
+    font-family:var(--mono);font-size:11px;
+    text-align:center;padding:40px 20px;
+    border:1px dashed var(--border);
+    border-radius:4px;
+  }
+
   /* ===== Print stylesheet — clean light theme, one section per page.
      Charts are converted to <img> by JS before print fires (LWC canvases
      don't survive the print engine reliably). ===== */
@@ -3637,6 +3756,7 @@
     <button id="add-ticker-btn" class="tb-btn" title="Fetch new ticker or extend existing" style="font-size:10px;padding:4px 12px;width:auto;border-radius:5px;">+ Add</button>
     <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
     <button id="portsim-start-btn" class="tb-btn" title="Open Portfolio Simulator">▶ Port Sim</button>
+    <button id="portsim-saved-btn" class="tb-btn" title="Browse saved Trade Reviews">📂 Saved</button>
     <div class="vsep"></div>
     <button id="theme-toggle" class="tb-btn" title="Toggle theme">☀ Light</button>
   </div>
@@ -14814,6 +14934,20 @@ Sim.Ctrl = (function(){
       startBtn._portsimBound = true;
       startBtn.addEventListener('click', function(){ openSetup(); });
     }
+    const savedBtn = _byId('portsim-saved-btn');
+    if (savedBtn && !savedBtn._portsimBound){
+      savedBtn._portsimBound = true;
+      savedBtn.addEventListener('click', function(){
+        // Open Review in browse mode (no live sim required), then immediately
+        // pop the picker so the user can pick a saved review to view.
+        if (window.PortSim && PortSim.Review && typeof PortSim.Review.open === 'function'){
+          PortSim.Review.open();
+          setTimeout(function(){
+            if (PortSim.Review.openLoadPicker) PortSim.Review.openLoadPicker();
+          }, 50);
+        }
+      });
+    }
     if (PortSim.Setup && typeof PortSim.Setup.onSubmit === 'function'){
       PortSim.Setup.onSubmit(_onWizardSubmit);
     }
@@ -18108,6 +18242,11 @@ Sim.Ctrl = (function(){
   var _runId = null;
   var _data = { notes: {}, portfolio: '', savedAt: null };
   var _dirty = false;
+  // View-only mode: set by _onLoad when the user opens a saved review
+  // that doesn't match the active sim (or there's no active sim). In this
+  // mode the renderers read stats from _data.meta instead of live state,
+  // textareas are read-only, and the chart slots show a placeholder.
+  var _viewOnly = false;
 
   // ---------- helpers ----------
   function _esc(s){
@@ -18272,6 +18411,7 @@ Sim.Ctrl = (function(){
       +     '<div class="portsim-review-meta" id="portsim-review-meta">—</div>'
       +     '<div class="portsim-review-actions">'
       +       '<button type="button" id="portsim-review-save"  class="portsim-review-btn">💾 Save</button>'
+      +       '<button type="button" id="portsim-review-load"  class="portsim-review-btn">📂 Load</button>'
       +       '<button type="button" id="portsim-review-md"    class="portsim-review-btn">↓ Markdown</button>'
       +       '<button type="button" id="portsim-review-pdf"   class="portsim-review-btn">🖨 Print/PDF</button>'
       +       '<button type="button" id="portsim-review-close" class="portsim-review-btn portsim-review-close">✕</button>'
@@ -18285,6 +18425,7 @@ Sim.Ctrl = (function(){
 
     document.getElementById('portsim-review-close').addEventListener('click', close);
     document.getElementById('portsim-review-save').addEventListener('click', _onSave);
+    document.getElementById('portsim-review-load').addEventListener('click', _onLoad);
     document.getElementById('portsim-review-md').addEventListener('click', _onExportMD);
     document.getElementById('portsim-review-pdf').addEventListener('click', _onPrint);
     _modal.addEventListener('click', function(ev){ if (ev.target === _modal) close(); });
@@ -18300,24 +18441,34 @@ Sim.Ctrl = (function(){
   }
 
   function _populate(){
-    var st = window.PortSim && window.PortSim._state;
-    if (!st || !st.active){
-      document.getElementById('portsim-review-meta').textContent = 'No active simulation.';
-      document.getElementById('portsim-review-tabs').innerHTML = '';
-      document.getElementById('portsim-review-body').innerHTML = '<div class="portsim-review-empty">Start a portfolio sim first to review trades.</div>';
-      return;
+    var ctx;
+    if (_viewOnly && _data && _data.meta){
+      ctx = _data.meta;
+    } else {
+      var st = window.PortSim && window.PortSim._state;
+      if (!st || !st.active){
+        document.getElementById('portsim-review-meta').textContent = 'No active simulation. Click 📂 LOAD to view a saved review.';
+        document.getElementById('portsim-review-tabs').innerHTML = '';
+        document.getElementById('portsim-review-body').innerHTML = '<div class="portsim-review-empty">Start a portfolio sim first, or click 📂 LOAD to open a saved review.</div>';
+        return;
+      }
+      ctx = st;
     }
+    var basket = ctx.basket || [];
+    var tickerSyms = basket.map(function(e){ return e.symbol; });
     document.getElementById('portsim-review-meta').textContent =
-      (st.startDate || '?') + ' → ' + (st.endDate || '?')
-      + ' · ' + ((st.basket || []).length) + ' tickers'
-      + ' · index ' + (st.index || 'SPX');
+      (_viewOnly ? '[VIEW-ONLY] ' : '')
+      + (ctx.startDate || '?') + ' → ' + (ctx.endDate || '?')
+      + ' · ' + tickerSyms.length + ' tickers'
+      + ' · index ' + (ctx.index || 'SPX')
+      + (_data && _data.savedAt ? ' · saved ' + _data.savedAt.replace('T',' ').slice(0,19) : '');
 
     var tabs = ['overview', 'index'];
-    (st.basket || []).forEach(function(e){ tabs.push('t:' + e.symbol); });
+    tickerSyms.forEach(function(sym){ tabs.push('t:' + sym); });
     var tabsHost = document.getElementById('portsim-review-tabs');
     tabsHost.innerHTML = tabs.map(function(t){
       var label = t === 'overview' ? 'OVERVIEW'
-        : (t === 'index' ? (st.index || 'INDEX')
+        : (t === 'index' ? (ctx.index || 'INDEX')
         : t.slice(2));
       return '<button type="button" class="portsim-review-tab" data-tab="' + _esc(t) + '">' + _esc(label) + '</button>';
     }).join('');
@@ -18344,34 +18495,26 @@ Sim.Ctrl = (function(){
 
   // ---------- overview tab ----------
   function _renderOverview(body){
-    var st = window.PortSim._state;
-    var basket = st.basket || [];
-    var initial = +st.initialEquity || 0;
-    var cash = +st.cash || 0;
-    var realized = +st.realizedPnL || 0;
-    var unreal = 0, openCount = 0, equity = cash;
-    basket.forEach(function(e){
-      if (!e.sim) return;
-      if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
-        var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
-          : (e.sim.entry ? +e.sim.entry.price : 0);
-        unreal += e.sim.qty * (mark - e.sim.avgCost);
-        equity += e.sim.qty * mark;
-        openCount += 1;
-      }
-    });
-    var totalPnL = equity - initial;
+    var ctx = _resolveCtx();
+    if (!ctx){ body.innerHTML = '<div class="portsim-review-empty">No data.</div>'; return; }
+    var initial = +ctx.initialEquity || 0;
+    var equity = +ctx.equity || 0;
+    var totalPnL = +ctx.totalPnL || 0;
     var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
-    var peak = +st.eqPeak || initial;
-    var maxDDDol = +st.eqMaxDD || 0;
+    var realized = +ctx.realized || 0;
+    var unreal = +ctx.unreal || 0;
+    var peak = +ctx.peak || initial;
+    var maxDDDol = +ctx.maxDDDol || 0;
     var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
-
-    var tickerRows = basket.map(function(e){
-      var legs = _legSnapshots(e);
-      var totalRealized = legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0);
-      var stops = legs.filter(function(l){ return l.exitReason === 'stop'; }).length;
-      var status = legs.length ? legs[legs.length - 1].exitReason : 'idle';
-      return { sym: e.symbol, legs: legs.length, realized: totalRealized, stops: stops, status: status };
+    var openCount = +ctx.openCount || 0;
+    var tickerRows = (ctx.basket || []).map(function(e){
+      return {
+        sym: e.symbol,
+        legs: (e.legs || []).length,
+        realized: +e.totalRealized || 0,
+        stops: +e.stops || 0,
+        status: e.status || 'idle'
+      };
     });
 
     body.innerHTML = ''
@@ -18398,24 +18541,31 @@ Sim.Ctrl = (function(){
       +   '</tbody>'
       + '</table>'
       + '<div class="portsim-review-notes">'
-      +   '<label for="portsim-review-portfolio-note">PORTFOLIO REVIEW NOTES</label>'
-      +   '<textarea id="portsim-review-portfolio-note" rows="6" placeholder="Overall review of this run — what went well, what didn&apos;t, lessons learned, sizing/timing observations…"></textarea>'
+      +   '<label for="portsim-review-portfolio-note">PORTFOLIO REVIEW NOTES' + (_viewOnly ? ' (read-only)' : '') + '</label>'
+      +   '<textarea id="portsim-review-portfolio-note" rows="6" placeholder="Overall review of this run — what went well, what didn&apos;t, lessons learned, sizing/timing observations…"' + (_viewOnly ? ' readonly' : '') + '></textarea>'
       + '</div>';
     var ta = document.getElementById('portsim-review-portfolio-note');
     if (ta){
       ta.value = _data.portfolio || '';
-      ta.addEventListener('input', function(){ _data.portfolio = ta.value; _markDirty(); });
+      if (!_viewOnly){
+        ta.addEventListener('input', function(){ _data.portfolio = ta.value; _markDirty(); });
+      }
     }
   }
 
   // ---------- index tab ----------
   function _renderIndexTab(body){
-    var st = window.PortSim._state;
+    var ctx = _resolveCtx() || {};
     body.innerHTML = ''
       + '<div class="portsim-review-charthost">'
-      +   '<div class="portsim-review-chartlabel">' + _esc((st && st.index) || 'INDEX') + ' · ' + _esc(st.startDate || '') + ' → ' + _esc(st.endDate || '') + '</div>'
+      +   '<div class="portsim-review-chartlabel">' + _esc(ctx.index || 'INDEX') + ' · ' + _esc(ctx.startDate || '') + ' → ' + _esc(ctx.endDate || '') + '</div>'
       +   '<div class="portsim-review-chart" id="portsim-review-chart-index"></div>'
       + '</div>';
+    if (_viewOnly){
+      var ph = document.getElementById('portsim-review-chart-index');
+      if (ph) ph.innerHTML = '<div class="portsim-review-chart-placeholder">📊 Chart unavailable for saved reviews — re-run the matching simulation to view it live.</div>';
+      return;
+    }
     setTimeout(function(){
       var host = document.getElementById('portsim-review-chart-index');
       if (host) _drawIndexChart(host);
@@ -18454,10 +18604,10 @@ Sim.Ctrl = (function(){
 
   // ---------- per-ticker tab ----------
   function _renderTickerTab(body, sym){
-    var st = window.PortSim._state;
-    var entry = (st.basket || []).filter(function(e){ return e.symbol === sym; })[0];
-    if (!entry){ body.innerHTML = '<div class="portsim-review-empty">No data for ' + _esc(sym) + '</div>'; return; }
-    var legs = _legSnapshots(entry);
+    var ctx = _resolveCtx();
+    var ctxEntry = ctx && (ctx.basket || []).filter(function(e){ return e.symbol === sym; })[0];
+    if (!ctxEntry){ body.innerHTML = '<div class="portsim-review-empty">No data for ' + _esc(sym) + '</div>'; return; }
+    var legs = ctxEntry.legs || [];
 
     body.innerHTML = ''
       + '<div class="portsim-review-tickerhead">'
@@ -18488,22 +18638,32 @@ Sim.Ctrl = (function(){
         }).join('') + '</tbody>'
       + '</table>'
       + '<div class="portsim-review-notes">'
-      +   '<label for="portsim-review-note-' + _esc(sym) + '">REVIEW NOTES — ' + _esc(sym) + '</label>'
-      +   '<textarea id="portsim-review-note-' + _esc(sym) + '" rows="6" placeholder="What did you learn about ' + _esc(sym) + '? Entry timing, stop placement, sizing, hold discipline…"></textarea>'
+      +   '<label for="portsim-review-note-' + _esc(sym) + '">REVIEW NOTES — ' + _esc(sym) + (_viewOnly ? ' (read-only)' : '') + '</label>'
+      +   '<textarea id="portsim-review-note-' + _esc(sym) + '" rows="6" placeholder="What did you learn about ' + _esc(sym) + '? Entry timing, stop placement, sizing, hold discipline…"' + (_viewOnly ? ' readonly' : '') + '></textarea>'
       + '</div>';
 
     var note = document.getElementById('portsim-review-note-' + sym);
     if (note){
       note.value = (_data.notes && _data.notes[sym]) || '';
-      note.addEventListener('input', function(){
-        _data.notes = _data.notes || {};
-        _data.notes[sym] = note.value;
-        _markDirty();
-      });
+      if (!_viewOnly){
+        note.addEventListener('input', function(){
+          _data.notes = _data.notes || {};
+          _data.notes[sym] = note.value;
+          _markDirty();
+        });
+      }
     }
+    if (_viewOnly){
+      var ph = document.getElementById('portsim-review-chart-' + sym);
+      if (ph) ph.innerHTML = '<div class="portsim-review-chart-placeholder">📊 Chart unavailable for saved reviews.</div>';
+      return;
+    }
+    // Live mode — pull bars from the active sim's basket entry
+    var st = window.PortSim._state;
+    var liveEntry = st && (st.basket || []).filter(function(e){ return e.symbol === sym; })[0];
     setTimeout(function(){
       var host = document.getElementById('portsim-review-chart-' + sym);
-      if (host) _drawTickerChart(host, entry, legs);
+      if (host && liveEntry) _drawTickerChart(host, liveEntry, legs);
     }, 30);
   }
 
@@ -18597,6 +18757,11 @@ Sim.Ctrl = (function(){
       return;
     }
     _data.savedAt = new Date().toISOString();
+    // Snapshot enough state to re-render the review later without an
+    // active sim (Load feature). Charts aren't included — the saved meta
+    // shows leg tables + notes; if you want the chart back you re-run
+    // the sim and the runId-keyed auto-load will rehydrate the notes.
+    try { _data.meta = _buildMeta(); } catch(e){ console.warn('[PortSim.Review] meta snapshot:', e); }
     var ok = _saveData(_runId, _data);
     if (ok){
       _dirty = false;
@@ -18608,8 +18773,13 @@ Sim.Ctrl = (function(){
     }
   }
 
-  function _buildMD(){
-    var st = window.PortSim._state;
+  // Snapshot enough live state to re-render the review later, even after
+  // the sim has exited. Per-ticker chart bars are intentionally NOT
+  // included (storage cost) — loaded reviews show leg tables + notes
+  // and a "chart unavailable" placeholder.
+  function _buildMeta(){
+    var st = window.PortSim && window.PortSim._state;
+    if (!st) return null;
     var basket = st.basket || [];
     var initial = +st.initialEquity || 0;
     var cash = +st.cash || 0;
@@ -18626,19 +18796,204 @@ Sim.Ctrl = (function(){
       }
     });
     var totalPnL = equity - initial;
-    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
     var peak = +st.eqPeak || initial;
     var maxDDDol = +st.eqMaxDD || 0;
+    return {
+      startDate: st.startDate || '',
+      endDate: st.endDate || '',
+      index: st.index || 'SPX',
+      initialEquity: initial,
+      cash: cash, equity: equity, realized: realized, unreal: unreal,
+      totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
+      basket: basket.map(function(e){
+        var legs = _legSnapshots(e);
+        return {
+          symbol: e.symbol,
+          legs: legs,
+          totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
+          stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
+          status: legs.length ? legs[legs.length - 1].exitReason : 'idle'
+        };
+      })
+    };
+  }
+
+  // Returns a stats+basket context object suitable for rendering tabs.
+  // In live mode it computes from _state; in view-only it reads from the
+  // loaded review's _data.meta. Renderers consume this uniformly.
+  function _resolveCtx(){
+    if (_viewOnly && _data && _data.meta) return _data.meta;
+    return _buildMeta();
+  }
+
+  // ---------- Load (picker) ----------
+  function _listSavedReviews(){
+    var out = [];
+    for (var i = 0; i < localStorage.length; i++){
+      var k = localStorage.key(i);
+      if (!k || k.indexOf(STORAGE_PREFIX) !== 0) continue;
+      var raw, val;
+      try { raw = localStorage.getItem(k); val = raw ? JSON.parse(raw) : null; } catch(e){ continue; }
+      if (!val) continue;
+      // Parse the runId tail for display: <prefix><sd>__<ed>__<sym1-sym2-...>
+      var rest = k.slice(STORAGE_PREFIX.length);
+      var parts = rest.split('__');
+      var sd = parts[0] || '';
+      var ed = parts[1] || '';
+      var syms = (parts[2] || '').split('-').filter(Boolean);
+      var notesCount = 0;
+      if (val.notes){
+        Object.keys(val.notes).forEach(function(s){
+          if (val.notes[s] && String(val.notes[s]).trim()) notesCount += 1;
+        });
+      }
+      var hasPortfolio = !!(val.portfolio && val.portfolio.trim());
+      var totalNotes = notesCount + (hasPortfolio ? 1 : 0);
+      out.push({
+        key: k, sd: sd, ed: ed, syms: syms,
+        savedAt: val.savedAt || '',
+        totalNotes: totalNotes,
+        hasMeta: !!val.meta,
+        meta: val.meta || null
+      });
+    }
+    out.sort(function(a, b){ return (b.savedAt || '').localeCompare(a.savedAt || ''); });
+    return out;
+  }
+
+  function _renderPicker(){
+    var picker = document.getElementById('portsim-review-picker');
+    if (!picker) return;
+    var entries = _listSavedReviews();
+    var listHTML;
+    if (!entries.length){
+      listHTML = '<div class="portsim-review-picker-empty">No saved reviews yet. Click 💾 SAVE while in any Trade Review to capture one.</div>';
+    } else {
+      listHTML = entries.map(function(e){
+        var ts = e.savedAt ? new Date(e.savedAt).toLocaleString() : '?';
+        var pnlStr = '';
+        if (e.meta && isFinite(+e.meta.totalPnL)){
+          var p = +e.meta.totalPnL;
+          var pcls = p > 0 ? 'is-pos' : (p < 0 ? 'is-neg' : '');
+          pnlStr = '<span class="portsim-review-picker-pnl ' + pcls + '">' + _moneyS(p) + '</span>';
+        }
+        return ''
+          + '<div class="portsim-review-picker-row" data-key="' + _esc(e.key) + '" tabindex="0">'
+          +   '<div class="portsim-review-picker-info">'
+          +     '<div class="portsim-review-picker-title">' + _esc(e.sd) + ' → ' + _esc(e.ed) + ' ' + pnlStr + '</div>'
+          +     '<div class="portsim-review-picker-syms">' + _esc(e.syms.join(', ') || '(no tickers)') + '</div>'
+          +     '<div class="portsim-review-picker-meta">' + e.totalNotes + ' note' + (e.totalNotes !== 1 ? 's' : '') + ' · saved ' + _esc(ts) + (e.hasMeta ? '' : ' · legacy (no meta)') + '</div>'
+          +   '</div>'
+          +   '<button type="button" class="portsim-review-picker-del" title="Delete this saved review">🗑</button>'
+          + '</div>';
+      }).join('');
+    }
+    picker.innerHTML = ''
+      + '<div class="portsim-review-picker-dialog">'
+      +   '<div class="portsim-review-picker-head">'
+      +     '<span>📂 Load Saved Review</span>'
+      +     '<button type="button" class="portsim-review-picker-close" title="Close">✕</button>'
+      +   '</div>'
+      +   '<div class="portsim-review-picker-list">' + listHTML + '</div>'
+      + '</div>';
+    picker.querySelector('.portsim-review-picker-close').addEventListener('click', _closePicker);
+    Array.prototype.slice.call(picker.querySelectorAll('.portsim-review-picker-row')).forEach(function(row){
+      row.addEventListener('click', function(){
+        _loadSavedReview(row.getAttribute('data-key'));
+      });
+    });
+    Array.prototype.slice.call(picker.querySelectorAll('.portsim-review-picker-del')).forEach(function(btn){
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var row = btn.closest('.portsim-review-picker-row');
+        var k = row && row.getAttribute('data-key');
+        if (!k) return;
+        if (confirm('Delete this saved review?\n\n' + k.slice(STORAGE_PREFIX.length))){
+          try { localStorage.removeItem(k); } catch(e){}
+          _renderPicker();
+        }
+      });
+    });
+  }
+
+  function _ensurePicker(){
+    var picker = document.getElementById('portsim-review-picker');
+    if (picker) return picker;
+    picker = document.createElement('div');
+    picker.id = 'portsim-review-picker';
+    picker.className = 'portsim-review-picker';
+    document.body.appendChild(picker);
+    picker.addEventListener('click', function(ev){ if (ev.target === picker) _closePicker(); });
+    return picker;
+  }
+  function _onLoad(){
+    _ensurePicker();
+    _renderPicker();
+    document.getElementById('portsim-review-picker').classList.add('is-open');
+  }
+  function _closePicker(){
+    var picker = document.getElementById('portsim-review-picker');
+    if (picker) picker.classList.remove('is-open');
+  }
+  function _loadSavedReview(key){
+    if (!key) return;
+    var loaded = _loadData(key);
+    if (!loaded){ alert('Could not load saved review.'); return; }
+
+    var st = window.PortSim && window.PortSim._state;
+    var liveActive = !!(st && st.active);
+    var liveRunId = liveActive ? _computeRunId(st) : null;
+
+    if (liveRunId === key){
+      _viewOnly = false;
+      _data = loaded;
+      _runId = liveRunId;
+      _ensureModal();
+      _modal.classList.add('is-open');
+      _modal.classList.remove('is-viewonly');
+      _populate();
+      _setStatus('Loaded · ' + (loaded.savedAt ? loaded.savedAt.replace('T',' ').slice(0,19) : ''), 'ok');
+    } else if (loaded.meta){
+      _viewOnly = true;
+      _data = loaded;
+      _runId = key;
+      _ensureModal();
+      _modal.classList.add('is-open');
+      _modal.classList.add('is-viewonly');
+      _populate();
+      _setStatus('Loaded (view-only) · ' + (loaded.savedAt ? loaded.savedAt.replace('T',' ').slice(0,19) : ''), 'ok');
+    } else {
+      // Legacy save (no meta) — can't render standalone
+      alert('This saved review has no captured stats (legacy save). Re-run the matching simulation and the notes will auto-load.');
+      return;
+    }
+    _closePicker();
+    _dirty = false;
+  }
+
+  function _buildMD(){
+    var ctx = _resolveCtx() || {};
+    var basket = ctx.basket || [];
+    var initial = +ctx.initialEquity || 0;
+    var equity = +ctx.equity || 0;
+    var realized = +ctx.realized || 0;
+    var unreal = +ctx.unreal || 0;
+    var openCount = +ctx.openCount || 0;
+    var totalPnL = +ctx.totalPnL || 0;
+    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
+    var peak = +ctx.peak || initial;
+    var maxDDDol = +ctx.maxDDDol || 0;
     var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
 
     var L = [];
     L.push('# Portfolio Simulation — Trade Review');
     L.push('');
-    L.push('- **Window:** ' + (st.startDate || '?') + ' → ' + (st.endDate || '?'));
-    L.push('- **Index benchmark:** ' + (st.index || 'SPX'));
+    L.push('- **Window:** ' + (ctx.startDate || '?') + ' → ' + (ctx.endDate || '?'));
+    L.push('- **Index benchmark:** ' + (ctx.index || 'SPX'));
     L.push('- **Tickers:** ' + basket.map(function(e){ return e.symbol; }).join(', '));
     L.push('- **Generated:** ' + new Date().toISOString());
     if (_data.savedAt) L.push('- **Last saved:** ' + _data.savedAt);
+    if (_viewOnly) L.push('- **Source:** loaded saved review (view-only)');
     L.push('');
     L.push('## Summary');
     L.push('');
@@ -18662,7 +19017,7 @@ Sim.Ctrl = (function(){
     L.push('## Per-Ticker Trades');
     L.push('');
     basket.forEach(function(e){
-      var legs = _legSnapshots(e);
+      var legs = e.legs || [];
       var totalRealized = legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0);
       L.push('### ' + e.symbol);
       L.push('');
@@ -18699,12 +19054,12 @@ Sim.Ctrl = (function(){
   }
 
   function _onExportMD(){
-    var st = window.PortSim._state;
+    var ctx = _resolveCtx() || {};
     var md = _buildMD();
     try {
       var blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
       var url = URL.createObjectURL(blob);
-      var fn = 'portsim_review_' + (st.startDate || 'x') + '_' + (st.endDate || 'x') + '.md';
+      var fn = 'portsim_review_' + (ctx.startDate || 'x') + '_' + (ctx.endDate || 'x') + '.md';
       var a = document.createElement('a');
       a.href = url;
       a.download = fn;
@@ -18728,9 +19083,9 @@ Sim.Ctrl = (function(){
   function _renderPrintAll(){
     var body = document.getElementById('portsim-review-body');
     if (!body) return;
-    var st = window.PortSim && window.PortSim._state;
-    if (!st) return;
-    var basket = st.basket || [];
+    var ctx = _resolveCtx();
+    if (!ctx) return;
+    var basket = ctx.basket || [];
 
     body.innerHTML = '';
 
@@ -18740,11 +19095,12 @@ Sim.Ctrl = (function(){
     cover.innerHTML = ''
       + '<h1 class="portsim-print-cover-title">Portfolio Simulation Review</h1>'
       + '<div class="portsim-print-cover-meta">'
-      +   '<div><strong>Window:</strong> ' + _esc(st.startDate || '?') + ' → ' + _esc(st.endDate || '?') + '</div>'
+      +   '<div><strong>Window:</strong> ' + _esc(ctx.startDate || '?') + ' → ' + _esc(ctx.endDate || '?') + '</div>'
       +   '<div><strong>Tickers:</strong> ' + basket.map(function(e){ return _esc(e.symbol); }).join(', ') + '</div>'
-      +   '<div><strong>Index:</strong> ' + _esc(st.index || 'SPX') + '</div>'
-      +   '<div><strong>Initial:</strong> ' + _money(+st.initialEquity || 0) + '</div>'
+      +   '<div><strong>Index:</strong> ' + _esc(ctx.index || 'SPX') + '</div>'
+      +   '<div><strong>Initial:</strong> ' + _money(+ctx.initialEquity || 0) + '</div>'
       +   '<div><strong>Generated:</strong> ' + new Date().toLocaleString() + '</div>'
+      + (_viewOnly ? '<div><strong>Source:</strong> loaded saved review (view-only)</div>' : '')
       + '</div>';
     body.appendChild(cover);
 
@@ -18763,7 +19119,7 @@ Sim.Ctrl = (function(){
     }
 
     addSection('Overview', function(host){ _renderOverview(host); });
-    addSection('Index · ' + (st.index || 'SPX'), function(host){ _renderIndexTab(host); });
+    addSection('Index · ' + (ctx.index || 'SPX'), function(host){ _renderIndexTab(host); });
     basket.forEach(function(e){
       addSection(e.symbol, function(host){ _renderTickerTab(host, e.symbol); });
     });
@@ -18839,24 +19195,35 @@ Sim.Ctrl = (function(){
   // ---------- public open/close ----------
   function open(){
     var st = window.PortSim && window.PortSim._state;
-    if (!st || !st.active){
-      alert('No active portfolio simulation. Start one first.');
-      return;
-    }
-    if (window.PortSim.Ctrl && typeof window.PortSim.Ctrl.pause === 'function'){
-      try { window.PortSim.Ctrl.pause(); } catch(e){}
-    }
-    _runId = _computeRunId(st);
-    var loaded = _loadData(_runId);
-    _data = loaded || { notes: {}, portfolio: '', savedAt: null };
-    _ensureModal();
-    _modal.classList.add('is-open');
-    _populate();
-    _dirty = false;
-    if (_data.savedAt){
-      _setStatus('Loaded saved review · ' + _data.savedAt.replace('T',' ').slice(0,19), 'ok');
+    if (st && st.active){
+      // Live mode — pause sim and load any matching saved review by runId
+      if (window.PortSim.Ctrl && typeof window.PortSim.Ctrl.pause === 'function'){
+        try { window.PortSim.Ctrl.pause(); } catch(e){}
+      }
+      _viewOnly = false;
+      _runId = _computeRunId(st);
+      var loaded = _loadData(_runId);
+      _data = loaded || { notes: {}, portfolio: '', savedAt: null };
+      _ensureModal();
+      _modal.classList.add('is-open');
+      _modal.classList.remove('is-viewonly');
+      _populate();
+      _dirty = false;
+      if (_data.savedAt){
+        _setStatus('Loaded saved review · ' + _data.savedAt.replace('T',' ').slice(0,19), 'ok');
+      } else {
+        _setStatus('', '');
+      }
     } else {
-      _setStatus('', '');
+      // No active sim — open in browse mode so the user can hit 📂 LOAD
+      _viewOnly = false;
+      _runId = null;
+      _data = { notes: {}, portfolio: '', savedAt: null };
+      _ensureModal();
+      _modal.classList.add('is-open');
+      _modal.classList.remove('is-viewonly');
+      _populate();
+      _setStatus('No active sim — click 📂 LOAD to browse saved reviews.', '');
     }
   }
   function close(){
@@ -18869,7 +19236,7 @@ Sim.Ctrl = (function(){
     if (_indexChart){ try { _indexChart.remove(); } catch(e){} _indexChart = null; }
   }
 
-  window.PortSim.Review = { open: open, close: close };
+  window.PortSim.Review = { open: open, close: close, openLoadPicker: _onLoad };
 
   // ---------- topbar button wiring (Summary + Review) ----------
   function _wireButtons(){
