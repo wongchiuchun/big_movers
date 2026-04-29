@@ -1830,13 +1830,31 @@
   /* Per-card hide (×): toggled by the hide button. Restored individually
      or in bulk via the transport-bar "Hidden (N)" pill. */
   .portcard.is-hidden{display:none;}
-  /* Drag affordance: the entire card is draggable, but we cue the user with
-     a subtle grab cursor on the header where the grip naturally lives. */
+  /* Drag affordance: cards are only draggable when the grid is in
+     reorder mode (toggled via the transport-bar "↕ Reorder" button).
+     Outside reorder mode the chart owns all pointer events so pan/zoom
+     work normally. */
   .portcard{cursor:auto;}
-  .portcard-header{cursor:grab;}
-  .portcard-header:active{cursor:grabbing;}
+  .portcard-header{cursor:default;}
+  #portsim-grid.is-reorder-mode .portcard{
+    cursor:grab;
+    outline:1px dashed var(--border-bright);
+    outline-offset:-3px;
+  }
+  #portsim-grid.is-reorder-mode .portcard:active{cursor:grabbing;}
+  /* In reorder mode, swallow pointer events on the chart canvas so the
+     drag never gets stolen by LWC's pan/zoom handlers. The card root
+     still receives the dragstart event because the wrapper passes it
+     through. */
+  #portsim-grid.is-reorder-mode .portcard-chart-wrap{pointer-events:none;}
   .portcard.is-dragging{opacity:0.45;}
   .portcard.is-drop-target{outline:2px dashed var(--accent);outline-offset:-2px;}
+  /* Reorder-mode toggle button: highlights when active. */
+  #portsim-toggle-reorder.is-active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#1b1b1b;
+  }
   /* Hide button (×) sits at the far right of the header. */
   .portcard-hide-btn{
     width:20px;height:20px;
@@ -11131,11 +11149,10 @@ Sim.Ctrl = (function(){
     const root = document.createElement('div');
     root.className = 'portcard';
     root.setAttribute('data-symbol', ticker || '');
-    // Native HTML5 drag-and-drop for reordering. Wired below; the grip is
-    // the symbol+badge area of the header so the user grabs the obvious
-    // "card title" zone — toolbars and form controls get isolated via
-    // dragstart-cancel handlers in PortSim.Reorder.
-    root.setAttribute('draggable', 'true');
+    // Drag is OFF by default so the LWC chart's pan/zoom isn't intercepted.
+    // PortSim.Reorder.setReorderMode(true) flips draggable="true" on every
+    // card when the user enters reorder mode via the transport-bar button.
+    root.setAttribute('draggable', 'false');
 
     // Header
     const header = document.createElement('div');
@@ -18532,6 +18549,31 @@ Sim.Ctrl = (function(){
   function _grid(){ return document.getElementById('portsim-grid'); }
   function _hiddenBtn(){ return document.getElementById('portsim-toggle-hidden'); }
   function _hiddenCountEl(){ return document.getElementById('portsim-hidden-count'); }
+  function _reorderBtn(){ return document.getElementById('portsim-toggle-reorder'); }
+
+  // Reorder-mode toggle. Off by default so chart pan/zoom isn't blocked.
+  // When on: every .portcard gets draggable="true" and the grid gets
+  // .is-reorder-mode (chart pointer-events disabled, grab cursor shown).
+  var _reorderOn = false;
+  function _setCardsDraggable(on){
+    var grid = _grid();
+    if (!grid) return;
+    grid.querySelectorAll('.portcard').forEach(function(c){
+      c.setAttribute('draggable', on ? 'true' : 'false');
+    });
+  }
+  function setReorderMode(on){
+    _reorderOn = !!on;
+    var grid = _grid();
+    if (grid) grid.classList.toggle('is-reorder-mode', _reorderOn);
+    _setCardsDraggable(_reorderOn);
+    var btn = _reorderBtn();
+    if (btn){
+      btn.classList.toggle('is-active', _reorderOn);
+      btn.textContent = _reorderOn ? '✓ Done' : '↕ Reorder';
+    }
+  }
+  function isReorderMode(){ return _reorderOn; }
 
   // ---- Hide / restore ----
   function _hiddenSymbols(){
@@ -18612,6 +18654,7 @@ Sim.Ctrl = (function(){
   var _dragSrc = null;
 
   function _onDragStart(ev){
+    if (!_reorderOn) { ev.preventDefault(); return; }
     var card = ev.target && ev.target.closest && ev.target.closest('.portcard');
     if (!card) return;
     // Don't start a drag if the user grabbed an interactive element inside
@@ -18703,6 +18746,11 @@ Sim.Ctrl = (function(){
       btn._reorderWired = true;
       btn.addEventListener('click', restoreAll);
     }
+    var rbtn = _reorderBtn();
+    if (rbtn && !rbtn._wired){
+      rbtn._wired = true;
+      rbtn.addEventListener('click', function(){ setReorderMode(!_reorderOn); });
+    }
     _refreshHiddenPill();
 
     // Re-check the pill when the grid mutates (cards added/hidden externally).
@@ -18716,7 +18764,9 @@ Sim.Ctrl = (function(){
     hide: hide,
     restoreAll: restoreAll,
     refreshPill: _refreshHiddenPill,
-    syncBasketOrder: _syncBasketOrder
+    syncBasketOrder: _syncBasketOrder,
+    setReorderMode: setReorderMode,
+    isReorderMode: isReorderMode
   };
 
   if (document.readyState === 'loading'){
@@ -19069,6 +19119,7 @@ Sim.Ctrl = (function(){
       </span>
       <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
       <button id="portsim-toggle-inactive" class="portsim-tbtn" type="button" title="Hide cards with no active position">👁 Active Only</button>
+      <button id="portsim-toggle-reorder" class="portsim-tbtn" type="button" title="Drag cards to rearrange order (click again to exit)">↕ Reorder</button>
       <button id="portsim-toggle-hidden" class="portsim-tbtn" type="button" title="Restore hidden cards"><span id="portsim-hidden-count">0</span> Hidden ▾</button>
       <button id="portsim-btn-summary" class="portsim-tbtn" type="button" title="Show per-ticker summary (without exiting)">📊 Summary</button>
       <button id="portsim-btn-review" class="portsim-tbtn" type="button" title="Open trade review (charts + notes + export)">📝 Review</button>
