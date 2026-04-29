@@ -13879,10 +13879,22 @@ Sim.Ctrl = (function(){
           return;
         }
         window.Sim.queueAction(entry.sim, { type: 'add', qty: qty, price: price });
+        // Apply any new stop immediately — same path as the standalone
+        // movestop action, so the stop line on the chart and the STOP
+        // cell in the mini-panel/positions table update without waiting
+        // for the next tick. Queueing it through pendingActions left the
+        // visual "stuck" until the user advanced.
         if (form.newStop != null && isFinite(+form.newStop)){
-          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: +form.newStop, pct: 1.0 });
+          const ns = +form.newStop;
+          const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
+            ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, 1.0)
+            : false;
+          if (!ok){
+            window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: 1.0 });
+          }
         }
-        // Note: cash debit will fold on next tick when the action fires.
+        // Note: cash debit for the add itself folds on next tick when the
+        // queued add action fires; the stop level above is already live.
         _renderAll();
       });
     } else if (action === 'sell'){
