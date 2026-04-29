@@ -3381,6 +3381,36 @@
     }
     body.portsim-printing .portsim-review-stats strong,
     body.portsim-printing .portsim-review-stats label{color:#000 !important;}
+    /* Print export renders ALL sections (overview + index + every ticker)
+       stacked. Force each section onto its own page so the PDF/paper
+       output is one section per page. The first section keeps its
+       page-break-before:auto so the document doesn't start with a blank
+       leading page. */
+    body.portsim-printing .portsim-print-section{
+      page-break-inside: avoid;
+      break-inside: avoid;
+      page-break-before: always;
+      break-before: page;
+      padding: 16px 8px 0;
+    }
+    body.portsim-printing .portsim-print-section:first-of-type{
+      page-break-before: auto;
+      break-before: auto;
+    }
+    body.portsim-printing .portsim-print-h2{
+      font-family: var(--display, serif);
+      font-size: 22px;
+      margin: 0 0 12px;
+      color: #000 !important;
+      border-bottom: 2px solid #333;
+      padding-bottom: 6px;
+    }
+    body.portsim-printing .portsim-review-chart{
+      min-height: 380px !important;
+    }
+    body.portsim-printing .portsim-review-notes textarea{
+      min-height: 90px;
+    }
   }
   /* ============ PORTSIM TRACK P: Trade Review Modal Styles — END ============ */
 </style>
@@ -18459,13 +18489,70 @@ Sim.Ctrl = (function(){
     }
   }
 
+  // Render every tab (Overview + Index + every ticker) into the review body
+  // as stacked sections with unique chart hosts. Used only by Print so the
+  // exported PDF/paper output contains the full review, not just whichever
+  // tab happens to be active.
+  function _renderPrintAll(){
+    var body = document.getElementById('portsim-review-body');
+    if (!body) return;
+    var st = window.PortSim && window.PortSim._state;
+    if (!st) return;
+    var basket = st.basket || [];
+
+    body.innerHTML = '';
+
+    function addSection(title, renderInto){
+      var sec = document.createElement('section');
+      sec.className = 'portsim-print-section';
+      var h = document.createElement('h2');
+      h.className = 'portsim-print-h2';
+      h.textContent = title;
+      sec.appendChild(h);
+      var inner = document.createElement('div');
+      inner.className = 'portsim-print-inner';
+      sec.appendChild(inner);
+      body.appendChild(sec);
+      try { renderInto(inner); } catch(e){ console.error('[PortSim.Review] print section:', title, e); }
+    }
+
+    addSection('Overview', function(host){ _renderOverview(host); });
+    addSection('Index — ' + (st.index || 'SPX'), function(host){ _renderIndexTab(host); });
+    basket.forEach(function(e){
+      addSection(e.symbol, function(host){ _renderTickerTab(host, e.symbol); });
+    });
+  }
+
   function _onPrint(){
+    var body = document.getElementById('portsim-review-body');
+    if (!body) return;
+    // Snapshot the currently visible tab so we can restore the normal single-
+    // tab view after the print dialog is dismissed.
+    var prevTab = _activeTab;
+    var savedHTML = body.innerHTML;
     document.body.classList.add('portsim-printing');
+    _renderPrintAll();
+    // Charts are drawn inside setTimeout(..., 30) blocks by the per-tab
+    // renderers, so wait long enough for the last one's LWC paint to settle
+    // before triggering the browser's print dialog.
+    var PRINT_DELAY = 600;
+    var afterPrint = function(){
+      // Restore previous single-tab view. _setTab will re-render fresh, so
+      // the savedHTML restore is just a defensive reset for the rare case
+      // where _setTab fails (e.g. previously-active tab no longer exists).
+      try { body.innerHTML = savedHTML; } catch(e){}
+      try { _setTab(prevTab || 'overview'); } catch(e){}
+      document.body.classList.remove('portsim-printing');
+      window.removeEventListener('afterprint', afterPrint);
+    };
+    window.addEventListener('afterprint', afterPrint);
     setTimeout(function(){
       try { window.print(); }
-      catch(e){ console.error('[PortSim.Review] print:', e); }
-      setTimeout(function(){ document.body.classList.remove('portsim-printing'); }, 500);
-    }, 50);
+      catch(e){ console.error('[PortSim.Review] print:', e); afterPrint(); return; }
+      // Some browsers (notably Safari) don't fire `afterprint` reliably —
+      // belt-and-suspenders timeout restore.
+      setTimeout(afterPrint, 1500);
+    }, PRINT_DELAY);
   }
 
   // ---------- public open/close ----------
