@@ -11187,6 +11187,7 @@ Sim.Ctrl = (function(){
       ['VALUE',    'value',    '—'],
       ['AVG',      'avg',      '—'],
       ['STOP',     'stop',     '—'],
+      ['RISK',     'risk',     '—'],
       ['LEG P&L',  'legPnL',   '—'],
       ['TOTAL',    'totalPnL', '—'],
     ];
@@ -11500,6 +11501,11 @@ Sim.Ctrl = (function(){
       mapField('value', (v) => typeof v === 'number' ? _fmtMoney(v) : String(v));
       mapField('avg', (v) => typeof v === 'number' ? _fmtPx(v) : String(v));
       mapField('stop', (v) => typeof v === 'number' ? _fmtPx(v) : String(v));
+      mapField(
+        'risk',
+        (v) => typeof v === 'number' ? '-' + _fmtMoney(v) : String(v),
+        (v) => (typeof v === 'number' && v > 0) ? 'is-down' : ''
+      );
       mapField(
         'legPnL',
         (v) => typeof v === 'number' ? _fmtMoney(v) : String(v),
@@ -13338,13 +13344,13 @@ Sim.Ctrl = (function(){
   function _miniPanelSnapshot(entry){
     const sim = entry.sim;
     if (!sim) {
-      return { posState: 'idle', qty: '', value: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
+      return { posState: 'idle', qty: '', value: '', avg: '', stop: '', risk: '', legPnL: '', totalPnL: '' };
     }
     const bars = entry.bars;
     let derived = null;
     try { derived = window.Sim.computeDerived(sim, bars); } catch(e){ derived = null; }
     if (!derived) {
-      return { posState: 'idle', qty: '', value: '', avg: '', stop: '', legPnL: '', totalPnL: '' };
+      return { posState: 'idle', qty: '', value: '', avg: '', stop: '', risk: '', legPnL: '', totalPnL: '' };
     }
     const closed = !!derived.closed;
     const stoppedOut = !!derived.stoppedOut;
@@ -13360,12 +13366,22 @@ Sim.Ctrl = (function(){
     const value = (derived.qty > 0 && mark != null && isFinite(mark))
       ? derived.qty * mark
       : '';
+    // Open risk for this position = qty × max(0, mark − activeStop). Same
+    // formula the portfolio-level OPEN RISK stat uses, so per-card cells
+    // sum to the portfolio total.
+    let risk = '';
+    if (derived.qty > 0 && mark != null && isFinite(mark)
+        && derived.currentStop != null && isFinite(derived.currentStop)){
+      const dist = +mark - +derived.currentStop;
+      risk = (dist > 0) ? derived.qty * dist : 0;
+    }
     return {
       posState: posState,
       qty: derived.qty,
       value: value,
       avg: derived.avgCost,
       stop: derived.currentStop,
+      risk: risk,
       legPnL: derived.totalPnL,
       totalPnL: derived.cumulativePnL != null ? derived.cumulativePnL : derived.totalPnL
     };
@@ -14257,6 +14273,7 @@ Sim.Ctrl = (function(){
         value: typeof snap.value === 'number' ? snap.value : '',
         avg: typeof snap.avg === 'number' ? snap.avg : '',
         stop: typeof snap.stop === 'number' ? snap.stop : '',
+        risk: typeof snap.risk === 'number' ? snap.risk : '',
         legPnL: typeof snap.legPnL === 'number' ? snap.legPnL : '',
         totalPnL: typeof snap.totalPnL === 'number' ? snap.totalPnL : ''
       });
@@ -16685,6 +16702,14 @@ Sim.Ctrl = (function(){
       giveBack = sim._mfeVal - totalPnL;
     }
     var value = (mark != null && isFinite(mark)) ? sim.qty * mark : null;
+    var stopPx = _activeStopPrice(sim);
+    // Open risk = qty × max(0, mark − activeStop). Same formula as the
+    // portfolio-level OPEN RISK so the per-row sum matches the header.
+    var risk = null;
+    if (mark != null && isFinite(mark) && stopPx != null && isFinite(stopPx)){
+      var dist = +mark - +stopPx;
+      risk = (dist > 0) ? sim.qty * dist : 0;
+    }
     return {
       entry: entry,
       symbol: entry.symbol,
@@ -16692,7 +16717,8 @@ Sim.Ctrl = (function(){
       value: value,
       avg: sim.avgCost,
       mark: mark,
-      stop: _activeStopPrice(sim),
+      stop: stopPx,
+      risk: risk,
       pnl: totalPnL,
       r: rUnits,
       mfe: sim._mfeVal || 0,
@@ -16908,7 +16934,7 @@ Sim.Ctrl = (function(){
       '<table class="portsim-pos-table">' +
       '<thead><tr>' +
         '<th>SYM</th><th>QTY</th><th>VALUE</th><th>AVG</th><th>MARK</th>' +
-        '<th>STOP</th><th>P&amp;L</th><th>R</th>' +
+        '<th>STOP</th><th>RISK</th><th>P&amp;L</th><th>R</th>' +
         '<th>MFE</th><th>MAE</th><th>GIVE</th><th>DAYS</th>' +
       '</tr></thead>' +
       '<tbody>'
@@ -16917,6 +16943,10 @@ Sim.Ctrl = (function(){
       var pnlCls = _pnlClass(s.pnl);
       var rCls = _pnlClass(s.r);
       var giveCls = s.giveBack > 0 ? 'portsim-pos-pnl-neg' : '';
+      var riskCls = (s.risk != null && s.risk > 0) ? 'portsim-pos-pnl-neg' : '';
+      var riskCell = (s.risk != null && isFinite(s.risk))
+        ? (s.risk > 0 ? '-' + _fmt$(s.risk) : '—')
+        : '—';
       rows.push(
         '<tr data-symbol="' + s.symbol + '">' +
           '<td class="portsim-pos-sym">' + s.symbol + '</td>' +
@@ -16927,6 +16957,7 @@ Sim.Ctrl = (function(){
           '<td><button type="button" class="portsim-pos-stop-btn" data-action="movestop">' +
             (s.stop != null ? _fmtPx(s.stop) : '—') +
           '</button></td>' +
+          '<td class="' + riskCls + '">' + riskCell + '</td>' +
           '<td class="' + pnlCls + '">' + _fmt$Signed(s.pnl) + '</td>' +
           '<td class="' + rCls + '">' + _fmtR(s.r) + '</td>' +
           '<td>' + _fmt$(s.mfe) + '</td>' +
