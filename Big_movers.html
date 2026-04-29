@@ -1823,6 +1823,10 @@
   .portsim-grid.cols-8,
   .portsim-grid.cols-9,
   .portsim-grid.cols-10{grid-template-columns:repeat(2,1fr);}
+  /* "Active Only" toggle: hide cards without an open position. Visible cards
+     reflow into the existing grid columns automatically (CSS grid skips
+     display:none items but keeps the column count fixed). */
+  .portsim-grid.hide-inactive .portcard:not(.is-active){display:none;}
 
   .portcard{
     display:flex;
@@ -17212,7 +17216,7 @@ Sim.Ctrl = (function(){
   if (window.PortSim.Resize) return; // idempotent
 
   var STORAGE_KEY = 'bm_portsim_layout';
-  var DEFAULTS = { indexHeight: 300, positionsHeight: 340, indexHidden: false };
+  var DEFAULTS = { indexHeight: 300, positionsHeight: 340, indexHidden: false, hideInactiveCards: false };
   var MIN_INDEX_H = 80;
   var MAX_INDEX_H = 800;
   var MIN_POS_H = 80;
@@ -17234,6 +17238,8 @@ Sim.Ctrl = (function(){
     var pos = document.getElementById('portsim-positions');
     var shell = document.getElementById('portsim-shell');
     var btn = document.getElementById('portsim-toggle-index');
+    var grid = document.getElementById('portsim-grid');
+    var inactiveBtn = document.getElementById('portsim-toggle-inactive');
     if (idx) idx.style.height = _state.indexHeight + 'px';
     if (pos) pos.style.height = _state.positionsHeight + 'px';
     if (shell){
@@ -17241,6 +17247,14 @@ Sim.Ctrl = (function(){
       else shell.classList.remove('index-hidden');
     }
     if (btn) btn.textContent = _state.indexHidden ? '▼ Index' : '▲ Index';
+    if (grid){
+      if (_state.hideInactiveCards) grid.classList.add('hide-inactive');
+      else grid.classList.remove('hide-inactive');
+    }
+    if (inactiveBtn){
+      inactiveBtn.textContent = _state.hideInactiveCards ? '👁 Show All' : '👁 Active Only';
+      inactiveBtn.classList.toggle('is-active', !!_state.hideInactiveCards);
+    }
   }
 
   function _bindHandle(handle, target, key, minH, maxH){
@@ -17284,6 +17298,11 @@ Sim.Ctrl = (function(){
     _applyLayout();
     _save();
   }
+  function _toggleHideInactive(){
+    _state.hideInactiveCards = !_state.hideInactiveCards;
+    _applyLayout();
+    _save();
+  }
 
   function init(){
     _applyLayout();
@@ -17299,12 +17318,18 @@ Sim.Ctrl = (function(){
       btn._portsimBound = true;
       btn.addEventListener('click', _toggleIndex);
     }
+    var inactiveBtn = document.getElementById('portsim-toggle-inactive');
+    if (inactiveBtn && !inactiveBtn._portsimBound){
+      inactiveBtn._portsimBound = true;
+      inactiveBtn.addEventListener('click', _toggleHideInactive);
+    }
   }
 
   window.PortSim.Resize = {
     init: init,
     apply: _applyLayout,
     toggleIndex: _toggleIndex,
+    toggleHideInactive: _toggleHideInactive,
     state: _state
   };
 
@@ -18593,6 +18618,7 @@ Sim.Ctrl = (function(){
         <button class="portsim-spill" data-speed="5" type="button">5×</button>
       </span>
       <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
+      <button id="portsim-toggle-inactive" class="portsim-tbtn" type="button" title="Hide cards with no active position">👁 Active Only</button>
       <button id="portsim-btn-summary" class="portsim-tbtn" type="button" title="Show per-ticker summary (without exiting)">📊 Summary</button>
       <button id="portsim-btn-review" class="portsim-tbtn" type="button" title="Open trade review (charts + notes + export)">📝 Review</button>
       <button id="portsim-btn-export" class="portsim-tbtn" type="button" title="Export portfolio simulation results as CSV">↓ Export</button>
