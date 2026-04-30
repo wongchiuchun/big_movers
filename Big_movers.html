@@ -2694,6 +2694,14 @@
     letter-spacing:0.08em;
     color:var(--muted);
   }
+  .portsim-equity-day{
+    font-family:var(--mono);
+    font-size:9px;
+    color:var(--text-2);
+    letter-spacing:0.05em;
+    margin-left:auto;
+    padding-right:8px;
+  }
   .portsim-equity-collapse{
     background:transparent;
     color:var(--text-2);
@@ -13803,6 +13811,13 @@ Sim.Ctrl = (function(){
 
       if (dayNumEl && stats.day       != null) dayNumEl.textContent = String(stats.day|0);
       if (dayDtEl  && stats.date      != null) dayDtEl.textContent  = String(stats.date || '—');
+
+      // Mirror the day count into the section-2 (equity) header so the user
+      // can read return × elapsed time without glancing back to the topbar.
+      const eqDayEl = _q('portsim-equity-day');
+      if (eqDayEl && stats.day != null){
+        eqDayEl.textContent = 'Day ' + (stats.day|0);
+      }
     }
 
     function setPlaying(isPlaying){
@@ -15321,6 +15336,30 @@ Sim.Ctrl = (function(){
       _recomputeRealizedFromCash();
       _renderAll();
     }
+    // Sim window — actual played span, not the configured end. If the user
+    // exits early, end = last unifiedDate played; otherwise end = unifiedDates[playIdx].
+    const _firstDate = (_state.unifiedDates && _state.unifiedDates[0]) || _state.startDate || null;
+    const _lastDate  = (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.endDate || null;
+
+    // Buy-and-hold return on a bars array clipped to [first, last]: takes the
+    // first bar at-or-after `first` and the last bar at-or-before `last`,
+    // returns pct change. null when either anchor can't be found.
+    function _bhPctOver(bars, first, last){
+      if (!Array.isArray(bars) || !bars.length || !first || !last) return null;
+      let i0 = -1, i1 = -1;
+      for (let i = 0; i < bars.length; i++){
+        const t = bars[i] && (bars[i].time || bars[i].date);
+        if (!t) continue;
+        if (i0 < 0 && t >= first) i0 = i;
+        if (t <= last) i1 = i;
+      }
+      if (i0 < 0 || i1 < 0 || i1 < i0) return null;
+      const c0 = +bars[i0].close, c1 = +bars[i1].close;
+      if (!isFinite(c0) || c0 <= 0 || !isFinite(c1)) return null;
+      return ((c1 - c0) / c0) * 100;
+    }
+    const _indexReturnPct = _bhPctOver(_state.indexBars, _firstDate, _lastDate);
+
     let equity = _state.cash;
     let unreal = 0;
     const rows = _state.basket.map(function(e){
@@ -15353,13 +15392,15 @@ Sim.Ctrl = (function(){
         }
       }
       const avgR = rs.length ? rs.reduce(function(s, x){ return s + x; }, 0) / rs.length : 0;
+      const bhPct = _bhPctOver(e.bars, _firstDate, _lastDate);
       return {
         symbol: e.symbol,
         legs: legs,
         realized: _r2(realized),
         avgR: Math.round(avgR * 100) / 100,
         stops: stops,
-        status: status
+        status: status,
+        bhPct: bhPct
       };
     });
     equity = _r2(equity);
@@ -15395,9 +15436,25 @@ Sim.Ctrl = (function(){
     _addLine(summary, 'Total return',
       (totalReturn >= 0 ? '+' : '') + totalReturn.toFixed(2) + '%',
       totalReturn >= 0 ? 'var(--green)' : 'var(--red)');
+    // Benchmark: buy-and-hold return on the active index over the same window.
+    if (_indexReturnPct != null){
+      const idxLabel = (_state.index || 'Index') + ' B&H';
+      const idxColor = _indexReturnPct >= 0 ? 'var(--green)' : 'var(--red)';
+      _addLine(summary, idxLabel,
+        (_indexReturnPct >= 0 ? '+' : '') + _indexReturnPct.toFixed(2) + '%',
+        idxColor);
+      // Alpha = total return − index return. Useful at-a-glance "did I beat the tape".
+      const alpha = totalReturn - _indexReturnPct;
+      _addLine(summary, 'Alpha (vs ' + (_state.index || 'index') + ')',
+        (alpha >= 0 ? '+' : '') + alpha.toFixed(2) + '%',
+        alpha >= 0 ? 'var(--green)' : 'var(--red)');
+    }
     _addLine(summary, 'Realized P&L', '$' + _state.realizedPnL.toLocaleString());
     _addLine(summary, 'Max drawdown', '$' + _state.eqMaxDD.toLocaleString(), 'var(--red)');
     _addLine(summary, 'Total stop-outs', String(totalStops));
+    if (_firstDate && _lastDate){
+      _addLine(summary, 'Sim window', _firstDate + ' → ' + _lastDate);
+    }
     dialog.appendChild(summary);
 
     const table = _mkEl('table');
@@ -15405,7 +15462,7 @@ Sim.Ctrl = (function(){
     const thead = _mkEl('thead');
     const trh = _mkEl('tr');
     _setStyle(trh, 'text-align:left;border-bottom:1px solid var(--border);');
-    ['Symbol','Legs','Realized P&L','Avg R','Stops','Status'].forEach(function(label){
+    ['Symbol','Legs','Realized P&L','Avg R','Stops','B&H %','Status'].forEach(function(label){
       const th = _mkEl('th', null, label);
       _setStyle(th, 'padding:4px 8px;');
       trh.appendChild(th);
@@ -15428,10 +15485,16 @@ Sim.Ctrl = (function(){
       _setStyle(tdR, 'padding:4px 8px;');
       const tdStops = _mkEl('td', null, String(r.stops));
       _setStyle(tdStops, 'padding:4px 8px;');
+      // Buy-and-hold return for this ticker over the sim window.
+      const bhTxt = (r.bhPct == null) ? '—' : (r.bhPct >= 0 ? '+' : '') + r.bhPct.toFixed(2) + '%';
+      const bhColor = (r.bhPct == null) ? 'var(--text-2)' :
+                      (r.bhPct > 0 ? 'var(--green)' : (r.bhPct < 0 ? 'var(--red)' : 'var(--text)'));
+      const tdBH = _mkEl('td', null, bhTxt);
+      _setStyle(tdBH, 'padding:4px 8px;color:' + bhColor + ';');
       const tdStatus = _mkEl('td', null, r.status);
       _setStyle(tdStatus, 'padding:4px 8px;color:var(--text-2);');
       tr.appendChild(tdSym); tr.appendChild(tdLegs); tr.appendChild(tdReal);
-      tr.appendChild(tdR); tr.appendChild(tdStops); tr.appendChild(tdStatus);
+      tr.appendChild(tdR); tr.appendChild(tdStops); tr.appendChild(tdBH); tr.appendChild(tdStatus);
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -20445,6 +20508,7 @@ Sim.Ctrl = (function(){
     <div id="portsim-equity-wrap" class="portsim-equity-wrap">
       <div class="portsim-equity-header">
         <span class="portsim-equity-title">Cumulative Return</span>
+        <span class="portsim-equity-day" id="portsim-equity-day">Day 0</span>
         <button id="portsim-equity-collapse" class="portsim-equity-collapse" type="button" title="Show / hide the return chart">▾</button>
       </div>
       <div class="portsim-equity-body">
