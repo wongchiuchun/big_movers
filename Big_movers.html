@@ -1674,6 +1674,9 @@
   .sim-stop-strategy-row input[type="number"]:disabled {
     opacity: 0.35; cursor: not-allowed;
   }
+  .sim-stop-strategy-row select.sim-stop-strategy-ema-period {
+    flex: 0 0 88px; min-width: 0;
+  }
   .sim-stop-strategy-suffix {
     color: var(--muted); font-family: var(--mono); font-size: 10px;
     white-space: nowrap; min-width: 24px;
@@ -3579,6 +3582,18 @@
      don't survive the print engine reliably). ===== */
   @page { size: A4 portrait; margin: 0.45in 0.5in; }
   @media print{
+    /* CRITICAL: base CSS sets `html, body { height:100%; overflow:hidden }`
+       to keep the app shell from scrolling. In print, that turns the document
+       into a single viewport-sized clip box — the print engine renders one
+       page and truncates everything past it. Reset both during print. */
+    html, body{
+      height:auto !important;
+      min-height:0 !important;
+      overflow:visible !important;
+      background:#fff !important;
+    }
+    /* Suppress the SVG noise overlay (position:fixed body::before). */
+    body::before{ display:none !important; content:none !important; }
     /* Hide everything that isn't the review modal. */
     body.portsim-printing > *{display:none !important;}
     body.portsim-printing #portsim-review-modal{
@@ -3591,7 +3606,14 @@
       display:block !important;
       background:#fff !important;
       height:auto !important;width:auto !important;padding:0 !important;
+      overflow:visible !important;
+      inset:auto !important;
     }
+    /* CRITICAL: dialog has `overflow:hidden` from base CSS to clip the modal
+       chrome on screen. In print that creates a block formatting context which
+       suppresses page-break-before on the section children — every page after
+       the first gets squashed onto page 1. Force overflow:visible so the
+       browser honours the per-section breaks. */
     body.portsim-printing .portsim-review-dialog{
       display:block !important;
       position:static !important;
@@ -3601,6 +3623,7 @@
       border:none !important;box-shadow:none !important;
       background:#fff !important;color:#111 !important;
       font-family:'Plus Jakarta Sans',-apple-system,sans-serif;
+      overflow:visible !important;
     }
     /* Strip modal chrome — head, tabs, status, action buttons. */
     body.portsim-printing .portsim-review-head,
@@ -4177,9 +4200,15 @@
                 <option value="manual">Manual</option>
                 <option value="pct">% below entry</option>
                 <option value="atr">ATR(14) ×</option>
+                <option value="ema">Below EMA</option>
                 <option value="swing5">Below 5-bar low</option>
                 <option value="swing10">Below 10-bar low</option>
                 <option value="base">Below base low</option>
+              </select>
+              <select id="sim-stop-strategy-ema-period" class="sim-stop-strategy-ema-period" style="display:none">
+                <option value="10">10 EMA</option>
+                <option value="20">20 EMA</option>
+                <option value="50">50 EMA</option>
               </select>
               <input type="number" step="0.1" min="0" id="sim-stop-strategy-k" placeholder="k">
               <span id="sim-stop-strategy-suffix" class="sim-stop-strategy-suffix"></span>
@@ -4285,8 +4314,14 @@
                 <option value="manual">Manual</option>
                 <option value="pct">% below current</option>
                 <option value="atr">ATR(14) ×</option>
+                <option value="ema">Below EMA</option>
                 <option value="swing5">Below 5-bar low</option>
                 <option value="swing10">Below 10-bar low</option>
+              </select>
+              <select id="sim-movestop-strategy-ema-period" class="sim-stop-strategy-ema-period" style="display:none">
+                <option value="10">10 EMA</option>
+                <option value="20">20 EMA</option>
+                <option value="50">50 EMA</option>
               </select>
               <input type="number" step="0.1" min="0" id="sim-movestop-strategy-k" placeholder="k">
               <span id="sim-movestop-strategy-suffix" class="sim-stop-strategy-suffix"></span>
@@ -4341,8 +4376,14 @@
                 <option value="manual">Manual</option>
                 <option value="pct">% below entry</option>
                 <option value="atr">ATR(14) ×</option>
+                <option value="ema">Below EMA</option>
                 <option value="swing5">Below 5-bar low</option>
                 <option value="swing10">Below 10-bar low</option>
+              </select>
+              <select id="sim-newleg-stop-strategy-ema-period" class="sim-stop-strategy-ema-period" style="display:none">
+                <option value="10">10 EMA</option>
+                <option value="20">20 EMA</option>
+                <option value="50">50 EMA</option>
               </select>
               <input type="number" step="0.1" min="0" id="sim-newleg-stop-strategy-k" placeholder="k">
               <span id="sim-newleg-stop-strategy-suffix" class="sim-stop-strategy-suffix"></span>
@@ -9673,7 +9714,25 @@ window.Sim = Sim;
     if (!isFinite(lo)) return null;
     return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
   }
-  Sim.StopRules = { pctBelow, atrAt, atrBelow, swingLowBelow, baseLowBelow, _findBarIdxByDate };
+  function emaAt(bars, idx, period){
+    if (!Array.isArray(bars) || idx == null || idx < 0) return null;
+    period = period || 10;
+    if (idx < period - 1) return null;
+    if (typeof window.calcEMA !== 'function') return null;
+    const arr = window.calcEMA(bars, period);
+    const offset = idx - (period - 1);
+    const entry = arr && arr[offset];
+    const v = entry && entry.value;
+    return isFinite(v) && v > 0 ? v : null;
+  }
+  function emaBelow(bars, idx, period, pctBelow){
+    const e = emaAt(bars, idx, period);
+    if (e == null) return null;
+    const pct = isFinite(pctBelow) ? pctBelow : 0;
+    if (pct < 0) return null;
+    return _round2(e * (1 - pct / 100));
+  }
+  Sim.StopRules = { pctBelow, atrAt, atrBelow, swingLowBelow, baseLowBelow, emaAt, emaBelow, _findBarIdxByDate };
 })();
 
 /* ---------- Sim.UI: modals (no innerHTML) ---------- */
@@ -9720,11 +9779,13 @@ window.Sim = Sim;
   function _wireStopStrategy(opts){
     const { stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl,
             priceEl, dateEl, lsKey, defaultK, includeBase,
+            emaPeriodEl,
             barsProvider, moveKeyProvider } = opts || {};
     if (!stratEl || !stopEl) return;
 
     let _suppressManualFlip = false;
-    const dK = defaultK || { pct: 7, atr: 1.5 };
+    const dK = defaultK || { pct: 7, atr: 1.5, ema: 0 };
+    if (dK.ema == null) dK.ema = 0;
 
     // Hide "Below base low" option in modals where it doesn't apply (newleg).
     if (!includeBase){
@@ -9739,13 +9800,18 @@ window.Sim = Sim;
       const opt = stratEl.querySelector('option[value="' + restored.type + '"]');
       if (opt) stratEl.value = restored.type;
       if (restored.k != null && stratKEl) stratKEl.value = restored.k;
+      if (restored.emaPeriod != null && emaPeriodEl){
+        const periodOpt = emaPeriodEl.querySelector('option[value="' + restored.emaPeriod + '"]');
+        if (periodOpt) emaPeriodEl.value = restored.emaPeriod;
+      }
     }
 
     function _persist(){
       try {
         localStorage.setItem(lsKey, JSON.stringify({
           type: stratEl.value,
-          k: stratKEl ? stratKEl.value : null
+          k: stratKEl ? stratKEl.value : null,
+          emaPeriod: emaPeriodEl ? emaPeriodEl.value : null
         }));
       } catch(_){}
     }
@@ -9760,7 +9826,7 @@ window.Sim = Sim;
 
     function _updateKVisibility(){
       const t = stratEl.value;
-      const useK = (t === 'pct' || t === 'atr');
+      const useK = (t === 'pct' || t === 'atr' || t === 'ema');
       if (stratKEl){
         stratKEl.disabled = !useK;
         if (useK && (stratKEl.value === '' || !isFinite(parseFloat(stratKEl.value)))){
@@ -9768,7 +9834,10 @@ window.Sim = Sim;
         }
       }
       if (stratSuffixEl){
-        stratSuffixEl.textContent = (t === 'pct') ? '%' : (t === 'atr' ? '× ATR' : '');
+        stratSuffixEl.textContent = (t === 'pct' || t === 'ema') ? '%' : (t === 'atr' ? '× ATR' : '');
+      }
+      if (emaPeriodEl){
+        emaPeriodEl.style.display = (t === 'ema') ? '' : 'none';
       }
     }
 
@@ -9786,6 +9855,10 @@ window.Sim = Sim;
       if (t === 'atr')    return Sim.StopRules.atrBelow(price, bars, idx, _kForType('atr'), 14);
       if (t === 'swing5') return Sim.StopRules.swingLowBelow(bars, idx, 5, 0.05);
       if (t === 'swing10')return Sim.StopRules.swingLowBelow(bars, idx, 10, 0.05);
+      if (t === 'ema'){
+        const period = parseInt(emaPeriodEl && emaPeriodEl.value, 10) || 10;
+        return Sim.StopRules.emaBelow(bars, idx, period, _kForType('ema'));
+      }
       if (t === 'base'){
         const mk = (typeof moveKeyProvider === 'function') ? moveKeyProvider() : null;
         return Sim.StopRules.baseLowBelow(bars, mk, null, 0.05);
@@ -9845,6 +9918,7 @@ window.Sim = Sim;
 
     stratEl.onchange = _applyStrategy;
     if (stratKEl) stratKEl.oninput = _applyStrategy;
+    if (emaPeriodEl) emaPeriodEl.onchange = _applyStrategy;
     // When the user manually edits the stop, drop back to "Manual".
     const _origStopInput = stopEl.oninput;
     stopEl.oninput = function(e){
@@ -9997,10 +10071,12 @@ window.Sim = Sim;
     const stratKEl = document.getElementById('sim-stop-strategy-k');
     const stratSuffixEl = document.getElementById('sim-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-stop-distance');
+    const emaPeriodEl = document.getElementById('sim-stop-strategy-ema-period');
     _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl, dateEl,
+      emaPeriodEl,
       lsKey: 'bm_sim_stop_strategy',
-      defaultK: { pct: 7, atr: 1.5 },
+      defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: true,
       // PortSim mode: prefer the per-card bars + moveKey passed via ctx.
       // Single-sim mode: fall back to window.currentBars / currentMoveRow.
@@ -10173,12 +10249,14 @@ window.Sim = Sim;
     const stratKEl = document.getElementById('sim-newleg-stop-strategy-k');
     const stratSuffixEl = document.getElementById('sim-newleg-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-newleg-stop-distance');
+    const emaPeriodEl = document.getElementById('sim-newleg-stop-strategy-ema-period');
     _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl,
+      emaPeriodEl,
       dateEl: null,
       dateProvider: function(){ return ctx.barDate || null; },
       lsKey: 'bm_sim_stop_strategy',
-      defaultK: { pct: 7, atr: 1.5 },
+      defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: false,
       // PortSim mode: prefer the per-card bars passed via ctx (the active
       // card's OHLCV). Single-sim mode: fall back to window.currentBars.
@@ -10320,6 +10398,7 @@ window.Sim = Sim;
     const stratKEl = document.getElementById('sim-movestop-strategy-k');
     const stratSuffixEl = document.getElementById('sim-movestop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-movestop-stop-distance');
+    const emaPeriodEl = document.getElementById('sim-movestop-strategy-ema-period');
     // Build a synthetic priceEl-like accessor that returns currentPrice — the
     // picker reads .value, so we use a tiny shim object.
     const _synthPriceEl = { get value(){ return isFinite(currentPrice) ? String(currentPrice) : ''; } };
@@ -10327,10 +10406,11 @@ window.Sim = Sim;
       stratEl, stratKEl, stratSuffixEl,
       stopEl: priceEl, stopDistEl,
       priceEl: _synthPriceEl,
+      emaPeriodEl,
       dateEl: null,
       dateProvider: function(){ return ctx.barDate || null; },
       lsKey: 'bm_sim_movestop_strategy',
-      defaultK: { pct: 5, atr: 1.5 },
+      defaultK: { pct: 5, atr: 1.5, ema: 0 },
       includeBase: false,
       barsProvider: function(){
         if (Array.isArray(ctx.cardBars) && ctx.cardBars.length) return ctx.cardBars;
