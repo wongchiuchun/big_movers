@@ -13305,12 +13305,14 @@ Sim.Ctrl = (function(){
         return;
       }
 
-      // Pick a random ~3-month window inside the year.
-      // Random start day in [Jan 1 .. Oct 1], window length 45–90 calendar days, clamp to year-end.
-      var startMonth = _randInt(0, 9);
+      // Pick a random 4–6 month window inside the year.
+      // Latest start month is Aug so that a min-120-day window doesn't get
+      // clipped against year-end (Aug 1 + 120 = Nov 29; with up to 180 days
+      // we can still bump into Dec 31 — the clamp below handles that).
+      var startMonth = _randInt(0, 7); // Jan..Aug
       var startDay = _randInt(1, 28);
       var startD = new Date(year, startMonth, startDay);
-      var winLen = _randInt(45, 90);
+      var winLen = _randInt(120, 180); // 4–6 months
       var endD = new Date(year, startMonth, startDay + winLen);
       var yearEnd = new Date(year, 11, 31);
       if (endD.getTime() > yearEnd.getTime()) endD = yearEnd;
@@ -20345,10 +20347,10 @@ Sim.Ctrl = (function(){
         </div>
         <div class="fetch-field">
           <label>&nbsp;</label>
-          <button type="button" id="portsim-rand-btn" title="Pick N random tickers from this year and a random ~3-month window">🎲 Randomize</button>
+          <button type="button" id="portsim-rand-btn" title="Pick N random tickers from this year and a random 4–6 month window">🎲 Randomize</button>
         </div>
       </div>
-      <div class="portsim-randomize-hint">Picks N random tickers that had a big move in the chosen year (from <code>big_movers_result.csv</code>) plus a random ~45–90 day window inside the year. Replaces current basket rows and dates.</div>
+      <div class="portsim-randomize-hint">Picks N random tickers that had a big move in the chosen year (from <code>big_movers_result.csv</code>) plus a random 4–6 month window inside the year. Replaces current basket rows and dates.</div>
     </div>
 
     <div class="portsim-section-title">
