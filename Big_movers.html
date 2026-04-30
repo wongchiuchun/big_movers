@@ -2672,11 +2672,54 @@
   }
   .portsim-equity-wrap{
     display:flex;
-    align-items:stretch;
-    gap:8px;
+    flex-direction:column;
+    gap:4px;
     padding:6px 0 8px;
     margin-bottom:6px;
     border-bottom:1px solid var(--border);
+    /* Cap the chart so it doesn't sprawl full-width with sparse data. */
+    max-width:760px;
+  }
+  .portsim-equity-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:0 4px;
+  }
+  .portsim-equity-title{
+    font-family:var(--mono);
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+  }
+  .portsim-equity-collapse{
+    background:transparent;
+    color:var(--text-2);
+    border:1px solid var(--border);
+    border-radius:3px;
+    width:22px;height:18px;
+    cursor:pointer;
+    font-size:10px;
+    line-height:1;
+    padding:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:background 0.12s,color 0.12s,border-color 0.12s;
+  }
+  .portsim-equity-collapse:hover{
+    background:var(--bg3);color:var(--text);border-color:var(--border-bright);
+  }
+  .portsim-equity-body{
+    display:flex;
+    align-items:stretch;
+    gap:8px;
+  }
+  .portsim-equity-wrap.is-collapsed .portsim-equity-body{ display:none; }
+  .portsim-equity-wrap.is-collapsed{
+    border-bottom:none;
+    margin-bottom:2px;
+    padding-bottom:2px;
   }
   .portsim-equity-chart{
     flex:1 1 auto;
@@ -13682,6 +13725,27 @@ Sim.Ctrl = (function(){
         });
       });
 
+      // Equity-chart collapse toggle. Persists user preference in localStorage
+      // so a session that collapses the chart stays collapsed across page
+      // reloads / new sims.
+      const eqWrap = _q('portsim-equity-wrap');
+      const eqBtn  = _q('portsim-equity-collapse');
+      const EQ_LS  = 'bm_portsim_equity_collapsed';
+      function _applyEqCollapsed(c){
+        if (!eqWrap) return;
+        eqWrap.classList.toggle('is-collapsed', !!c);
+        if (eqBtn) eqBtn.textContent = c ? '▸' : '▾';
+      }
+      try { _applyEqCollapsed(localStorage.getItem(EQ_LS) === '1'); } catch(_){}
+      if (eqBtn && !eqBtn._portsimBound){
+        eqBtn._portsimBound = true;
+        eqBtn.addEventListener('click', () => {
+          const willCollapse = !eqWrap.classList.contains('is-collapsed');
+          _applyEqCollapsed(willCollapse);
+          try { localStorage.setItem(EQ_LS, willCollapse ? '1' : '0'); } catch(_){}
+        });
+      }
+
       _wired = true;
     }
 
@@ -18171,6 +18235,16 @@ Sim.Ctrl = (function(){
       try { s.update({ time: date, value: pt.positions[e.symbol] }); } catch(err){}
     });
     _curve.push(pt);
+
+    // Auto-fit: with only ~40 data points and a 600-700px wide chart, default
+    // bar spacing makes the line cluster against the right edge with empty
+    // grid on the left. fitContent stretches the data across the visible
+    // range, growing as the sim plays. Skip when collapsed (chart is hidden,
+    // host has zero size — fitContent would no-op or warn).
+    var wrap = document.getElementById('portsim-equity-wrap');
+    if (wrap && !wrap.classList.contains('is-collapsed')){
+      try { _equityChart.timeScale().fitContent(); } catch(_){}
+    }
   }
 
   function _renderEquityLegend(){
@@ -20369,8 +20443,14 @@ Sim.Ctrl = (function(){
   <div id="portsim-positions" class="portsim-positions">
     <div id="portsim-positions-stats"></div>
     <div id="portsim-equity-wrap" class="portsim-equity-wrap">
-      <div id="portsim-equity-chart" class="portsim-equity-chart"></div>
-      <div id="portsim-equity-legend" class="portsim-equity-legend"></div>
+      <div class="portsim-equity-header">
+        <span class="portsim-equity-title">Cumulative Return</span>
+        <button id="portsim-equity-collapse" class="portsim-equity-collapse" type="button" title="Show / hide the return chart">▾</button>
+      </div>
+      <div class="portsim-equity-body">
+        <div id="portsim-equity-chart" class="portsim-equity-chart"></div>
+        <div id="portsim-equity-legend" class="portsim-equity-legend"></div>
+      </div>
     </div>
     <div id="portsim-positions-table"><div class="portsim-positions-empty">No open positions</div></div>
   </div>
