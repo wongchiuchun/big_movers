@@ -12665,10 +12665,9 @@ Sim.Ctrl = (function(){
       }
     });
 
-    var preEntries = tickers.filter(function (t) { return t && t.symbol && t.hasPreEntry; });
-    if (nonEmpty.length > 0 && preEntries.length === 0) {
-      errors.push({ path: 'preEntry', msg: 'At least 1 ticker must have a pre-declared entry' });
-    }
+    // Pre-declared entry is optional — the user can start the sim flat and
+    // open positions mid-play by clicking cards. Earlier this required ≥1
+    // pre-entry; relaxed so users can run "watch first, react" sessions.
 
     // Per-row pre-entry validation + cost roll-up
     var totalCost = 0;
@@ -20355,7 +20354,7 @@ Sim.Ctrl = (function(){
 
     <div class="portsim-section-title">
       <span>Basket</span>
-      <span class="portsim-section-hint">Up to 10 tickers · at least 1 needs a pre-declared entry</span>
+      <span class="portsim-section-hint">Up to 10 tickers · pre-declared entries are optional</span>
     </div>
 
     <datalist id="portsim-ticker-options"><!-- populated lazily on Setup.open() from /api/results --></datalist>
