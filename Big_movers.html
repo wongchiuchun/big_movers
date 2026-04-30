@@ -1655,6 +1655,34 @@
   .sim-pill-active:hover { color: var(--bg); border-color: var(--accent); }
   .sim-pill-row { display: flex; gap: 6px; margin-top: 4px; }
   .fetch-modal.sim-modal-wide { width: 520px; }
+  /* Stop-strategy picker (sim-setup + sim-newleg modals) */
+  .sim-stop-strategy-row {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sim-stop-strategy-row select {
+    flex: 1 1 auto; min-width: 0;
+    background: var(--bg3); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 4px 6px; font: inherit; font-size: 12px;
+  }
+  .sim-stop-strategy-row input[type="number"] {
+    flex: 0 0 70px;
+    background: var(--bg3); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 4px 6px; font: inherit; font-size: 12px;
+  }
+  .sim-stop-strategy-row input[type="number"]:disabled {
+    opacity: 0.35; cursor: not-allowed;
+  }
+  .sim-stop-strategy-suffix {
+    color: var(--muted); font-family: var(--mono); font-size: 10px;
+    white-space: nowrap; min-width: 24px;
+  }
+  .sim-stop-distance {
+    margin-top: 4px; font-family: var(--mono); font-size: 10px;
+    color: var(--text-2); min-height: 12px;
+  }
+  .sim-stop-distance.is-rule { color: var(--accent); }
   .sim-readout {
     padding: 8px 12px;
     background: var(--bg3);
@@ -2258,6 +2286,23 @@
   }
   .portsim-row-peek:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
   .portsim-row-peek:disabled { opacity: 0.4; cursor: not-allowed; }
+  /* 📥 Fetch-data button — same shell as peek, distinct hover tint */
+  .portsim-row-fetch {
+    background: var(--bg3); color: var(--text-2);
+    border: 1px solid var(--border); border-radius: 4px;
+    width: 28px; height: 28px;
+    cursor: pointer; font-size: 13px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .portsim-row-fetch:hover { background: var(--green); color: var(--bg); border-color: var(--green); }
+  .portsim-row-fetch:disabled { opacity: 0.4; cursor: not-allowed; }
+  .portsim-row-fetch.is-busy { animation: portsim-row-fetch-pulse 1.1s ease-in-out infinite; }
+  @keyframes portsim-row-fetch-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
   .portsim-peek-shell {
     width: min(900px, 92vw);
     max-width: 92vw;
@@ -4075,8 +4120,24 @@
             <input type="number" id="sim-size-value" style="margin-top:6px;">
           </div>
           <div class="fetch-field">
+            <label for="sim-stop-strategy">Stop strategy</label>
+            <div class="sim-stop-strategy-row">
+              <select id="sim-stop-strategy">
+                <option value="manual">Manual</option>
+                <option value="pct">% below entry</option>
+                <option value="atr">ATR(14) ×</option>
+                <option value="swing5">Below 5-bar low</option>
+                <option value="swing10">Below 10-bar low</option>
+                <option value="base">Below base low</option>
+              </select>
+              <input type="number" step="0.1" min="0" id="sim-stop-strategy-k" placeholder="k">
+              <span id="sim-stop-strategy-suffix" class="sim-stop-strategy-suffix"></span>
+            </div>
+          </div>
+          <div class="fetch-field">
             <label for="sim-stop-price">Stop price</label>
             <input type="number" step="0.01" id="sim-stop-price">
+            <div class="sim-stop-distance" id="sim-stop-distance"></div>
           </div>
           <div class="fetch-field">
             <label for="sim-end-date">End date (optional · force close)</label>
@@ -4208,8 +4269,23 @@
             <input type="number" step="0.01" id="sim-newleg-price">
           </div>
           <div class="fetch-field">
+            <label for="sim-newleg-stop-strategy">Stop strategy</label>
+            <div class="sim-stop-strategy-row">
+              <select id="sim-newleg-stop-strategy">
+                <option value="manual">Manual</option>
+                <option value="pct">% below entry</option>
+                <option value="atr">ATR(14) ×</option>
+                <option value="swing5">Below 5-bar low</option>
+                <option value="swing10">Below 10-bar low</option>
+              </select>
+              <input type="number" step="0.1" min="0" id="sim-newleg-stop-strategy-k" placeholder="k">
+              <span id="sim-newleg-stop-strategy-suffix" class="sim-stop-strategy-suffix"></span>
+            </div>
+          </div>
+          <div class="fetch-field">
             <label for="sim-newleg-stop">Initial stop price</label>
             <input type="number" step="0.01" id="sim-newleg-stop">
+            <div class="sim-stop-distance" id="sim-newleg-stop-distance"></div>
           </div>
           <div class="sim-readout" id="sim-newleg-summary">
             <div>Risk per share: <strong>—</strong></div>
@@ -9446,6 +9522,94 @@ window.Sim = Sim;
   Sim.UI._fmt$ = fmt$; Sim.UI._fmt$Signed = fmt$Signed; Sim.UI._fmtPct = fmtPct;
 })();
 
+/* ---------- Sim.StopRules — entry-stop strategy primitives ----------
+ * Pure helpers, no DOM. Consumed by the entry modals (single-sim setup,
+ * single-sim new-leg) via the picker UI to pre-fill the Stop $ field.
+ *
+ * Conventions:
+ *   - All "below" helpers return null when inputs are insufficient (let
+ *     the caller decide how to render: leave field blank, show hint, etc.).
+ *   - Buffer is applied as a literal $ subtraction on swing/base lows so a
+ *     "below 5-bar low" stop sits a clean $0.05 (default) under the actual low.
+ *   - ATR uses Wilder's smoothing via the existing global calcATR(bars, len).
+ *   - barIdx is the bar matching the entry date. Swing windows look at the
+ *     N bars BEFORE entry (idx-N..idx-1, exclusive of entry bar).
+ */
+(function(){
+  window.Sim = window.Sim || {};
+  function _round2(n){ return isFinite(n) ? +(Math.round(n * 100) / 100) : null; }
+
+  function pctBelow(price, pct){
+    if (!isFinite(price) || !isFinite(pct) || pct <= 0) return null;
+    return _round2(price * (1 - pct / 100));
+  }
+  function atrAt(bars, idx, period){
+    if (!Array.isArray(bars) || idx == null || idx < 0) return null;
+    period = period || 14;
+    if (typeof window.calcATR === 'function'){
+      const arr = window.calcATR(bars, period);
+      const v = arr && arr[idx];
+      return isFinite(v) && v > 0 ? v : null;
+    }
+    // Fallback simple-mean ATR if calcATR isn't on window for any reason.
+    const start = Math.max(1, idx - period + 1);
+    let sum = 0, n = 0;
+    for (let i = start; i <= idx; i++){
+      const b = bars[i], pb = bars[i-1];
+      if (!b || !pb) continue;
+      const tr = Math.max(b.high - b.low, Math.abs(b.high - pb.close), Math.abs(b.low - pb.close));
+      sum += tr; n++;
+    }
+    return n > 0 ? sum / n : null;
+  }
+  function atrBelow(price, bars, idx, k, period){
+    const a = atrAt(bars, idx, period || 14);
+    if (a == null || !isFinite(price) || !isFinite(k)) return null;
+    return _round2(price - (k * a));
+  }
+  function swingLowBelow(bars, idx, n, buffer){
+    if (!Array.isArray(bars) || idx == null || idx <= 0) return null;
+    const start = Math.max(0, idx - n);
+    let lo = Infinity;
+    for (let i = start; i < idx; i++){
+      const b = bars[i];
+      if (b && isFinite(b.low) && b.low < lo) lo = b.low;
+    }
+    if (!isFinite(lo)) return null;
+    return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
+  }
+  function _findBarIdxByDate(bars, dateStr){
+    if (!Array.isArray(bars) || !dateStr) return -1;
+    for (let i = 0; i < bars.length; i++){
+      const t = (bars[i] && (bars[i].time || bars[i].date)) || '';
+      if (t === dateStr) return i;
+      if (t > dateStr) return Math.max(0, i - 1);
+    }
+    return bars.length - 1;
+  }
+  // Base low: read pivot.base_start / base_end from window.aiClassByMoveKey,
+  // then take min(low) of the bars in that window. Falls back to null when
+  // either the AI metadata or the date range is missing.
+  function baseLowBelow(bars, moveKey, aiData, buffer){
+    if (!Array.isArray(bars) || !moveKey) return null;
+    const data = aiData || window.aiClassByMoveKey || {};
+    const entry = data[moveKey];
+    const piv = entry && entry.pivot;
+    if (!piv || !piv.base_start || !piv.base_end) return null;
+    const i0 = _findBarIdxByDate(bars, piv.base_start);
+    const i1 = _findBarIdxByDate(bars, piv.base_end);
+    if (i0 < 0 || i1 < 0 || i1 < i0) return null;
+    let lo = Infinity;
+    for (let i = i0; i <= i1; i++){
+      const b = bars[i];
+      if (b && isFinite(b.low) && b.low < lo) lo = b.low;
+    }
+    if (!isFinite(lo)) return null;
+    return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
+  }
+  Sim.StopRules = { pctBelow, atrAt, atrBelow, swingLowBelow, baseLowBelow, _findBarIdxByDate };
+})();
+
 /* ---------- Sim.UI: modals (no innerHTML) ---------- */
 (function(){
   window.Sim = window.Sim || {};
@@ -9478,6 +9642,174 @@ window.Sim = Sim;
     el.style.color = isError ? 'var(--red)' : 'var(--green)';
   }
   function _clearStatus(id) { _setStatus(id, '', false); }
+
+  /* ---------- Stop-strategy picker wiring (Feature #2) ---------- */
+  // Shared between sim-setup-modal and sim-newleg-modal. Owns:
+  //   - showing/hiding the k input + suffix per strategy
+  //   - recomputing the stop value when entry price / date / strategy / k changes
+  //   - auto-flipping to "manual" if the user types into the stop field directly
+  //   - persisting the chosen strategy + k in localStorage so the next sim
+  //     defaults to the user's last preference
+  // Caller passes the modal-specific element handles + a barsProvider closure.
+  function _wireStopStrategy(opts){
+    const { stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl,
+            priceEl, dateEl, lsKey, defaultK, includeBase,
+            barsProvider, moveKeyProvider } = opts || {};
+    if (!stratEl || !stopEl) return;
+
+    let _suppressManualFlip = false;
+    const dK = defaultK || { pct: 7, atr: 1.5 };
+
+    // Hide "Below base low" option in modals where it doesn't apply (newleg).
+    if (!includeBase){
+      const baseOpt = stratEl.querySelector('option[value="base"]');
+      if (baseOpt) baseOpt.parentNode.removeChild(baseOpt);
+    }
+
+    // Restore previously-used strategy from localStorage.
+    let restored = null;
+    try { restored = JSON.parse(localStorage.getItem(lsKey) || 'null'); } catch (_){}
+    if (restored && typeof restored.type === 'string'){
+      const opt = stratEl.querySelector('option[value="' + restored.type + '"]');
+      if (opt) stratEl.value = restored.type;
+      if (restored.k != null && stratKEl) stratKEl.value = restored.k;
+    }
+
+    function _persist(){
+      try {
+        localStorage.setItem(lsKey, JSON.stringify({
+          type: stratEl.value,
+          k: stratKEl ? stratKEl.value : null
+        }));
+      } catch(_){}
+    }
+
+    function _kForType(t){
+      if (stratKEl && stratKEl.value !== '') {
+        const v = parseFloat(stratKEl.value);
+        if (isFinite(v)) return v;
+      }
+      return dK[t];
+    }
+
+    function _updateKVisibility(){
+      const t = stratEl.value;
+      const useK = (t === 'pct' || t === 'atr');
+      if (stratKEl){
+        stratKEl.disabled = !useK;
+        if (useK && (stratKEl.value === '' || !isFinite(parseFloat(stratKEl.value)))){
+          stratKEl.value = String(dK[t]);
+        }
+      }
+      if (stratSuffixEl){
+        stratSuffixEl.textContent = (t === 'pct') ? '%' : (t === 'atr' ? '× ATR' : '');
+      }
+    }
+
+    function _computeStop(){
+      const t = stratEl.value;
+      if (t === 'manual') return null;
+      const price = parseFloat(priceEl && priceEl.value);
+      if (!isFinite(price) || price <= 0) return null;
+      const bars = (typeof barsProvider === 'function') ? barsProvider() : [];
+      if (t === 'pct') return Sim.StopRules.pctBelow(price, _kForType('pct'));
+      // The remaining strategies need historical bars + an entry-bar index.
+      const dateStr = (dateEl && dateEl.value) || (opts.dateProvider ? opts.dateProvider() : null);
+      const idx = Sim.StopRules._findBarIdxByDate(bars, dateStr);
+      if (idx < 0) return null;
+      if (t === 'atr')    return Sim.StopRules.atrBelow(price, bars, idx, _kForType('atr'), 14);
+      if (t === 'swing5') return Sim.StopRules.swingLowBelow(bars, idx, 5, 0.05);
+      if (t === 'swing10')return Sim.StopRules.swingLowBelow(bars, idx, 10, 0.05);
+      if (t === 'base'){
+        const mk = (typeof moveKeyProvider === 'function') ? moveKeyProvider() : null;
+        return Sim.StopRules.baseLowBelow(bars, mk, null, 0.05);
+      }
+      return null;
+    }
+
+    function _renderDistance(){
+      if (!stopDistEl) return;
+      const price = parseFloat(priceEl && priceEl.value);
+      const stop = parseFloat(stopEl.value);
+      const t = stratEl.value;
+      if (!isFinite(price) || !isFinite(stop) || price <= 0 || stop <= 0 || stop >= price){
+        stopDistEl.textContent = '';
+        stopDistEl.classList.remove('is-rule');
+        return;
+      }
+      const distPct = ((price - stop) / price) * 100;
+      const bars = (typeof barsProvider === 'function') ? barsProvider() : [];
+      const dateStr = (dateEl && dateEl.value) || (opts.dateProvider ? opts.dateProvider() : null);
+      const idx = Sim.StopRules._findBarIdxByDate(bars, dateStr);
+      const a = Sim.StopRules.atrAt(bars, idx, 14);
+      const atrMult = (a && a > 0) ? ((price - stop) / a) : null;
+      const ruleLabel = (t === 'manual') ? '' : '· auto';
+      stopDistEl.textContent = '−' + distPct.toFixed(2) + '% from entry'
+        + (atrMult != null ? ' · ' + atrMult.toFixed(2) + '× ATR' : '')
+        + (ruleLabel ? ' ' + ruleLabel : '');
+      stopDistEl.classList.toggle('is-rule', t !== 'manual');
+    }
+
+    let _firstApply = true;
+    function _applyStrategy(){
+      _updateKVisibility();
+      // First paint: if the modal was reopened with an existing stop value
+      // (e.g. ctx.restoreFrom.stop), preserve it and force "Manual". The user
+      // can pick a strategy explicitly to recompute.
+      if (_firstApply){
+        _firstApply = false;
+        const existing = parseFloat(stopEl.value);
+        if (isFinite(existing) && existing > 0){
+          stratEl.value = 'manual';
+          _updateKVisibility();
+          _renderDistance();
+          _persist();
+          return;
+        }
+      }
+      const v = _computeStop();
+      if (v != null && isFinite(v) && v > 0){
+        _suppressManualFlip = true;
+        stopEl.value = v.toFixed(2);
+        _suppressManualFlip = false;
+      }
+      _renderDistance();
+      _persist();
+    }
+
+    stratEl.onchange = _applyStrategy;
+    if (stratKEl) stratKEl.oninput = _applyStrategy;
+    // When the user manually edits the stop, drop back to "Manual".
+    const _origStopInput = stopEl.oninput;
+    stopEl.oninput = function(e){
+      if (!_suppressManualFlip && stratEl.value !== 'manual'){
+        stratEl.value = 'manual';
+        _updateKVisibility();
+        _persist();
+      }
+      _renderDistance();
+      if (typeof _origStopInput === 'function') _origStopInput.call(stopEl, e);
+    };
+
+    // Re-run the strategy when entry price / date moves (e.g. user picks a
+    // bar on chart). priceEl already has its own oninput in the caller; we
+    // wrap-and-chain so we don't clobber.
+    function _reapplyOnInput(el){
+      if (!el) return;
+      const prev = el.oninput;
+      el.oninput = function(e){
+        if (typeof prev === 'function') prev.call(el, e);
+        if (stratEl.value !== 'manual') _applyStrategy(); else _renderDistance();
+      };
+    }
+    _reapplyOnInput(priceEl);
+    _reapplyOnInput(dateEl);
+
+    // Initial paint.
+    _applyStrategy();
+    return { reapply: _applyStrategy, render: _renderDistance };
+  }
+
   function _onBackdrop(overlayId, onClose) {
     const overlay = document.getElementById(overlayId); if (!overlay) return;
     overlay.onclick = function(e) { if (e.target === overlay) { onClose && onClose(); _closeModal(overlayId); } };
@@ -9593,6 +9925,23 @@ window.Sim = Sim;
     [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
     _setupPills('sim-setup-pills', 'sim-size-mode', 'sim-setup-size-label', recompute);
     recompute();
+
+    // Stop-strategy picker (wraps existing recompute via _reapplyOnInput chain).
+    const stratEl = document.getElementById('sim-stop-strategy');
+    const stratKEl = document.getElementById('sim-stop-strategy-k');
+    const stratSuffixEl = document.getElementById('sim-stop-strategy-suffix');
+    const stopDistEl = document.getElementById('sim-stop-distance');
+    _wireStopStrategy({
+      stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl, dateEl,
+      lsKey: 'bm_sim_stop_strategy',
+      defaultK: { pct: 7, atr: 1.5 },
+      includeBase: true,
+      barsProvider: function(){ return (typeof window !== 'undefined' && Array.isArray(window.currentBars)) ? window.currentBars : []; },
+      moveKeyProvider: function(){
+        const r = window.currentMoveRow;
+        return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
+      }
+    });
 
     document.getElementById('sim-setup-cancel').onclick = () => _closeModal('sim-setup-modal');
     _onBackdrop('sim-setup-modal');
@@ -9745,6 +10094,26 @@ window.Sim = Sim;
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
     _setupPills('sim-newleg-pills', 'sim-newleg-size-mode', 'sim-newleg-size-label', recompute);
     recompute();
+
+    // Stop-strategy picker. NewLeg has no separate date input — we use the
+    // ctx.barDate (the paused-bar date) as the entry-bar reference.
+    const stratEl = document.getElementById('sim-newleg-stop-strategy');
+    const stratKEl = document.getElementById('sim-newleg-stop-strategy-k');
+    const stratSuffixEl = document.getElementById('sim-newleg-stop-strategy-suffix');
+    const stopDistEl = document.getElementById('sim-newleg-stop-distance');
+    _wireStopStrategy({
+      stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl,
+      dateEl: null,
+      dateProvider: function(){ return ctx.barDate || null; },
+      lsKey: 'bm_sim_stop_strategy',
+      defaultK: { pct: 7, atr: 1.5 },
+      includeBase: false,
+      barsProvider: function(){ return (typeof window !== 'undefined' && Array.isArray(window.currentBars)) ? window.currentBars : []; },
+      moveKeyProvider: function(){
+        const r = window.currentMoveRow;
+        return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
+      }
+    });
 
     document.getElementById('sim-newleg-cancel').onclick = () => _closeModal('sim-newleg-modal');
     _onBackdrop('sim-newleg-modal');
@@ -12324,14 +12693,14 @@ Sim.Ctrl = (function(){
     return nd.toISOString().slice(0, 10);
   }
 
-  // Server-fetch a ticker we don't have locally. Pulls a wider window
-  // (start - 6mo, end + 6mo) so future plays around this date range have
-  // pre/post context for the chart.
+  // Server-fetch a ticker we don't have locally. Universal range policy:
+  // start = simulation startDate − 6mo, end = today. One API call grabs
+  // the longest contiguous window so subsequent plays anywhere from this
+  // setup forward already have data.
   function _autoFetchTicker(sym, startDate, endDate) {
-    var fetchStart = _shiftMonths(startDate, -6);
     var todayStr = new Date().toISOString().slice(0, 10);
-    var fetchEnd = _shiftMonths(endDate, 6);
-    if (fetchEnd > todayStr) fetchEnd = todayStr; // can't fetch future bars
+    var fetchStart = _shiftMonths(startDate, -6);
+    var fetchEnd = todayStr;
     return fetch('/api/fetch-ticker', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -12547,6 +12916,7 @@ Sim.Ctrl = (function(){
     var sizeEl = $('.portsim-row-size', node);
     var pillBtns = $$('.portsim-row-size-pill', node);
     var removeBtn = $('.portsim-row-remove', node);
+    var fetchBtn = $('.portsim-row-fetch', node);
 
     if (rowState) {
       symEl.value = rowState.symbol || '';
@@ -12602,7 +12972,76 @@ Sim.Ctrl = (function(){
       el.addEventListener('input', clearRowErrorOnInput.bind(null, node));
     });
 
+    if (fetchBtn) {
+      fetchBtn.addEventListener('click', function () { _fetchRowTicker(node); });
+    }
+
     return node;
+  }
+
+  // Per-row 📥 Fetch button. Pulls OHLCV for the symbol typed in this row from
+  // Twelve Data via /api/fetch-ticker, using the universal policy:
+  //   start = setup startDate − 6 months, end = today.
+  // Shows inline status in the row's .portsim-row-warn / .portsim-row-error slots,
+  // refreshes the autocomplete datalist on success, and clears the busy state
+  // regardless of outcome.
+  function _fetchRowTicker(rowEl) {
+    if (!rowEl) return;
+    var symEl = $('.portsim-row-sym', rowEl);
+    var btn = $('.portsim-row-fetch', rowEl);
+    var errEl = $('.portsim-row-error', rowEl);
+    var warnEl = $('.portsim-row-warn', rowEl);
+    var sym = ((symEl && symEl.value) || '').trim().toUpperCase();
+    if (!sym) {
+      rowEl.classList.add('has-error');
+      if (errEl) errEl.textContent = '✕ Enter a symbol first';
+      return;
+    }
+    var startEl = $('#portsim-start-date');
+    var startDate = (startEl && startEl.value) || '';
+    if (!startDate) {
+      rowEl.classList.add('has-error');
+      if (errEl) errEl.textContent = '✕ Set a Start date first';
+      return;
+    }
+    rowEl.classList.remove('has-error', 'has-warn');
+    if (errEl) errEl.textContent = '';
+    if (warnEl) warnEl.textContent = '';
+
+    var todayStr = new Date().toISOString().slice(0, 10);
+    var fetchStart = _shiftMonths(startDate, -6);
+    var fetchEnd = todayStr;
+
+    if (btn) { btn.disabled = true; btn.classList.add('is-busy'); }
+    if (warnEl) warnEl.textContent = '↓ Fetching ' + sym + ' (' + fetchStart + ' → ' + fetchEnd + ')…';
+
+    fetch('/api/fetch-ticker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: sym, start_date: fetchStart, end_date: fetchEnd })
+    }).then(function (resp) {
+      return resp.json().then(function (data) { return { ok: resp.ok, data: data, status: resp.status }; });
+    }).then(function (r) {
+      if (!r.ok || (r.data && r.data.error)) {
+        var msg = (r.data && r.data.error) || ('HTTP ' + r.status);
+        rowEl.classList.add('has-error');
+        if (warnEl) warnEl.textContent = '';
+        if (errEl) errEl.textContent = '✕ ' + sym + ' fetch failed: ' + msg;
+        return;
+      }
+      var bars = (r.data && (r.data.bars_added != null ? r.data.bars_added : '?'));
+      if (warnEl) warnEl.textContent = '✓ ' + sym + ' fetched ' + bars + ' bars (' + fetchStart + ' → ' + fetchEnd + ')';
+      // Mark the row "warn" tone (informational, not error).
+      rowEl.classList.add('has-warn');
+      // Refresh the autocomplete datalist so this symbol appears for future rows.
+      try { Setup._tickerList = null; populateTickerDatalist(); } catch (_) {}
+    }).catch(function (e) {
+      rowEl.classList.add('has-error');
+      if (warnEl) warnEl.textContent = '';
+      if (errEl) errEl.textContent = '✕ ' + sym + ' fetch error: ' + (e && e.message ? e.message : String(e));
+    }).then(function () {
+      if (btn) { btn.disabled = false; btn.classList.remove('is-busy'); }
+    });
   }
 
   function clearRowErrorOnInput(rowEl) {
@@ -13268,9 +13707,21 @@ Sim.Ctrl = (function(){
       const dayNumEl = _q('portsim-day-num');
       const dayDtEl  = _q('portsim-day-date');
 
+      // Cash% / Equity% are framed against initial equity:
+      //   cash%   = cash   / initial × 100  ("how much of starting capital is dry powder")
+      //   equity% = equity / initial × 100  ("100% means flat; 110% means +10% portfolio return")
+      const init = +stats.initial;
+      const hasInit = isFinite(init) && init > 0;
+      function _pctStr(v){
+        if (!hasInit || !isFinite(v)) return '';
+        const p = (v / init) * 100;
+        // 1 decimal under 100 (sub-percent moves matter for cash drift), int otherwise.
+        const txt = (Math.abs(p) >= 100) ? p.toFixed(0) : p.toFixed(1);
+        return ' (' + txt + '%)';
+      }
       if (initEl   && stats.initial   != null) initEl.textContent   = _fmtMoney(+stats.initial);
-      if (cashEl   && stats.cash      != null) cashEl.textContent   = _fmtMoney(+stats.cash);
-      if (eqEl     && stats.equity    != null) eqEl.textContent     = _fmtMoney(+stats.equity);
+      if (cashEl   && stats.cash      != null) cashEl.textContent   = _fmtMoney(+stats.cash)   + _pctStr(+stats.cash);
+      if (eqEl     && stats.equity    != null) eqEl.textContent     = _fmtMoney(+stats.equity) + _pctStr(+stats.equity);
 
       if (dayPnLEl && stats.dayPnL    != null){
         dayPnLEl.textContent = _fmtPnL(+stats.dayPnL);
@@ -13581,10 +14032,9 @@ Sim.Ctrl = (function(){
       const st = window.PortSim && window.PortSim._state;
       const todayStr = new Date().toISOString().slice(0, 10);
       let start = (st && st.startDate) || '2010-01-01';
-      let end   = (st && st.endDate)   || todayStr;
+      // Universal policy: start − 6mo → today (one call, max length).
       start = _shiftMonths(start, -6);
-      end   = _shiftMonths(end,   +6);
-      if (end > todayStr) end = todayStr;
+      const end = todayStr;
       console.log('[PortSim.Index] auto-fetching QQQ via Twelve Data (' + start + ' → ' + end + ')…');
       return fetch('/api/fetch-ticker', {
         method: 'POST',
@@ -19790,6 +20240,7 @@ Sim.Ctrl = (function(){
     <div class="portsim-basket-row-main">
       <div class="portsim-row-num"></div>
       <input type="text" class="portsim-row-sym" placeholder="SYMBOL" maxlength="10" autocomplete="off" spellcheck="false" list="portsim-ticker-options">
+      <button type="button" class="portsim-row-fetch" title="Fetch ticker data from Twelve Data (Start − 6mo → today)">📥</button>
       <button type="button" class="portsim-row-peek" title="Open 3-month preview chart to pick entry/stop">📊</button>
       <label class="portsim-row-pre-toggle">
         <input type="checkbox" class="portsim-row-pre-cb">
