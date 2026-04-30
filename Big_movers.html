@@ -1179,7 +1179,7 @@
     opacity: 1;
   }
   /* Fetch ticker modal */
-  .fetch-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:none;align-items:center;justify-content:center;}
+  .fetch-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:700;display:none;align-items:center;justify-content:center;}
   .fetch-modal-overlay.open{display:flex;}
 
   /* ============== SIM: Panel + Transport ============== */
@@ -3255,6 +3255,248 @@
   }
   /* ============ PORTSIM TRACK I: Card Panel Styles — END ============ */
 
+  /* ============ PORTSIM TRACK Q: Expand Modal Styles — START ============ */
+  .portcard-expand-overlay{
+    position:fixed;inset:0;z-index:600;
+    background:rgba(0,0,0,0.72);
+    display:none;
+    align-items:center;justify-content:center;
+    font-family:var(--ui);
+  }
+  .portcard-expand-overlay.is-open{display:flex;}
+  .portcard-expand-shell{
+    width:min(1500px,94vw);
+    height:min(900px,90vh);
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+  .portcard-expand-header{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 18px;
+    border-bottom:1px solid var(--border);
+    background:var(--bg2);
+    flex:0 0 auto;
+  }
+  .portcard-expand-title{
+    font-family:var(--mono);
+    font-size:18px;font-weight:700;
+    color:var(--accent-cream,var(--text));
+    letter-spacing:0.02em;
+  }
+  .portcard-expand-subtitle{
+    font-family:var(--mono);
+    font-size:11px;color:var(--text-2);
+    letter-spacing:0.04em;
+  }
+  .portcard-expand-status{
+    font-family:var(--mono);
+    font-size:10px;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--muted);
+    padding:2px 8px;border-radius:3px;
+    border:1px solid var(--border);
+    background:var(--bg3);
+  }
+  .portcard-expand-status.is-active{color:var(--green);border-color:rgba(110,231,183,0.4);background:rgba(110,231,183,0.10);}
+  .portcard-expand-status.is-stopped{color:var(--red);border-color:rgba(251,113,133,0.4);background:rgba(251,113,133,0.10);}
+  .portcard-expand-status.is-idle{color:var(--muted);}
+  .portcard-expand-actions{
+    display:flex;align-items:center;gap:6px;
+    flex-wrap:wrap;
+  }
+  .portcard-expand-action-btn{
+    background:var(--bg3);
+    color:var(--text-2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:5px 10px;
+    font-family:var(--mono);
+    font-size:10px;font-weight:600;
+    letter-spacing:0.04em;
+    cursor:pointer;
+    transition:background 0.12s,color 0.12s,border-color 0.12s;
+  }
+  .portcard-expand-action-btn:hover{background:var(--bg4);color:var(--text);border-color:var(--border-bright);}
+  .portcard-expand-action-btn[hidden]{display:none !important;}
+  .portcard-expand-action-btn.is-primary{
+    background:var(--accent);color:var(--bg);border-color:var(--accent);
+  }
+  .portcard-expand-action-btn.is-primary:hover{filter:brightness(1.05);background:var(--accent);color:var(--bg);}
+  .portcard-expand-action-btn.is-danger{
+    background:transparent;color:var(--red);border-color:rgba(251,113,133,0.45);
+  }
+  .portcard-expand-action-btn.is-danger:hover{background:var(--red);color:var(--bg);border-color:var(--red);}
+  .portcard-expand-action-btn.is-stop{color:var(--accent);border-color:rgba(212,165,116,0.45);}
+  .portcard-expand-action-btn.is-stop:hover{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+  .portcard-expand-spacer{flex:1;}
+  .portcard-expand-close{
+    background:var(--bg3);
+    border:1px solid var(--border);
+    color:var(--text-2);
+    width:30px;height:30px;border-radius:6px;
+    cursor:pointer;
+    font-size:20px;line-height:1;
+    display:inline-flex;align-items:center;justify-content:center;
+    transition:background 0.12s,color 0.12s,border-color 0.12s;
+  }
+  .portcard-expand-close:hover{background:var(--red);color:var(--bg);border-color:var(--red);}
+  .portcard-expand-body{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 340px;
+    flex:1 1 auto;min-height:0;
+  }
+  .portcard-expand-chart-wrap{
+    background:var(--bg);
+    position:relative;min-height:0;min-width:0;
+    overflow:hidden;
+  }
+  .portcard-expand-chart-host{
+    position:absolute;inset:0;
+  }
+  .portcard-expand-chart-hint{
+    position:absolute;
+    top:8px;left:10px;
+    z-index:5;
+    pointer-events:none;
+    background:rgba(20,22,28,0.78);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:3px 8px;
+    font-family:var(--mono);font-size:10px;
+    color:var(--text-2);
+    letter-spacing:0.04em;
+    opacity:0.85;
+  }
+  .portcard-expand-chart-hint:empty{display:none;}
+  .portcard-expand-side{
+    border-left:1px solid var(--border);
+    background:var(--bg2);
+    overflow-y:auto;
+    padding:14px 16px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .portcard-expand-section{
+    display:flex;flex-direction:column;gap:6px;
+  }
+  .portcard-expand-section-title{
+    font-family:var(--mono);
+    font-size:10px;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--muted);
+  }
+  .portcard-expand-stats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px 10px;
+    font-family:var(--mono);
+    font-size:11px;
+  }
+  .portcard-expand-stat{
+    display:flex;flex-direction:column;gap:1px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:5px 7px;
+  }
+  .portcard-expand-stat label{
+    font-size:9px;color:var(--muted);
+    letter-spacing:0.06em;text-transform:uppercase;
+  }
+  .portcard-expand-stat strong{
+    color:var(--text);font-weight:600;
+  }
+  .portcard-expand-stat strong.is-up{color:var(--green);}
+  .portcard-expand-stat strong.is-down{color:var(--red);}
+  .portcard-expand-stat strong.is-muted{color:var(--muted);}
+  .portcard-expand-cum{
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:6px 8px;
+    display:flex;flex-direction:column;gap:2px;
+    font-family:var(--mono);font-size:11px;
+  }
+  .portcard-expand-cum-label{
+    font-size:9px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.06em;
+  }
+  .portcard-expand-cum-line{
+    display:flex;align-items:baseline;gap:8px;
+    flex-wrap:wrap;
+  }
+  .portcard-expand-cum-value{font-weight:700;color:var(--text);}
+  .portcard-expand-cum-value.is-up{color:var(--green);}
+  .portcard-expand-cum-value.is-down{color:var(--red);}
+  .portcard-expand-cum-r{color:var(--muted);font-size:10px;}
+  .portcard-expand-cum-meta{color:var(--muted);font-size:10px;margin-left:auto;}
+  .portcard-expand-list{
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .portcard-expand-leg{
+    display:grid;
+    grid-template-columns:24px 1fr auto auto;
+    align-items:center;gap:6px;
+    padding:4px 8px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-family:var(--mono);
+    font-size:10px;color:var(--text-2);
+  }
+  .portcard-expand-leg.is-active{border-color:var(--accent);}
+  .portcard-expand-leg .leg-num{color:var(--muted);font-weight:600;font-size:9px;}
+  .portcard-expand-leg .leg-entry{color:var(--text-2);}
+  .portcard-expand-leg .leg-pnl{color:var(--text);font-weight:600;text-align:right;}
+  .portcard-expand-leg .leg-pnl.is-up{color:var(--green);}
+  .portcard-expand-leg .leg-pnl.is-down{color:var(--red);}
+  .portcard-expand-leg .leg-r{color:var(--muted);font-size:9px;text-align:right;}
+  .portcard-expand-leg .leg-exit{
+    grid-column:1 / -1;
+    color:var(--muted);font-size:9px;
+    letter-spacing:0.04em;
+  }
+  .portcard-expand-leg .leg-exit.is-stop{color:var(--red);}
+  .portcard-expand-leg .leg-exit.is-close{color:var(--muted);}
+  .portcard-expand-leg .leg-exit.is-active{color:var(--accent);}
+  .portcard-expand-stop{
+    display:grid;
+    grid-template-columns:32px 1fr auto;
+    align-items:center;gap:6px;
+    padding:4px 8px;
+    background:var(--bg3);
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-family:var(--mono);
+    font-size:10px;color:var(--text-2);
+  }
+  .portcard-expand-stop.is-fired{opacity:0.45;}
+  .portcard-expand-stop.is-init{border-color:var(--accent);}
+  .portcard-expand-stop .stop-day{color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:0.04em;}
+  .portcard-expand-stop .stop-px{color:var(--text);font-weight:600;}
+  .portcard-expand-stop .stop-tag{
+    color:var(--muted);font-size:9px;
+    text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .portcard-expand-stop .stop-tag.is-fired{color:var(--red);}
+  .portcard-expand-stop .stop-tag.is-init{color:var(--accent);}
+  .portcard-expand-empty{
+    color:var(--muted);font-size:10px;
+    font-family:var(--mono);
+    padding:6px 8px;
+    background:var(--bg3);
+    border:1px dashed var(--border);
+    border-radius:4px;
+  }
+  /* Narrow viewports: stack chart over panel. */
+  @media (max-width: 900px){
+    .portcard-expand-shell{height:94vh;}
+    .portcard-expand-body{grid-template-columns:1fr;grid-template-rows:1fr auto;}
+    .portcard-expand-side{border-left:none;border-top:1px solid var(--border);max-height:42vh;}
+  }
+  /* ============ PORTSIM TRACK Q: Expand Modal Styles — END ============ */
+
   /* ============ PORTSIM TRACK P: Trade Review Modal Styles — START ============ */
   .portsim-review-overlay{
     position:fixed;inset:0;z-index:11000;
@@ -4431,6 +4673,66 @@
             <button class="fetch-btn-primary" id="sim-summary-reenter">Continue Simulation →</button>
           </div>
           <div class="fetch-status" id="sim-summary-status"></div>
+        </div>
+      </div>
+
+      <!-- Portcard Expand Modal -->
+      <div class="portcard-expand-overlay" id="portcard-expand-modal" role="dialog" aria-hidden="true">
+        <div class="portcard-expand-shell">
+          <div class="portcard-expand-header">
+            <span class="portcard-expand-title" id="portcard-expand-symbol">—</span>
+            <span class="portcard-expand-subtitle" id="portcard-expand-date">—</span>
+            <span class="portcard-expand-status" id="portcard-expand-status">idle</span>
+            <div class="portcard-expand-actions" id="portcard-expand-actions">
+              <button class="portcard-expand-action-btn is-primary" data-action="setup"   type="button" hidden>Setup</button>
+              <button class="portcard-expand-action-btn is-primary" data-action="newleg"  type="button" hidden>+ New Entry</button>
+              <button class="portcard-expand-action-btn"            data-action="add"     type="button" hidden>+ Add</button>
+              <button class="portcard-expand-action-btn"            data-action="sell"    type="button" hidden>– Sell</button>
+              <button class="portcard-expand-action-btn is-stop"    data-action="movestop" type="button" hidden>↕ Stop</button>
+              <button class="portcard-expand-action-btn is-danger"  data-action="close"   type="button" hidden>✕ Close</button>
+            </div>
+            <span class="portcard-expand-spacer"></span>
+            <button class="portcard-expand-close" id="portcard-expand-close" type="button" title="Close (Esc)">×</button>
+          </div>
+          <div class="portcard-expand-body">
+            <div class="portcard-expand-chart-wrap">
+              <div class="portcard-expand-chart-hint" id="portcard-expand-chart-hint"></div>
+              <div class="portcard-expand-chart-host" id="portcard-expand-chart-host"></div>
+            </div>
+            <div class="portcard-expand-side">
+              <div class="portcard-expand-section">
+                <div class="portcard-expand-section-title">Position</div>
+                <div class="portcard-expand-stats" id="portcard-expand-stats"></div>
+              </div>
+              <div class="portcard-expand-section">
+                <div class="portcard-expand-section-title">Legs</div>
+                <div id="portcard-expand-cum"></div>
+                <div class="portcard-expand-list" id="portcard-expand-legs"></div>
+              </div>
+              <div class="portcard-expand-section">
+                <div class="portcard-expand-section-title">Stops</div>
+                <div class="portcard-expand-list" id="portcard-expand-stops"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Runtime Add / Replace Ticker modal -->
+      <div class="fetch-modal-overlay" id="portsim-runtime-ticker-modal" role="dialog" aria-hidden="true">
+        <div class="fetch-modal" style="width:380px">
+          <h3 id="portsim-rt-title">Add ticker</h3>
+          <div class="fetch-field">
+            <label for="portsim-rt-symbol">Symbol</label>
+            <input id="portsim-rt-symbol" type="text" list="portsim-ticker-options" placeholder="AAPL" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="fetch-actions" style="margin-top:6px">
+            <button class="fetch-btn-cancel" type="button" id="portsim-rt-random" title="Pick a random symbol matching the sim year">🎲 Random</button>
+            <span style="flex:1"></span>
+            <button class="fetch-btn-cancel" type="button" id="portsim-rt-cancel">Cancel</button>
+            <button class="fetch-btn-primary" type="button" id="portsim-rt-submit">Add</button>
+          </div>
+          <div class="fetch-status" id="portsim-rt-status"></div>
         </div>
       </div>
 
@@ -15741,6 +16043,166 @@ Sim.Ctrl = (function(){
     _wireOnce();
   }
 
+  // =====================================================================
+  // Runtime ticker management — add / replace tickers while a sim is active.
+  // =====================================================================
+
+  function _runtimeFetchBars(sym){
+    return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+      .then(function(r){
+        if (r.status === 404) return { ok: false, error: sym + ' not found locally — fetch it via the Setup wizard first.' };
+        if (!r.ok) return { ok: false, error: 'HTTP ' + r.status };
+        return r.json().then(function(j){
+          var bars = Array.isArray(j) ? j : (j && Array.isArray(j.bars) ? j.bars : []);
+          if (!bars.length) return { ok: false, error: sym + ' returned no bars' };
+          return { ok: true, bars: bars };
+        });
+      })
+      .catch(function(e){ return { ok: false, error: 'network: ' + (e && e.message ? e.message : e) }; });
+  }
+
+  function _basketSymbolsSet(){
+    var set = Object.create(null);
+    (_state.basket || []).forEach(function(e){ if (e && e.symbol) set[e.symbol] = true; });
+    return set;
+  }
+
+  // Same-window/year random pool. Exclude symbols already in the basket.
+  // Falls back to all-rows if the year filter yields zero candidates.
+  function _pickRandomTickerForSim(excludeExtra){
+    return fetch('/api/results')
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        if (!Array.isArray(rows) || !rows.length) return null;
+        var year = NaN;
+        try { year = +(_state.startDate || '').slice(0, 4); } catch(e){ year = NaN; }
+        var taken = _basketSymbolsSet();
+        if (excludeExtra && typeof excludeExtra === 'string'){
+          taken[String(excludeExtra).trim().toUpperCase()] = true;
+        }
+        function eligible(r, requireYear){
+          var sym = String((r && r.symbol) || '').trim().toUpperCase();
+          if (!sym || taken[sym]) return false;
+          if (requireYear && Number.isFinite(year) && +r.year !== year) return false;
+          return true;
+        }
+        var candidates = rows.filter(function(r){ return eligible(r, true); });
+        if (!candidates.length) candidates = rows.filter(function(r){ return eligible(r, false); });
+        if (!candidates.length) return null;
+        var pick = candidates[Math.floor(Math.random() * candidates.length)];
+        return String((pick && pick.symbol) || '').trim().toUpperCase() || null;
+      })
+      .catch(function(){ return null; });
+  }
+
+  function _applyGridCols(grid, n){
+    if (!grid) return;
+    grid.classList.remove('cols-1','cols-2','cols-3','cols-4','cols-5','cols-6','cols-7','cols-8','cols-9','cols-10');
+    var clamp = Math.max(1, Math.min(10, n));
+    grid.classList.add('cols-' + clamp);
+  }
+
+  // _addOrReplaceTicker(sym, opts) → Promise<{ ok, error?, entry? }>
+  // opts.replaceIndex : if set, destroys the basket entry at this index and
+  //                     splices the new card into the same DOM position.
+  function _addOrReplaceTicker(sym, opts){
+    opts = opts || {};
+    sym = String(sym || '').trim().toUpperCase();
+    if (!sym) return Promise.resolve({ ok: false, error: 'No symbol supplied.' });
+    if (!_state.active) return Promise.resolve({ ok: false, error: 'No active simulation.' });
+    var taken = _basketSymbolsSet();
+    if (taken[sym] && opts.replaceIndex == null){
+      return Promise.resolve({ ok: false, error: sym + ' is already in the basket.' });
+    }
+    if (opts.replaceIndex == null && (_state.basket || []).length >= 10){
+      return Promise.resolve({ ok: false, error: 'Max 10 tickers reached. Replace one instead.' });
+    }
+    if (opts.replaceIndex != null){
+      var prevAtIdx = _state.basket[opts.replaceIndex];
+      if (prevAtIdx && prevAtIdx.symbol === sym){
+        return Promise.resolve({ ok: false, error: sym + ' is already in this slot.' });
+      }
+      // If the picked symbol is in the basket but in a DIFFERENT slot, refuse —
+      // duplicate symbols would break dateToBarIdx lookups and make the UI
+      // confusing.
+      if (taken[sym]){
+        return Promise.resolve({ ok: false, error: sym + ' is already in another slot.' });
+      }
+    }
+    _pause();
+    return _runtimeFetchBars(sym).then(function(res){
+      if (!res.ok) return res;
+      var bars = res.bars;
+      var grid = _byId('portsim-grid');
+      if (!grid) return { ok: false, error: '#portsim-grid not in DOM' };
+      var dateToBarIdx = new Map();
+      for (var i = 0; i < bars.length; i++){
+        var t = bars[i] && bars[i].time;
+        if (t) dateToBarIdx.set(t, i);
+      }
+      var currentDate = (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.startDate;
+      var initSlice = _sliceUpTo(bars, currentDate);
+      var card = PortSim.Cards.createCard(grid, sym, initSlice, {});
+
+      if (opts.replaceIndex != null){
+        var prev = _state.basket[opts.replaceIndex];
+        // Insert the new card before the old one's DOM node so DOM order
+        // matches basket order, then destroy the old card.
+        if (prev && prev.cardEl && prev.cardEl.parentNode){
+          prev.cardEl.parentNode.insertBefore(card.cardEl, prev.cardEl);
+        }
+        try {
+          if (prev && prev.card && typeof prev.card.destroy === 'function') prev.card.destroy();
+        } catch(e){ /* ignore */ }
+      }
+
+      var entry = {
+        symbol: sym,
+        year: null,
+        bars: bars,
+        dateToBarIdx: dateToBarIdx,
+        lastCloseSeen: initSlice.length ? +initSlice[initSlice.length - 1].close : null,
+        sim: null,
+        card: card,
+        cardEl: card.cardEl,
+        chart: card.chart,
+        candleSeries: card.candleSeries,
+        volSeries: card.volSeries,
+        _newLegBtn: null,
+        _actionBar: null
+      };
+      _attachCardActions(entry);
+      card.cardEl.addEventListener('click', function(ev){
+        if (ev.target && ev.target.closest && ev.target.closest('.portcard-action-row')) return;
+        if (ev.target && ev.target.closest && ev.target.closest('.portcard-newleg-btn')) return;
+        _onCardBareClick(entry);
+      });
+
+      if (opts.replaceIndex != null){
+        _state.basket[opts.replaceIndex] = entry;
+      } else {
+        _state.basket.push(entry);
+      }
+
+      // Re-merge unified dates with the new ticker. Preserve play head by date.
+      var prevDate = currentDate;
+      _state.unifiedDates = _buildUnifiedDates(_state.basket, _state.indexBars || [], _state.startDate, _state.endDate);
+      _state.playIdx = 0;
+      for (var k = 0; k < _state.unifiedDates.length; k++){
+        if (_state.unifiedDates[k] >= prevDate){ _state.playIdx = k; break; }
+      }
+      // Update the grid's cols-N layout to reflect the new size.
+      _applyGridCols(grid, _state.basket.length);
+
+      // Force a render so positions table / equity / Track J markers refresh.
+      _renderAll();
+      if (window.PortSim && PortSim.TrackJ && typeof PortSim.TrackJ.afterRender === 'function'){
+        try { PortSim.TrackJ.afterRender(); } catch(e){}
+      }
+      return { ok: true, entry: entry };
+    });
+  }
+
   // ---- Public API ----
   PortSim.Ctrl = {
     openSetup: openSetup,
@@ -15754,7 +16216,23 @@ Sim.Ctrl = (function(){
       _pause();
       _showSummary(opts || { viewOnly: true });
     },
-    pause: _pause
+    pause: _pause,
+    // Action helpers reused by ExpandModal so the larger chart can drive the
+    // same Setup / Add / Sell / MoveStop / Close / NewLeg flows the mini card
+    // already exposes through its bare-click + action-row UX.
+    cardBareClick:  _onCardBareClick,
+    cardSetupClick: _onCardSetupClick,
+    newLegClick:    _onNewLegClick,
+    cardAction:     _onCardAction,
+    // Runtime ticker management — add a new ticker or replace an existing one
+    // while the simulation is in flight.
+    addTicker: function(sym){ return _addOrReplaceTicker(sym, {}); },
+    replaceTickerByEntry: function(entry, sym){
+      var idx = (_state.basket || []).indexOf(entry);
+      if (idx < 0) return Promise.resolve({ ok: false, error: 'entry not in basket' });
+      return _addOrReplaceTicker(sym, { replaceIndex: idx });
+    },
+    pickRandomTicker: function(excludeSym){ return _pickRandomTickerForSim(excludeSym); }
   };
 })();
 // ============ PORTSIM TRACK G: Controller — END ============
@@ -16158,6 +16636,21 @@ Sim.Ctrl = (function(){
       if (existing){
         // Re-wire handlers (idempotent).
         var btns = existing.querySelectorAll('button[data-tool]');
+        // Bolt on any newer buttons missing from a pre-existing toolbar so cards
+        // built before the feature shipped pick up the new affordance.
+        function _ensureBtn(tool, label, title){
+          if (existing.querySelector('button[data-tool="' + tool + '"]')) return;
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'portcard-toolbar-btn';
+          b.setAttribute('data-tool', tool);
+          b.title = title;
+          b.textContent = label;
+          existing.appendChild(b);
+        }
+        _ensureBtn('expand',  'Expand',  'Open in larger window');
+        _ensureBtn('replace', 'Replace', 'Replace this ticker (random or specific)');
+        btns = existing.querySelectorAll('button[data-tool]');
         btns.forEach(function(btn){
           var tool = btn.getAttribute('data-tool');
           btn.onclick = function(ev){
@@ -16165,6 +16658,8 @@ Sim.Ctrl = (function(){
             if (tool === 'legs' && typeof handlers.onLegsClick === 'function') handlers.onLegsClick(card);
             else if (tool === 'stops' && typeof handlers.onStopsClick === 'function') handlers.onStopsClick(card);
             else if (tool === 'csv' && typeof handlers.onCsvClick === 'function') handlers.onCsvClick(card);
+            else if (tool === 'expand' && typeof handlers.onExpandClick === 'function') handlers.onExpandClick(card);
+            else if (tool === 'replace' && typeof handlers.onReplaceClick === 'function') handlers.onReplaceClick(card);
           };
         });
         return existing;
@@ -16185,13 +16680,17 @@ Sim.Ctrl = (function(){
           if (tool === 'legs' && typeof handlers.onLegsClick === 'function') handlers.onLegsClick(card);
           else if (tool === 'stops' && typeof handlers.onStopsClick === 'function') handlers.onStopsClick(card);
           else if (tool === 'csv' && typeof handlers.onCsvClick === 'function') handlers.onCsvClick(card);
+          else if (tool === 'expand' && typeof handlers.onExpandClick === 'function') handlers.onExpandClick(card);
+          else if (tool === 'replace' && typeof handlers.onReplaceClick === 'function') handlers.onReplaceClick(card);
         };
         return b;
       }
 
-      bar.appendChild(mkBtn('legs',  'Legs',  'Show per-leg breakdown'));
-      bar.appendChild(mkBtn('stops', 'Stops', 'Manage stop levels'));
-      bar.appendChild(mkBtn('csv',   'CSV',   'Export this trade as CSV'));
+      bar.appendChild(mkBtn('legs',    'Legs',    'Show per-leg breakdown'));
+      bar.appendChild(mkBtn('stops',   'Stops',   'Manage stop levels'));
+      bar.appendChild(mkBtn('csv',     'CSV',     'Export this trade as CSV'));
+      bar.appendChild(mkBtn('expand',  'Expand',  'Open in larger window'));
+      bar.appendChild(mkBtn('replace', 'Replace', 'Replace this ticker (random or specific)'));
       header.appendChild(bar);
       return bar;
     } catch(e){
@@ -16641,6 +17140,1089 @@ Sim.Ctrl = (function(){
   };
 })();
 // ============ PORTSIM TRACK I: Card Panel UI — END ============
+
+// ============ PORTSIM TRACK Q: Expand Modal — START ============
+// Pop-out modal that re-renders a card's bars at near-fullscreen with the
+// same EMA / marker / stop-line stack as the per-card chart, plus inline
+// Position / Legs / Stops panels. Read-only snapshot at open time — no live
+// refresh; user closes and re-opens to see updated state. The chart instance
+// is destroyed on close to avoid memory leaks (LWC v3.8 requires explicit
+// chart.remove() — letting it sit just keeps the canvas + observers alive).
+//
+// Track J wires this in via _onExpandClick(entry) → PortSim.ExpandModal.open(entry).
+(function(){
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.ExpandModal) return; // idempotent
+
+  // ---------- Color constants (mirror PortSim.CardChart) ----------
+  var ENTRY_COLOR        = '#6ee7b7';
+  var STOP_EXIT_COLOR    = '#fb7185';
+  var CLOSE_EXIT_COLOR   = '#9ca3af';
+  var R_STAR_COLOR       = '#fbbf24';
+  var ACTIVE_STOP_COLOR  = '#fecdd3';
+  var INITIAL_STOP_COLOR = '#6b7280';
+  var STYLE_DASHED = 2;
+  var STYLE_DOTTED = 3;
+
+  function _clearChildren(el){ while (el && el.firstChild) el.removeChild(el.firstChild); }
+
+  // ---------- DOM cache ----------
+  var dom = null;
+  function _dom(){
+    if (dom) return dom;
+    dom = {
+      overlay:    document.getElementById('portcard-expand-modal'),
+      symbolEl:   document.getElementById('portcard-expand-symbol'),
+      dateEl:     document.getElementById('portcard-expand-date'),
+      statusEl:   document.getElementById('portcard-expand-status'),
+      actionsEl:  document.getElementById('portcard-expand-actions'),
+      closeBtn:   document.getElementById('portcard-expand-close'),
+      chartWrap:  null,
+      chartHost:  document.getElementById('portcard-expand-chart-host'),
+      chartHint:  document.getElementById('portcard-expand-chart-hint'),
+      statsEl:    document.getElementById('portcard-expand-stats'),
+      cumEl:      document.getElementById('portcard-expand-cum'),
+      legsEl:     document.getElementById('portcard-expand-legs'),
+      stopsEl:    document.getElementById('portcard-expand-stops'),
+    };
+    if (dom.chartHost && dom.chartHost.parentElement){
+      dom.chartWrap = dom.chartHost.parentElement;
+    }
+    return dom;
+  }
+
+  // ---------- State ----------
+  var state = {
+    chart: null,
+    candleSeries: null,
+    volSeries: null,
+    emaSeries: [],
+    priceLines: [],          // active + initial stop lines (for cleanup)
+    ro: null,
+    escHandler: null,
+    overlayHandler: null,
+    chartClickHandler: null, // LWC subscribeClick callback
+    actionHandlers: null,    // per-button onclick refs (for cleanup)
+    isOpen: false,
+    entry: null,             // current basket entry the modal is bound to
+  };
+
+  // ---------- Theme + helpers ----------
+  function _cssVar(name, fallback){
+    try {
+      var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+      v = (v || '').trim();
+      return v || fallback;
+    } catch(e){ return fallback; }
+  }
+  function _theme(){
+    return {
+      bg:     _cssVar('--chart-bg', _cssVar('--bg', '#0c0d10')),
+      grid:   _cssVar('--chart-grid', _cssVar('--border', '#1a1c22')),
+      text:   _cssVar('--text', '#f4f1e8'),
+      border: _cssVar('--border', '#262932'),
+    };
+  }
+  function _fmt$(v){
+    if (v == null || !isFinite(v)) return '—';
+    var sign = v < 0 ? '-' : '';
+    var a = Math.abs(v);
+    if (a >= 1e6) return sign + '$' + (a/1e6).toFixed(2) + 'M';
+    if (a >= 10000) return sign + '$' + a.toFixed(0);
+    return sign + '$' + a.toFixed(2);
+  }
+  function _fmt$Signed(v){
+    if (v == null || !isFinite(v)) return '$0.00';
+    return (v >= 0 ? '+' : '-') + _fmt$(Math.abs(v)).replace('-','');
+  }
+  function _fmtPx(v){
+    if (v == null || !isFinite(v)) return '—';
+    return '$' + Number(v).toFixed(2);
+  }
+  function _fmtR(v){
+    if (v == null || !isFinite(v)) return '0.00R';
+    return (v >= 0 ? '+' : '') + Number(v).toFixed(2) + 'R';
+  }
+
+  // ---------- Bar slicing ----------
+  // Returns the bar slice the card currently shows: bars[0..barIdxAtPlayhead].
+  // Falls back to the full bar list if the play head can't be resolved (e.g.
+  // sim already complete or unifiedDates not present). Built on top of
+  // _currentPlayIdxForEntry so the clamping logic lives in one place.
+  function _slicedBarsForEntry(entry){
+    var bars = (entry && entry.bars) || [];
+    if (!bars.length) return [];
+    var idx = _currentPlayIdxForEntry(entry);
+    if (idx < 0) return bars.slice();
+    return bars.slice(0, idx + 1);
+  }
+
+  function _toLWCBars(bars){
+    var n = bars.length, candles = new Array(n), vols = new Array(n);
+    for (var i = 0; i < n; i++){
+      var b = bars[i] || {};
+      var t = b.time || b.date || b.Date || b.datetime || b.DateTime;
+      var o = +b.open, h = +b.high, l = +b.low, c = +b.close;
+      var v = (b.volume != null) ? +b.volume : (b.value != null ? +b.value : 0);
+      candles[i] = { time: t, open: o, high: h, low: l, close: c };
+      vols[i]    = {
+        time: t,
+        value: isFinite(v) ? v : 0,
+        color: (c >= o) ? 'rgba(38,166,154,0.45)' : 'rgba(239,83,80,0.45)',
+      };
+    }
+    return { candles: candles, vols: vols };
+  }
+
+  // ---------- Marker building from sim ----------
+  // Mirrors what Track J paints incrementally on the per-card chart, but
+  // computed from sim state directly so the modal reflects the snapshot at
+  // open time even if a card was re-created mid-trade.
+  //
+  // IMPORTANT: clamp the R-star scan to the played-up-to bar. `entry.bars` is
+  // the FULL ticker dataset including future bars; scanning all of them would
+  // mark every R-level as "hit" and LWC then snaps markers with out-of-range
+  // times to the nearest existing chart bar — which produces a tower of stars
+  // stacked on the latest played bar.
+  function _currentPlayIdxForEntry(entry){
+    var bars = (entry && entry.bars) || [];
+    if (!bars.length) return -1;
+    var st = window.PortSim && window.PortSim._state;
+    var date = (st && Array.isArray(st.unifiedDates)) ? st.unifiedDates[st.playIdx] : null;
+    if (!date) return bars.length - 1;
+    if (entry.dateToBarIdx && typeof entry.dateToBarIdx.has === 'function' && entry.dateToBarIdx.has(date)){
+      return entry.dateToBarIdx.get(date);
+    }
+    var lo = 0, hi = bars.length - 1, found = -1;
+    while (lo <= hi){
+      var mid = (lo + hi) >> 1;
+      var t = bars[mid] && bars[mid].time;
+      if (t == null){ hi = mid - 1; continue; }
+      if (t <= date){ found = mid; lo = mid + 1; }
+      else { hi = mid - 1; }
+    }
+    return found;
+  }
+
+  function _buildMarkers(entry){
+    var markers = [];
+    var sim = entry && entry.sim;
+    if (!sim) return markers;
+    var legs = sim.legs || [];
+    legs.forEach(function(leg, i){
+      var legNum = i + 1;
+      if (leg && leg.entry && leg.entry.date){
+        markers.push({
+          time: leg.entry.date,
+          position: 'belowBar',
+          color: ENTRY_COLOR,
+          shape: 'arrowUp',
+          text: 'L' + legNum + ' entry',
+          size: 1
+        });
+      }
+      var exitEv = null;
+      (leg.eventsLog || []).forEach(function(ev){
+        if (ev && (ev.type === 'stop' || ev.type === 'close' || ev.type === 'sell-all')) exitEv = ev;
+      });
+      var exitDate = exitEv && exitEv.date;
+      if (!exitDate && leg && leg.entry && leg.entry.date) exitDate = leg.entry.date;
+      var exitPx = exitEv && exitEv.price != null ? exitEv.price : null;
+      var isStop = leg.exitReason === 'stop';
+      var sym = isStop ? '✕ ' : '● ';
+      var priceTxt = (exitPx != null) ? _fmtPx(exitPx) : (isStop ? 'stop' : 'close');
+      if (exitDate){
+        markers.push({
+          time: exitDate,
+          position: 'aboveBar',
+          color: isStop ? STOP_EXIT_COLOR : CLOSE_EXIT_COLOR,
+          shape: 'arrowDown',
+          text: 'L' + legNum + ' ' + sym + priceTxt,
+          size: 1
+        });
+      }
+    });
+    if (sim.entry && sim.entry.date){
+      var legNumC = legs.length + 1;
+      markers.push({
+        time: sim.entry.date,
+        position: 'belowBar',
+        color: ENTRY_COLOR,
+        shape: 'arrowUp',
+        text: 'L' + legNumC + ' entry',
+        size: 1
+      });
+      if (sim.stoppedOut || sim.closed){
+        var exitEv2 = null;
+        (sim.eventsLog || []).forEach(function(ev){
+          if (ev && (ev.type === 'stop' || ev.type === 'close' || ev.type === 'sell-all')) exitEv2 = ev;
+        });
+        if (exitEv2 && exitEv2.date){
+          var isStop2 = !!sim.stoppedOut;
+          var sym2 = isStop2 ? '✕ ' : '● ';
+          markers.push({
+            time: exitEv2.date,
+            position: 'aboveBar',
+            color: isStop2 ? STOP_EXIT_COLOR : CLOSE_EXIT_COLOR,
+            shape: 'arrowDown',
+            text: 'L' + legNumC + ' ' + sym2 + (exitEv2.price != null ? _fmtPx(exitEv2.price) : (isStop2 ? 'stop' : 'close')),
+            size: 1
+          });
+        }
+      }
+    }
+    if (window.PortSim && window.PortSim.CardChart && sim.entry){
+      var levels = window.PortSim.CardChart.buildRLevels(sim, 3, 15) || [];
+      if (levels.length){
+        var startIdx = (sim.entry.barIdx != null) ? sim.entry.barIdx : 0;
+        var allBars = entry.bars || [];
+        // Clamp to the current play head — DON'T scan future bars.
+        var endIdx = _currentPlayIdxForEntry(entry);
+        if (endIdx < 0 || endIdx >= allBars.length) endIdx = allBars.length - 1;
+        var hit = {};
+        for (var k = startIdx; k <= endIdx; k++){
+          var bar = allBars[k];
+          if (!bar) continue;
+          for (var li = 0; li < levels.length; li++){
+            var lv = levels[li];
+            if (hit[lv.level]) continue;
+            if (+bar.high >= lv.price){
+              hit[lv.level] = true;
+              markers.push({
+                time: bar.time,
+                position: 'aboveBar',
+                color: R_STAR_COLOR,
+                shape: 'circle',
+                text: '★ +' + lv.level + 'R',
+                size: 1
+              });
+            }
+          }
+        }
+      }
+    }
+    markers.sort(function(a, b){ return a.time === b.time ? 0 : (a.time < b.time ? -1 : 1); });
+    return markers;
+  }
+
+  function _buildStopLines(entry){
+    var out = { active: null, initial: null };
+    var sim = entry && entry.sim;
+    if (!sim || !sim.stopLevels) return out;
+    var unfired = sim.stopLevels.filter(function(s){ return !s.fired; });
+    unfired.sort(function(a,b){ return b.price - a.price; });
+    if (unfired.length){
+      out.active = { price: +unfired[0].price, label: 'STOP ' + _fmtPx(+unfired[0].price) };
+    }
+    if (sim.entry && sim.entry.stop != null && Number.isFinite(+sim.entry.stop)){
+      out.initial = { price: +sim.entry.stop };
+    }
+    return out;
+  }
+
+  // ---------- Chart construction ----------
+  function _buildChart(host, bars){
+    var th = _theme();
+    var chart = window.LightweightCharts.createChart(host, {
+      width: host.clientWidth || 600,
+      height: host.clientHeight || 400,
+      layout: { background: { color: th.bg }, textColor: th.text },
+      grid: {
+        vertLines: { color: th.grid, visible: true },
+        horzLines: { color: th.grid, visible: true },
+      },
+      rightPriceScale: { borderColor: th.border, scaleMargins: { top: 0.05, bottom: 0.18 } },
+      timeScale: { borderColor: th.border, timeVisible: false, rightOffset: 6 },
+      crosshair: { mode: window.LightweightCharts.CrosshairMode.Normal },
+      localization: { locale: 'en-US' },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale:  { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+    });
+    var candleSeries = chart.addCandlestickSeries({
+      upColor: '#26a69a', downColor: '#ef5350',
+      borderVisible: false, wickVisible: true,
+      wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+    });
+    var volSeries = chart.addHistogramSeries({
+      priceScaleId: '',
+      priceFormat: { type: 'volume' },
+      scaleMargins: { top: 0.85, bottom: 0 },
+      color: 'rgba(120,140,160,0.4)',
+    });
+    var EMA_DEFS = [
+      { p: 10, color: '#d4a574' },
+      { p: 20, color: '#6ee7b7' },
+      { p: 50, color: '#fb7185' },
+    ];
+    var emaSeries = EMA_DEFS.map(function(def){
+      return chart.addLineSeries({
+        color: def.color,
+        lineWidth: 1.5,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+    });
+    var norm = _toLWCBars(bars);
+    candleSeries.setData(norm.candles);
+    volSeries.setData(norm.vols);
+    if (typeof window.calcEMA === 'function'){
+      EMA_DEFS.forEach(function(def, i){
+        try { emaSeries[i].setData(window.calcEMA(norm.candles, def.p)); } catch(e){}
+      });
+    }
+    return { chart: chart, candleSeries: candleSeries, volSeries: volSeries, emaSeries: emaSeries };
+  }
+
+  // ---------- Side panel rendering ----------
+  function _chip(label, value, mood){
+    var w = document.createElement('div');
+    w.className = 'portcard-expand-stat';
+    var lbl = document.createElement('label'); lbl.textContent = label;
+    var val = document.createElement('strong');
+    val.textContent = value;
+    if (mood) val.classList.add('is-' + mood);
+    w.appendChild(lbl); w.appendChild(val);
+    return w;
+  }
+
+  function _renderStats(entry){
+    var d = _dom();
+    var el = d.statsEl;
+    if (!el) return;
+    _clearChildren(el);
+    var sim = entry && entry.sim;
+    if (!sim){
+      el.appendChild(_chip('STATE', 'idle', 'muted'));
+      el.appendChild(_chip('QTY', '—', 'muted'));
+      el.appendChild(_chip('AVG', '—', 'muted'));
+      el.appendChild(_chip('STOP', '—', 'muted'));
+      return;
+    }
+    var derived = null;
+    try {
+      if (window.Sim && typeof window.Sim.computeDerived === 'function'){
+        derived = window.Sim.computeDerived(sim, entry.bars);
+      }
+    } catch(e){}
+    var stateLabel = sim.stoppedOut ? 'stopped' : (sim.closed ? 'closed' : (derived && derived.between ? 'between' : 'active'));
+    var stateMood  = sim.stoppedOut ? 'down' : (sim.closed ? 'muted' : (derived && derived.between ? 'muted' : 'up'));
+    el.appendChild(_chip('STATE', stateLabel, stateMood));
+    el.appendChild(_chip('QTY',   sim.qty != null ? String(sim.qty) : '—'));
+    el.appendChild(_chip('AVG',   sim.avgCost != null && sim.avgCost > 0 ? _fmtPx(sim.avgCost) : '—'));
+    var unfired = (sim.stopLevels || []).filter(function(s){ return !s.fired; });
+    var topStop = unfired.length ? unfired.sort(function(a,b){ return b.price - a.price; })[0] : null;
+    el.appendChild(_chip('STOP', topStop ? _fmtPx(topStop.price) : '—'));
+    if (derived){
+      el.appendChild(_chip('R',         derived.rCurrent != null ? _fmtR(derived.rCurrent) : '—', derived.rCurrent > 0 ? 'up' : (derived.rCurrent < 0 ? 'down' : '')));
+      el.appendChild(_chip('TOTAL P&L', derived.cumulativePnL != null ? _fmt$Signed(derived.cumulativePnL) : '—', derived.cumulativePnL > 0 ? 'up' : (derived.cumulativePnL < 0 ? 'down' : '')));
+      el.appendChild(_chip('MFE',       derived.mfe != null ? _fmt$(Math.abs(derived.mfe)) : '—', 'up'));
+      el.appendChild(_chip('MAE',       derived.mae != null ? '-' + _fmt$(Math.abs(derived.mae)) : '—', 'down'));
+      el.appendChild(_chip('GIVE BACK', derived.giveBack != null ? _fmt$(Math.abs(derived.giveBack)) : '—', 'muted'));
+      el.appendChild(_chip('DAYS',      derived.dayCount != null ? String(derived.dayCount) : '—'));
+    }
+  }
+
+  function _renderLegs(entry){
+    var d = _dom();
+    var listEl = d.legsEl, cumEl = d.cumEl;
+    if (!listEl) return;
+    _clearChildren(listEl);
+    if (cumEl) _clearChildren(cumEl);
+    var legs = [];
+    try {
+      if (window.PortSim && window.PortSim.TrackJ && typeof window.PortSim.TrackJ.buildLegsForPopover === 'function'){
+        legs = window.PortSim.TrackJ.buildLegsForPopover(entry) || [];
+      } else if (entry && entry.sim){
+        var sim = entry.sim;
+        var derived = window.Sim ? window.Sim.computeDerived(sim, entry.bars) : null;
+        if (derived){
+          legs = (derived.legsSummary || []).slice();
+          if (!derived.between){
+            legs.push({
+              index: legs.length + 1,
+              entryPrice: sim.entry ? sim.entry.price : null,
+              exitReason: sim.stoppedOut ? 'stop' : (sim.closed ? 'close' : 'active'),
+              realizedPnL: derived.totalPnL || 0,
+              rMultiple: derived.rCurrent || 0,
+              active: !sim.stoppedOut && !sim.closed,
+            });
+          }
+        }
+      }
+    } catch(e){ legs = []; }
+    if (!legs.length){
+      var empty = document.createElement('div');
+      empty.className = 'portcard-expand-empty';
+      empty.textContent = 'No legs yet.';
+      listEl.appendChild(empty);
+      return;
+    }
+    var totalPnL = 0, totalR = 0;
+    legs.forEach(function(l){
+      if (typeof l.realizedPnL === 'number') totalPnL += l.realizedPnL;
+      if (typeof l.rMultiple === 'number') totalR += l.rMultiple;
+    });
+    if (cumEl){
+      var cum = document.createElement('div');
+      cum.className = 'portcard-expand-cum';
+      var cumLbl = document.createElement('span');
+      cumLbl.className = 'portcard-expand-cum-label';
+      cumLbl.textContent = 'Trade total · all legs';
+      var line = document.createElement('div');
+      line.className = 'portcard-expand-cum-line';
+      var cumVal = document.createElement('span');
+      cumVal.className = 'portcard-expand-cum-value' + (totalPnL > 0 ? ' is-up' : (totalPnL < 0 ? ' is-down' : ''));
+      cumVal.textContent = _fmt$Signed(totalPnL);
+      var cumR = document.createElement('span');
+      cumR.className = 'portcard-expand-cum-r';
+      cumR.textContent = _fmtR(totalR);
+      var cumMeta = document.createElement('span');
+      cumMeta.className = 'portcard-expand-cum-meta';
+      cumMeta.textContent = legs.length + (legs.length === 1 ? ' leg' : ' legs');
+      line.appendChild(cumVal); line.appendChild(cumR); line.appendChild(cumMeta);
+      cum.appendChild(cumLbl); cum.appendChild(line);
+      cumEl.appendChild(cum);
+    }
+    legs.forEach(function(leg){
+      var row = document.createElement('div');
+      row.className = 'portcard-expand-leg' + (leg.active ? ' is-active' : '');
+      var num = document.createElement('span');
+      num.className = 'leg-num';
+      num.textContent = 'L' + (leg.index != null ? leg.index : '?');
+      row.appendChild(num);
+      var ent = document.createElement('span');
+      ent.className = 'leg-entry';
+      ent.textContent = '@ ' + (leg.entryPrice != null ? _fmtPx(leg.entryPrice) : '—');
+      row.appendChild(ent);
+      var pnl = document.createElement('span');
+      pnl.className = 'leg-pnl' + (leg.realizedPnL > 0 ? ' is-up' : (leg.realizedPnL < 0 ? ' is-down' : ''));
+      pnl.textContent = _fmt$Signed(typeof leg.realizedPnL === 'number' ? leg.realizedPnL : 0);
+      row.appendChild(pnl);
+      var r = document.createElement('span');
+      r.className = 'leg-r';
+      r.textContent = _fmtR(typeof leg.rMultiple === 'number' ? leg.rMultiple : 0);
+      row.appendChild(r);
+      var ex = document.createElement('span');
+      ex.className = 'leg-exit';
+      if (leg.exitReason === 'stop'){ ex.classList.add('is-stop'); ex.textContent = '✕ stopped out'; }
+      else if (leg.exitReason === 'close'){ ex.classList.add('is-close'); ex.textContent = '● closed'; }
+      else { ex.classList.add('is-active'); ex.textContent = '◉ active'; }
+      row.appendChild(ex);
+      listEl.appendChild(row);
+    });
+  }
+
+  function _renderStops(entry){
+    var d = _dom();
+    var el = d.stopsEl;
+    if (!el) return;
+    _clearChildren(el);
+    var hist = [];
+    try {
+      if (window.PortSim && window.PortSim.TrackJ && typeof window.PortSim.TrackJ.buildStopHistory === 'function'){
+        hist = window.PortSim.TrackJ.buildStopHistory(entry) || [];
+      } else if (entry && entry.sim && entry.sim.stopLevels){
+        var entryBarIdx = (entry.sim.entry && entry.sim.entry.barIdx != null) ? entry.sim.entry.barIdx : 0;
+        hist = entry.sim.stopLevels.map(function(s){
+          var isInit = s.id && /^stop_initial/.test(s.id);
+          var idx = (s.barIdx != null) ? s.barIdx : entryBarIdx;
+          return {
+            id: s.id, price: s.price, day: idx - entryBarIdx,
+            type: isInit ? 'initial' : 'moved', fired: !!s.fired,
+            pct: s.pct != null ? s.pct : 1.0,
+          };
+        });
+      }
+    } catch(e){ hist = []; }
+    if (!hist.length){
+      var empty = document.createElement('div');
+      empty.className = 'portcard-expand-empty';
+      empty.textContent = 'No stops yet.';
+      el.appendChild(empty);
+      return;
+    }
+    hist.forEach(function(s){
+      var row = document.createElement('div');
+      row.className = 'portcard-expand-stop'
+        + (s.fired ? ' is-fired' : '')
+        + (s.type === 'initial' ? ' is-init' : '');
+      var day = document.createElement('span');
+      day.className = 'stop-day';
+      day.textContent = 'D' + (s.day != null ? s.day : '?');
+      row.appendChild(day);
+      var px = document.createElement('span');
+      px.className = 'stop-px';
+      px.textContent = _fmtPx(s.price);
+      row.appendChild(px);
+      var tag = document.createElement('span');
+      tag.className = 'stop-tag';
+      if (s.fired){ tag.classList.add('is-fired'); tag.textContent = 'fired'; }
+      else if (s.type === 'initial'){ tag.classList.add('is-init'); tag.textContent = 'init'; }
+      else { tag.textContent = 'active'; }
+      row.appendChild(tag);
+      el.appendChild(row);
+    });
+  }
+
+  // ---------- Header / status ----------
+  function _renderHeader(entry){
+    var d = _dom();
+    if (d.symbolEl) d.symbolEl.textContent = (entry.symbol || '—').toUpperCase();
+    var st = window.PortSim && window.PortSim._state;
+    var headDate = (st && Array.isArray(st.unifiedDates)) ? st.unifiedDates[st.playIdx] : '';
+    if (d.dateEl) d.dateEl.textContent = headDate || '';
+    if (d.statusEl){
+      var sim = entry.sim;
+      var label = 'idle';
+      d.statusEl.classList.remove('is-active','is-stopped','is-idle');
+      if (!sim){ label = 'idle'; d.statusEl.classList.add('is-idle'); }
+      else if (sim.stoppedOut){ label = 'stopped'; d.statusEl.classList.add('is-stopped'); }
+      else if (sim.closed){ label = 'closed'; d.statusEl.classList.add('is-idle'); }
+      else { label = 'active'; d.statusEl.classList.add('is-active'); }
+      d.statusEl.textContent = label;
+    }
+  }
+
+  // ---------- Action toolbar ----------
+  // Show buttons that match the per-state semantics of the mini chart's
+  // _onCardBareClick + action row:
+  //   no sim                → Setup
+  //   active                → Add / Sell / Stop / Close
+  //   stopped/closed/between → New Entry
+  function _renderActions(entry){
+    var d = _dom();
+    if (!d.actionsEl) return;
+    var sim = entry && entry.sim;
+    var isActive = !!(sim && !sim.stoppedOut && !sim.closed && !sim.between);
+    var isOver   = !!(sim && (sim.stoppedOut || sim.closed || sim.between));
+    var states = {
+      setup:    !sim,
+      newleg:   isOver,
+      add:      isActive,
+      sell:     isActive,
+      movestop: isActive,
+      close:    isActive
+    };
+    var btns = d.actionsEl.querySelectorAll('button[data-action]');
+    btns.forEach(function(btn){
+      var k = btn.getAttribute('data-action');
+      if (states[k]) btn.removeAttribute('hidden');
+      else btn.setAttribute('hidden', '');
+    });
+    // Chart hint text mirrors the action that bare-click would trigger.
+    if (d.chartHint){
+      var hint = '';
+      if (!sim)          hint = 'Click chart to set entry & stop';
+      else if (isOver)   hint = 'Click chart to start a new entry';
+      else if (isActive) hint = 'Click ↕ Stop to move stop · ✕ Close to exit';
+      d.chartHint.textContent = hint;
+    }
+  }
+
+  function _wireActions(){
+    var d = _dom();
+    if (!d.actionsEl) return;
+    if (state.actionHandlers){
+      // Already wired — handlers reference state.entry by closure-on-state.
+      return;
+    }
+    state.actionHandlers = {};
+    var btns = d.actionsEl.querySelectorAll('button[data-action]');
+    btns.forEach(function(btn){
+      var kind = btn.getAttribute('data-action');
+      var fn = function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        _runAction(kind);
+      };
+      btn.addEventListener('click', fn);
+      state.actionHandlers[kind] = { btn: btn, fn: fn };
+    });
+  }
+  function _unwireActions(){
+    if (!state.actionHandlers) return;
+    Object.keys(state.actionHandlers).forEach(function(k){
+      var h = state.actionHandlers[k];
+      try { h.btn.removeEventListener('click', h.fn); } catch(e){}
+    });
+    state.actionHandlers = null;
+  }
+
+  function _runAction(kind){
+    var entry = state.entry;
+    if (!entry) return;
+    var Ctrl = window.PortSim && window.PortSim.Ctrl;
+    if (!Ctrl){ if (window.console) console.warn('[ExpandModal] PortSim.Ctrl not available'); return; }
+    try {
+      if (kind === 'setup'){
+        if (typeof Ctrl.cardSetupClick === 'function') Ctrl.cardSetupClick(entry);
+      } else if (kind === 'newleg'){
+        if (typeof Ctrl.newLegClick === 'function') Ctrl.newLegClick(entry);
+      } else if (kind === 'add' || kind === 'sell' || kind === 'movestop' || kind === 'close'){
+        if (typeof Ctrl.cardAction === 'function') Ctrl.cardAction(entry, kind);
+      }
+    } catch(e){
+      if (window.console) console.warn('[ExpandModal] action failed:', kind, e && e.message);
+    }
+    // Side panel + chart annotations refresh on the next _afterRender hook.
+    // For close/movestop that resolve synchronously we also kick a refresh now
+    // so the UI updates without waiting for the watch tick.
+    refresh();
+  }
+
+  // ---------- Chart click → mirror bare-click on the mini card ----------
+  function _onChartClick(){
+    var entry = state.entry;
+    if (!entry) return;
+    var Ctrl = window.PortSim && window.PortSim.Ctrl;
+    if (!Ctrl) return;
+    var sim = entry.sim;
+    try {
+      if (!sim){
+        if (typeof Ctrl.cardSetupClick === 'function') Ctrl.cardSetupClick(entry);
+      } else if (sim.stoppedOut || sim.closed || sim.between){
+        if (typeof Ctrl.newLegClick === 'function') Ctrl.newLegClick(entry);
+      } else {
+        // Active position — most natural follow-up is Move Stop.
+        if (typeof Ctrl.cardAction === 'function') Ctrl.cardAction(entry, 'movestop');
+      }
+    } catch(e){
+      if (window.console) console.warn('[ExpandModal] chart click action failed:', e && e.message);
+    }
+    refresh();
+  }
+
+  // ---------- Annotations: markers + stop lines (cheap, no chart rebuild) ----------
+  function _paintAnnotations(entry){
+    if (!state.candleSeries) return;
+    try { state.candleSeries.setMarkers(_buildMarkers(entry)); } catch(e){}
+    // Tear down existing price lines and re-add from current sim state.
+    if (state.priceLines && state.priceLines.length){
+      state.priceLines.forEach(function(pl){
+        try { state.candleSeries.removePriceLine(pl); } catch(e){}
+      });
+    }
+    state.priceLines = [];
+    var lines = _buildStopLines(entry);
+    if (lines.active && Number.isFinite(lines.active.price)){
+      try {
+        state.priceLines.push(state.candleSeries.createPriceLine({
+          price: lines.active.price,
+          color: ACTIVE_STOP_COLOR,
+          lineWidth: 1,
+          lineStyle: STYLE_DASHED,
+          axisLabelVisible: true,
+          title: lines.active.label
+        }));
+      } catch(e){}
+    }
+    if (lines.initial && Number.isFinite(lines.initial.price)){
+      try {
+        state.priceLines.push(state.candleSeries.createPriceLine({
+          price: lines.initial.price,
+          color: INITIAL_STOP_COLOR,
+          lineWidth: 1,
+          lineStyle: STYLE_DOTTED,
+          axisLabelVisible: true,
+          title: '−1R (init)'
+        }));
+      } catch(e){}
+    }
+  }
+
+  // ---------- Public refresh ----------
+  // Lightweight re-render on state change. Skips chart bar setData (heavy);
+  // only re-applies markers, stop lines, side panel, header, and action bar.
+  function refresh(){
+    if (!state.isOpen || !state.entry) return;
+    var entry = state.entry;
+    _renderHeader(entry);
+    _renderActions(entry);
+    _renderStats(entry);
+    _renderLegs(entry);
+    _renderStops(entry);
+    _paintAnnotations(entry);
+  }
+
+  // ---------- Cleanup ----------
+  function _disposeChart(){
+    try {
+      if (state.priceLines && state.candleSeries){
+        state.priceLines.forEach(function(pl){
+          try { state.candleSeries.removePriceLine(pl); } catch(e){}
+        });
+      }
+    } catch(e){}
+    state.priceLines = [];
+    if (state.chart && state.chartClickHandler){
+      try { state.chart.unsubscribeClick(state.chartClickHandler); } catch(e){}
+    }
+    state.chartClickHandler = null;
+    if (state.ro){ try { state.ro.disconnect(); } catch(e){} state.ro = null; }
+    if (state.chart){
+      try { state.chart.remove(); } catch(e){}
+    }
+    state.chart = null;
+    state.candleSeries = null;
+    state.volSeries = null;
+    state.emaSeries = [];
+    var d = _dom();
+    if (d.chartHost) _clearChildren(d.chartHost);
+  }
+
+  // ---------- Open / close ----------
+  function open(entry){
+    if (!entry || typeof window.LightweightCharts === 'undefined') return;
+    var d = _dom();
+    if (!d.overlay || !d.chartHost) return;
+    if (state.isOpen) close();
+
+    state.entry = entry;
+
+    // Auto-pause sim — the user opened the expand modal to inspect/act on this
+    // ticker, mirroring the bare-click flow on the mini card.
+    try {
+      if (window.PortSim && window.PortSim.Ctrl && typeof window.PortSim.Ctrl.pause === 'function'){
+        window.PortSim.Ctrl.pause();
+      }
+    } catch(e){}
+
+    // Header + side panel + action bar.
+    _renderHeader(entry);
+    _renderActions(entry);
+    _renderStats(entry);
+    _renderLegs(entry);
+    _renderStops(entry);
+
+    // Wire action buttons (idempotent).
+    _wireActions();
+
+    // Show overlay BEFORE building chart so the host has measurable size.
+    d.overlay.classList.add('is-open');
+    d.overlay.setAttribute('aria-hidden', 'false');
+    state.isOpen = true;
+
+    // Build chart on next frame so layout is committed.
+    var bars = _slicedBarsForEntry(entry);
+    var raf = window.requestAnimationFrame || function(cb){ return setTimeout(cb, 16); };
+    raf(function(){
+      try {
+        var built = _buildChart(d.chartHost, bars);
+        state.chart = built.chart;
+        state.candleSeries = built.candleSeries;
+        state.volSeries = built.volSeries;
+        state.emaSeries = built.emaSeries;
+        // Apply markers + stop lines via the shared annotation helper.
+        _paintAnnotations(entry);
+        // LWC click subscription — mirrors mini-card bare-click behavior.
+        try {
+          state.chartClickHandler = function(){ _onChartClick(); };
+          state.chart.subscribeClick(state.chartClickHandler);
+        } catch(e){}
+        var DEFAULT_BARS = 180;
+        if (bars.length > 1){
+          var lastIdx = bars.length - 1;
+          var fromIdx = Math.max(0, lastIdx - (DEFAULT_BARS - 1));
+          try {
+            state.chart.timeScale().setVisibleRange({
+              from: bars[fromIdx].time,
+              to: bars[lastIdx].time,
+            });
+          } catch(e){}
+        } else {
+          try { state.chart.timeScale().fitContent(); } catch(e){}
+        }
+      } catch(e){
+        if (window.console) console.warn('[ExpandModal] build:', e && e.message);
+      }
+    });
+
+    // Resize observer
+    if (typeof ResizeObserver !== 'undefined' && d.chartHost){
+      state.ro = new ResizeObserver(function(){
+        if (!state.chart) return;
+        var w = d.chartHost.clientWidth, h = d.chartHost.clientHeight;
+        if (w > 0 && h > 0){
+          try { state.chart.resize(w, h); } catch(e){}
+        }
+      });
+      state.ro.observe(d.chartHost);
+    }
+
+    state.escHandler = function(ev){
+      if (ev.key === 'Escape'){ ev.preventDefault(); close(); }
+    };
+    document.addEventListener('keydown', state.escHandler);
+
+    // Click outside the shell to close. Only close on a click that actually
+    // hits the overlay backdrop (not a child element bubbling up).
+    state.overlayHandler = function(ev){
+      if (ev.target === d.overlay) close();
+    };
+    d.overlay.addEventListener('click', state.overlayHandler);
+
+    if (d.closeBtn){ d.closeBtn.onclick = function(){ close(); }; }
+  }
+
+  function close(){
+    var d = _dom();
+    if (!d.overlay) return;
+    _disposeChart();
+    _unwireActions();
+    d.overlay.classList.remove('is-open');
+    d.overlay.setAttribute('aria-hidden', 'true');
+    if (state.escHandler){
+      document.removeEventListener('keydown', state.escHandler);
+      state.escHandler = null;
+    }
+    if (state.overlayHandler){
+      d.overlay.removeEventListener('click', state.overlayHandler);
+      state.overlayHandler = null;
+    }
+    if (d.closeBtn){ d.closeBtn.onclick = null; }
+    state.isOpen = false;
+    state.entry = null;
+  }
+
+  window.PortSim.ExpandModal = {
+    open:    open,
+    close:   close,
+    refresh: refresh,
+    isOpen:  function(){ return state.isOpen; },
+    entry:   function(){ return state.entry; },
+  };
+})();
+// ============ PORTSIM TRACK Q: Expand Modal — END ============
+
+// ============ PORTSIM TRACK R: Runtime Ticker — START ============
+// Small modal that drives PortSim.Ctrl.addTicker / replaceTickerByEntry while
+// a sim is in flight. Dual-mode (add | replace), shares one DOM. The transport
+// bar's "+ Ticker" button calls openAdd(); each portcard's "Replace" toolbar
+// button calls openReplace(entry).
+(function(){
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.RuntimeTicker) return; // idempotent
+
+  function _$(id){ return document.getElementById(id); }
+  function _setStatus(msg, kind){
+    var el = _$('portsim-rt-status');
+    if (!el) return;
+    el.className = 'fetch-status' + (kind ? ' ' + kind : '');
+    el.textContent = msg || '';
+  }
+  function _setSubmitting(on){
+    var btn = _$('portsim-rt-submit');
+    if (btn) btn.disabled = !!on;
+    var rnd = _$('portsim-rt-random');
+    if (rnd) rnd.disabled = !!on;
+  }
+
+  // Lazy-populate the shared #portsim-ticker-options datalist if it's empty —
+  // Setup.open() normally seeds it, but the runtime modal can be opened first.
+  function _ensureDatalist(){
+    var dl = _$('portsim-ticker-options');
+    if (!dl || dl.options.length > 0) return;
+    fetch('/api/results').then(function(r){ return r.ok ? r.json() : []; }).then(function(rows){
+      var seen = Object.create(null);
+      var syms = [];
+      (Array.isArray(rows) ? rows : []).forEach(function(r){
+        var s = String((r && (r.symbol || r.Symbol)) || '').toUpperCase().trim();
+        if (!s || seen[s]) return;
+        seen[s] = true;
+        syms.push(s);
+      });
+      syms.sort();
+      while (dl.firstChild) dl.removeChild(dl.firstChild);
+      syms.forEach(function(s){
+        var opt = document.createElement('option');
+        opt.value = s;
+        dl.appendChild(opt);
+      });
+    }).catch(function(){ /* ignore */ });
+  }
+
+  // ---------- State ----------
+  var state = {
+    mode: 'add',        // 'add' | 'replace'
+    targetEntry: null,  // populated in replace mode
+    bound: false,
+    keyHandler: null,
+    overlayHandler: null,
+  };
+
+  function _applyMode(){
+    var titleEl = _$('portsim-rt-title');
+    var submitBtn = _$('portsim-rt-submit');
+    if (state.mode === 'replace'){
+      var sym = (state.targetEntry && state.targetEntry.symbol) || '?';
+      if (titleEl) titleEl.textContent = 'Replace ' + sym;
+      if (submitBtn) submitBtn.textContent = 'Replace';
+    } else {
+      if (titleEl) titleEl.textContent = 'Add ticker';
+      if (submitBtn) submitBtn.textContent = 'Add';
+    }
+  }
+
+  function _close(){
+    var modal = _$('portsim-runtime-ticker-modal');
+    if (modal) modal.classList.remove('open');
+    state.mode = 'add';
+    state.targetEntry = null;
+    var input = _$('portsim-rt-symbol');
+    if (input) input.value = '';
+    _setStatus('', '');
+    _setSubmitting(false);
+    if (state.keyHandler){
+      document.removeEventListener('keydown', state.keyHandler);
+      state.keyHandler = null;
+    }
+    if (state.overlayHandler && modal){
+      modal.removeEventListener('click', state.overlayHandler);
+      state.overlayHandler = null;
+    }
+  }
+
+  function _bindOnce(){
+    if (state.bound) return;
+    state.bound = true;
+    var submitBtn = _$('portsim-rt-submit');
+    var cancelBtn = _$('portsim-rt-cancel');
+    var randBtn   = _$('portsim-rt-random');
+    var input     = _$('portsim-rt-symbol');
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ _close(); });
+    if (randBtn) randBtn.addEventListener('click', _onRandom);
+    if (submitBtn) submitBtn.addEventListener('click', _onSubmit);
+    if (input){
+      input.addEventListener('keydown', function(ev){
+        if (ev.key === 'Enter'){ ev.preventDefault(); _onSubmit(); }
+      });
+    }
+  }
+
+  function _onRandom(){
+    var Ctrl = window.PortSim && window.PortSim.Ctrl;
+    if (!Ctrl || typeof Ctrl.pickRandomTicker !== 'function'){
+      _setStatus('Ctrl.pickRandomTicker not available', 'error');
+      return;
+    }
+    var excludeSym = (state.mode === 'replace' && state.targetEntry) ? state.targetEntry.symbol : null;
+    _setStatus('🎲 Picking…', '');
+    Ctrl.pickRandomTicker(excludeSym).then(function(sym){
+      if (!sym){
+        _setStatus('No eligible random ticker found.', 'error');
+        return;
+      }
+      var input = _$('portsim-rt-symbol');
+      if (input) input.value = sym;
+      _setStatus('Selected ' + sym + ' — press ' + (state.mode === 'replace' ? 'Replace' : 'Add') + ' to confirm.', '');
+    }).catch(function(e){
+      _setStatus('Random failed: ' + (e && e.message ? e.message : e), 'error');
+    });
+  }
+
+  function _onSubmit(){
+    var input = _$('portsim-rt-symbol');
+    var raw = (input && input.value) || '';
+    var sym = String(raw).trim().toUpperCase();
+    if (!sym){
+      _setStatus('Enter a symbol or click Random.', 'error');
+      return;
+    }
+    var Ctrl = window.PortSim && window.PortSim.Ctrl;
+    if (!Ctrl){ _setStatus('Ctrl not available', 'error'); return; }
+    _setSubmitting(true);
+    _setStatus('Fetching ' + sym + '…', '');
+    var p;
+    if (state.mode === 'replace'){
+      if (!state.targetEntry){ _setStatus('No target entry.', 'error'); _setSubmitting(false); return; }
+      p = Ctrl.replaceTickerByEntry(state.targetEntry, sym);
+    } else {
+      p = Ctrl.addTicker(sym);
+    }
+    p.then(function(res){
+      if (res && res.ok){
+        _setStatus('✓ ' + (state.mode === 'replace' ? 'Replaced with ' : 'Added ') + sym, 'success');
+        // Close after a brief flash so the user sees confirmation.
+        setTimeout(_close, 350);
+      } else {
+        _setStatus(res && res.error ? res.error : 'Failed.', 'error');
+        _setSubmitting(false);
+      }
+    }).catch(function(e){
+      _setStatus('Error: ' + (e && e.message ? e.message : e), 'error');
+      _setSubmitting(false);
+    });
+  }
+
+  function _open(){
+    _bindOnce();
+    _ensureDatalist();
+    var modal = _$('portsim-runtime-ticker-modal');
+    if (!modal) return;
+    _applyMode();
+    _setStatus('', '');
+    _setSubmitting(false);
+    modal.classList.add('open');
+    var input = _$('portsim-rt-symbol');
+    if (input){
+      input.value = '';
+      setTimeout(function(){ try { input.focus(); } catch(e){} }, 30);
+    }
+    state.keyHandler = function(ev){
+      if (ev.key === 'Escape'){ ev.preventDefault(); _close(); }
+    };
+    document.addEventListener('keydown', state.keyHandler);
+    state.overlayHandler = function(ev){
+      // Click on the dim backdrop (the overlay element itself) closes; clicks
+      // inside the .fetch-modal child do not.
+      if (ev.target === modal) _close();
+    };
+    modal.addEventListener('click', state.overlayHandler);
+  }
+
+  function openAdd(){
+    state.mode = 'add';
+    state.targetEntry = null;
+    _open();
+  }
+  function openReplace(entry){
+    if (!entry){ openAdd(); return; }
+    state.mode = 'replace';
+    state.targetEntry = entry;
+    _open();
+  }
+
+  window.PortSim.RuntimeTicker = {
+    openAdd:     openAdd,
+    openReplace: openReplace,
+    close:       _close,
+  };
+
+  // Wire transport-bar "+ Ticker" button on DOM ready.
+  function _wireTransport(){
+    var btn = _$('portsim-add-ticker');
+    if (!btn || btn._portsimBound) return;
+    btn._portsimBound = true;
+    btn.addEventListener('click', function(){
+      // Only meaningful while a sim is active; otherwise nudge the user to set up.
+      var Ctrl = window.PortSim && window.PortSim.Ctrl;
+      if (Ctrl && typeof Ctrl.isActive === 'function' && !Ctrl.isActive()){
+        alert('Start a simulation first, then use + Ticker to add tickers on the fly.');
+        return;
+      }
+      openAdd();
+    });
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wireTransport);
+  } else {
+    _wireTransport();
+  }
+})();
+// ============ PORTSIM TRACK R: Runtime Ticker — END ============
 
 // ============ PORTSIM TRACK J: Ctrl Parity Wiring — START ============
 // Wires PortSim.CardChart (markers, R-stars, stop lines, entry highlight) and
@@ -17185,15 +18767,39 @@ Sim.Ctrl = (function(){
     _downloadCSV(fname, rows.join('\n'));
   }
 
+  function _onExpandClick(entry){
+    if (!entry) return;
+    if (!window.PortSim || !window.PortSim.ExpandModal){
+      if (window.console) console.warn('[Track J] ExpandModal not loaded');
+      return;
+    }
+    _safe('ExpandModal.open', function(){
+      window.PortSim.ExpandModal.open(entry);
+    });
+  }
+
+  function _onReplaceClick(entry){
+    if (!entry) return;
+    if (!window.PortSim || !window.PortSim.RuntimeTicker){
+      if (window.console) console.warn('[Track J] RuntimeTicker not loaded');
+      return;
+    }
+    _safe('RuntimeTicker.openReplace', function(){
+      window.PortSim.RuntimeTicker.openReplace(entry);
+    });
+  }
+
   function _ensureToolbarForEntry(entry){
     var sh = _ensureShadow(entry);
     if (sh.toolbarReady) return;
     if (!_isCardOk(entry.card)) return;
     _safe('ensureToolbar', function(){
       window.PortSim.CardPanel.ensureToolbar(entry.card, {
-        onLegsClick: function(){ _onLegsClick(entry); },
-        onStopsClick: function(){ _onStopsClick(entry); },
-        onCsvClick: function(){ _onCsvClick(entry); }
+        onLegsClick:    function(){ _onLegsClick(entry); },
+        onStopsClick:   function(){ _onStopsClick(entry); },
+        onCsvClick:     function(){ _onCsvClick(entry); },
+        onExpandClick:  function(){ _onExpandClick(entry); },
+        onReplaceClick: function(){ _onReplaceClick(entry); }
       });
       sh.toolbarReady = true;
     });
@@ -17236,6 +18842,14 @@ Sim.Ctrl = (function(){
     // Refresh any open popover content so it doesn't go stale as bars advance
     // or stops are edited from elsewhere (codex review finding #2).
     _safe('refreshOpenPopovers', _refreshOpenPopovers);
+    // Keep the Expand modal in sync if open — cheap (markers + side panel only,
+    // no chart bar rebuild). The modal binds to a single entry object, so we
+    // just call its refresh() and let it read state.entry.sim itself.
+    if (window.PortSim && window.PortSim.ExpandModal && typeof window.PortSim.ExpandModal.isOpen === 'function'){
+      if (window.PortSim.ExpandModal.isOpen()){
+        _safe('refreshExpandModal', function(){ window.PortSim.ExpandModal.refresh(); });
+      }
+    }
   }
 
   // ----------------------------------------------------------------
@@ -17443,6 +19057,9 @@ Sim.Ctrl = (function(){
     afterAdvance: _afterAdvance,
     afterRender: _afterRender,
     exportEntryCSV: _onCsvClick,
+    expandEntry:   _onExpandClick,
+    buildLegsForPopover: _buildLegsForPopover,
+    buildStopHistory:    _buildStopHistory,
     forceTick: _watchTick
   };
 })();
@@ -20647,6 +22264,7 @@ Sim.Ctrl = (function(){
       </span>
       <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
       <button id="portsim-toggle-inactive" class="portsim-tbtn" type="button" title="Hide cards with no active position">👁 Active Only</button>
+      <button id="portsim-add-ticker" class="portsim-tbtn" type="button" title="Add a new ticker to the simulation">+ Ticker</button>
       <button id="portsim-toggle-reorder" class="portsim-tbtn" type="button" title="Drag cards to rearrange order (click again to exit)">↕ Reorder</button>
       <button id="portsim-toggle-hidden" class="portsim-tbtn" type="button" title="Restore hidden cards"><span id="portsim-hidden-count">0</span> Hidden ▾</button>
       <button id="portsim-btn-summary" class="portsim-tbtn" type="button" title="Show per-ticker summary (without exiting)">📊 Summary</button>

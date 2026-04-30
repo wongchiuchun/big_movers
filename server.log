@@ -2,24 +2,4 @@ Chart Studies: http://localhost:5051/
   Twelve Data API: configured (key: ...4b13)
  * Serving Flask app 'Big_movers_server'
  * Debug mode: off
-[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://127.0.0.1:5051
-[33mPress CTRL+C to quit[0m
-127.0.0.1 - - [29/Apr/2026 22:59:12] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:00:03] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:00:03] "GET /api/drawings HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:00:03] "GET /api/ohlcv?symbol=SPY HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:00:03] "GET /api/ohlcv?symbol=NDQ HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:00:03] "GET /api/metadata HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:00:03] "GET /api/ai-classifications HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:00:03] "GET /api/results HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:03:51] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:03:51] "GET /api/ohlcv?symbol=SPY HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:03:51] "GET /api/ohlcv?symbol=QQQ HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:05:48] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:05:49] "GET /api/ohlcv?symbol=SPY HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:05:49] "GET /api/ohlcv?symbol=NDQ HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:05:49] "GET /api/drawings HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:05:49] "GET /api/metadata HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:05:49] "GET /api/ai-classifications HTTP/1.1" 200 -
-127.0.0.1 - - [29/Apr/2026 23:05:49] "GET /api/results HTTP/1.1" 200 -
+Operation not permitted
