@@ -12718,31 +12718,16 @@ window.Sim = Sim;
   }
   function _calcKeyMetrics(rawTrades, sessions){
     const trades = _excludeAggregates(rawTrades);
-    const n = trades.length;
-    if (!n){
-      return { count: 0, sessionCount: sessions ? sessions.length : 0, winRate: null,
-               expectedValue: null, profitFactor: null,
-               avgWin: null, avgLoss: null, totalPnL: 0, avgReturnPct: null,
-               avgPctDeployed: null, peakPctDeployed: null, idlePctOfTime: null,
-               winCount: 0, lossCount: 0, breakEvenCount: 0 };
-    }
-    const wins = trades.filter(function(t){ return (t.realizedPnL || 0) > 0; });
-    const losses = trades.filter(function(t){ return (t.realizedPnL || 0) < 0; });
-    const breakEven = n - wins.length - losses.length;
-    const sumWins = wins.reduce(function(s, t){ return s + t.realizedPnL; }, 0);
-    const sumLosses = Math.abs(losses.reduce(function(s, t){ return s + t.realizedPnL; }, 0));
-    const totalPnL = trades.reduce(function(s, t){ return s + (t.realizedPnL || 0); }, 0);
-    const winRate = (n > 0) ? (wins.length / n) * 100 : 0;
-    const avgWin = wins.length ? sumWins / wins.length : 0;
-    const avgLoss = losses.length ? -sumLosses / losses.length : 0;
-    const expectedValue = (winRate / 100) * avgWin + (1 - winRate / 100) * avgLoss;
-    const profitFactor = sumLosses > 0 ? sumWins / sumLosses : (sumWins > 0 ? Infinity : 0);
-    // Per-trade % return on notional
-    const rets = trades.filter(function(t){ return t.returnPctOfNotional != null; })
-                       .map(function(t){ return t.returnPctOfNotional; });
-    const avgReturnPct = rets.length ? rets.reduce(function(s, x){ return s + x; }, 0) / rets.length : null;
-    // Deployed % is a session-level metric — average across the filtered
-    // sessions weighted equally (each session is one observation).
+    const aggCount = (rawTrades || []).length - trades.length;
+    // Total P&L always sums across SESSIONS — that's the headline "what did
+    // I make?" number and includes aggregate sessions whose leg detail is
+    // unknown but whose total P&L is real.
+    const totalPnL = (sessions || []).reduce(function(s, x){ return s + (x.sessionPnL || 0); }, 0);
+    const sessionCount = sessions ? sessions.length : 0;
+
+    // Deployed % is a session-level metric — averaged across sessions that
+    // had a starting equity (older aggregate sessions usually do, since v1
+    // recorded sessionInitialEquity even without legs).
     const sessionsWithDep = (sessions || []).filter(function(s){ return s.avgPctDeployed != null; });
     const avgPctDeployed = sessionsWithDep.length
       ? sessionsWithDep.reduce(function(a, s){ return a + s.avgPctDeployed; }, 0) / sessionsWithDep.length
@@ -12753,9 +12738,34 @@ window.Sim = Sim;
     const idlePctOfTime = sessionsWithDep.length
       ? sessionsWithDep.reduce(function(a, s){ return a + (s.idlePctOfTime || 0); }, 0) / sessionsWithDep.length
       : null;
+
+    const n = trades.length;
+    if (!n){
+      return { count: 0, aggCount: aggCount, sessionCount: sessionCount,
+               winRate: null, expectedValue: null, profitFactor: null,
+               avgWin: null, avgLoss: null,
+               totalPnL: totalPnL,
+               avgReturnPct: null,
+               avgPctDeployed: avgPctDeployed,
+               peakPctDeployed: peakPctDeployed,
+               idlePctOfTime: idlePctOfTime,
+               winCount: 0, lossCount: 0, breakEvenCount: 0 };
+    }
+    const wins = trades.filter(function(t){ return (t.realizedPnL || 0) > 0; });
+    const losses = trades.filter(function(t){ return (t.realizedPnL || 0) < 0; });
+    const breakEven = n - wins.length - losses.length;
+    const sumWins = wins.reduce(function(s, t){ return s + t.realizedPnL; }, 0);
+    const sumLosses = Math.abs(losses.reduce(function(s, t){ return s + t.realizedPnL; }, 0));
+    const winRate = (n > 0) ? (wins.length / n) * 100 : 0;
+    const avgWin = wins.length ? sumWins / wins.length : 0;
+    const avgLoss = losses.length ? -sumLosses / losses.length : 0;
+    const expectedValue = (winRate / 100) * avgWin + (1 - winRate / 100) * avgLoss;
+    const profitFactor = sumLosses > 0 ? sumWins / sumLosses : (sumWins > 0 ? Infinity : 0);
+    const rets = trades.filter(function(t){ return t.returnPctOfNotional != null; })
+                       .map(function(t){ return t.returnPctOfNotional; });
+    const avgReturnPct = rets.length ? rets.reduce(function(s, x){ return s + x; }, 0) / rets.length : null;
     return {
-      count: n,
-      sessionCount: sessions ? sessions.length : 0,
+      count: n, aggCount: aggCount, sessionCount: sessionCount,
       winCount: wins.length, lossCount: losses.length, breakEvenCount: breakEven,
       winRate: winRate,
       avgWin: avgWin, avgLoss: avgLoss,
@@ -12872,19 +12882,34 @@ window.Sim = Sim;
       if (sub) card.appendChild(_mk('div', 'sim-stats-metric-sub', sub));
       return card;
     }
-    grid.appendChild(tile('Trades', String(k.count),
-      k.winCount + 'W · ' + k.lossCount + 'L' + (k.breakEvenCount ? ' · ' + k.breakEvenCount + 'BE' : '')
-      + (k.sessionCount ? '  in ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's') : '')));
-    grid.appendChild(tile('Total P&L', _fmt$Signed(k.totalPnL), null, k.totalPnL > 0 ? 'is-pos' : (k.totalPnL < 0 ? 'is-neg' : '')));
-    grid.appendChild(tile('Win Rate', k.count ? k.winRate.toFixed(1) + '%' : '—', 'per trade', k.winRate >= 50 ? 'is-pos' : 'is-neg'));
-    grid.appendChild(tile('Expected Value', _fmt$Signed(k.expectedValue), 'per trade', k.expectedValue > 0 ? 'is-pos' : (k.expectedValue < 0 ? 'is-neg' : '')));
+    const hasRealTrades = k.count > 0;
+    const tradeSub = hasRealTrades
+      ? (k.winCount + 'W · ' + k.lossCount + 'L'
+          + (k.breakEvenCount ? ' · ' + k.breakEvenCount + 'BE' : '')
+          + (k.sessionCount ? '  in ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's') : ''))
+      : (k.aggCount > 0
+          ? (k.aggCount + ' aggregate session' + (k.aggCount === 1 ? '' : 's') + ' (no leg detail)')
+          : ('in ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's')));
+    grid.appendChild(tile('Trades', String(k.count), tradeSub));
+    // Total P&L always reflects ALL sessions (incl. aggregate stubs) — that's
+    // the headline "did I make money" answer, separate from per-trade WR/PF.
+    const pnlSub = (k.aggCount > 0 && k.sessionCount > 0)
+      ? ('across ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's')
+         + ' (incl. ' + k.aggCount + ' aggregate)')
+      : null;
+    grid.appendChild(tile('Total P&L', _fmt$Signed(k.totalPnL), pnlSub, k.totalPnL > 0 ? 'is-pos' : (k.totalPnL < 0 ? 'is-neg' : '')));
+    // Per-trade tiles render '—' when only aggregates exist.
+    grid.appendChild(tile('Win Rate', hasRealTrades ? k.winRate.toFixed(1) + '%' : '—', 'per trade', hasRealTrades ? (k.winRate >= 50 ? 'is-pos' : 'is-neg') : ''));
+    grid.appendChild(tile('Expected Value', hasRealTrades ? _fmt$Signed(k.expectedValue) : '—', 'per trade', hasRealTrades ? (k.expectedValue > 0 ? 'is-pos' : (k.expectedValue < 0 ? 'is-neg' : '')) : ''));
     let pfTxt = '—';
-    if (k.profitFactor === Infinity) pfTxt = '∞';
-    else if (k.profitFactor != null && isFinite(k.profitFactor)) pfTxt = k.profitFactor.toFixed(2);
-    grid.appendChild(tile('Profit Factor', pfTxt, null, (isFinite(k.profitFactor) && k.profitFactor >= 1) ? 'is-pos' : (k.profitFactor < 1 ? 'is-neg' : '')));
-    grid.appendChild(tile('Avg Win', _fmt$Signed(k.avgWin), null, 'is-pos'));
-    grid.appendChild(tile('Avg Loss', _fmt$Signed(k.avgLoss), null, 'is-neg'));
-    grid.appendChild(tile('Avg Return %', _fmtPct(k.avgReturnPct), 'per trade · notional', k.avgReturnPct > 0 ? 'is-pos' : (k.avgReturnPct < 0 ? 'is-neg' : '')));
+    if (hasRealTrades){
+      if (k.profitFactor === Infinity) pfTxt = '∞';
+      else if (k.profitFactor != null && isFinite(k.profitFactor)) pfTxt = k.profitFactor.toFixed(2);
+    }
+    grid.appendChild(tile('Profit Factor', pfTxt, null, (hasRealTrades && isFinite(k.profitFactor) && k.profitFactor >= 1) ? 'is-pos' : (hasRealTrades && k.profitFactor < 1 ? 'is-neg' : '')));
+    grid.appendChild(tile('Avg Win', hasRealTrades ? _fmt$Signed(k.avgWin) : '—', null, hasRealTrades ? 'is-pos' : ''));
+    grid.appendChild(tile('Avg Loss', hasRealTrades ? _fmt$Signed(k.avgLoss) : '—', null, hasRealTrades ? 'is-neg' : ''));
+    grid.appendChild(tile('Avg Return %', hasRealTrades ? _fmtPct(k.avgReturnPct) : '—', 'per trade · notional', hasRealTrades ? (k.avgReturnPct > 0 ? 'is-pos' : (k.avgReturnPct < 0 ? 'is-neg' : '')) : ''));
     // Cash-deployment efficiency tiles — only shown if at least one session
     // had starting equity (otherwise the metric isn't computable).
     if (k.avgPctDeployed != null){
