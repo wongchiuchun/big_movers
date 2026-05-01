@@ -1764,6 +1764,244 @@
   .sim-summary-leg-r { color: var(--muted); font-size: 10px; text-align: right; }
   .fetch-field input[type="number"], .fetch-field input[type="date"] { font-variant-numeric: tabular-nums; }
 
+  /* ---------- Sim Statistics modal ---------- */
+  .sim-stats-modal {
+    width: 92vw !important;
+    max-width: 1100px !important;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .sim-stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .sim-stats-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .sim-stats-time-filter {
+    display: flex;
+    gap: 4px;
+    background: var(--bg3);
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .sim-stats-pill {
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    font-family: var(--ui, var(--mono));
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .sim-stats-pill:hover { color: var(--text-2); }
+  .sim-stats-pill.is-active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  .sim-stats-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 13px;
+  }
+  .sim-stats-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .sim-stats-section {
+    margin-bottom: 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .sim-stats-section-title {
+    margin: 0 0 10px 0;
+    font-family: var(--ui, var(--mono));
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .sim-stats-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .sim-stats-2col .sim-stats-section { margin-bottom: 0; }
+  .sim-stats-keymetrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .sim-stats-metric {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 12px;
+  }
+  .sim-stats-metric-label {
+    font-family: var(--ui, var(--mono));
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .sim-stats-metric-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .sim-stats-metric-val.is-pos { color: var(--green); }
+  .sim-stats-metric-val.is-neg { color: var(--red); }
+  .sim-stats-metric-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .sim-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .sim-stats-table th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 9px;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sim-stats-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-2);
+  }
+  .sim-stats-table tr:last-child td { border-bottom: none; }
+  .sim-stats-table .is-pos { color: var(--green); font-weight: 600; }
+  .sim-stats-table .is-neg { color: var(--red); font-weight: 600; }
+  .sim-stats-distribution-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 50px;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-2);
+  }
+  .sim-stats-distribution-bin {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .sim-stats-distribution-bar {
+    height: 14px;
+    border-radius: 3px;
+    background: var(--bg4);
+    position: relative;
+    overflow: hidden;
+  }
+  .sim-stats-distribution-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 200ms ease;
+  }
+  .sim-stats-distribution-bar-fill.is-pos { background: var(--green); }
+  .sim-stats-distribution-bar-fill.is-neg { background: var(--red); }
+  .sim-stats-distribution-count {
+    text-align: right;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Saved Sim picker ---------- */
+  .sim-saved-list {
+    max-height: 360px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg3);
+    padding: 4px;
+  }
+  .sim-saved-empty {
+    padding: 24px 12px;
+    text-align: center;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 12px;
+  }
+  .sim-saved-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .sim-saved-row:last-child { border-bottom: none; }
+  .sim-saved-row:hover { background: var(--bg4); }
+  .sim-saved-name {
+    color: var(--text);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sim-saved-meta {
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .sim-saved-ret {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    text-align: right;
+    min-width: 60px;
+  }
+  .sim-saved-ret.is-pos { color: var(--green); }
+  .sim-saved-ret.is-neg { color: var(--red); }
+  .sim-saved-btn {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    border-radius: 4px;
+    font-family: var(--ui, var(--mono));
+    font-size: 10px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  .sim-saved-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .sim-saved-btn.is-danger:hover { background: var(--red); color: var(--bg); border-color: var(--red); }
+
   /* ---------- Sim Summary tabs (Events | Calendar) ---------- */
   .sim-summary-tabs {
     display: flex;
@@ -2026,6 +2264,25 @@
   }
   #sim-start-btn:hover,
   #portsim-start-btn:hover { background: var(--accent); color: var(--bg); }
+
+  /* Sim-related auxiliary topbar buttons (Random / Saved / Stats) — match
+     the +Add button's text-with-icon shape rather than the 32×32 icon shell. */
+  #sim-random-btn,
+  #sim-saved-btn,
+  #sim-stats-btn,
+  #portsim-saved-btn {
+    font-size: 10px;
+    padding: 4px 10px;
+    width: auto;
+    border-radius: 5px;
+    margin-left: 4px;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+  }
+  #sim-random-btn:hover,
+  #sim-saved-btn:hover,
+  #sim-stats-btn:hover,
+  #portsim-saved-btn:hover { color: var(--accent); border-color: var(--accent); }
   .sim-input-with-pick { display: flex; gap: 6px; align-items: stretch; }
   .sim-input-with-pick input { flex: 1; }
   .sim-pick-btn {
@@ -4372,6 +4629,9 @@
     <div class="spacer"></div>
     <button id="add-ticker-btn" class="tb-btn" title="Fetch new ticker or extend existing" style="font-size:10px;padding:4px 12px;width:auto;border-radius:5px;">+ Add</button>
     <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
+    <button id="sim-random-btn" class="tb-btn" title="Pick a random big-mover from a chosen year and load a year-long sim window">🎲 Random</button>
+    <button id="sim-saved-btn" class="tb-btn" title="Browse saved Sim scenarios">📂 Saved Sim</button>
+    <button id="sim-stats-btn" class="tb-btn" title="View lifetime sim statistics">📊 Sim Stats</button>
     <button id="portsim-start-btn" class="tb-btn" title="Open Portfolio Simulator">▶ Port Sim</button>
     <div class="vsep"></div>
     <button id="portsim-saved-btn" class="tb-btn" title="Browse saved Trade Reviews">📂 Saved</button>
@@ -4686,7 +4946,8 @@
                 <option value="manual">Manual</option>
                 <option value="pct">% below entry</option>
                 <option value="atr">ATR(14) ×</option>
-                <option value="ema">Below EMA</option>
+                <option value="ema">Below EMA (snapshot)</option>
+                <option value="ema_trail">Below EMA · auto-trail ↗</option>
                 <option value="swing5">Below 5-bar low</option>
                 <option value="swing10">Below 10-bar low</option>
                 <option value="base">Below base low</option>
@@ -4713,6 +4974,10 @@
             </div>
             <div class="sim-barcount-readout" id="sim-setup-barcount" style="display:none"></div>
           </div>
+          <div class="fetch-field">
+            <label for="sim-initial-equity">Starting equity (optional · enables % return + benchmark)</label>
+            <input type="number" step="100" min="0" id="sim-initial-equity" placeholder="e.g. 10000">
+          </div>
           <div class="sim-readout" id="sim-setup-summary">
             <div>Shares: <strong>—</strong></div>
             <div>Notional: <strong>—</strong></div>
@@ -4723,6 +4988,102 @@
             <button class="fetch-btn-primary" id="sim-setup-submit">Start Sim</button>
           </div>
           <div class="fetch-status" id="sim-setup-status"></div>
+        </div>
+      </div>
+
+      <!-- Random Year picker -->
+      <div class="fetch-modal-overlay" id="sim-random-modal">
+        <div class="fetch-modal">
+          <h3>🎲 Random Big Mover</h3>
+          <div class="fetch-field">
+            <label for="sim-random-year">Pick a year</label>
+            <select id="sim-random-year"></select>
+          </div>
+          <div class="sim-readout" id="sim-random-readout">
+            <div>Available: <strong id="sim-random-count">—</strong></div>
+          </div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-random-cancel">Cancel</button>
+            <button class="fetch-btn-primary" id="sim-random-go">Pick &amp; Load</button>
+          </div>
+          <div class="fetch-status" id="sim-random-status"></div>
+        </div>
+      </div>
+
+      <!-- Saved Sim picker -->
+      <div class="fetch-modal-overlay" id="sim-saved-modal">
+        <div class="fetch-modal">
+          <h3>📂 Saved Sim Scenarios</h3>
+          <div id="sim-saved-list" class="sim-saved-list"></div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-saved-close">Close</button>
+          </div>
+          <div class="fetch-status" id="sim-saved-status"></div>
+        </div>
+      </div>
+
+      <!-- Sim Statistics modal -->
+      <div class="fetch-modal-overlay" id="sim-stats-modal">
+        <div class="fetch-modal sim-stats-modal">
+          <div class="sim-stats-header">
+            <h3 style="margin:0">📊 Sim Statistics</h3>
+            <div class="sim-stats-filters">
+              <div class="sim-stats-time-filter" id="sim-stats-time-filter">
+                <button type="button" class="sim-stats-pill" data-range="5D">5D</button>
+                <button type="button" class="sim-stats-pill" data-range="MTD">MTD</button>
+                <button type="button" class="sim-stats-pill" data-range="1M">1M</button>
+                <button type="button" class="sim-stats-pill" data-range="3M">3M</button>
+                <button type="button" class="sim-stats-pill" data-range="6M">6M</button>
+                <button type="button" class="sim-stats-pill" data-range="YTD">YTD</button>
+                <button type="button" class="sim-stats-pill is-active" data-range="ALL">All</button>
+              </div>
+              <div class="sim-stats-time-filter" id="sim-stats-type-filter">
+                <button type="button" class="sim-stats-pill is-active" data-type="ALL">Both</button>
+                <button type="button" class="sim-stats-pill" data-type="individual">Individual</button>
+                <button type="button" class="sim-stats-pill" data-type="portfolio">Portfolio</button>
+              </div>
+            </div>
+          </div>
+          <div class="sim-stats-empty" id="sim-stats-empty" style="display:none">
+            No sim runs yet. After completing a simulation, click "📊 Add to Stats" in the summary modal to log it here.
+          </div>
+          <div class="sim-stats-body" id="sim-stats-body">
+            <div class="sim-stats-section" id="sim-stats-keymetrics"></div>
+            <div class="sim-stats-section">
+              <h4 class="sim-stats-section-title">P&amp;L Calendar (by run date)</h4>
+              <div id="sim-stats-calendar"></div>
+            </div>
+            <div class="sim-stats-2col">
+              <div class="sim-stats-section">
+                <h4 class="sim-stats-section-title">Monthly Summary</h4>
+                <div id="sim-stats-monthly"></div>
+              </div>
+              <div class="sim-stats-section">
+                <h4 class="sim-stats-section-title">Return Distribution</h4>
+                <div id="sim-stats-distribution"></div>
+              </div>
+            </div>
+            <div class="sim-stats-2col">
+              <div class="sim-stats-section">
+                <h4 class="sim-stats-section-title">Top 5 Trades</h4>
+                <div id="sim-stats-top"></div>
+              </div>
+              <div class="sim-stats-section">
+                <h4 class="sim-stats-section-title">Bottom 5 Trades</h4>
+                <div id="sim-stats-bottom"></div>
+              </div>
+            </div>
+            <div class="sim-stats-section">
+              <h4 class="sim-stats-section-title">Sessions (recent 50)</h4>
+              <div id="sim-stats-sessions"></div>
+            </div>
+          </div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-stats-export">↓ Export CSV</button>
+            <button class="fetch-btn-cancel" id="sim-stats-clear">🗑 Clear All</button>
+            <button class="fetch-btn-cancel" id="sim-stats-close">Close</button>
+          </div>
+          <div class="fetch-status" id="sim-stats-status"></div>
         </div>
       </div>
 
@@ -4800,7 +5161,8 @@
                 <option value="manual">Manual</option>
                 <option value="pct">% below current</option>
                 <option value="atr">ATR(14) ×</option>
-                <option value="ema">Below EMA</option>
+                <option value="ema">Below EMA (snapshot)</option>
+                <option value="ema_trail">Below EMA · auto-trail ↗</option>
                 <option value="swing5">Below 5-bar low</option>
                 <option value="swing10">Below 10-bar low</option>
               </select>
@@ -4862,7 +5224,8 @@
                 <option value="manual">Manual</option>
                 <option value="pct">% below entry</option>
                 <option value="atr">ATR(14) ×</option>
-                <option value="ema">Below EMA</option>
+                <option value="ema">Below EMA (snapshot)</option>
+                <option value="ema_trail">Below EMA · auto-trail ↗</option>
                 <option value="swing5">Below 5-bar low</option>
                 <option value="swing10">Below 10-bar low</option>
               </select>
@@ -4909,6 +5272,14 @@
             <div># Entries<strong id="sim-summary-entries">—</strong></div>
             <div># Sells<strong id="sim-summary-sells">—</strong></div>
           </div>
+          <div class="sim-summary-grid" id="sim-summary-grid-equity" style="display:none">
+            <div>Initial<strong id="sim-summary-eq-initial">—</strong></div>
+            <div>Final<strong id="sim-summary-eq-final">—</strong></div>
+            <div>Return<strong id="sim-summary-eq-return">—</strong></div>
+            <div>Ticker B&amp;H<strong id="sim-summary-bh">—</strong></div>
+            <div>Alpha<strong id="sim-summary-alpha">—</strong></div>
+            <div>Window<strong id="sim-summary-window">—</strong></div>
+          </div>
           <div id="sim-summary-legs"></div>
           <div class="sim-summary-tabs" id="sim-summary-tabs">
             <button type="button" class="sim-summary-tab is-active" data-tab="events">Events</button>
@@ -4922,6 +5293,8 @@
           </div>
           <div class="fetch-actions">
             <button class="fetch-btn-cancel" id="sim-summary-close">Close</button>
+            <button class="fetch-btn-cancel" id="sim-summary-save">💾 Save</button>
+            <button class="fetch-btn-cancel" id="sim-summary-add-stats">📊 Add to Stats</button>
             <button class="fetch-btn-cancel" id="sim-summary-screenshot">Screenshot</button>
             <button class="fetch-btn-primary" id="sim-summary-reenter">Continue Simulation →</button>
           </div>
@@ -9462,7 +9835,9 @@ const Sim = (function(){
   const rR = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
-  function createSim({ moveKey, direction = 'long', entry }) {
+  function createSim(params) {
+    params = params || {};
+    const { moveKey, direction = 'long', entry, initialEquity = null } = params;
     if (direction !== 'long') console.warn('Sim: only direction="long" supported in phase 1');
     if (!entry || typeof entry.barIdx !== 'number' || typeof entry.price !== 'number' || typeof entry.stop !== 'number') {
       throw new Error('createSim: entry.barIdx, entry.price, entry.stop required');
@@ -9493,14 +9868,16 @@ const Sim = (function(){
       shares0: shares, initialRisk,
       qty: shares, avgCost: entry.price,
       realizedPnL: 0,
-      stopLevels: [{ id: 'stop_initial', price: entry.stop, pct: 1.0, fired: false, barIdx: entry.barIdx }],
+      stopLevels: [{ id: 'stop_initial', price: entry.stop, pct: 1.0, fired: false, barIdx: entry.barIdx,
+                     trail: (entry.stopTrail && entry.stopTrail.type === 'ema') ? { type: 'ema', period: +entry.stopTrail.period || 10, k: +entry.stopTrail.k || 0 } : null }],
       playIdx: entry.barIdx, stoppedOut: false, closed: false,
       pendingActions: [],
       eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price,
                     note: 'entry ' + shares + '@' + r2(entry.price) + ' stop ' + r2(entry.stop) }],
       peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
       legs: [], between: false, simStartBarIdx: entry.barIdx,
-      pnlSeries: []
+      pnlSeries: [],
+      initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null
     };
   }
 
@@ -9510,8 +9887,37 @@ const Sim = (function(){
     const total = _computeTotalPnLAtBar(sim, bar) + pastLegs;
     const series = sim.pnlSeries || (sim.pnlSeries = []);
     const last = series.length ? series[series.length - 1] : null;
-    if (last && last.date === bar.time) { last.totalPnL = total; return; }
-    series.push({ date: bar.time, totalPnL: total });
+    if (last && last.date === bar.time) { last.totalPnL = total; last.qty = sim.qty || 0; return; }
+    series.push({ date: bar.time, totalPnL: total, qty: sim.qty || 0 });
+  }
+
+  // Auto-trailing stop: walks every active stop with a `trail` spec and
+  // ratchets the stop price up (never down) to match the latest rule output.
+  // Currently supports trail.type === 'ema' (Below EMA · auto-trail).
+  function _maybeTrailStops(sim, bars, idx, fired) {
+    if (!sim || !sim.stopLevels || !bars) return;
+    const bar = bars[idx];
+    if (!bar) return;
+    sim.stopLevels.forEach(function(s) {
+      if (!s || s.fired || !s.trail) return;
+      if (s.trail.type !== 'ema') return;
+      const candidate = Sim.StopRules.emaBelow(bars, idx, s.trail.period || 10, s.trail.k || 0);
+      if (candidate == null || !isFinite(candidate)) return;
+      // Ratchet: only ever move stop UP (longs). Tiny epsilon to avoid noise.
+      if (candidate > (s.price || 0) + 0.005) {
+        const oldPrice = s.price;
+        s.price = Math.round(candidate * 100) / 100;
+        const ev = {
+          barIdx: idx, date: bar.time || null, type: 'movestop',
+          stopId: s.id, newStop: s.price, pct: s.pct,
+          note: 'auto-trail EMA' + (s.trail.period || 10) + (s.trail.k ? ' −' + s.trail.k + '%' : '')
+                + ': ' + (oldPrice != null ? oldPrice.toFixed(2) + ' → ' : '')
+                + s.price.toFixed(2)
+        };
+        sim.eventsLog.push(ev);
+        if (fired) fired.push(ev);
+      }
+    });
   }
 
   function queueAction(sim, action) {
@@ -9611,10 +10017,14 @@ const Sim = (function(){
         const pct = Number.isFinite(a.pct) ? Math.max(0, Math.min(1, a.pct)) : 1.0;
         if (pct <= 0) continue;
         const stopId = 'stop_' + Math.random().toString(36).slice(2, 8);
-        sim.stopLevels.push({ id: stopId, price: ns, pct, fired: false, barIdx });
+        const trail = (a.stopTrail && a.stopTrail.type === 'ema')
+          ? { type: 'ema', period: +a.stopTrail.period || 10, k: +a.stopTrail.k || 0 }
+          : null;
+        sim.stopLevels.push({ id: stopId, price: ns, pct, fired: false, barIdx, trail });
         const pctLbl = Math.round(pct * 100);
+        const trailLbl = trail ? ' · trail EMA' + trail.period + (trail.k ? ' −' + trail.k + '%' : '') : '';
         const ev = { barIdx, date: bar.time, type: 'movestop', qty: sim.qty, price: null, newStop: r2(ns), pct, stopId,
-          note: 'stop ' + r2(ns) + ' added (' + pctLbl + '%)' };
+          note: 'stop ' + r2(ns) + ' added (' + pctLbl + '%)' + trailLbl };
         sim.eventsLog.push(ev); fired.push(ev);
       }
     }
@@ -9628,6 +10038,9 @@ const Sim = (function(){
     const lastIdx = Math.min(targetIdx, bars.length - 1, sim.endBarIdx != null ? sim.endBarIdx : Infinity);
     while (sim.playIdx < lastIdx) {
       const nextIdx = sim.playIdx + 1; const bar = bars[nextIdx]; if (!bar) break;
+      // Trail stops to the new bar's EMA BEFORE checking for trigger so a stop
+      // that just got ratcheted up can fire in the same bar if price gaps under.
+      _maybeTrailStops(sim, bars, nextIdx, fired);
       const stopFired = _processStopOnBar(sim, bar, nextIdx, fired);
       if (!stopFired) _processActionsOnBar(sim, bar, nextIdx, fired);
       _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), nextIdx);
@@ -9722,7 +10135,8 @@ const Sim = (function(){
 
   function reset(sim, bars) {
     const preservedEndBarIdx = sim.endBarIdx;
-    const fresh = createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry) });
+    const preservedInitialEquity = sim.initialEquity || null;
+    const fresh = createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry), initialEquity: preservedInitialEquity });
     Object.keys(sim).forEach(k => delete sim[k]);
     Object.assign(sim, fresh);
     sim.endBarIdx = preservedEndBarIdx;
@@ -10396,18 +10810,19 @@ window.Sim = Sim;
 
     function _updateKVisibility(){
       const t = stratEl.value;
-      const useK = (t === 'pct' || t === 'atr' || t === 'ema');
+      const useK = (t === 'pct' || t === 'atr' || t === 'ema' || t === 'ema_trail');
       if (stratKEl){
         stratKEl.disabled = !useK;
         if (useK && (stratKEl.value === '' || !isFinite(parseFloat(stratKEl.value)))){
-          stratKEl.value = String(dK[t]);
+          // 'ema_trail' uses the same default as 'ema'.
+          stratKEl.value = String(dK[t === 'ema_trail' ? 'ema' : t]);
         }
       }
       if (stratSuffixEl){
-        stratSuffixEl.textContent = (t === 'pct' || t === 'ema') ? '%' : (t === 'atr' ? '× ATR' : '');
+        stratSuffixEl.textContent = (t === 'pct' || t === 'ema' || t === 'ema_trail') ? '%' : (t === 'atr' ? '× ATR' : '');
       }
       if (emaPeriodEl){
-        emaPeriodEl.style.display = (t === 'ema') ? '' : 'none';
+        emaPeriodEl.style.display = (t === 'ema' || t === 'ema_trail') ? '' : 'none';
       }
     }
 
@@ -10425,7 +10840,7 @@ window.Sim = Sim;
       if (t === 'atr')    return Sim.StopRules.atrBelow(price, bars, idx, _kForType('atr'), 14);
       if (t === 'swing5') return Sim.StopRules.swingLowBelow(bars, idx, 5, 0.05);
       if (t === 'swing10')return Sim.StopRules.swingLowBelow(bars, idx, 10, 0.05);
-      if (t === 'ema'){
+      if (t === 'ema' || t === 'ema_trail'){
         const period = parseInt(emaPeriodEl && emaPeriodEl.value, 10) || 10;
         return Sim.StopRules.emaBelow(bars, idx, period, _kForType('ema'));
       }
@@ -10435,6 +10850,17 @@ window.Sim = Sim;
       }
       return null;
     }
+
+    // Expose a small reader so callers can pull trail metadata at submit time.
+    // Returns null unless the user picked an auto-trail strategy.
+    stratEl._getTrailParams = function(){
+      if (stratEl.value !== 'ema_trail') return null;
+      return {
+        type: 'ema',
+        period: parseInt(emaPeriodEl && emaPeriodEl.value, 10) || 10,
+        k: parseFloat(stratKEl && stratKEl.value) || 0
+      };
+    };
 
     function _renderDistance(){
       if (!stopDistEl) return;
@@ -10572,6 +10998,7 @@ window.Sim = Sim;
     const barcountEl = document.getElementById('sim-setup-barcount');
     const pickEntryBtn = document.getElementById('sim-pick-entry-btn');
     const pickEndBtn = document.getElementById('sim-pick-end-btn');
+    const equityEl = document.getElementById('sim-initial-equity');
 
     if (ctx.defaultDate) dateEl.value = ctx.defaultDate;
     if (ctx.defaultPrice != null) priceEl.value = Number(ctx.defaultPrice).toFixed(2);
@@ -10580,7 +11007,10 @@ window.Sim = Sim;
     _setPillActive('sim-setup-pills', 'shares');
     _clearStatus('sim-setup-status');
 
-    endDateEl.value = ctx.restoreFrom?.endDate || '';
+    endDateEl.value = ctx.restoreFrom?.endDate || (ctx.defaultEndDate || '');
+    if (equityEl) equityEl.value = (ctx.restoreFrom?.initialEquity != null)
+      ? ctx.restoreFrom.initialEquity
+      : (ctx.defaultEquity != null ? ctx.defaultEquity : '');
     if (ctx.restoreFrom) {
       if (ctx.restoreFrom.date) dateEl.value = ctx.restoreFrom.date;
       if (ctx.restoreFrom.price != null) priceEl.value = ctx.restoreFrom.price;
@@ -10671,7 +11101,8 @@ window.Sim = Sim;
         sizeMode: modeEl.value,
         sizeValue: _parseNum(sizeEl.value, null),
         stop: _parseNum(stopEl.value, null),
-        endDate: endDateEl.value
+        endDate: endDateEl.value,
+        initialEquity: equityEl ? _parseNum(equityEl.value, null) : null
       };
     }
     if (pickEntryBtn) pickEntryBtn.onclick = function() {
@@ -10709,7 +11140,10 @@ window.Sim = Sim;
       if (stop >= price) return _setStatus('sim-setup-status', 'Stop must be below entry price', true);
       const endDate = endDateEl.value;
       if (endDate && endDate <= date) return _setStatus('sim-setup-status', 'End date must be after entry date', true);
-      try { onSubmit && onSubmit({ date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null }); _closeModal('sim-setup-modal'); }
+      const equityRaw = equityEl ? _parseNum(equityEl.value, NaN) : NaN;
+      const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
+      const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
+      try { onSubmit && onSubmit({ date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail }); _closeModal('sim-setup-modal'); }
       catch (err) { _setStatus('sim-setup-status', err && err.message ? err.message : 'Failed to start sim', true); }
     };
     _openModal('sim-setup-modal');
@@ -11002,7 +11436,8 @@ window.Sim = Sim;
       if (!isFinite(newStop) || newStop <= 0) return _setStatus('sim-movestop-status', 'Stop must be > 0', true);
       if (isFinite(currentPrice) && newStop >= currentPrice) return _setStatus('sim-movestop-status', 'Stop must be below current price', true);
       if (!isFinite(pct) || pct <= 0 || pct > 100) return _setStatus('sim-movestop-status', '% must be between 1 and 100', true);
-      try { onSubmit && onSubmit({ newStop, pct: pct / 100 }); _closeModal('sim-movestop-modal'); }
+      const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
+      try { onSubmit && onSubmit({ newStop, pct: pct / 100, stopTrail }); _closeModal('sim-movestop-modal'); }
       catch (err) { _setStatus('sim-movestop-status', err && err.message ? err.message : 'Add failed', true); }
     };
     _openModal('sim-movestop-modal');
@@ -11026,6 +11461,34 @@ window.Sim = Sim;
     document.getElementById('sim-summary-dd').textContent = derived.maxDrawdown != null ? (typeof derived.maxDrawdown === 'number' ? _fmtSigned$(derived.maxDrawdown) : derived.maxDrawdown) : '—';
     document.getElementById('sim-summary-entries').textContent = derived.numEntries != null ? derived.numEntries : '—';
     document.getElementById('sim-summary-sells').textContent = derived.numSells != null ? derived.numSells : '—';
+
+    // Equity / B&H stats — only render the row if a starting equity was set.
+    const eqGrid = document.getElementById('sim-summary-grid-equity');
+    if (eqGrid){
+      if (derived.initialEquity){
+        eqGrid.style.display = '';
+        const ie = derived.initialEquity;
+        const fe = derived.finalEquity;
+        const ret = derived.totalReturnPct;
+        const bh  = derived.tickerBhPct;
+        const alpha = (ret != null && bh != null) ? (ret - bh) : null;
+        document.getElementById('sim-summary-eq-initial').textContent = '$' + Math.round(ie).toLocaleString();
+        document.getElementById('sim-summary-eq-final').textContent = (fe != null) ? ('$' + Math.round(fe).toLocaleString()) : '—';
+        const retEl = document.getElementById('sim-summary-eq-return');
+        retEl.textContent = (ret != null) ? ((ret >= 0 ? '+' : '') + ret.toFixed(2) + '%') : '—';
+        retEl.style.color = (ret != null) ? (ret >= 0 ? 'var(--green)' : 'var(--red)') : '';
+        const bhEl = document.getElementById('sim-summary-bh');
+        bhEl.textContent = (bh != null) ? ((bh >= 0 ? '+' : '') + bh.toFixed(2) + '%') : '—';
+        bhEl.style.color = (bh != null) ? (bh >= 0 ? 'var(--green)' : 'var(--red)') : '';
+        const aEl = document.getElementById('sim-summary-alpha');
+        aEl.textContent = (alpha != null) ? ((alpha >= 0 ? '+' : '') + alpha.toFixed(2) + '%') : '—';
+        aEl.style.color = (alpha != null) ? (alpha >= 0 ? 'var(--green)' : 'var(--red)') : '';
+        const w = derived.simWindow;
+        document.getElementById('sim-summary-window').textContent = w ? (w.from + ' → ' + w.to) : '—';
+      } else {
+        eqGrid.style.display = 'none';
+      }
+    }
 
     // Render per-leg breakdown when multi-leg
     const legsHostEl = document.getElementById('sim-summary-legs');
@@ -11129,6 +11592,22 @@ window.Sim = Sim;
       try { handlers.onScreenshot && handlers.onScreenshot(); }
       catch (err) { _setStatus('sim-summary-status', err && err.message ? err.message : 'Screenshot failed', true); }
     };
+    const saveBtn = document.getElementById('sim-summary-save');
+    if (saveBtn){
+      saveBtn.onclick = function(){
+        try { handlers.onSave && handlers.onSave(); }
+        catch (err) { _setStatus('sim-summary-status', err && err.message ? err.message : 'Save failed', true); }
+      };
+    }
+    const addStatsBtn = document.getElementById('sim-summary-add-stats');
+    if (addStatsBtn){
+      addStatsBtn.onclick = function(){
+        try { handlers.onAddToStats && handlers.onAddToStats(); }
+        catch (err) { _setStatus('sim-summary-status', err && err.message ? err.message : 'Add to stats failed', true); }
+      };
+      // Hide the button in view-only (mid-sim peek) mode — recording mid-run is misleading.
+      addStatsBtn.style.display = (handlers && handlers.viewOnly) ? 'none' : '';
+    }
     document.getElementById('sim-summary-reenter').onclick = () => { _closeModal('sim-summary-modal'); handlers.onReenter && handlers.onReenter(); };
     _onBackdrop('sim-summary-modal', handlers.onClose);
     _openModal('sim-summary-modal');
@@ -11212,6 +11691,11 @@ window.Sim = Sim;
         type: ev.type, symbol: symbol, qty: ev.qty, price: ev.price, note: ev.note
       });
     });
+    const initialEquity = (sim && sim.initialEquity) || null;
+    // Build a side-map of bar.time → qty so the detail pane can distinguish
+    // "no position held" from "held but flat" on $0 days.
+    const qtyByDate = new Map();
+    series.forEach(function(pt){ qtyByDate.set(pt.date, pt.qty || 0); });
     let prev = 0;
     const days = dates.map(function(date){
       const cum = byDate.get(date);
@@ -11221,16 +11705,17 @@ window.Sim = Sim;
       return {
         date: date,
         dollarChange: dollarChange,
-        pctChange: null,
-        equityClose: cum,
+        pctChange: initialEquity ? (dollarChange / initialEquity) * 100 : null,
+        equityClose: initialEquity ? initialEquity + cum : cum,
         positions: pos,
-        events: eventsByDate[date] || []
+        events: eventsByDate[date] || [],
+        openCount: (qtyByDate.get(date) || 0) > 0 ? 1 : 0
       };
     });
     return {
       startDate: dates[0],
       endDate: dates[dates.length - 1],
-      initialEquity: null,
+      initialEquity: initialEquity,
       days: days
     };
   }
@@ -11279,7 +11764,8 @@ window.Sim = Sim;
         pctChange: initialEquity > 0 ? (dollarChange / initialEquity) * 100 : null,
         equityClose: pt.equity,
         positions: positions,
-        events: eventsByDate[pt.date] || []
+        events: eventsByDate[pt.date] || [],
+        openCount: pt.openCount || 0
       };
     });
     return {
@@ -11340,7 +11826,16 @@ window.Sim = Sim;
       });
     }
     if (!symKeys.length && !evs.length){
-      const empty = _mk('div', 'pnlcal-detail-empty', 'No position activity this day.');
+      let msg;
+      if (day.openCount && day.openCount > 0){
+        msg = 'Held ' + day.openCount + ' position' + (day.openCount > 1 ? 's' : '') + ' — close-to-close was unchanged.';
+      } else if (day.openCount === 0){
+        msg = 'No positions held on this day.';
+      } else {
+        // openCount unknown (e.g. stats-aggregated calendar)
+        msg = 'Flat day — no position activity.';
+      }
+      const empty = _mk('div', 'pnlcal-detail-empty', msg);
       empty.style.marginTop = '8px';
       detailHost.appendChild(empty);
     }
@@ -11460,6 +11955,1313 @@ window.Sim = Sim;
     render: render,
     modelFromIndividual: modelFromIndividual,
     modelFromPortfolio: modelFromPortfolio
+  };
+})();
+
+/* ---------- SimRandom: pick random big-mover from a year ---------- */
+(function(){
+  function _years(){
+    if (typeof allRows === 'undefined' || !allRows) return [];
+    const set = new Set();
+    allRows.forEach(function(r){ if (r && r.year != null) set.add(String(r.year)); });
+    return Array.from(set).sort(function(a, b){ return +b - +a; });
+  }
+  function _rowsForYear(y){
+    if (typeof allRows === 'undefined' || !allRows) return [];
+    return allRows.filter(function(r){ return String(r.year) === String(y); });
+  }
+  function _findFilteredIndex(row){
+    if (typeof filtered === 'undefined' || !filtered || !row) return -1;
+    return filtered.findIndex(function(r){
+      return r && r.symbol === row.symbol && String(r.year) === String(row.year);
+    });
+  }
+
+  function _populateYearSelect(){
+    const sel = document.getElementById('sim-random-year');
+    if (!sel) return;
+    const years = _years();
+    sel.innerHTML = '';
+    years.forEach(function(y){
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      sel.appendChild(opt);
+    });
+    // Default to f-year if set, else current/most recent
+    const fyEl = document.getElementById('f-year');
+    const curYear = (fyEl && fyEl.value) ? fyEl.value.trim() : '';
+    if (curYear && years.indexOf(curYear) >= 0) sel.value = curYear;
+    else if (years.length) sel.value = years[0];
+    _updateCount();
+  }
+  function _updateCount(){
+    const sel = document.getElementById('sim-random-year');
+    const out = document.getElementById('sim-random-count');
+    if (!sel || !out) return;
+    const rows = _rowsForYear(sel.value);
+    out.textContent = rows.length + ' big mover' + (rows.length === 1 ? '' : 's');
+  }
+  function _zoomChartToYear(year){
+    if (typeof chart === 'undefined' || !chart || !chart.timeScale) return;
+    try {
+      chart.timeScale().setVisibleRange({ from: year + '-01-01', to: year + '-12-31' });
+    } catch(e){
+      // setVisibleRange can throw if range is outside bar data — ignore.
+    }
+  }
+  async function _doPick(){
+    const sel = document.getElementById('sim-random-year');
+    const status = document.getElementById('sim-random-status');
+    if (!sel) return;
+    const year = sel.value;
+    const candidates = _rowsForYear(year);
+    if (!candidates.length){
+      if (status) { status.textContent = 'No big movers in ' + year + '.'; status.style.color = 'var(--red)'; }
+      return;
+    }
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    // Make sure the row is in the current `filtered` table — set the year
+    // filter to match if needed, then re-apply.
+    const fyEl = document.getElementById('f-year');
+    if (fyEl && fyEl.value.trim() !== String(year)){
+      fyEl.value = String(year);
+      if (typeof applyFilters === 'function') applyFilters();
+    }
+    let idx = _findFilteredIndex(pick);
+    if (idx < 0){
+      // Row not in filtered (other filters excluded it) — clear the symbol/tag/dir filters minimally and retry.
+      const fSym = document.getElementById('f-sym'); if (fSym) fSym.value = '';
+      const fTag = document.getElementById('f-tag'); if (fTag) fTag.value = '';
+      const fDir = document.getElementById('f-dir'); if (fDir) fDir.value = '';
+      const fRat = document.getElementById('f-rating'); if (fRat) fRat.value = '';
+      if (typeof applyFilters === 'function') applyFilters();
+      idx = _findFilteredIndex(pick);
+    }
+    if (idx < 0){
+      if (status) { status.textContent = 'Could not surface ' + pick.symbol + ' in the table.'; status.style.color = 'var(--red)'; }
+      return;
+    }
+    // Stash the year window so the next openSetup pre-fills end-of-year.
+    window._pendingSimYearWindow = { year: +year };
+    // Close modal first so the chart load is visible.
+    const randomModal = document.getElementById('sim-random-modal');
+    if (randomModal) randomModal.classList.remove('open');
+    if (typeof selectRow === 'function'){
+      try { await selectRow(idx); } catch(e){ console.warn('[SimRandom] selectRow:', e); }
+    }
+    _zoomChartToYear(year);
+  }
+
+  function _open(){
+    _populateYearSelect();
+    const m = document.getElementById('sim-random-modal');
+    if (m) m.classList.add('open');
+    const status = document.getElementById('sim-random-status');
+    if (status) { status.textContent = ''; status.style.color = ''; }
+  }
+  function _wire(){
+    const btn = document.getElementById('sim-random-btn');
+    if (btn && !btn._simRandomBound){
+      btn._simRandomBound = true;
+      btn.addEventListener('click', _open);
+    }
+    const sel = document.getElementById('sim-random-year');
+    if (sel && !sel._simRandomBound){
+      sel._simRandomBound = true;
+      sel.addEventListener('change', _updateCount);
+    }
+    const go = document.getElementById('sim-random-go');
+    if (go && !go._simRandomBound){
+      go._simRandomBound = true;
+      go.addEventListener('click', _doPick);
+    }
+    const cancel = document.getElementById('sim-random-cancel');
+    if (cancel && !cancel._simRandomBound){
+      cancel._simRandomBound = true;
+      cancel.addEventListener('click', function(){
+        const m = document.getElementById('sim-random-modal');
+        if (m) m.classList.remove('open');
+      });
+    }
+    // Backdrop click closes
+    const modal = document.getElementById('sim-random-modal');
+    if (modal && !modal._simRandomBound){
+      modal._simRandomBound = true;
+      modal.addEventListener('click', function(e){
+        if (e.target === modal) modal.classList.remove('open');
+      });
+    }
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wire);
+  } else {
+    _wire();
+  }
+  window.SimRandom = { open: _open };
+})();
+
+/* ---------- SimSaved: localStorage save/load of sim scenarios ---------- */
+(function(){
+  const KEY = 'bm_saved_sims_v1';
+
+  function _load(){
+    try {
+      const raw = localStorage.getItem(KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch(e){ return []; }
+  }
+  function _store(arr){
+    try { localStorage.setItem(KEY, JSON.stringify(arr.slice(0, 200))); }
+    catch(e){ console.warn('[SimSaved] store failed:', e); }
+  }
+
+  function saveCurrent(sim, bars, derived){
+    if (!sim || !sim.entry){
+      alert('No active sim to save.');
+      return;
+    }
+    const defaultName = (derived && derived.symbol ? derived.symbol : 'Sim') +
+                        ' ' + (sim.entry.date || '') +
+                        (derived && derived.totalReturnPct != null
+                          ? ' (' + (derived.totalReturnPct >= 0 ? '+' : '') + derived.totalReturnPct.toFixed(1) + '%)'
+                          : '');
+    const name = prompt('Name this saved sim:', defaultName);
+    if (name == null || !name.trim()) return;
+    const symbol = (typeof currentSymbol !== 'undefined' && currentSymbol)
+      ? currentSymbol
+      : (derived && derived.symbol) || '';
+    const moveKey = sim.moveKey || symbol;
+    const yearMatch = (moveKey || '').match(/_(\d{4})$/);
+    const year = yearMatch ? +yearMatch[1]
+      : (sim.entry.date ? +sim.entry.date.slice(0,4) : null);
+    // Find the end bar's date if endBarIdx is set.
+    let endDate = null;
+    if (sim.endBarIdx != null && bars && bars[sim.endBarIdx]) endDate = bars[sim.endBarIdx].time;
+    const scenario = {
+      v: 1,
+      id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      name: name.trim(),
+      ts: Date.now(),
+      symbol: symbol,
+      moveKey: moveKey,
+      year: year,
+      direction: sim.direction || 'long',
+      initialEquity: sim.initialEquity || null,
+      setup: {
+        date: sim.entry.date,
+        price: sim.entry.price,
+        sizeMode: sim.entry.sizeMode || 'shares',
+        sizeValue: sim.entry.sizeValue,
+        stop: sim.entry.stop,
+        endDate: endDate
+      },
+      result: {
+        totalReturnPct: derived && derived.totalReturnPct != null ? +derived.totalReturnPct.toFixed(2) : null,
+        totalPnL: derived && derived.totalPnL != null ? +(+derived.totalPnL).toFixed(2) : null,
+        rMultiple: derived && derived.rMultiple != null ? +(+derived.rMultiple).toFixed(2) : null,
+        legCount: derived && derived.legCount != null ? derived.legCount : null
+      }
+    };
+    const all = _load();
+    all.unshift(scenario);
+    _store(all);
+    alert('Saved as "' + scenario.name + '".');
+  }
+
+  function _renderList(){
+    const host = document.getElementById('sim-saved-list');
+    if (!host) return;
+    while (host.firstChild) host.removeChild(host.firstChild);
+    const all = _load();
+    if (!all.length){
+      const empty = document.createElement('div');
+      empty.className = 'sim-saved-empty';
+      empty.textContent = 'No saved sims yet. Save from the Sim Summary modal.';
+      host.appendChild(empty);
+      return;
+    }
+    all.forEach(function(s){
+      const row = document.createElement('div');
+      row.className = 'sim-saved-row';
+      const main = document.createElement('div');
+      const name = document.createElement('div');
+      name.className = 'sim-saved-name';
+      name.textContent = s.name;
+      const meta = document.createElement('div');
+      meta.className = 'sim-saved-meta';
+      const tsStr = new Date(s.ts || Date.now()).toLocaleDateString();
+      meta.textContent = (s.symbol || '—') + ' · ' + (s.year || '—') +
+                         ' · ' + (s.setup && s.setup.date ? s.setup.date : '—') +
+                         ' · saved ' + tsStr;
+      main.appendChild(name);
+      main.appendChild(meta);
+      row.appendChild(main);
+      const ret = document.createElement('div');
+      ret.className = 'sim-saved-ret';
+      const r = s.result && s.result.totalReturnPct;
+      if (r != null){
+        ret.textContent = (r >= 0 ? '+' : '') + r.toFixed(1) + '%';
+        ret.classList.add(r >= 0 ? 'is-pos' : 'is-neg');
+      } else if (s.result && s.result.rMultiple != null){
+        const rr = s.result.rMultiple;
+        ret.textContent = (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R';
+        ret.classList.add(rr >= 0 ? 'is-pos' : 'is-neg');
+      } else {
+        ret.textContent = '—';
+      }
+      row.appendChild(ret);
+      const loadBtn = document.createElement('button');
+      loadBtn.className = 'sim-saved-btn';
+      loadBtn.type = 'button';
+      loadBtn.textContent = '↺ Load';
+      loadBtn.addEventListener('click', function(){ _loadScenario(s); });
+      row.appendChild(loadBtn);
+      const delBtn = document.createElement('button');
+      delBtn.className = 'sim-saved-btn is-danger';
+      delBtn.type = 'button';
+      delBtn.textContent = '✕';
+      delBtn.title = 'Delete';
+      delBtn.addEventListener('click', function(){
+        if (!confirm('Delete "' + s.name + '"?')) return;
+        const after = _load().filter(function(x){ return x.id !== s.id; });
+        _store(after);
+        _renderList();
+      });
+      row.appendChild(delBtn);
+      host.appendChild(row);
+    });
+  }
+
+  async function _loadScenario(s){
+    if (!s || !s.symbol){ alert('Invalid saved sim.'); return; }
+    // Close the picker modal.
+    const modal = document.getElementById('sim-saved-modal');
+    if (modal) modal.classList.remove('open');
+    // Find row in allRows; prefer same year, else any year for the symbol.
+    if (typeof allRows === 'undefined' || !allRows){
+      alert('Stocks list not loaded yet.'); return;
+    }
+    const target = allRows.find(function(r){
+      return r.symbol === s.symbol && (!s.year || +r.year === +s.year);
+    }) || allRows.find(function(r){ return r.symbol === s.symbol; });
+    if (!target){
+      alert('Ticker ' + s.symbol + ' (' + (s.year || '?') + ') no longer in the table.');
+      return;
+    }
+    // Make sure year filter matches so it shows up
+    const fyEl = document.getElementById('f-year');
+    if (fyEl) {
+      fyEl.value = s.year ? String(s.year) : '';
+      if (typeof applyFilters === 'function') applyFilters();
+    }
+    let idx = -1;
+    if (typeof filtered !== 'undefined' && filtered){
+      idx = filtered.findIndex(function(r){ return r.symbol === target.symbol && +r.year === +target.year; });
+    }
+    if (idx < 0){
+      ['f-sym','f-tag','f-dir','f-rating','f-ai','f-src'].forEach(function(id){
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      if (typeof applyFilters === 'function') applyFilters();
+      idx = filtered.findIndex(function(r){ return r.symbol === target.symbol && +r.year === +target.year; });
+    }
+    if (idx < 0){
+      alert('Could not surface ' + target.symbol + ' in the table.');
+      return;
+    }
+    if (typeof selectRow === 'function'){
+      try { await selectRow(idx); } catch(e){ console.warn('[SimSaved] selectRow:', e); }
+    }
+    if (s.year){
+      try { chart.timeScale().setVisibleRange({ from: s.year + '-01-01', to: s.year + '-12-31' }); } catch(e){}
+    }
+    // Open setup modal pre-filled with saved setup.
+    if (window.Sim && Sim.Ctrl && typeof Sim.Ctrl.openSetup === 'function'){
+      Sim.Ctrl.openSetup({
+        defaultDate: s.setup && s.setup.date,
+        defaultEndDate: s.setup && s.setup.endDate,
+        defaultEquity: s.initialEquity || null,
+        restoreFrom: {
+          date: s.setup && s.setup.date,
+          price: s.setup && s.setup.price,
+          sizeMode: s.setup && s.setup.sizeMode,
+          sizeValue: s.setup && s.setup.sizeValue,
+          stop: s.setup && s.setup.stop,
+          endDate: s.setup && s.setup.endDate,
+          initialEquity: s.initialEquity || null
+        }
+      });
+    }
+  }
+
+  function _open(){
+    _renderList();
+    const m = document.getElementById('sim-saved-modal');
+    if (m) m.classList.add('open');
+  }
+  function _wire(){
+    const btn = document.getElementById('sim-saved-btn');
+    if (btn && !btn._simSavedBound){
+      btn._simSavedBound = true;
+      btn.addEventListener('click', _open);
+    }
+    const close = document.getElementById('sim-saved-close');
+    if (close && !close._simSavedBound){
+      close._simSavedBound = true;
+      close.addEventListener('click', function(){
+        const m = document.getElementById('sim-saved-modal');
+        if (m) m.classList.remove('open');
+      });
+    }
+    const modal = document.getElementById('sim-saved-modal');
+    if (modal && !modal._simSavedBound){
+      modal._simSavedBound = true;
+      modal.addEventListener('click', function(e){
+        if (e.target === modal) modal.classList.remove('open');
+      });
+    }
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wire);
+  } else {
+    _wire();
+  }
+  window.SimSaved = { open: _open, saveCurrent: saveCurrent };
+})();
+
+/* ---------- SimStats: lifetime sim performance log ---------- */
+(function(){
+  // v2 schema: separate tables for sessions and trades.
+  // - Each Add-to-Stats click writes ONE session + N trades (one per leg).
+  // - v1 records (single-row-per-sim) auto-migrate on first load.
+  const SESSIONS_KEY = 'bm_sim_sessions_v2';
+  const TRADES_KEY   = 'bm_sim_trades_v2';
+  const V1_KEY       = 'bm_sim_stats_v1';            // legacy
+  const MIGRATION_KEY = 'bm_sim_stats_migrated_v2';
+
+  let _currentRange = 'ALL';
+  let _currentType = 'ALL';
+  let _currentView = 'TRADES';                        // TRADES | SESSIONS
+
+  // Cap chosen so a routine of ~4 sims/day still fits ~3 years of sessions
+  // and ~10 trades/session. Trade rows are smaller than sessions.
+  const MAX_SESSIONS = 5000;
+  const MAX_TRADES   = 50000;
+
+  function _loadJson(key){
+    try {
+      const raw = localStorage.getItem(key);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch(e){ return []; }
+  }
+  function _storeJson(key, arr, cap){
+    try { localStorage.setItem(key, JSON.stringify(arr.slice(0, cap))); }
+    catch(e){
+      console.warn('[SimStats] store ' + key + ' failed:', e);
+      try { localStorage.setItem(key, JSON.stringify(arr.slice(0, Math.floor(cap / 2)))); }
+      catch(_){ alert('localStorage is full — could not save. Export and clear some stats first.'); }
+    }
+  }
+
+  function _loadSessions(){ return _loadJson(SESSIONS_KEY); }
+  function _loadTrades(){ return _loadJson(TRADES_KEY); }
+  function _storeSessions(arr){ _storeJson(SESSIONS_KEY, arr, MAX_SESSIONS); }
+  function _storeTrades(arr){ _storeJson(TRADES_KEY, arr, MAX_TRADES); }
+
+  // Migrate v1 records (one-record-per-sim) into v2 (session + 1 stub trade).
+  // Stub trade has aggregate fields only — leg-level detail wasn't recorded
+  // in v1 so we can't synthesize it. Leaves V1_KEY untouched as a safety net.
+  function _migrateV1IfNeeded(){
+    try {
+      if (localStorage.getItem(MIGRATION_KEY)) return;
+      const v1 = _loadJson(V1_KEY);
+      if (!v1.length){ localStorage.setItem(MIGRATION_KEY, '1'); return; }
+      const sessions = _loadSessions();
+      const trades = _loadTrades();
+      v1.forEach(function(r){
+        const sid = 'sess_mig_' + (r.id || (Date.now() + '_' + Math.random().toString(36).slice(2,6)));
+        const session = {
+          v: 2, id: sid, ts: r.ts || Date.now(),
+          simType: r.simType || 'individual',
+          symbols: r.symbols || (r.symbol ? [r.symbol] : []),
+          symbol: r.symbol || null, year: r.year || null,
+          initialEquity: r.initialEquity || null,
+          finalEquity: r.finalEquity != null ? r.finalEquity : (r.initialEquity != null ? r.initialEquity + (r.totalPnL || 0) : null),
+          sessionPnL: r.totalPnL || 0,
+          totalReturnPct: r.totalReturnPct != null ? r.totalReturnPct : null,
+          avgPctDeployed: null, peakPctDeployed: null, idlePctOfTime: null,
+          tradeCount: 1, winCount: (r.totalPnL > 0 ? 1 : 0), lossCount: (r.totalPnL < 0 ? 1 : 0),
+          winRate: (r.totalPnL > 0 ? 100 : 0),
+          profitFactor: null,
+          simStartDate: r.simStartDate || null,
+          simEndDate: r.simEndDate || null,
+          indexReturnPct: r.indexReturnPct || null, indexName: r.indexName || null,
+          migratedFromV1: true
+        };
+        sessions.push(session);
+        trades.push({
+          v: 2, id: 'trade_mig_' + sid, sessionId: sid, ts: session.ts,
+          simType: session.simType, symbol: r.symbol || null, year: r.year || null,
+          legIndex: 1, direction: r.direction || 'long',
+          entryDate: r.simStartDate || null, entryPrice: null, qty: null, stopAtEntry: null, initialRisk: null,
+          exitDate: r.simEndDate || null, exitPrice: null, exitReason: 'aggregate',
+          holdingDays: r.daysHeld || null,
+          realizedPnL: r.totalPnL || 0,
+          rMultiple: r.rMultiple != null ? r.rMultiple : null,
+          returnPctOfNotional: null,
+          mfe: r.mfe || null, mae: r.mae || null,
+          migratedFromV1: true
+        });
+      });
+      _storeSessions(sessions);
+      _storeTrades(trades);
+      localStorage.setItem(MIGRATION_KEY, '1');
+      console.info('[SimStats] migrated ' + v1.length + ' v1 records to v2 (sessions + stub trades).');
+    } catch(e){ console.warn('[SimStats] migration failed:', e); }
+  }
+  _migrateV1IfNeeded();
+
+  // ---- Trade extraction ----
+  // Walk a sim's archived legs[] PLUS its current leg (if not in 'between'
+  // idle state) and produce one trade record per leg. Active legs (not yet
+  // closed/stopped) get exitReason='open' and a mark-to-market exitPrice.
+  function _extractTradesFromSim(sim, bars, ctx){
+    ctx = ctx || {};
+    const symbol = ctx.symbol || (sim && sim.symbol) || 'POS';
+    const trades = [];
+    if (!sim) return trades;
+
+    const allLegs = [];
+    (sim.legs || []).forEach(function(leg, i){
+      allLegs.push({
+        legIndex: i + 1,
+        entry: leg.entry, shares0: leg.shares0, initialRisk: leg.initialRisk,
+        realizedPnL: leg.realizedPnL, rMultiple: leg.rMultiple,
+        mfe: leg.mfe, mae: leg.mae,
+        exitBarIdx: leg.exitBarIdx, exitReason: leg.exitReason,
+        eventsLog: leg.eventsLog || []
+      });
+    });
+    const hasCurrent = !sim.between && (sim.qty > 0 || sim.closed || sim.stoppedOut);
+    if (hasCurrent){
+      let realized = sim.realizedPnL || 0;
+      let exitReason = sim.stoppedOut ? 'stop' : (sim.closed ? 'close' : 'open');
+      // Mark-to-market for an open leg.
+      if (!sim.closed && !sim.stoppedOut && sim.qty > 0){
+        const lastBar = bars && bars[sim.playIdx];
+        if (lastBar) realized = (sim.realizedPnL || 0) + sim.qty * (lastBar.close - sim.avgCost);
+      }
+      const r = (sim.initialRisk > 0) ? realized / sim.initialRisk : null;
+      allLegs.push({
+        legIndex: (sim.legs || []).length + 1,
+        entry: sim.entry, shares0: sim.shares0, initialRisk: sim.initialRisk,
+        realizedPnL: realized, rMultiple: r,
+        mfe: sim._mfeVal, mae: sim._maeVal,
+        exitBarIdx: sim.playIdx, exitReason: exitReason,
+        eventsLog: sim.eventsLog || []
+      });
+    }
+
+    allLegs.forEach(function(leg){
+      const exitBar = bars && bars[leg.exitBarIdx];
+      const entryBar = bars && bars[leg.entry.barIdx];
+      let exitPrice = null;
+      // Last realized exit event has the actual fill price.
+      for (let i = (leg.eventsLog || []).length - 1; i >= 0; i--){
+        const ev = leg.eventsLog[i];
+        if ((ev.type === 'stop' || ev.type === 'close' || ev.type === 'sell') && ev.price != null){
+          exitPrice = ev.price; break;
+        }
+      }
+      // For an open leg, fall back to the last bar's close (mark).
+      if (exitPrice == null && exitBar) exitPrice = exitBar.close;
+
+      const entryDate = leg.entry.date || (entryBar ? entryBar.time : null);
+      const exitDate = exitBar ? exitBar.time : null;
+      const holdingDays = (leg.exitBarIdx != null && leg.entry.barIdx != null)
+        ? leg.exitBarIdx - leg.entry.barIdx : null;
+      const notional = (leg.entry.price && leg.shares0) ? leg.entry.price * leg.shares0 : null;
+
+      trades.push({
+        legIndex: leg.legIndex,
+        symbol: symbol,
+        entryDate: entryDate, entryPrice: leg.entry.price,
+        qty: leg.shares0, stopAtEntry: leg.entry.stop, initialRisk: leg.initialRisk,
+        exitDate: exitDate, exitPrice: exitPrice, exitReason: leg.exitReason,
+        holdingDays: holdingDays,
+        realizedPnL: +(+leg.realizedPnL || 0).toFixed(2),
+        rMultiple: leg.rMultiple != null && isFinite(leg.rMultiple) ? +leg.rMultiple.toFixed(3) : null,
+        returnPctOfNotional: notional > 0 ? +(((leg.realizedPnL || 0) / notional) * 100).toFixed(2) : null,
+        mfe: leg.mfe != null ? +leg.mfe.toFixed(2) : null,
+        mae: leg.mae != null ? +leg.mae.toFixed(2) : null
+      });
+    });
+    return trades;
+  }
+
+  // ---- Deployed % computation ----
+  function _deployedIndividual(sim, bars){
+    if (!sim || !sim.initialEquity || !bars) return { avg: null, peak: null, idlePct: null };
+    const series = sim.pnlSeries || [];
+    if (!series.length) return { avg: null, peak: null, idlePct: null };
+    const closeByDate = {};
+    bars.forEach(function(b){ if (b && b.time) closeByDate[b.time] = b.close; });
+    let sum = 0, n = 0, peak = 0, idle = 0;
+    series.forEach(function(pt){
+      const close = closeByDate[pt.date];
+      if (close == null) return;
+      const equity = sim.initialEquity + (pt.totalPnL || 0);
+      if (equity <= 0) return;
+      const deployed = (pt.qty || 0) * close;
+      const pct = deployed / equity;
+      sum += pct;
+      if (pct > peak) peak = pct;
+      if ((pt.qty || 0) === 0) idle += 1;
+      n += 1;
+    });
+    return {
+      avg: n > 0 ? +(sum / n * 100).toFixed(2) : null,
+      peak: +(peak * 100).toFixed(2),
+      idlePct: n > 0 ? +(idle / n * 100).toFixed(2) : null
+    };
+  }
+  function _deployedPortfolio(){
+    const PS = window.PortSim;
+    const Positions = PS && PS.Positions;
+    if (!Positions || !Positions.curve) return { avg: null, peak: null, idlePct: null };
+    const curve = Positions.curve();
+    if (!curve.length) return { avg: null, peak: null, idlePct: null };
+    let sum = 0, n = 0, peak = 0, idle = 0;
+    curve.forEach(function(pt){
+      if (!pt.equity || pt.equity <= 0) return;
+      const deployed = pt.equity - (pt.cash || 0);
+      const pct = Math.max(0, deployed / pt.equity);
+      sum += pct;
+      if (pct > peak) peak = pct;
+      if ((pt.openCount || 0) === 0) idle += 1;
+      n += 1;
+    });
+    return {
+      avg: n > 0 ? +(sum / n * 100).toFixed(2) : null,
+      peak: +(peak * 100).toFixed(2),
+      idlePct: n > 0 ? +(idle / n * 100).toFixed(2) : null
+    };
+  }
+
+  // ---- Aggregates from trades ----
+  function _aggSession(trades){
+    const wins = trades.filter(function(t){ return (t.realizedPnL || 0) > 0; });
+    const losses = trades.filter(function(t){ return (t.realizedPnL || 0) < 0; });
+    const sumW = wins.reduce(function(s, t){ return s + t.realizedPnL; }, 0);
+    const sumL = Math.abs(losses.reduce(function(s, t){ return s + t.realizedPnL; }, 0));
+    const total = trades.reduce(function(s, t){ return s + (t.realizedPnL || 0); }, 0);
+    return {
+      tradeCount: trades.length,
+      winCount: wins.length, lossCount: losses.length,
+      winRate: trades.length ? (wins.length / trades.length) * 100 : 0,
+      profitFactor: sumL > 0 ? sumW / sumL : (sumW > 0 ? Infinity : 0),
+      sessionPnL: total
+    };
+  }
+
+  // ---- Add to stats — individual sim ----
+  function addCurrent(sim, bars, derived){
+    if (!sim){ alert('No active sim to record.'); return; }
+    if (sim.qty > 0 && !sim.closed && !sim.stoppedOut){
+      if (!confirm('Sim still has open shares. Add to stats anyway? (Mark-to-close P&L will be used.)')) return;
+    }
+    const symbol = (typeof currentSymbol !== 'undefined' && currentSymbol)
+      ? currentSymbol : (derived && derived.symbol) || '';
+    const moveKey = sim.moveKey || symbol;
+    const yearMatch = (moveKey || '').match(/_(\d{4})$/);
+    const year = yearMatch ? +yearMatch[1]
+      : (sim.entry && sim.entry.date ? +sim.entry.date.slice(0,4) : null);
+    const simStartIdx = sim.simStartBarIdx != null ? sim.simStartBarIdx : (sim.entry ? sim.entry.barIdx : 0);
+    const simEndIdx = Math.min(sim.playIdx || 0, (bars && bars.length - 1) || 0);
+    const simStartDate = bars && bars[simStartIdx] ? bars[simStartIdx].time : null;
+    const simEndDate = bars && bars[simEndIdx] ? bars[simEndIdx].time : null;
+
+    const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const tradeRows = _extractTradesFromSim(sim, bars, { symbol: symbol });
+    if (!tradeRows.length){
+      alert('No trades to record (no entries taken in this sim).');
+      return;
+    }
+    const dep = _deployedIndividual(sim, bars);
+    const agg = _aggSession(tradeRows);
+    const session = {
+      v: 2, id: sessionId, ts: Date.now(),
+      simType: 'individual',
+      symbols: [symbol], symbol: symbol, year: year,
+      moveKey: moveKey, direction: sim.direction || 'long',
+      initialEquity: sim.initialEquity || null,
+      finalEquity: sim.initialEquity ? sim.initialEquity + agg.sessionPnL : null,
+      sessionPnL: +agg.sessionPnL.toFixed(2),
+      totalReturnPct: sim.initialEquity > 0 ? +((agg.sessionPnL / sim.initialEquity) * 100).toFixed(2) : null,
+      avgPctDeployed: dep.avg, peakPctDeployed: dep.peak, idlePctOfTime: dep.idlePct,
+      tradeCount: agg.tradeCount, winCount: agg.winCount, lossCount: agg.lossCount,
+      winRate: +agg.winRate.toFixed(1),
+      profitFactor: agg.profitFactor === Infinity ? null : (isFinite(agg.profitFactor) ? +agg.profitFactor.toFixed(2) : null),
+      tickerBhPct: derived && derived.tickerBhPct != null ? +(+derived.tickerBhPct).toFixed(2) : null,
+      simStartDate: simStartDate, simEndDate: simEndDate
+    };
+
+    const sessions = _loadSessions();
+    const trades = _loadTrades();
+    sessions.unshift(session);
+    tradeRows.forEach(function(t){
+      trades.unshift(Object.assign({
+        v: 2,
+        id: 'trade_' + sessionId + '_' + t.legIndex,
+        sessionId: sessionId, ts: session.ts,
+        simType: 'individual',
+        year: year, direction: session.direction
+      }, t));
+    });
+    _storeSessions(sessions);
+    _storeTrades(trades);
+    const status = document.getElementById('sim-summary-status');
+    if (status){
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Logged session with ' + tradeRows.length + ' trade' + (tradeRows.length === 1 ? '' : 's') + '. Total sessions: ' + sessions.length + '.';
+    }
+  }
+
+  // ---- Add to stats — portfolio sim ----
+  function addCurrentPortfolio(payload){
+    payload = payload || {};
+    const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const ts = Date.now();
+    const symbols = (payload.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean);
+    let allTrades = [];
+    (payload.basket || []).forEach(function(entry){
+      if (!entry || !entry.sim) return;
+      const t = _extractTradesFromSim(entry.sim, entry.bars, { symbol: entry.symbol || 'POS' });
+      allTrades = allTrades.concat(t);
+    });
+    if (!allTrades.length){
+      alert('No trades to record (no entries taken in this sim).');
+      return;
+    }
+    const dep = _deployedPortfolio();
+    const agg = _aggSession(allTrades);
+    const session = {
+      v: 2, id: sessionId, ts: ts,
+      simType: 'portfolio',
+      symbols: symbols,
+      symbol: symbols.length === 1 ? symbols[0] : ('Basket (' + symbols.length + ')'),
+      year: (payload.firstDate ? +payload.firstDate.slice(0, 4) : null),
+      direction: 'long',
+      initialEquity: payload.initialEquity || null,
+      finalEquity: payload.finalEquity != null ? +(+payload.finalEquity).toFixed(2) : null,
+      sessionPnL: +agg.sessionPnL.toFixed(2),
+      totalReturnPct: payload.totalReturnPct != null ? +(+payload.totalReturnPct).toFixed(2) : null,
+      avgPctDeployed: dep.avg, peakPctDeployed: dep.peak, idlePctOfTime: dep.idlePct,
+      tradeCount: agg.tradeCount, winCount: agg.winCount, lossCount: agg.lossCount,
+      winRate: +agg.winRate.toFixed(1),
+      profitFactor: agg.profitFactor === Infinity ? null : (isFinite(agg.profitFactor) ? +agg.profitFactor.toFixed(2) : null),
+      indexReturnPct: payload.indexReturnPct != null ? +(+payload.indexReturnPct).toFixed(2) : null,
+      indexName: payload.indexName || null,
+      simStartDate: payload.firstDate || null,
+      simEndDate: payload.lastDate || null
+    };
+
+    const sessions = _loadSessions();
+    const trades = _loadTrades();
+    sessions.unshift(session);
+    allTrades.forEach(function(t, i){
+      trades.unshift(Object.assign({
+        v: 2,
+        id: 'trade_' + sessionId + '_' + i,
+        sessionId: sessionId, ts: ts,
+        simType: 'portfolio',
+        year: session.year, direction: 'long'
+      }, t));
+    });
+    _storeSessions(sessions);
+    _storeTrades(trades);
+    alert('✓ Logged portfolio session: ' + symbols.length + ' tickers, ' + allTrades.length + ' trades. Total sessions: ' + sessions.length);
+  }
+
+  function _filterByRange(rows, range){
+    if (range === 'ALL') return rows.slice();
+    const now = new Date();
+    let cutoffMs = null;
+    if (range === '5D'){
+      cutoffMs = now.getTime() - 7 * 86400000;
+    } else if (range === '1M'){
+      const d = new Date(now); d.setMonth(d.getMonth() - 1); cutoffMs = d.getTime();
+    } else if (range === '3M'){
+      const d = new Date(now); d.setMonth(d.getMonth() - 3); cutoffMs = d.getTime();
+    } else if (range === '6M'){
+      const d = new Date(now); d.setMonth(d.getMonth() - 6); cutoffMs = d.getTime();
+    } else if (range === 'MTD'){
+      cutoffMs = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    } else if (range === 'YTD'){
+      cutoffMs = new Date(now.getFullYear(), 0, 1).getTime();
+    }
+    if (cutoffMs == null) return rows.slice();
+    return rows.filter(function(r){ return r.ts >= cutoffMs; });
+  }
+
+  // ---- Calculations (TRADE-LEVEL) ----
+  // `trades` is an array of v2 trade rows. `sessions` is the parallel
+  // session list scoped to the same filter window — used for stats that are
+  // session-level by definition (avg deployed %, # sessions).
+  function _calcKeyMetrics(trades, sessions){
+    const n = trades.length;
+    if (!n){
+      return { count: 0, sessionCount: sessions ? sessions.length : 0, winRate: null,
+               expectedValue: null, profitFactor: null,
+               avgWin: null, avgLoss: null, totalPnL: 0, avgReturnPct: null,
+               avgPctDeployed: null, peakPctDeployed: null, idlePctOfTime: null,
+               winCount: 0, lossCount: 0, breakEvenCount: 0 };
+    }
+    const wins = trades.filter(function(t){ return (t.realizedPnL || 0) > 0; });
+    const losses = trades.filter(function(t){ return (t.realizedPnL || 0) < 0; });
+    const breakEven = n - wins.length - losses.length;
+    const sumWins = wins.reduce(function(s, t){ return s + t.realizedPnL; }, 0);
+    const sumLosses = Math.abs(losses.reduce(function(s, t){ return s + t.realizedPnL; }, 0));
+    const totalPnL = trades.reduce(function(s, t){ return s + (t.realizedPnL || 0); }, 0);
+    const winRate = (n > 0) ? (wins.length / n) * 100 : 0;
+    const avgWin = wins.length ? sumWins / wins.length : 0;
+    const avgLoss = losses.length ? -sumLosses / losses.length : 0;
+    const expectedValue = (winRate / 100) * avgWin + (1 - winRate / 100) * avgLoss;
+    const profitFactor = sumLosses > 0 ? sumWins / sumLosses : (sumWins > 0 ? Infinity : 0);
+    // Per-trade % return on notional
+    const rets = trades.filter(function(t){ return t.returnPctOfNotional != null; })
+                       .map(function(t){ return t.returnPctOfNotional; });
+    const avgReturnPct = rets.length ? rets.reduce(function(s, x){ return s + x; }, 0) / rets.length : null;
+    // Deployed % is a session-level metric — average across the filtered
+    // sessions weighted equally (each session is one observation).
+    const sessionsWithDep = (sessions || []).filter(function(s){ return s.avgPctDeployed != null; });
+    const avgPctDeployed = sessionsWithDep.length
+      ? sessionsWithDep.reduce(function(a, s){ return a + s.avgPctDeployed; }, 0) / sessionsWithDep.length
+      : null;
+    const peakPctDeployed = sessionsWithDep.length
+      ? Math.max.apply(null, sessionsWithDep.map(function(s){ return s.peakPctDeployed || 0; }))
+      : null;
+    const idlePctOfTime = sessionsWithDep.length
+      ? sessionsWithDep.reduce(function(a, s){ return a + (s.idlePctOfTime || 0); }, 0) / sessionsWithDep.length
+      : null;
+    return {
+      count: n,
+      sessionCount: sessions ? sessions.length : 0,
+      winCount: wins.length, lossCount: losses.length, breakEvenCount: breakEven,
+      winRate: winRate,
+      avgWin: avgWin, avgLoss: avgLoss,
+      expectedValue: expectedValue,
+      profitFactor: profitFactor,
+      totalPnL: totalPnL,
+      avgReturnPct: avgReturnPct,
+      avgPctDeployed: avgPctDeployed,
+      peakPctDeployed: peakPctDeployed,
+      idlePctOfTime: idlePctOfTime
+    };
+  }
+
+  function _calcMonthly(trades){
+    const byMonth = {};
+    trades.forEach(function(t){
+      const d = new Date(t.ts);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      const m = byMonth[key] || (byMonth[key] = { month: key, count: 0, pnl: 0, wins: 0 });
+      m.count += 1;
+      m.pnl += (t.realizedPnL || 0);
+      if ((t.realizedPnL || 0) > 0) m.wins += 1;
+    });
+    return Object.values(byMonth).sort(function(a, b){ return a.month < b.month ? 1 : -1; });
+  }
+
+  function _calcDistribution(trades){
+    const rets = trades.map(function(t){ return t.returnPctOfNotional; }).filter(function(v){ return v != null && isFinite(v); });
+    if (!rets.length) return [];
+    const bins = [
+      { label: '< -50%', test: function(v){ return v < -50; } },
+      { label: '-50 → -25', test: function(v){ return v >= -50 && v < -25; } },
+      { label: '-25 → -10', test: function(v){ return v >= -25 && v < -10; } },
+      { label: '-10 → 0',   test: function(v){ return v >= -10 && v < 0; } },
+      { label: '0 → +10',   test: function(v){ return v >= 0 && v < 10; } },
+      { label: '+10 → +25', test: function(v){ return v >= 10 && v < 25; } },
+      { label: '+25 → +50', test: function(v){ return v >= 25 && v < 50; } },
+      { label: '> +50%',    test: function(v){ return v >= 50; } }
+    ];
+    return bins.map(function(b){
+      const count = rets.filter(b.test).length;
+      return { label: b.label, count: count, isPos: b.label.indexOf('+') >= 0 || b.label.indexOf('> +') >= 0 };
+    });
+  }
+
+  // Calendar groups SESSIONS by run-date (the day you clicked Add to Stats),
+  // and a click on a day shows which sessions ran with their per-session WR/PF.
+  function _calcCalendarModel(sessions){
+    if (!sessions.length) return { startDate: null, endDate: null, initialEquity: null, days: [] };
+    const byDate = {};
+    sessions.forEach(function(s){
+      const d = new Date(s.ts);
+      const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const e = byDate[date] || (byDate[date] = { date: date, dollarChange: 0, positions: {}, events: [], count: 0 });
+      const pnl = s.sessionPnL || 0;
+      e.dollarChange += pnl;
+      const sym = s.symbol || '?';
+      e.positions[sym] = (e.positions[sym] || 0) + pnl;
+      const tag = (s.simType || 'individual') === 'portfolio' ? '[PORT] ' : '';
+      const wlrate = s.tradeCount ? '  ·  ' + s.winCount + 'W/' + s.lossCount + 'L' : '';
+      e.events.push({
+        type: pnl > 0 ? 'win' : (pnl < 0 ? 'loss' : 'flat'),
+        symbol: sym,
+        note: tag + (s.year ? s.year + ' · ' : '') + (pnl >= 0 ? '+' : '') + '$' + Math.round(Math.abs(pnl)).toLocaleString() + wlrate
+      });
+      e.count += 1;
+    });
+    const dates = Object.keys(byDate).sort();
+    const days = dates.map(function(date){
+      const e = byDate[date];
+      return {
+        date: date,
+        dollarChange: e.dollarChange,
+        pctChange: null,
+        equityClose: null,
+        positions: e.positions,
+        events: e.events
+      };
+    });
+    return {
+      startDate: dates[0],
+      endDate: dates[dates.length - 1],
+      initialEquity: null,
+      days: days
+    };
+  }
+
+  // ---- Rendering ----
+  function _mk(tag, cls, text){
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text != null) el.textContent = text;
+    return el;
+  }
+  function _fmt$Signed(v){
+    if (!isFinite(v)) return '—';
+    return (v >= 0 ? '+' : '−') + '$' + Math.abs(Math.round(v)).toLocaleString();
+  }
+  function _fmtPct(v, decimals){
+    if (v == null || !isFinite(v)) return '—';
+    decimals = decimals == null ? 2 : decimals;
+    return (v >= 0 ? '+' : '') + v.toFixed(decimals) + '%';
+  }
+
+  function _renderKeyMetrics(host, k){
+    while (host.firstChild) host.removeChild(host.firstChild);
+    const grid = _mk('div', 'sim-stats-keymetrics-grid');
+    function tile(label, val, sub, cls){
+      const card = _mk('div', 'sim-stats-metric');
+      card.appendChild(_mk('div', 'sim-stats-metric-label', label));
+      card.appendChild(_mk('div', 'sim-stats-metric-val' + (cls ? ' ' + cls : ''), val));
+      if (sub) card.appendChild(_mk('div', 'sim-stats-metric-sub', sub));
+      return card;
+    }
+    grid.appendChild(tile('Trades', String(k.count),
+      k.winCount + 'W · ' + k.lossCount + 'L' + (k.breakEvenCount ? ' · ' + k.breakEvenCount + 'BE' : '')
+      + (k.sessionCount ? '  in ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's') : '')));
+    grid.appendChild(tile('Total P&L', _fmt$Signed(k.totalPnL), null, k.totalPnL > 0 ? 'is-pos' : (k.totalPnL < 0 ? 'is-neg' : '')));
+    grid.appendChild(tile('Win Rate', k.count ? k.winRate.toFixed(1) + '%' : '—', 'per trade', k.winRate >= 50 ? 'is-pos' : 'is-neg'));
+    grid.appendChild(tile('Expected Value', _fmt$Signed(k.expectedValue), 'per trade', k.expectedValue > 0 ? 'is-pos' : (k.expectedValue < 0 ? 'is-neg' : '')));
+    let pfTxt = '—';
+    if (k.profitFactor === Infinity) pfTxt = '∞';
+    else if (k.profitFactor != null && isFinite(k.profitFactor)) pfTxt = k.profitFactor.toFixed(2);
+    grid.appendChild(tile('Profit Factor', pfTxt, null, (isFinite(k.profitFactor) && k.profitFactor >= 1) ? 'is-pos' : (k.profitFactor < 1 ? 'is-neg' : '')));
+    grid.appendChild(tile('Avg Win', _fmt$Signed(k.avgWin), null, 'is-pos'));
+    grid.appendChild(tile('Avg Loss', _fmt$Signed(k.avgLoss), null, 'is-neg'));
+    grid.appendChild(tile('Avg Return %', _fmtPct(k.avgReturnPct), 'per trade · notional', k.avgReturnPct > 0 ? 'is-pos' : (k.avgReturnPct < 0 ? 'is-neg' : '')));
+    // Cash-deployment efficiency tiles — only shown if at least one session
+    // had starting equity (otherwise the metric isn't computable).
+    if (k.avgPctDeployed != null){
+      const dep = k.avgPctDeployed;
+      grid.appendChild(tile('Avg % Deployed', dep.toFixed(1) + '%',
+        'idle ' + (k.idlePctOfTime != null ? k.idlePctOfTime.toFixed(0) : '—') + '% of bars',
+        dep >= 70 ? 'is-pos' : (dep < 30 ? 'is-neg' : '')));
+      if (k.peakPctDeployed != null){
+        grid.appendChild(tile('Peak % Deployed', k.peakPctDeployed.toFixed(1) + '%', 'across sessions'));
+      }
+    }
+    host.appendChild(grid);
+  }
+
+  function _renderMonthly(host, rows){
+    while (host.firstChild) host.removeChild(host.firstChild);
+    if (!rows.length){
+      host.appendChild(_mk('div', 'sim-stats-empty', 'No data.'));
+      return;
+    }
+    const table = _mk('table', 'sim-stats-table');
+    const thead = _mk('thead');
+    const tr = _mk('tr');
+    ['Month','Sims','P&L','Win %'].forEach(function(h){ tr.appendChild(_mk('th', null, h)); });
+    thead.appendChild(tr); table.appendChild(thead);
+    const tbody = _mk('tbody');
+    rows.forEach(function(r){
+      const row = _mk('tr');
+      row.appendChild(_mk('td', null, r.month));
+      row.appendChild(_mk('td', null, String(r.count)));
+      const pnlCls = r.pnl > 0 ? 'is-pos' : (r.pnl < 0 ? 'is-neg' : '');
+      row.appendChild(_mk('td', pnlCls, _fmt$Signed(r.pnl)));
+      const wr = r.count ? (r.wins / r.count) * 100 : 0;
+      row.appendChild(_mk('td', null, wr.toFixed(0) + '%'));
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    host.appendChild(table);
+  }
+
+  function _renderDistribution(host, bins){
+    while (host.firstChild) host.removeChild(host.firstChild);
+    if (!bins.length){
+      host.appendChild(_mk('div', 'sim-stats-empty', 'No data with return %.'));
+      return;
+    }
+    const maxC = Math.max.apply(null, bins.map(function(b){ return b.count; }));
+    bins.forEach(function(b){
+      const row = _mk('div', 'sim-stats-distribution-row');
+      row.appendChild(_mk('div', 'sim-stats-distribution-bin', b.label));
+      const bar = _mk('div', 'sim-stats-distribution-bar');
+      const fill = _mk('div', 'sim-stats-distribution-bar-fill ' + (b.isPos ? 'is-pos' : 'is-neg'));
+      const pct = maxC > 0 ? (b.count / maxC) * 100 : 0;
+      fill.style.width = pct + '%';
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(_mk('div', 'sim-stats-distribution-count', String(b.count)));
+      host.appendChild(row);
+    });
+  }
+
+  function _renderTopBottom(host, trades, isTop){
+    while (host.firstChild) host.removeChild(host.firstChild);
+    const sorted = trades.slice().sort(function(a, b){
+      return isTop ? (b.realizedPnL || 0) - (a.realizedPnL || 0)
+                   : (a.realizedPnL || 0) - (b.realizedPnL || 0);
+    }).slice(0, 5);
+    if (!sorted.length){
+      host.appendChild(_mk('div', 'sim-stats-empty', 'No trades yet.'));
+      return;
+    }
+    const table = _mk('table', 'sim-stats-table');
+    const thead = _mk('thead');
+    const tr = _mk('tr');
+    ['Type','Symbol','Year','Held','P&L','Return','R'].forEach(function(h){ tr.appendChild(_mk('th', null, h)); });
+    thead.appendChild(tr); table.appendChild(thead);
+    const tbody = _mk('tbody');
+    sorted.forEach(function(t){
+      const row = _mk('tr');
+      row.appendChild(_mk('td', null, (t.simType || 'individual') === 'portfolio' ? '📦' : '👤'));
+      row.appendChild(_mk('td', null, t.symbol || '—'));
+      row.appendChild(_mk('td', null, t.year != null ? String(t.year) : '—'));
+      row.appendChild(_mk('td', null, t.holdingDays != null ? (t.holdingDays + 'd') : '—'));
+      const pnlCls = (t.realizedPnL || 0) > 0 ? 'is-pos' : ((t.realizedPnL || 0) < 0 ? 'is-neg' : '');
+      row.appendChild(_mk('td', pnlCls, _fmt$Signed(t.realizedPnL)));
+      row.appendChild(_mk('td', pnlCls, _fmtPct(t.returnPctOfNotional, 1)));
+      row.appendChild(_mk('td', pnlCls, t.rMultiple != null ? ((t.rMultiple >= 0 ? '+' : '') + t.rMultiple.toFixed(2) + 'R') : '—'));
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    host.appendChild(table);
+  }
+
+  function _renderSessions(host, sessions){
+    while (host.firstChild) host.removeChild(host.firstChild);
+    if (!sessions.length){
+      host.appendChild(_mk('div', 'sim-stats-empty', 'No sessions yet.'));
+      return;
+    }
+    const table = _mk('table', 'sim-stats-table');
+    const thead = _mk('thead');
+    const tr = _mk('tr');
+    ['When','Type','Symbol(s)','Trades','W/L','PF','% Deploy','Session P&L','Return'].forEach(function(h){
+      tr.appendChild(_mk('th', null, h));
+    });
+    thead.appendChild(tr); table.appendChild(thead);
+    const tbody = _mk('tbody');
+    sessions.slice(0, 50).forEach(function(s){
+      const row = _mk('tr');
+      const d = new Date(s.ts);
+      row.appendChild(_mk('td', null, d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })));
+      row.appendChild(_mk('td', null, (s.simType === 'portfolio') ? '📦' : '👤'));
+      row.appendChild(_mk('td', null, s.symbol || '—'));
+      row.appendChild(_mk('td', null, String(s.tradeCount || 0)));
+      row.appendChild(_mk('td', null, (s.winCount || 0) + '/' + (s.lossCount || 0)));
+      row.appendChild(_mk('td', null, s.profitFactor != null ? s.profitFactor.toFixed(2) : '—'));
+      row.appendChild(_mk('td', null, s.avgPctDeployed != null ? s.avgPctDeployed.toFixed(1) + '%' : '—'));
+      const pnlCls = (s.sessionPnL || 0) > 0 ? 'is-pos' : ((s.sessionPnL || 0) < 0 ? 'is-neg' : '');
+      row.appendChild(_mk('td', pnlCls, _fmt$Signed(s.sessionPnL)));
+      row.appendChild(_mk('td', pnlCls, _fmtPct(s.totalReturnPct, 1)));
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    host.appendChild(table);
+  }
+
+  function _renderCalendar(host, sessions){
+    if (!window.Sim || !Sim.UI || !Sim.UI.PnLCalendar) {
+      host.textContent = 'Calendar component not loaded.';
+      return;
+    }
+    const model = _calcCalendarModel(sessions);
+    Sim.UI.PnLCalendar.render(host, model, {
+      emptyMessage: 'No sessions in this range.'
+    });
+  }
+
+  function _filterByType(rows, t){
+    if (t === 'ALL') return rows.slice();
+    return rows.filter(function(r){ return (r.simType || 'individual') === t; });
+  }
+
+  function _currentFilteredSet(){
+    return _filterByType(_filterByRange(_loadTrades(), _currentRange), _currentType);
+  }
+  function _currentFilteredSessions(){
+    return _filterByType(_filterByRange(_loadSessions(), _currentRange), _currentType);
+  }
+
+  function _renderAll(){
+    const allSessions = _loadSessions();
+    const allTrades = _loadTrades();
+    const sessions = _currentFilteredSessions();
+    const trades = _currentFilteredSet();
+    const empty = document.getElementById('sim-stats-empty');
+    const body = document.getElementById('sim-stats-body');
+    if (!allSessions.length && !allTrades.length){
+      if (empty) empty.style.display = '';
+      if (body) body.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    if (body) body.style.display = '';
+    _renderKeyMetrics(document.getElementById('sim-stats-keymetrics'), _calcKeyMetrics(trades, sessions));
+    _renderCalendar(document.getElementById('sim-stats-calendar'), sessions);
+    _renderMonthly(document.getElementById('sim-stats-monthly'), _calcMonthly(trades));
+    _renderDistribution(document.getElementById('sim-stats-distribution'), _calcDistribution(trades));
+    _renderTopBottom(document.getElementById('sim-stats-top'), trades, true);
+    _renderTopBottom(document.getElementById('sim-stats-bottom'), trades, false);
+    const sessHost = document.getElementById('sim-stats-sessions');
+    if (sessHost) _renderSessions(sessHost, sessions);
+  }
+
+  // Denormalized export — one row per trade with every relevant session
+  // column repeated. Designed so an AI can ingest a single CSV without
+  // joining tables. Schema details live in STATS_DATA_GUIDE.md.
+  function _exportCSV(){
+    const allTrades = _loadTrades();
+    const allSessions = _loadSessions();
+    if (!allTrades.length && !allSessions.length){ alert('No stats to export.'); return; }
+    const filteredTrades = _currentFilteredSet();
+    let dataset = filteredTrades;
+    let suffix = '_' + _currentRange + '_' + _currentType;
+    const filteredNarrows = filteredTrades.length < allTrades.length;
+    if (filteredNarrows){
+      const choice = confirm('Export ' + filteredTrades.length + ' filtered trade' + (filteredTrades.length === 1 ? '' : 's') + '?\n\nOK = export filtered\nCancel = export all ' + allTrades.length);
+      if (!choice){ dataset = allTrades; suffix = '_all'; }
+    } else {
+      suffix = '_all';
+    }
+    if (!dataset.length){ alert('Nothing in the current filter to export.'); return; }
+    // Build a session lookup so we can denormalize.
+    const sessionById = {};
+    allSessions.forEach(function(s){ sessionById[s.id] = s; });
+
+    const cols = [
+      // Trade-level
+      'tradeId','sessionId','tradeTs','simType','symbol','year','direction','legIndex',
+      'entryDate','entryPrice','qty','stopAtEntry','initialRisk',
+      'exitDate','exitPrice','exitReason','holdingDays',
+      'realizedPnL','rMultiple','returnPctOfNotional','mfe','mae',
+      // Session-level (repeated per row)
+      'sessionTs','sessionInitialEquity','sessionFinalEquity','sessionPnL','sessionTotalReturnPct',
+      'sessionAvgPctDeployed','sessionPeakPctDeployed','sessionIdlePctOfTime',
+      'sessionTradeCount','sessionWinCount','sessionLossCount','sessionWinRate','sessionProfitFactor',
+      'sessionSymbols','sessionSimStartDate','sessionSimEndDate',
+      'sessionIndexReturnPct','sessionIndexName','sessionTickerBhPct'
+    ];
+    function csvCell(v){
+      if (v == null) return '';
+      if (Array.isArray(v)) v = v.join('|');
+      if (typeof v === 'string' && (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0)){
+        return '"' + v.replace(/"/g, '""') + '"';
+      }
+      return String(v);
+    }
+    const lines = [cols.join(',')];
+    dataset.forEach(function(t){
+      const s = sessionById[t.sessionId] || {};
+      lines.push(cols.map(function(c){
+        let v;
+        switch (c){
+          case 'tradeId': v = t.id; break;
+          case 'sessionId': v = t.sessionId; break;
+          case 'tradeTs': v = t.ts ? new Date(t.ts).toISOString() : ''; break;
+          case 'simType': v = t.simType || s.simType; break;
+          case 'symbol': v = t.symbol; break;
+          case 'year': v = t.year; break;
+          case 'direction': v = t.direction; break;
+          case 'legIndex': v = t.legIndex; break;
+          case 'entryDate': v = t.entryDate; break;
+          case 'entryPrice': v = t.entryPrice; break;
+          case 'qty': v = t.qty; break;
+          case 'stopAtEntry': v = t.stopAtEntry; break;
+          case 'initialRisk': v = t.initialRisk; break;
+          case 'exitDate': v = t.exitDate; break;
+          case 'exitPrice': v = t.exitPrice; break;
+          case 'exitReason': v = t.exitReason; break;
+          case 'holdingDays': v = t.holdingDays; break;
+          case 'realizedPnL': v = t.realizedPnL; break;
+          case 'rMultiple': v = t.rMultiple; break;
+          case 'returnPctOfNotional': v = t.returnPctOfNotional; break;
+          case 'mfe': v = t.mfe; break;
+          case 'mae': v = t.mae; break;
+          case 'sessionTs': v = s.ts ? new Date(s.ts).toISOString() : ''; break;
+          case 'sessionInitialEquity': v = s.initialEquity; break;
+          case 'sessionFinalEquity': v = s.finalEquity; break;
+          case 'sessionPnL': v = s.sessionPnL; break;
+          case 'sessionTotalReturnPct': v = s.totalReturnPct; break;
+          case 'sessionAvgPctDeployed': v = s.avgPctDeployed; break;
+          case 'sessionPeakPctDeployed': v = s.peakPctDeployed; break;
+          case 'sessionIdlePctOfTime': v = s.idlePctOfTime; break;
+          case 'sessionTradeCount': v = s.tradeCount; break;
+          case 'sessionWinCount': v = s.winCount; break;
+          case 'sessionLossCount': v = s.lossCount; break;
+          case 'sessionWinRate': v = s.winRate; break;
+          case 'sessionProfitFactor': v = s.profitFactor; break;
+          case 'sessionSymbols': v = s.symbols; break;
+          case 'sessionSimStartDate': v = s.simStartDate; break;
+          case 'sessionSimEndDate': v = s.simEndDate; break;
+          case 'sessionIndexReturnPct': v = s.indexReturnPct; break;
+          case 'sessionIndexName': v = s.indexName; break;
+          case 'sessionTickerBhPct': v = s.tickerBhPct; break;
+          default: v = '';
+        }
+        return csvCell(v);
+      }).join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sim_stats_trades' + suffix + '_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+  }
+
+  function _open(){
+    _renderAll();
+    const m = document.getElementById('sim-stats-modal');
+    if (m) m.classList.add('open');
+  }
+
+  function _wire(){
+    const btn = document.getElementById('sim-stats-btn');
+    if (btn && !btn._simStatsBound){
+      btn._simStatsBound = true;
+      btn.addEventListener('click', _open);
+    }
+    const close = document.getElementById('sim-stats-close');
+    if (close && !close._simStatsBound){
+      close._simStatsBound = true;
+      close.addEventListener('click', function(){
+        const m = document.getElementById('sim-stats-modal');
+        if (m) m.classList.remove('open');
+      });
+    }
+    const filterRow = document.getElementById('sim-stats-time-filter');
+    if (filterRow && !filterRow._simStatsBound){
+      filterRow._simStatsBound = true;
+      filterRow.addEventListener('click', function(e){
+        const pill = e.target.closest && e.target.closest('.sim-stats-pill');
+        if (!pill) return;
+        const range = pill.dataset.range;
+        if (!range) return;
+        _currentRange = range;
+        filterRow.querySelectorAll('.sim-stats-pill').forEach(function(b){
+          b.classList.toggle('is-active', b.dataset.range === range);
+        });
+        _renderAll();
+      });
+    }
+    const typeRow = document.getElementById('sim-stats-type-filter');
+    if (typeRow && !typeRow._simStatsBound){
+      typeRow._simStatsBound = true;
+      typeRow.addEventListener('click', function(e){
+        const pill = e.target.closest && e.target.closest('.sim-stats-pill');
+        if (!pill) return;
+        const t = pill.dataset.type;
+        if (!t) return;
+        _currentType = t;
+        typeRow.querySelectorAll('.sim-stats-pill').forEach(function(b){
+          b.classList.toggle('is-active', b.dataset.type === t);
+        });
+        _renderAll();
+      });
+    }
+    const exp = document.getElementById('sim-stats-export');
+    if (exp && !exp._simStatsBound){
+      exp._simStatsBound = true;
+      exp.addEventListener('click', _exportCSV);
+    }
+    const clr = document.getElementById('sim-stats-clear');
+    if (clr && !clr._simStatsBound){
+      clr._simStatsBound = true;
+      clr.addEventListener('click', function(){
+        const allSessions = _loadSessions();
+        const allTrades = _loadTrades();
+        if (!allSessions.length && !allTrades.length){ alert('Nothing to clear.'); return; }
+        const filteredSessions = _currentFilteredSessions();
+        const filteredTrades = _currentFilteredSet();
+        const filteredNarrows = filteredSessions.length < allSessions.length;
+        if (!filteredNarrows){
+          if (!confirm('Clear ALL ' + allSessions.length + ' session' + (allSessions.length === 1 ? '' : 's') + ' and ' + allTrades.length + ' trade' + (allTrades.length === 1 ? '' : 's') + '? This cannot be undone.')) return;
+          _storeSessions([]); _storeTrades([]);
+          _renderAll();
+          return;
+        }
+        const choice = confirm(
+          'Clear ' + filteredSessions.length + ' filtered session' + (filteredSessions.length === 1 ? '' : 's') +
+          ' (' + filteredTrades.length + ' trade' + (filteredTrades.length === 1 ? '' : 's') + ')?\n\n' +
+          'OK = clear only the visible filtered set\n' +
+          'Cancel = clear ALL'
+        );
+        if (choice){
+          if (!confirm('Confirm: delete ' + filteredSessions.length + ' session' + (filteredSessions.length === 1 ? '' : 's') + ' (and their ' + filteredTrades.length + ' trades)? This cannot be undone.')) return;
+          const sIds = new Set(filteredSessions.map(function(s){ return s.id; }));
+          _storeSessions(allSessions.filter(function(s){ return !sIds.has(s.id); }));
+          _storeTrades(allTrades.filter(function(t){ return !sIds.has(t.sessionId); }));
+          _renderAll();
+        } else {
+          if (!confirm('Clear ALL ' + allSessions.length + ' sessions and ' + allTrades.length + ' trades?')) return;
+          _storeSessions([]); _storeTrades([]);
+          _renderAll();
+        }
+      });
+    }
+    const modal = document.getElementById('sim-stats-modal');
+    if (modal && !modal._simStatsBound){
+      modal._simStatsBound = true;
+      modal.addEventListener('click', function(e){
+        if (e.target === modal) modal.classList.remove('open');
+      });
+    }
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wire);
+  } else {
+    _wire();
+  }
+  window.SimStats = {
+    open: _open,
+    addCurrent: addCurrent,
+    addCurrentPortfolio: addCurrentPortfolio,
+    loadSessions: _loadSessions,
+    loadTrades: _loadTrades
   };
 })();
 
@@ -12093,8 +13895,35 @@ Sim.Ctrl = (function(){
         active: !d.stoppedOut && !d.closed
       }]),
       sim: sim,
-      symbol: (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'POS'
+      symbol: (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'POS',
+      initialEquity: sim.initialEquity || null,
+      finalEquity: sim.initialEquity ? (sim.initialEquity + d.cumulativePnL) : null,
+      totalReturnPct: sim.initialEquity ? (d.cumulativePnL / sim.initialEquity) * 100 : null,
+      tickerBhPct: _tickerBhOverSimWindow(sim),
+      simWindow: _simWindowDates(sim)
     };
+  }
+
+  // Buy-and-hold % for the active symbol over the actually-played window
+  // [first played bar, current playIdx]. Uses simStartBarIdx (entry bar of
+  // first leg) for the start. Returns null if bars are missing.
+  function _tickerBhOverSimWindow(sim) {
+    if (!sim || !state.bars) return null;
+    const start = sim.simStartBarIdx != null ? sim.simStartBarIdx : sim.entry.barIdx;
+    const end = Math.min(sim.playIdx, state.bars.length - 1);
+    if (start < 0 || end <= start) return null;
+    const c0 = state.bars[start] && state.bars[start].close;
+    const c1 = state.bars[end] && state.bars[end].close;
+    if (!isFinite(c0) || c0 <= 0 || !isFinite(c1)) return null;
+    return ((c1 - c0) / c0) * 100;
+  }
+  function _simWindowDates(sim) {
+    if (!sim || !state.bars) return null;
+    const start = sim.simStartBarIdx != null ? sim.simStartBarIdx : sim.entry.barIdx;
+    const end = Math.min(sim.playIdx, state.bars.length - 1);
+    const a = state.bars[start] && state.bars[start].time;
+    const b = state.bars[end] && state.bars[end].time;
+    return (a && b) ? { from: a, to: b } : null;
   }
 
   function _render(result) {
@@ -12122,6 +13951,16 @@ Sim.Ctrl = (function(){
       onClose: () => {},
       onScreenshot: () => { if (typeof takeScreenshot === 'function') takeScreenshot(); },
       onReenter: () => { onContinueClick(); },
+      onSave: () => {
+        if (window.SimSaved && typeof window.SimSaved.saveCurrent === 'function'){
+          window.SimSaved.saveCurrent(state.sim, state.bars, _deriveForSummary(d));
+        }
+      },
+      onAddToStats: () => {
+        if (window.SimStats && typeof window.SimStats.addCurrent === 'function'){
+          window.SimStats.addCurrent(state.sim, state.bars, _deriveForSummary(d));
+        }
+      },
       viewOnly: !!opts.viewOnly,
       focusTab: opts.focusTab || null
     });
@@ -12183,10 +14022,31 @@ Sim.Ctrl = (function(){
     let defaultBar;
     if (opts.defaultBarIdx != null && currentBars[opts.defaultBarIdx]) {
       defaultBar = currentBars[opts.defaultBarIdx];
+    } else if (opts.defaultDate) {
+      defaultBar = currentBars.find(b => b.time === opts.defaultDate)
+        || currentBars.slice().reverse().find(b => b.time <= opts.defaultDate)
+        || currentBars[currentBars.length - 1];
     } else {
       defaultBar = currentBars[currentBars.length - 1];
     }
-    Sim.UI.showSetupModal({ defaultDate: defaultBar.time, defaultPrice: defaultBar.close, suggestedSize: 1000 }, _onSetupSubmit);
+    // Pull in pending year-window (set by Random) or explicit overrides
+    const pending = window._pendingSimYearWindow;
+    let defaultEndDate = opts.defaultEndDate || null;
+    if (!defaultEndDate && pending && pending.year){
+      const yEnd = pending.year + '-12-31';
+      const last = currentBars.slice().reverse().find(b => b.time <= yEnd);
+      if (last) defaultEndDate = last.time;
+    }
+    Sim.UI.showSetupModal({
+      defaultDate: defaultBar.time,
+      defaultPrice: defaultBar.close,
+      suggestedSize: 1000,
+      defaultEndDate: defaultEndDate,
+      defaultEquity: opts.defaultEquity != null ? opts.defaultEquity : null,
+      restoreFrom: opts.restoreFrom || null
+    }, _onSetupSubmit);
+    // Consume the year-window only after the modal is opened (next start clears it).
+    if (pending) window._pendingSimYearWindow = null;
   }
 
   function _onSetupSubmit(form) {
@@ -12214,7 +14074,8 @@ Sim.Ctrl = (function(){
     try {
       sim = Sim.createSim({
         moveKey, direction: 'long',
-        entry: { barIdx, date: currentBars[barIdx].time, price: form.price, sizeMode: form.sizeMode, sizeValue: form.sizeValue, stop: form.stop, endBarIdx }
+        entry: { barIdx, date: currentBars[barIdx].time, price: form.price, sizeMode: form.sizeMode, sizeValue: form.sizeValue, stop: form.stop, endBarIdx, stopTrail: form.stopTrail || null },
+        initialEquity: form.initialEquity || null
       });
     } catch (e) { alert('Could not start sim: ' + e.message); return; }
 
@@ -12493,7 +14354,7 @@ Sim.Ctrl = (function(){
     const activeStops = (state.sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price);
     const currentStopPx = activeStops.length ? activeStops[0].price : state.sim.entry.stop;
     Sim.UI.showMoveStopModal({ currentStop: currentStopPx, currentPrice: bar.close, shares0: state.sim.shares0, barDate: bar.time || null }, form => {
-      Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop, pct: form.pct });
+      Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop, pct: form.pct, stopTrail: form.stopTrail || null });
       _stepForward(1);
     });
   }
@@ -12593,7 +14454,7 @@ Sim.Ctrl = (function(){
   // Add a new active stop at sim.playIdx. Mirrors the "movestop" branch in
   // Sim core's _processActionsOnBar (Big_movers.html:8113-8121). Returns
   // the new stop id on success, false otherwise.
-  window.PortSim.Util.applyMoveStopNow = function(sim, bars, newStop, pct){
+  window.PortSim.Util.applyMoveStopNow = function(sim, bars, newStop, pct, stopTrail){
     if (!sim || sim.closed || sim.stoppedOut) return false;
     var ns = +newStop;
     if (!isFinite(ns) || ns <= 0) return false;
@@ -12602,12 +14463,16 @@ Sim.Ctrl = (function(){
     var bar = bars && bars[sim.playIdx];
     if (!bar) return false;
     var stopId = 'stop_' + Math.random().toString(36).slice(2, 8);
-    sim.stopLevels.push({ id: stopId, price: ns, pct: p, fired: false, barIdx: sim.playIdx });
+    var trail = (stopTrail && stopTrail.type === 'ema')
+      ? { type: 'ema', period: +stopTrail.period || 10, k: +stopTrail.k || 0 }
+      : null;
+    sim.stopLevels.push({ id: stopId, price: ns, pct: p, fired: false, barIdx: sim.playIdx, trail: trail });
     var rounded = _r2(ns);
+    var trailLbl = trail ? ' · trail EMA' + trail.period + (trail.k ? ' −' + trail.k + '%' : '') : '';
     sim.eventsLog.push({
       barIdx: sim.playIdx, date: bar.time, type: 'movestop',
       qty: sim.qty, price: null, newStop: rounded, pct: p, stopId: stopId,
-      note: 'stop ' + rounded + ' added (' + Math.round(p * 100) + '%)'
+      note: 'stop ' + rounded + ' added (' + Math.round(p * 100) + '%)' + trailLbl
     });
     return stopId;
   };
@@ -16651,6 +18516,30 @@ Sim.Ctrl = (function(){
         try { PortSim.Review.open(); } catch(e){ console.error('[PortSim.Review] open:', e); }
       });
       actions.appendChild(reviewBtn);
+    }
+
+    // Add-to-Stats — only meaningful at end-of-sim, not for mid-sim peek.
+    if (!viewOnly && window.SimStats && typeof window.SimStats.addCurrentPortfolio === 'function'){
+      const statsBtn = _mkEl('button', null, '📊 Add to Stats');
+      statsBtn.type = 'button';
+      _setStyle(statsBtn, 'font-family:var(--mono);font-size:11px;padding:6px 14px;background:var(--bg3);color:var(--text);border:1px solid var(--border-bright);border-radius:5px;cursor:pointer;letter-spacing:0.04em;');
+      statsBtn.addEventListener('click', function(){
+        try {
+          window.SimStats.addCurrentPortfolio({
+            initialEquity: _state.initialEquity,
+            finalEquity: equity,
+            totalReturnPct: totalReturn,
+            totalPnL: equity - (_state.initialEquity || 0),
+            indexReturnPct: _indexReturnPct,
+            firstDate: _firstDate,
+            lastDate: _lastDate,
+            basket: _state.basket,
+            rows: rows,
+            indexName: _state.index || null
+          });
+        } catch (err) { console.error('[SimStats.addCurrentPortfolio]', err); alert('Add to stats failed: ' + (err && err.message)); }
+      });
+      actions.appendChild(statsBtn);
     }
 
     if (viewOnly){
