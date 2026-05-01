@@ -16806,6 +16806,10 @@ Sim.Ctrl = (function(){
     bindOnce();
   }
 
+  // Expose the fetcher so other modules (e.g. PortSim.Review's 🔄 Rerun)
+  // can reuse the same auto-fetch / coverage-check pipeline that the Setup
+  // wizard's Submit button drives.
+  Setup.fetchAllTickers = fetchAllTickers;
   PortSim.Setup = Setup;
 })();
 // ============ PORTSIM TRACK D: Setup Wizard — END ============
@@ -23645,6 +23649,7 @@ Sim.Ctrl = (function(){
       +     '<div class="portsim-review-actions">'
       +       '<button type="button" id="portsim-review-save"  class="portsim-review-btn">💾 Save</button>'
       +       '<button type="button" id="portsim-review-load"  class="portsim-review-btn">📂 Load</button>'
+      +       '<button type="button" id="portsim-review-rerun" class="portsim-review-btn" style="display:none">🔄 Rerun</button>'
       +       '<button type="button" id="portsim-review-md"    class="portsim-review-btn">↓ Markdown</button>'
       +       '<button type="button" id="portsim-review-pdf"   class="portsim-review-btn">🖨 Print/PDF</button>'
       +       '<button type="button" id="portsim-review-close" class="portsim-review-btn portsim-review-close">✕</button>'
@@ -23659,6 +23664,7 @@ Sim.Ctrl = (function(){
     document.getElementById('portsim-review-close').addEventListener('click', close);
     document.getElementById('portsim-review-save').addEventListener('click', _onSave);
     document.getElementById('portsim-review-load').addEventListener('click', _onLoad);
+    document.getElementById('portsim-review-rerun').addEventListener('click', _onRerun);
     document.getElementById('portsim-review-md').addEventListener('click', _onExportMD);
     document.getElementById('portsim-review-pdf').addEventListener('click', _onPrint);
     _modal.addEventListener('click', function(ev){ if (ev.target === _modal) close(); });
@@ -23695,6 +23701,17 @@ Sim.Ctrl = (function(){
       + ' · ' + tickerSyms.length + ' tickers'
       + ' · index ' + (ctx.index || 'SPX')
       + (_data && _data.savedAt ? ' · saved ' + _data.savedAt.replace('T',' ').slice(0,19) : '');
+
+    // Rerun is only meaningful for a loaded past episode — when the user is
+    // already in a live sim, Replay (in the live summary modal) covers the
+    // same need without leaving the running scenario. Reveal only when we
+    // have enough meta to rebuild a wizard config.
+    var rerunBtn = document.getElementById('portsim-review-rerun');
+    if (rerunBtn){
+      var canRerun = _viewOnly && ctx && ctx.startDate && ctx.endDate
+        && Array.isArray(ctx.basket) && ctx.basket.length > 0;
+      rerunBtn.style.display = canRerun ? '' : 'none';
+    }
 
     var tabs = ['overview', 'index'];
     tickerSyms.forEach(function(sym){ tabs.push('t:' + sym); });
@@ -24168,6 +24185,67 @@ Sim.Ctrl = (function(){
     var picker = document.getElementById('portsim-review-picker');
     if (picker) picker.classList.remove('is-open');
   }
+  // Rerun the loaded saved review as a fresh sim. Reconstructs a wizard
+  // config from _data.meta, runs the standard fetch-and-publish pipeline so
+  // any missing OHLCV gets auto-fetched, then hands off to the live Ctrl
+  // bootstrap. Active sim (if any) is torn down inside _bootstrapFromConfig.
+  function _onRerun(){
+    var meta = _data && _data.meta;
+    if (!meta || !meta.startDate || !meta.endDate || !Array.isArray(meta.basket) || !meta.basket.length){
+      alert('This saved review is missing the metadata needed to rerun.');
+      return;
+    }
+    var symList = meta.basket.map(function(b){ return b.symbol; }).join(', ');
+    if (!confirm('Rerun this episode from day 0?\n\n' +
+                 meta.startDate + ' → ' + meta.endDate + '\n' +
+                 symList + '\n' +
+                 'Initial: $' + (Number(meta.initialEquity) || 0).toLocaleString() + ' · Index: ' + (meta.index || 'SPX') + '\n\n' +
+                 'Any active simulation will be replaced.')) return;
+
+    var cfg = {
+      initialCash: +meta.initialEquity || 0,
+      startDate: meta.startDate,
+      endDate: meta.endDate,
+      index: meta.index || 'SPX',
+      tickers: meta.basket.map(function(b){
+        return { symbol: String(b.symbol || '').trim().toUpperCase(), hasPreEntry: false };
+      })
+    };
+
+    if (!window.PortSim || !PortSim.Setup || typeof PortSim.Setup.fetchAllTickers !== 'function'
+        || typeof PortSim.Setup.publish !== 'function'){
+      alert('Setup pipeline unavailable — cannot rerun.');
+      return;
+    }
+
+    _setStatus('Fetching bars for ' + cfg.tickers.length + ' tickers…', '');
+    PortSim.Setup.fetchAllTickers(cfg).then(function(dataResults){
+      var hardErrors = [];
+      Object.keys(dataResults.perTicker).forEach(function(sym){
+        if (dataResults.perTicker[sym].error) hardErrors.push(sym + ': ' + dataResults.perTicker[sym].error);
+      });
+      if (hardErrors.length){
+        _setStatus('Rerun blocked: ' + hardErrors.join(' · '), 'err');
+        alert('Some tickers failed data check — cannot rerun:\n\n' + hardErrors.join('\n'));
+        return;
+      }
+      cfg.fetchedBars = dataResults.fetchedBars;
+      try {
+        PortSim.Setup.publish(cfg);
+        _setStatus('Rerun started.', 'ok');
+        // Close the review modal so the user sees the live sim, not the
+        // overlay. The live sim's own UI (header + grid) is now shown.
+        close();
+      } catch(e){
+        console.error('[PortSim.Review] rerun publish failed:', e);
+        _setStatus('Rerun failed: ' + (e && e.message ? e.message : e), 'err');
+      }
+    }).catch(function(e){
+      console.error('[PortSim.Review] rerun fetch failed:', e);
+      _setStatus('Fetch failed: ' + (e && e.message ? e.message : e), 'err');
+    });
+  }
+
   function _loadSavedReview(key){
     if (!key) return;
     var loaded = _loadData(key);
