@@ -1764,6 +1764,250 @@
   .sim-summary-leg-r { color: var(--muted); font-size: 10px; text-align: right; }
   .fetch-field input[type="number"], .fetch-field input[type="date"] { font-variant-numeric: tabular-nums; }
 
+  /* ---------- Sim Summary tabs (Events | Calendar) ---------- */
+  .sim-summary-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin: 8px 0 10px;
+  }
+  .sim-summary-tab {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    padding: 6px 14px;
+    font-family: var(--ui, var(--mono));
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 120ms ease, border-color 120ms ease;
+  }
+  .sim-summary-tab:hover { color: var(--text-2); }
+  .sim-summary-tab.is-active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .sim-summary-tab-pane { display: none; }
+  .sim-summary-tab-pane.is-active { display: block; }
+
+  /* ---------- P&L Calendar ---------- */
+  .pnlcal-root {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    font-family: var(--mono);
+  }
+  .pnlcal-grid {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .pnlcal-detail {
+    width: 240px;
+    flex: 0 0 240px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--text-2);
+    align-self: stretch;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+  .pnlcal-detail-empty { color: var(--muted); font-style: italic; padding: 6px 0; }
+  .pnlcal-detail-date {
+    font-family: var(--ui, var(--mono));
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .pnlcal-detail-totals {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 4px;
+  }
+  .pnlcal-detail-totals.is-pos { color: var(--green); }
+  .pnlcal-detail-totals.is-neg { color: var(--red); }
+  .pnlcal-detail-equity { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
+  .pnlcal-detail-section-title {
+    font-family: var(--ui, var(--mono));
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin: 8px 0 4px;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+  }
+  .pnlcal-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-variant-numeric: tabular-nums;
+    padding: 1px 0;
+  }
+  .pnlcal-detail-row.is-pos .pnlcal-detail-row-val { color: var(--green); }
+  .pnlcal-detail-row.is-neg .pnlcal-detail-row-val { color: var(--red); }
+  .pnlcal-detail-row-sym { color: var(--text-2); font-weight: 600; }
+  .pnlcal-detail-row-val { color: var(--text); font-weight: 600; }
+  .pnlcal-detail-event {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    font-size: 10px;
+    padding: 1px 0;
+  }
+  .pnlcal-detail-event-type {
+    text-transform: uppercase;
+    font-weight: 700;
+    width: 44px;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+  .pnlcal-detail-event-type-entry { color: var(--accent); }
+  .pnlcal-detail-event-type-add { color: var(--green); }
+  .pnlcal-detail-event-type-sell { color: var(--text); }
+  .pnlcal-detail-event-type-stop { color: var(--red); }
+  .pnlcal-detail-event-type-close { color: var(--muted); }
+  .pnlcal-detail-event-type-movestop { color: var(--muted); }
+  .pnlcal-detail-event-sym { color: var(--text-2); flex: 0 0 auto; }
+  .pnlcal-detail-event-text { color: var(--muted); font-style: italic; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+
+  .pnlcal-month {
+    margin-bottom: 14px;
+  }
+  .pnlcal-month-label {
+    font-family: var(--display, var(--ui, var(--mono)));
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  .pnlcal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .pnlcal-weekdays > span { text-align: center; padding: 2px 0; }
+  .pnlcal-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+  .pnlcal-day {
+    position: relative;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-2);
+    font-family: var(--mono);
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3px 5px;
+    transition: border-color 120ms ease, transform 80ms ease;
+  }
+  .pnlcal-day:hover { border-color: var(--border-bright); transform: translateY(-1px); }
+  .pnlcal-day.is-selected {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 1px var(--accent) inset;
+  }
+  .pnlcal-day.is-blank { background: transparent; border: 1px dashed var(--border); cursor: default; opacity: 0.35; }
+  .pnlcal-day.is-blank:hover { transform: none; border-color: var(--border); }
+  .pnlcal-day.is-weekend, .pnlcal-day.is-nodata { background: var(--bg3); cursor: default; }
+  .pnlcal-day.is-weekend:hover, .pnlcal-day.is-nodata:hover { transform: none; border-color: var(--border); }
+  .pnlcal-day.is-weekend .pnlcal-day-val, .pnlcal-day.is-nodata .pnlcal-day-val { color: var(--muted); }
+  .pnlcal-day.is-flat { background: transparent; }
+  .pnlcal-day.is-pos { background: rgba(110, 231, 183, var(--pnlcal-heat, 0.2)); border-color: rgba(110, 231, 183, 0.4); }
+  .pnlcal-day.is-neg { background: rgba(251, 113, 133, var(--pnlcal-heat, 0.2)); border-color: rgba(251, 113, 133, 0.4); }
+  .pnlcal-day-num {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .pnlcal-day.is-pos .pnlcal-day-num, .pnlcal-day.is-neg .pnlcal-day-num { color: var(--text-2); }
+  .pnlcal-day-val {
+    font-size: 10px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    color: var(--text-2);
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pnlcal-day.is-pos .pnlcal-day-val { color: var(--green); }
+  .pnlcal-day.is-neg .pnlcal-day-val { color: var(--red); }
+
+  .pnlcal-empty {
+    padding: 30px 10px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* Narrow viewport: stack detail pane below grid */
+  @media (max-width: 720px) {
+    .pnlcal-root { flex-direction: column; }
+    .pnlcal-detail { width: 100%; flex: 0 0 auto; max-height: 220px; }
+  }
+
+  /* ---------- Portfolio summary calendar block ---------- */
+  .portsim-summary-calendar-wrap {
+    margin-top: 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  .portsim-summary-calendar-toggle {
+    background: transparent;
+    border: 0;
+    color: var(--accent);
+    font-family: var(--ui, var(--mono));
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .portsim-summary-calendar-toggle .portsim-summary-calendar-caret {
+    transition: transform 150ms ease;
+    display: inline-block;
+  }
+  .portsim-summary-calendar-wrap.is-open .portsim-summary-calendar-caret { transform: rotate(90deg); }
+  .portsim-summary-calendar-body {
+    display: none;
+    margin-top: 10px;
+  }
+  .portsim-summary-calendar-wrap.is-open .portsim-summary-calendar-body { display: block; }
+
   /* Start Sim / Port Sim buttons in topbar */
   #sim-start-btn,
   #portsim-start-btn {
@@ -4666,7 +4910,16 @@
             <div># Sells<strong id="sim-summary-sells">—</strong></div>
           </div>
           <div id="sim-summary-legs"></div>
-          <div class="sim-log" id="sim-summary-log"></div>
+          <div class="sim-summary-tabs" id="sim-summary-tabs">
+            <button type="button" class="sim-summary-tab is-active" data-tab="events">Events</button>
+            <button type="button" class="sim-summary-tab" data-tab="calendar">Calendar</button>
+          </div>
+          <div class="sim-summary-tab-pane is-active" data-pane="events">
+            <div class="sim-log" id="sim-summary-log"></div>
+          </div>
+          <div class="sim-summary-tab-pane" data-pane="calendar">
+            <div id="sim-summary-calendar"></div>
+          </div>
           <div class="fetch-actions">
             <button class="fetch-btn-cancel" id="sim-summary-close">Close</button>
             <button class="fetch-btn-cancel" id="sim-summary-screenshot">Screenshot</button>
@@ -5079,6 +5332,7 @@
           <div class="sim-transport-sep"></div>
           <div id="sim-date-readout">Day 0 · —</div>
           <div class="sim-transport-sep"></div>
+          <button id="sim-btn-calendar" class="sim-transport-btn" type="button" title="Open P&amp;L calendar (sim keeps running)">📅 Calendar</button>
           <button id="sim-btn-export" class="sim-transport-btn" type="button" title="Export simulation summary, per-leg breakdown, and event log as CSV">↓ Export</button>
           <button id="sim-btn-exit" class="sim-transport-btn" type="button" title="Exit simulator (Esc)">✕ Exit Sim</button>
         </div>
@@ -9245,8 +9499,19 @@ const Sim = (function(){
       eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price,
                     note: 'entry ' + shares + '@' + r2(entry.price) + ' stop ' + r2(entry.stop) }],
       peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
-      legs: [], between: false, simStartBarIdx: entry.barIdx
+      legs: [], between: false, simStartBarIdx: entry.barIdx,
+      pnlSeries: []
     };
+  }
+
+  function _pushPnlPoint(sim, bar) {
+    if (!sim || !bar || !bar.time) return;
+    const pastLegs = (sim.legs || []).reduce(function(s, l){ return s + (l.realizedPnL || 0); }, 0);
+    const total = _computeTotalPnLAtBar(sim, bar) + pastLegs;
+    const series = sim.pnlSeries || (sim.pnlSeries = []);
+    const last = series.length ? series[series.length - 1] : null;
+    if (last && last.date === bar.time) { last.totalPnL = total; return; }
+    series.push({ date: bar.time, totalPnL: total });
   }
 
   function queueAction(sim, action) {
@@ -9279,6 +9544,7 @@ const Sim = (function(){
     const bar = bars[sim.entry.barIdx]; if (!bar) return;
     _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), sim.entry.barIdx);
     _updateIntradayExtremes(sim, bar, sim.entry.barIdx);
+    _pushPnlPoint(sim, bar);
   }
 
   function _processStopOnBar(sim, bar, barIdx, fired) {
@@ -9367,6 +9633,7 @@ const Sim = (function(){
       _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), nextIdx);
       _updateIntradayExtremes(sim, bar, nextIdx);
       sim.playIdx = nextIdx;
+      _pushPnlPoint(sim, bar);
       if (sim.closed || sim.stoppedOut) break;
     }
     if (sim.endBarIdx != null && sim.playIdx === sim.endBarIdx && !sim.closed && sim.qty > 0) {
@@ -9382,6 +9649,7 @@ const Sim = (function(){
         sim.eventsLog.push(ev);
         fired.push(ev);
         _updateExtremes(sim, _computeTotalPnLAtBar(sim, lastBar), sim.playIdx);
+        _pushPnlPoint(sim, lastBar);
       }
     }
     return { sim, derived: computeDerived(sim, bars), eventsFired: fired };
@@ -9446,7 +9714,7 @@ const Sim = (function(){
       sim.realizedPnL += (px - sim.avgCost) * soldQty;
       sim.qty = 0; sim.closed = true;
       sim.eventsLog.push({ barIdx: sim.playIdx, date: bar ? bar.time : null, type: 'close', qty: soldQty, price: r2(px), note: 'manual close ' + soldQty + '@' + r2(px) });
-      if (bar) _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), sim.playIdx);
+      if (bar) { _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), sim.playIdx); _pushPnlPoint(sim, bar); }
     }
     sim.pendingActions = [];
     return { sim, derived: computeDerived(sim, bars) };
@@ -10813,6 +11081,48 @@ window.Sim = Sim;
       logEl.appendChild(row);
     });
 
+    // Render calendar pane
+    const calHost = document.getElementById('sim-summary-calendar');
+    if (calHost && Sim.UI.PnLCalendar) {
+      const calModel = derived.calendarModel
+        || (derived.sim ? Sim.UI.PnLCalendar.modelFromIndividual(derived.sim, { symbol: derived.symbol })
+                        : { startDate: null, endDate: null, days: [] });
+      Sim.UI.PnLCalendar.render(calHost, calModel, { emptyMessage: 'No simulated days yet — let the sim run, then return.' });
+    }
+
+    // Tab wiring (Events default; click switches)
+    const tabsRoot = document.getElementById('sim-summary-tabs');
+    const modalRoot = document.getElementById('sim-summary-modal');
+    if (tabsRoot && modalRoot){
+      // Reset to default Events tab on each open
+      tabsRoot.querySelectorAll('.sim-summary-tab').forEach(function(b){
+        b.classList.toggle('is-active', b.dataset.tab === 'events');
+      });
+      modalRoot.querySelectorAll('.sim-summary-tab-pane').forEach(function(p){
+        p.classList.toggle('is-active', p.dataset.pane === 'events');
+      });
+      tabsRoot.onclick = function(e){
+        const btn = e.target.closest && e.target.closest('.sim-summary-tab');
+        if (!btn) return;
+        const want = btn.dataset.tab;
+        tabsRoot.querySelectorAll('.sim-summary-tab').forEach(function(b){
+          b.classList.toggle('is-active', b.dataset.tab === want);
+        });
+        modalRoot.querySelectorAll('.sim-summary-tab-pane').forEach(function(p){
+          p.classList.toggle('is-active', p.dataset.pane === want);
+        });
+      };
+      // If caller wants Calendar focused (mid-sim peek), switch up front.
+      if (handlers && handlers.focusTab === 'calendar'){
+        const calBtn = tabsRoot.querySelector('.sim-summary-tab[data-tab="calendar"]');
+        if (calBtn) calBtn.click();
+      }
+    }
+
+    // View-only mode: hide Continue button, since the sim is still running.
+    const reenterBtn = document.getElementById('sim-summary-reenter');
+    if (reenterBtn) reenterBtn.style.display = (handlers && handlers.viewOnly) ? 'none' : '';
+
     _clearStatus('sim-summary-status');
     document.getElementById('sim-summary-close').onclick = () => { handlers.onClose && handlers.onClose(); _closeModal('sim-summary-modal'); };
     document.getElementById('sim-summary-screenshot').onclick = function() {
@@ -10822,6 +11132,334 @@ window.Sim = Sim;
     document.getElementById('sim-summary-reenter').onclick = () => { _closeModal('sim-summary-modal'); handlers.onReenter && handlers.onReenter(); };
     _onBackdrop('sim-summary-modal', handlers.onClose);
     _openModal('sim-summary-modal');
+  };
+})();
+
+/* ---------- Sim.UI.PnLCalendar: shared calendar component + adapters ---------- */
+(function(){
+  Sim.UI = Sim.UI || {};
+
+  const MONTH_NAMES = ['January','February','March','April','May','June',
+                       'July','August','September','October','November','December'];
+
+  function _mk(tag, cls, text){
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text != null) el.textContent = text;
+    return el;
+  }
+  function _parseISO(s){
+    if (!s || typeof s !== 'string') return null;
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return { y: +m[1], mo: +m[2] - 1, d: +m[3] };
+  }
+  function _toISO(y, mo, d){
+    return y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  }
+  function _fmtDateLabel(iso){
+    const p = _parseISO(iso); if (!p) return iso || '';
+    return MONTH_NAMES[p.mo].slice(0,3) + ' ' + p.d + ', ' + p.y;
+  }
+  function _fmt$Signed(v){
+    if (!isFinite(v)) return '$0';
+    const sign = v >= 0 ? '+' : '−';
+    return sign + '$' + Math.abs(Math.round(v)).toLocaleString();
+  }
+  // Compact formatter for cramped cells: $987 / $1.2k / $123k / $1.2M
+  function _fmt$Compact(v){
+    if (!isFinite(v) || v === 0) return v === 0 ? '$0' : '';
+    const sign = v >= 0 ? '+' : '−';
+    const a = Math.abs(v);
+    let body;
+    if (a >= 1e6) body = (a / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
+    else if (a >= 1e5) body = Math.round(a / 1e3) + 'k';
+    else if (a >= 1e4) body = (a / 1e3).toFixed(1) + 'k';
+    else if (a >= 1e3) body = (a / 1e3).toFixed(1) + 'k';
+    else body = String(Math.round(a));
+    return sign + '$' + body;
+  }
+  function _fmtPctSigned(v){
+    if (v == null || !isFinite(v)) return '';
+    return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+  }
+  function _allEvents(sim){
+    if (!sim) return [];
+    const out = [];
+    (sim.legs || []).forEach(function(l){ (l.eventsLog || []).forEach(function(ev){ out.push(ev); }); });
+    (sim.eventsLog || []).forEach(function(ev){ out.push(ev); });
+    return out;
+  }
+
+  // ---- Adapter: Individual sim → model ----
+  // sim.pnlSeries is { date, totalPnL } per advanced bar, where totalPnL is
+  // cumulative across legs (current-leg unrealized + closed-leg realized).
+  function modelFromIndividual(sim, opts){
+    opts = opts || {};
+    const symbol = opts.symbol || (sim && sim.symbol) || 'POS';
+    const series = (sim && sim.pnlSeries) || [];
+    if (!series.length){
+      return { startDate: null, endDate: null, initialEquity: null, days: [] };
+    }
+    const byDate = new Map();
+    series.forEach(function(pt){ byDate.set(pt.date, pt.totalPnL); });
+    const dates = Array.from(byDate.keys()).sort();
+    const events = _allEvents(sim);
+    const eventsByDate = {};
+    events.forEach(function(ev){
+      if (!ev.date) return;
+      (eventsByDate[ev.date] = eventsByDate[ev.date] || []).push({
+        type: ev.type, symbol: symbol, qty: ev.qty, price: ev.price, note: ev.note
+      });
+    });
+    let prev = 0;
+    const days = dates.map(function(date){
+      const cum = byDate.get(date);
+      const dollarChange = cum - prev;
+      prev = cum;
+      const pos = {}; pos[symbol] = dollarChange;
+      return {
+        date: date,
+        dollarChange: dollarChange,
+        pctChange: null,
+        equityClose: cum,
+        positions: pos,
+        events: eventsByDate[date] || []
+      };
+    });
+    return {
+      startDate: dates[0],
+      endDate: dates[dates.length - 1],
+      initialEquity: null,
+      days: days
+    };
+  }
+
+  // ---- Adapter: Portfolio sim → model ----
+  // Reads PortSim.Positions.curve() (cumulative per-day) and slices to playIdx
+  // so post-step-back rewinds don't include stale future points.
+  function modelFromPortfolio(){
+    const PS = window.PortSim;
+    const Positions = PS && PS.Positions;
+    const st = PS && PS._state;
+    if (!Positions || !st) return { startDate: null, endDate: null, initialEquity: null, days: [] };
+    const curveAll = Positions.curve ? Positions.curve() : [];
+    if (!curveAll.length) return { startDate: null, endDate: null, initialEquity: st.initialEquity || null, days: [] };
+    const dates = st.unifiedDates || [];
+    const playIdx = (st.playIdx != null) ? st.playIdx : (dates.length - 1);
+    const cutoff = dates[Math.min(playIdx, dates.length - 1)] || curveAll[curveAll.length - 1].date;
+    const curve = curveAll.filter(function(pt){ return pt.date <= cutoff; });
+    if (!curve.length) return { startDate: null, endDate: null, initialEquity: st.initialEquity || null, days: [] };
+    const eventsByDate = {};
+    (st.basket || []).forEach(function(entry){
+      const sim = entry && entry.sim; if (!sim) return;
+      _allEvents(sim).forEach(function(ev){
+        if (!ev.date || ev.date > cutoff) return;
+        (eventsByDate[ev.date] = eventsByDate[ev.date] || []).push({
+          type: ev.type, symbol: entry.symbol, qty: ev.qty, price: ev.price, note: ev.note
+        });
+      });
+    });
+    const initialEquity = st.initialEquity || 0;
+    const days = curve.map(function(pt, i){
+      const prev = i > 0 ? curve[i - 1] : null;
+      const dollarChange = pt.port - (prev ? prev.port : 0);
+      const positions = {};
+      const symbols = new Set(Object.keys(pt.positions || {}));
+      if (prev) Object.keys(prev.positions || {}).forEach(function(s){ symbols.add(s); });
+      symbols.forEach(function(sym){
+        const cur = (pt.positions && pt.positions[sym]) || 0;
+        const pre = (prev && prev.positions && prev.positions[sym]) || 0;
+        const diff = cur - pre;
+        if (Math.abs(diff) > 0.005) positions[sym] = diff;
+      });
+      return {
+        date: pt.date,
+        dollarChange: dollarChange,
+        pctChange: initialEquity > 0 ? (dollarChange / initialEquity) * 100 : null,
+        equityClose: pt.equity,
+        positions: positions,
+        events: eventsByDate[pt.date] || []
+      };
+    });
+    return {
+      startDate: days[0].date,
+      endDate: days[days.length - 1].date,
+      initialEquity: initialEquity || null,
+      days: days
+    };
+  }
+
+  // ---- Renderer ----
+  function _emptyState(host, msg){
+    while (host.firstChild) host.removeChild(host.firstChild);
+    host.appendChild(_mk('div', 'pnlcal-empty', msg || 'No simulated days yet.'));
+  }
+
+  function _renderDetail(detailHost, day, model){
+    while (detailHost.firstChild) detailHost.removeChild(detailHost.firstChild);
+    if (!day){
+      detailHost.appendChild(_mk('div', 'pnlcal-detail-empty', 'Click a day to see the breakdown.'));
+      return;
+    }
+    const cls = day.dollarChange > 0 ? ' is-pos' : (day.dollarChange < 0 ? ' is-neg' : '');
+    detailHost.appendChild(_mk('div', 'pnlcal-detail-date', _fmtDateLabel(day.date)));
+    let totalsText = _fmt$Signed(day.dollarChange);
+    if (day.pctChange != null) totalsText += '  ·  ' + _fmtPctSigned(day.pctChange);
+    detailHost.appendChild(_mk('div', 'pnlcal-detail-totals' + cls, totalsText));
+    if (day.equityClose != null && model.initialEquity){
+      detailHost.appendChild(_mk('div', 'pnlcal-detail-equity',
+        'Equity at close: $' + Math.round(day.equityClose).toLocaleString()));
+    } else if (day.equityClose != null){
+      detailHost.appendChild(_mk('div', 'pnlcal-detail-equity',
+        'Cumulative P&L: ' + _fmt$Signed(day.equityClose)));
+    }
+    const symKeys = Object.keys(day.positions || {});
+    if (symKeys.length){
+      detailHost.appendChild(_mk('div', 'pnlcal-detail-section-title', 'Position contribution'));
+      symKeys.sort(function(a, b){ return Math.abs(day.positions[b]) - Math.abs(day.positions[a]); });
+      symKeys.forEach(function(sym){
+        const v = day.positions[sym];
+        const c = v > 0 ? ' is-pos' : (v < 0 ? ' is-neg' : '');
+        const row = _mk('div', 'pnlcal-detail-row' + c);
+        row.appendChild(_mk('span', 'pnlcal-detail-row-sym', sym));
+        row.appendChild(_mk('span', 'pnlcal-detail-row-val', _fmt$Signed(v)));
+        detailHost.appendChild(row);
+      });
+    }
+    const evs = day.events || [];
+    if (evs.length){
+      detailHost.appendChild(_mk('div', 'pnlcal-detail-section-title', 'Events'));
+      evs.forEach(function(ev){
+        const t = String(ev.type || '').toLowerCase();
+        const row = _mk('div', 'pnlcal-detail-event');
+        row.appendChild(_mk('span', 'pnlcal-detail-event-type pnlcal-detail-event-type-' + (t || 'close'), t || '—'));
+        row.appendChild(_mk('span', 'pnlcal-detail-event-sym', ev.symbol || ''));
+        row.appendChild(_mk('span', 'pnlcal-detail-event-text', ev.note || ''));
+        detailHost.appendChild(row);
+      });
+    }
+    if (!symKeys.length && !evs.length){
+      const empty = _mk('div', 'pnlcal-detail-empty', 'No position activity this day.');
+      empty.style.marginTop = '8px';
+      detailHost.appendChild(empty);
+    }
+  }
+
+  function _monthsBetween(startISO, endISO){
+    const a = _parseISO(startISO); const b = _parseISO(endISO);
+    if (!a || !b) return [];
+    const out = [];
+    let y = a.y, mo = a.mo;
+    while (y < b.y || (y === b.y && mo <= b.mo)){
+      out.push({ y: y, mo: mo });
+      mo++; if (mo > 11){ mo = 0; y++; }
+    }
+    return out;
+  }
+
+  function render(host, model, opts){
+    if (!host) return;
+    opts = opts || {};
+    if (!model || !model.days || !model.days.length){
+      _emptyState(host, opts.emptyMessage || 'No simulated days yet.');
+      return;
+    }
+    let maxAbs = 0;
+    model.days.forEach(function(d){ const v = Math.abs(d.dollarChange || 0); if (v > maxAbs) maxAbs = v; });
+    const dayByDate = {};
+    model.days.forEach(function(d){ dayByDate[d.date] = d; });
+    const months = _monthsBetween(model.startDate, model.endDate);
+    const startISO = model.startDate; const endISO = model.endDate;
+
+    while (host.firstChild) host.removeChild(host.firstChild);
+    const root = _mk('div', 'pnlcal-root');
+    const grid = _mk('div', 'pnlcal-grid');
+    const detail = _mk('div', 'pnlcal-detail');
+    _renderDetail(detail, null, model);
+
+    months.forEach(function(m){
+      const monthDiv = _mk('div', 'pnlcal-month');
+      monthDiv.appendChild(_mk('div', 'pnlcal-month-label', MONTH_NAMES[m.mo] + ' ' + m.y));
+      const wd = _mk('div', 'pnlcal-weekdays');
+      ['M','T','W','T','F','S','S'].forEach(function(c){ wd.appendChild(_mk('span', null, c)); });
+      monthDiv.appendChild(wd);
+      const days = _mk('div', 'pnlcal-days');
+      const firstDay = new Date(Date.UTC(m.y, m.mo, 1));
+      const dow = (firstDay.getUTCDay() + 6) % 7;
+      const lastDate = new Date(Date.UTC(m.y, m.mo + 1, 0)).getUTCDate();
+      for (let i = 0; i < dow; i++){
+        days.appendChild(_mk('div', 'pnlcal-day is-blank'));
+      }
+      for (let d = 1; d <= lastDate; d++){
+        const iso = _toISO(m.y, m.mo, d);
+        const cell = _mk('div', 'pnlcal-day');
+        cell.dataset.date = iso;
+        const dayData = dayByDate[iso];
+        const wkdy = (new Date(Date.UTC(m.y, m.mo, d)).getUTCDay() + 6) % 7;
+        const inRange = iso >= startISO && iso <= endISO;
+        if (!inRange){
+          cell.classList.add('is-blank');
+        } else if (dayData){
+          const v = dayData.dollarChange;
+          if (v > 0) cell.classList.add('is-pos');
+          else if (v < 0) cell.classList.add('is-neg');
+          else cell.classList.add('is-flat');
+          if (maxAbs > 0){
+            const heat = Math.max(0.15, Math.min(1.0, Math.abs(v) / maxAbs));
+            cell.style.setProperty('--pnlcal-heat', heat.toFixed(2));
+          }
+        } else if (wkdy >= 5){
+          cell.classList.add('is-weekend');
+        } else {
+          cell.classList.add('is-nodata');
+        }
+        cell.appendChild(_mk('span', 'pnlcal-day-num', String(d)));
+        let valText = '';
+        if (dayData){
+          valText = _fmt$Compact(dayData.dollarChange);
+        } else if (inRange && wkdy < 5){
+          valText = '—';
+        }
+        cell.appendChild(_mk('span', 'pnlcal-day-val', valText));
+        days.appendChild(cell);
+      }
+      monthDiv.appendChild(days);
+      grid.appendChild(monthDiv);
+    });
+
+    let selectedDate = null;
+    grid.addEventListener('click', function(e){
+      let n = e.target;
+      while (n && n !== grid && !(n.classList && n.classList.contains('pnlcal-day'))) n = n.parentNode;
+      if (!n || n === grid) return;
+      const date = n.dataset && n.dataset.date;
+      if (!date) return;
+      const day = dayByDate[date];
+      if (!day) return;
+      if (selectedDate === date){
+        selectedDate = null;
+        n.classList.remove('is-selected');
+        _renderDetail(detail, null, model);
+        return;
+      }
+      const prev = grid.querySelector('.pnlcal-day.is-selected');
+      if (prev) prev.classList.remove('is-selected');
+      n.classList.add('is-selected');
+      selectedDate = date;
+      _renderDetail(detail, day, model);
+      if (typeof opts.onDayClick === 'function') opts.onDayClick(day);
+    });
+
+    root.appendChild(grid);
+    root.appendChild(detail);
+    host.appendChild(root);
+  }
+
+  Sim.UI.PnLCalendar = {
+    render: render,
+    modelFromIndividual: modelFromIndividual,
+    modelFromPortfolio: modelFromPortfolio
   };
 })();
 
@@ -11453,7 +12091,9 @@ Sim.Ctrl = (function(){
         realizedPnL: Math.round(d.totalPnL * 100) / 100,
         rMultiple: d.rCurrent,
         active: !d.stoppedOut && !d.closed
-      }])
+      }]),
+      sim: sim,
+      symbol: (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'POS'
     };
   }
 
@@ -11475,13 +12115,21 @@ Sim.Ctrl = (function(){
     else if (state.sim.playIdx >= state.bars.length - 1) { pause(); }
     return d;
   }
-  function _showSummary(d) {
+  function _showSummary(d, opts) {
     if (!d) d = Sim.computeDerived(state.sim, state.bars);
+    opts = opts || {};
     Sim.UI.showSummaryModal(_deriveForSummary(d), {
       onClose: () => {},
       onScreenshot: () => { if (typeof takeScreenshot === 'function') takeScreenshot(); },
-      onReenter: () => { onContinueClick(); }
+      onReenter: () => { onContinueClick(); },
+      viewOnly: !!opts.viewOnly,
+      focusTab: opts.focusTab || null
     });
+  }
+  function _peekCalendar() {
+    if (!state.sim) { alert('Start a simulation first.'); return; }
+    // Do not pause — sim keeps running while the modal is open.
+    _showSummary(undefined, { viewOnly: true, focusTab: 'calendar' });
   }
   function onContinueClick() {
     if (!state.sim) return;
@@ -11903,6 +12551,7 @@ Sim.Ctrl = (function(){
       ['sim-speed-1',   () => setSpeed(1)],
       ['sim-speed-2',   () => setSpeed(2)],
       ['sim-speed-5',   () => setSpeed(5)],
+      ['sim-btn-calendar', _peekCalendar],
       ['sim-btn-export', _exportSimulation],
       ['sim-btn-exit', exit],
       ['sim-btn-sell', onSellClick],
@@ -15955,6 +16604,39 @@ Sim.Ctrl = (function(){
     table.appendChild(tbody);
     dialog.appendChild(table);
 
+    // P&L Calendar — collapsible section. Open by default when launched
+    // from the "📅 Calendar" button (peekSummary), otherwise collapsed so
+    // the end-of-sim summary stays compact.
+    if (window.Sim && Sim.UI && Sim.UI.PnLCalendar){
+      const calWrap = _mkEl('div', 'portsim-summary-calendar-wrap');
+      if (opts.focusCalendar) calWrap.classList.add('is-open');
+      const calToggle = _mkEl('button', 'portsim-summary-calendar-toggle');
+      calToggle.type = 'button';
+      const caret = _mkEl('span', 'portsim-summary-calendar-caret', '▶');
+      calToggle.appendChild(caret);
+      calToggle.appendChild(document.createTextNode(' P&L Calendar'));
+      const calBody = _mkEl('div', 'portsim-summary-calendar-body');
+      const calHost = _mkEl('div');
+      calBody.appendChild(calHost);
+      calWrap.appendChild(calToggle);
+      calWrap.appendChild(calBody);
+      dialog.appendChild(calWrap);
+      let calRendered = false;
+      function _renderCalendarOnce(){
+        if (calRendered) return;
+        const model = Sim.UI.PnLCalendar.modelFromPortfolio();
+        Sim.UI.PnLCalendar.render(calHost, model, {
+          emptyMessage: 'No simulated days yet — let the sim run, then return.'
+        });
+        calRendered = true;
+      }
+      if (opts.focusCalendar) _renderCalendarOnce();
+      calToggle.addEventListener('click', function(){
+        const open = calWrap.classList.toggle('is-open');
+        if (open) _renderCalendarOnce();
+      });
+    }
+
     const actions = _mkEl('div');
     _setStyle(actions, 'margin-top:16px;display:flex;justify-content:flex-end;gap:8px;');
 
@@ -16215,6 +16897,12 @@ Sim.Ctrl = (function(){
       if (!_state.active){ alert('No active portfolio simulation.'); return; }
       _pause();
       _showSummary(opts || { viewOnly: true });
+    },
+    peekSummary: function(opts){
+      // Like showSummary but does NOT pause — used by the live "📅 Calendar"
+      // button so the sim keeps ticking while the user inspects per-day P&L.
+      if (!_state.active){ alert('No active portfolio simulation.'); return; }
+      _showSummary(Object.assign({ viewOnly: true, focusCalendar: true }, opts || {}));
     },
     pause: _pause,
     // Action helpers reused by ExpandModal so the larger chart can drive the
@@ -21658,6 +22346,17 @@ Sim.Ctrl = (function(){
         }
       });
     }
+    var calBtn = document.getElementById('portsim-btn-calendar');
+    if (calBtn && !calBtn._psBound){
+      calBtn._psBound = true;
+      calBtn.addEventListener('click', function(){
+        // peekSummary skips _pause(), so the sim keeps ticking while the
+        // calendar is open. focusCalendar opens the calendar section by default.
+        if (window.PortSim && window.PortSim.Ctrl && typeof window.PortSim.Ctrl.peekSummary === 'function'){
+          window.PortSim.Ctrl.peekSummary({ viewOnly: true, focusCalendar: true });
+        }
+      });
+    }
     var revBtn = document.getElementById('portsim-btn-review');
     if (revBtn && !revBtn._psBound){
       revBtn._psBound = true;
@@ -22267,6 +22966,7 @@ Sim.Ctrl = (function(){
       <button id="portsim-add-ticker" class="portsim-tbtn" type="button" title="Add a new ticker to the simulation">+ Ticker</button>
       <button id="portsim-toggle-reorder" class="portsim-tbtn" type="button" title="Drag cards to rearrange order (click again to exit)">↕ Reorder</button>
       <button id="portsim-toggle-hidden" class="portsim-tbtn" type="button" title="Restore hidden cards"><span id="portsim-hidden-count">0</span> Hidden ▾</button>
+      <button id="portsim-btn-calendar" class="portsim-tbtn" type="button" title="Open P&amp;L calendar (sim keeps running)">📅 Calendar</button>
       <button id="portsim-btn-summary" class="portsim-tbtn" type="button" title="Show per-ticker summary (without exiting)">📊 Summary</button>
       <button id="portsim-btn-review" class="portsim-tbtn" type="button" title="Open trade review (charts + notes + export)">📝 Review</button>
       <button id="portsim-btn-export" class="portsim-tbtn" type="button" title="Export portfolio simulation results as CSV">↓ Export</button>
