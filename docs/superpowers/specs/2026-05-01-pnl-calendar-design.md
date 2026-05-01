@@ -77,7 +77,8 @@ Reuses the existing per-day series produced by `_appendCurves()` and exposed via
 - Daily $ change: `curve[i].port − curve[i-1].port` (first day uses 0 baseline)
 - Per-symbol contribution: `curve[i].positions[SYM] − curve[i-1].positions[SYM]`
 - Daily %: `dollarChange / initialEquity * 100`
-- Events for day: walk `st.basket[].sim.eventsLog`, filter where `ev.date === day.date`
+- Events for day: union of `sim.eventsLog` and `(sim.legs || []).flatMap(l => l.eventsLog)` across `st.basket`, then filter where `ev.date === day.date`. **`continueSim()` archives prior events into `sim.legs[]` and clears `sim.eventsLog` (lines 9469–9488), so legs must be included.**
+- **Step-back guard:** `_stepBack()` restores `_state.playIdx` but does not rewind `_curve` (it only ever appends, tracked by `_curveLastDate`). The adapter must therefore slice `_curve` to entries whose date `<= st.unifiedDates[st.playIdx]` before computing diffs — otherwise post-step-back calendars include stale future points.
 
 No new state. Reuses an existing source-of-truth that already powers the equity chart and CSV export.
 
@@ -86,9 +87,14 @@ No new state. Reuses an existing source-of-truth that already powers the equity 
 The individual sim doesn't keep a per-bar series today. Add one tiny field:
 
 - Initialize `sim.pnlSeries = []` in `createSim()` (next to `eventsLog`).
-- After each advanced bar (same call site as `_updateExtremes` / `_updateIntradayExtremes`), `sim.pnlSeries.push({ date: bar.time, totalPnL: _computeTotalPnLAtBar(sim, bar) })`.
+- After each advanced bar (same call site as `_updateExtremes` / `_updateIntradayExtremes`), push the **cumulative-across-legs** total P&L:
+  ```js
+  const pastLegs = (sim.legs || []).reduce((s, l) => s + (l.realizedPnL || 0), 0);
+  sim.pnlSeries.push({ date: bar.time, totalPnL: _computeTotalPnLAtBar(sim, bar) + pastLegs });
+  ```
+  **Why cumulative:** `_computeTotalPnLAtBar` is current-leg-only (lines 9259–9263), and `continueSim()` resets `sim.realizedPnL` to 0 when a new leg starts (9482–9489). Diffing current-leg-only values would show a false drop at every leg boundary. Adding the archived legs' realized P&L (same pattern as `_positionTotalPnL` in portfolio code) gives the correct continuous series.
 
-Then the adapter is the same shape as portfolio's: diff adjacent entries to get daily $ change. Events come from filtering `sim.eventsLog` by date.
+The adapter then diffs adjacent entries to get daily $ change. Events come from the union of `sim.eventsLog` and `(sim.legs || []).flatMap(l => l.eventsLog)`, filtered by date — same reason as the portfolio adapter.
 
 ## UI integration
 
@@ -113,6 +119,11 @@ Built dynamically in `_showSummary` (line ~15868). Append a single collapsible "
 - Portfolio: equivalent button in the portfolio sim toolbar.
 - Click opens the existing summary modal in **view-only mode**: Continue button hidden, sim is not paused or exited. Modal is dismissable normally; closing returns to the running sim.
 - Modal content snapshots the model at open time. No live refresh — close and reopen to see the latest.
+- **Portfolio sim caveat:** the existing `PortSim.Ctrl.showSummary()` public entrypoint (line 16214) always calls `_pause()` before `_showSummary({ viewOnly: true })`. The new mid-sim Calendar button must **not** go through that entrypoint. Either:
+  - Add a new public entrypoint `PortSim.Ctrl.peekSummary({ viewOnly: true })` that calls `_showSummary` directly without `_pause()`, **or**
+  - Extend `showSummary` to accept `{ noPause: true }` and skip the pause when set.
+
+  We'll go with the explicit new entrypoint (`peekSummary`) to keep the existing pausing behavior unchanged for any other callers. Individual sim has no equivalent pause-on-open behavior in `_showSummary`, so its Calendar button can call the existing flow with a `viewOnly` flag.
 
 ### Calendar component DOM
 
@@ -177,6 +188,8 @@ Where reasonable, add a small JS smoke check at the bottom of the file: a functi
 - **`bar.time` format mismatch with `eventsLog[].date`** — both are ISO `YYYY-MM-DD` per existing code (verified at lines 9245, 14507 area). Adapter test catches drift.
 - **Modal feels cramped on narrow screens.** Mitigation: detail pane stacks below grid under 720px.
 - **Tab system collides with existing modal CSS.** The summary modal currently has no tabs; we add scoped classes (`.sim-summary-tabs`) to avoid touching shared `.fetch-modal-overlay` styles.
+- **Continued sims (multi-leg).** Both `Sim.continueSim()` and the portfolio's per-symbol new-leg flow archive prior events into `sim.legs[]` and reset `sim.realizedPnL` to 0. The adapters explicitly handle this (see Adapters section). Without those guards the calendar would (a) miss old-leg events on day-detail panes and (b) show false negative spikes in daily P&L at leg boundaries.
+- **Portfolio step-back.** `_stepBack()` rewinds `_state.playIdx` but not `_curve`. The portfolio adapter slices `_curve` by `unifiedDates[playIdx]` to avoid stale future points.
 
 ## Out of scope (v1)
 
@@ -189,11 +202,12 @@ Where reasonable, add a small JS smoke check at the bottom of the file: a functi
 ## Files touched
 
 - `big_movers/Big_movers.html` — single-file project. All changes here:
-  - New `Sim.UI.PnLCalendar` module (CSS + JS) — ~250 lines
+  - New `Sim.UI.PnLCalendar` module (CSS + JS) — ~280 lines (incl. month-grid renderer, detail pane, heat scaling)
   - Tab row markup in `#sim-summary-modal` — ~10 lines
-  - `pnlSeries` init + push in individual sim — 2 lines
+  - `pnlSeries` init in `createSim()` + cumulative-across-legs push at the per-tick advance site — ~5 lines
   - `📅 Calendar` button + handler in individual sim toolbar — ~15 lines
   - Collapsible calendar section in portfolio `_showSummary` — ~20 lines
   - `📅 Calendar` button + handler in portfolio sim toolbar — ~15 lines
+  - New `PortSim.Ctrl.peekSummary({ viewOnly: true })` entrypoint that skips `_pause()` — ~10 lines
 
-Total: roughly 300 lines of additions, zero deletions, no refactor of existing simulator code.
+Total: roughly 350 lines of additions, zero deletions, no refactor of existing simulator code.
