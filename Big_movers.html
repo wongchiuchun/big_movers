@@ -12710,7 +12710,14 @@ window.Sim = Sim;
   // `trades` is an array of v2 trade rows. `sessions` is the parallel
   // session list scoped to the same filter window — used for stats that are
   // session-level by definition (avg deployed %, # sessions).
-  function _calcKeyMetrics(trades, sessions){
+  // Migrated v1 stubs (exitReason='aggregate') are excluded from per-trade
+  // metrics so win-rate / profit-factor / EV reflect real legs only. They
+  // remain visible in the Sessions table for history.
+  function _excludeAggregates(trades){
+    return trades.filter(function(t){ return t.exitReason !== 'aggregate'; });
+  }
+  function _calcKeyMetrics(rawTrades, sessions){
+    const trades = _excludeAggregates(rawTrades);
     const n = trades.length;
     if (!n){
       return { count: 0, sessionCount: sessions ? sessions.length : 0, winRate: null,
@@ -12762,7 +12769,8 @@ window.Sim = Sim;
     };
   }
 
-  function _calcMonthly(trades){
+  function _calcMonthly(rawTrades){
+    const trades = _excludeAggregates(rawTrades);
     const byMonth = {};
     trades.forEach(function(t){
       const d = new Date(t.ts);
@@ -12775,7 +12783,8 @@ window.Sim = Sim;
     return Object.values(byMonth).sort(function(a, b){ return a.month < b.month ? 1 : -1; });
   }
 
-  function _calcDistribution(trades){
+  function _calcDistribution(rawTrades){
+    const trades = _excludeAggregates(rawTrades);
     const rets = trades.map(function(t){ return t.returnPctOfNotional; }).filter(function(v){ return v != null && isFinite(v); });
     if (!rets.length) return [];
     const bins = [
@@ -12937,8 +12946,9 @@ window.Sim = Sim;
     });
   }
 
-  function _renderTopBottom(host, trades, isTop){
+  function _renderTopBottom(host, rawTrades, isTop){
     while (host.firstChild) host.removeChild(host.firstChild);
+    const trades = _excludeAggregates(rawTrades);
     const sorted = trades.slice().sort(function(a, b){
       return isTop ? (b.realizedPnL || 0) - (a.realizedPnL || 0)
                    : (a.realizedPnL || 0) - (b.realizedPnL || 0);
@@ -12985,11 +12995,13 @@ window.Sim = Sim;
     const tbody = _mk('tbody');
     sessions.slice(0, 50).forEach(function(s){
       const row = _mk('tr');
+      if (s.migratedFromV1) row.title = 'Migrated from v1 — original session was logged before per-leg tracking, so trades show as a single aggregate row.';
       const d = new Date(s.ts);
       row.appendChild(_mk('td', null, d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })));
-      row.appendChild(_mk('td', null, (s.simType === 'portfolio') ? '📦' : '👤'));
+      const typeTxt = (s.simType === 'portfolio') ? '📦' : '👤';
+      row.appendChild(_mk('td', null, typeTxt + (s.migratedFromV1 ? ' ⚠' : '')));
       row.appendChild(_mk('td', null, s.symbol || '—'));
-      row.appendChild(_mk('td', null, String(s.tradeCount || 0)));
+      row.appendChild(_mk('td', null, String(s.tradeCount || 0) + (s.migratedFromV1 ? '*' : '')));
       row.appendChild(_mk('td', null, (s.winCount || 0) + '/' + (s.lossCount || 0)));
       row.appendChild(_mk('td', null, s.profitFactor != null ? s.profitFactor.toFixed(2) : '—'));
       row.appendChild(_mk('td', null, s.avgPctDeployed != null ? s.avgPctDeployed.toFixed(1) + '%' : '—'));
@@ -12998,6 +13010,15 @@ window.Sim = Sim;
       row.appendChild(_mk('td', pnlCls, _fmtPct(s.totalReturnPct, 1)));
       tbody.appendChild(row);
     });
+    // Footnote if any migrated session is shown.
+    if (sessions.slice(0, 50).some(function(s){ return s.migratedFromV1; })){
+      const note = _mk('div', 'sim-stats-empty');
+      note.style.fontSize = '10px';
+      note.style.padding = '8px 0 0 0';
+      note.style.textAlign = 'left';
+      note.textContent = '⚠ * = migrated from v1 (logged before per-leg tracking). Aggregate counts only — excluded from per-trade win-rate / EV / PF calculations.';
+      host.appendChild(note);
+    }
     table.appendChild(tbody);
     host.appendChild(table);
   }
