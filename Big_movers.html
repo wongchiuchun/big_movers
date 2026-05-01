@@ -2776,6 +2776,21 @@
   .portsim-randomize-hint code{
     background:var(--bg3);padding:1px 4px;border-radius:3px;
   }
+  .portsim-randomize-noise{
+    display:flex;align-items:flex-start;gap:8px;
+    margin-top:8px;padding:6px 8px;
+    background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+    font-family:var(--mono);font-size:10px;color:var(--text-2);
+    line-height:1.45;cursor:pointer;
+    text-transform:none;letter-spacing:0;
+  }
+  .portsim-randomize-noise input[type=checkbox]{
+    margin:1px 0 0 0;flex:0 0 auto;cursor:pointer;
+  }
+  .portsim-randomize-noise span em{
+    color:var(--text);font-style:italic;font-weight:600;
+  }
+  .portsim-randomize-noise:hover{ border-color:var(--border-bright); }
   /* ============ PORTSIM TRACK D: Setup Wizard Styles — END ============ */
 
   /* ============ PORTSIM TRACK K: Chart Peek Styles — START ============ */
@@ -3236,20 +3251,20 @@
   .portsim-equity-chart{
     flex:1 1 auto;
     min-width:0;
-    height:160px;
+    height:200px;
     background:var(--bg);
     border:1px solid var(--border);
     border-radius:5px;
     position:relative;
   }
   .portsim-equity-legend{
-    flex:0 0 180px;
+    flex:0 0 160px;
     display:flex;
     flex-direction:column;
     gap:4px;
     padding:4px 8px;
     overflow-y:auto;
-    max-height:160px;
+    max-height:200px;
     font-family:var(--mono);
     font-size:10px;
   }
@@ -5296,6 +5311,7 @@
             <button class="fetch-btn-cancel" id="sim-summary-save">💾 Save</button>
             <button class="fetch-btn-cancel" id="sim-summary-add-stats">📊 Add to Stats</button>
             <button class="fetch-btn-cancel" id="sim-summary-screenshot">Screenshot</button>
+            <button class="fetch-btn-cancel" id="sim-summary-replay" title="Re-run this sim from day 0 with the same setup">🔄 Replay</button>
             <button class="fetch-btn-primary" id="sim-summary-reenter">Continue Simulation →</button>
           </div>
           <div class="fetch-status" id="sim-summary-status"></div>
@@ -11608,6 +11624,16 @@ window.Sim = Sim;
       // Hide the button in view-only (mid-sim peek) mode — recording mid-run is misleading.
       addStatsBtn.style.display = (handlers && handlers.viewOnly) ? 'none' : '';
     }
+    const replayBtn = document.getElementById('sim-summary-replay');
+    if (replayBtn){
+      replayBtn.onclick = function(){
+        _closeModal('sim-summary-modal');
+        try { handlers.onReplay && handlers.onReplay(); }
+        catch (err) { _setStatus('sim-summary-status', err && err.message ? err.message : 'Replay failed', true); }
+      };
+      // Hide in view-only (mid-sim peek): replay would clobber the live run.
+      replayBtn.style.display = (handlers && handlers.viewOnly) ? 'none' : '';
+    }
     document.getElementById('sim-summary-reenter').onclick = () => { _closeModal('sim-summary-modal'); handlers.onReenter && handlers.onReenter(); };
     _onBackdrop('sim-summary-modal', handlers.onClose);
     _openModal('sim-summary-modal');
@@ -14007,6 +14033,7 @@ Sim.Ctrl = (function(){
           window.SimStats.addCurrent(state.sim, state.bars, _deriveForSummary(d));
         }
       },
+      onReplay: () => { replay(); },
       viewOnly: !!opts.viewOnly,
       focusTab: opts.focusTab || null
     });
@@ -14096,6 +14123,9 @@ Sim.Ctrl = (function(){
   }
 
   function _onSetupSubmit(form) {
+    // Stash the form so Replay can re-run this sim from day 0 with the same
+    // setup. Cloned to keep it independent of any post-submit form mutation.
+    state._lastSetup = Object.assign({}, form);
     let barIdx = currentBars.findIndex(b => b.time === form.date);
     if (barIdx < 0) {
       for (let i = currentBars.length - 1; i >= 0; i--) {
@@ -14473,7 +14503,14 @@ Sim.Ctrl = (function(){
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _wire);
   else _wire();
 
-  return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null) };
+  function replay() {
+    if (!state._lastSetup) { alert('No prior setup to replay.'); return; }
+    pause();
+    _clearStopHistory();
+    _clearInitialStopLine();
+    _onSetupSubmit(Object.assign({}, state._lastSetup));
+  }
+  return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null), replay };
 })();
 
 // ============ PORTSIM TRACK N: Sim Action Helpers — START ============
@@ -16285,43 +16322,116 @@ Sim.Ctrl = (function(){
     }).then(function (rows) { return Array.isArray(rows) ? rows : []; });
   }
 
+  // Eagerly ensure a noise ticker (one that did NOT have a big move in the
+  // chosen year) has local OHLCV covering the sim window. Best-effort: returns
+  // {ok: true, fetched: bool} on success, {ok: false, error} otherwise. Never
+  // throws — caller decides whether to swap to a different candidate.
+  function _ensureNoiseDataCovers(sym, yearStart, todayStr) {
+    return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+      .then(function (resp) {
+        if (resp.status === 404) return { _missing: true };
+        if (!resp.ok) return { _httpErr: 'HTTP ' + resp.status };
+        return resp.json().then(function (j) { return { _bars: _normalizeOhlcvResponse(j) }; });
+      })
+      .then(function (probe) {
+        // Missing locally — fetch a wide range covering year Y onwards.
+        if (probe._missing) {
+          return fetch('/api/fetch-ticker', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbol: sym, start_date: yearStart, end_date: todayStr })
+          }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok && !(d && d.error), fetched: true, error: d && d.error }; }); })
+            .catch(function (e) { return { ok: false, error: e && e.message ? e.message : 'fetch failed' }; });
+        }
+        if (probe._httpErr) return { ok: false, error: probe._httpErr };
+        var bars = probe._bars || [];
+        if (!bars.length) return { ok: false, error: sym + ' has no bars' };
+        var b0 = bars[0] || {};
+        var first = b0.date || b0.time || b0.t || b0.Date || b0.DateTime || null;
+        // Local CSV starts AFTER the chosen year — refetch with explicit range.
+        if (first && first > yearStart) {
+          return fetch('/api/fetch-ticker', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbol: sym, start_date: yearStart, end_date: todayStr })
+          }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok && !(d && d.error), fetched: true, error: d && d.error }; }); })
+            .catch(function (e) { return { ok: false, error: e && e.message ? e.message : 'fetch failed' }; });
+        }
+        // Local data already covers — no API call needed.
+        return { ok: true, fetched: false };
+      })
+      .catch(function (e) { return { ok: false, error: e && e.message ? e.message : 'probe failed' }; });
+  }
+
+  // Walk noise candidates in order, keeping ones that have data covering the
+  // chosen window (auto-fetching when missing). Stops once `target` candidates
+  // are accumulated, or when the candidate pool is exhausted.
+  function _collectNoiseTickers(candidates, target, yearStart, todayStr, onProgress) {
+    var picked = [];
+    var fetchedCount = 0;
+    function next(idx) {
+      if (picked.length >= target || idx >= candidates.length) {
+        return Promise.resolve({ picked: picked, fetched: fetchedCount });
+      }
+      var row = candidates[idx];
+      var sym = String((row && row.symbol) || '').trim().toUpperCase();
+      if (!sym) return next(idx + 1);
+      if (onProgress) onProgress(picked.length, target, sym);
+      return _ensureNoiseDataCovers(sym, yearStart, todayStr).then(function (res) {
+        if (res.ok) {
+          if (res.fetched) fetchedCount++;
+          picked.push(row);
+        }
+        return next(idx + 1);
+      });
+    }
+    return next(0);
+  }
+
   function handleRandomize() {
     var yearEl = $('#portsim-rand-year');
     var countEl = $('#portsim-rand-count');
+    var noiseEl = $('#portsim-rand-noise');
     var year = parseInt(yearEl && yearEl.value, 10);
     var count = parseInt(countEl && countEl.value, 10);
+    var noiseOn = !!(noiseEl && noiseEl.checked);
     if (!Number.isFinite(year)) { setStatus('Pick a year first.', 'error'); return; }
     if (!Number.isFinite(count) || count < 1) count = 4;
     count = Math.min(count, MAX_ROWS);
 
     setStatus('Loading results for ' + year + '…', '');
     _getResultRows().then(function (rows) {
-      var matches = rows.filter(function (r) { return parseInt(r && r.year, 10) === year; });
-      if (matches.length === 0) {
+      var inYearRows = rows.filter(function (r) { return parseInt(r && r.year, 10) === year; });
+      if (inYearRows.length === 0) {
         var ys = _yearsAvailable(rows);
         setStatus('No tickers found for ' + year + '. Available years: ' + (ys.length ? ys.join(', ') : '(none)'), 'error');
         return;
       }
 
-      // Pick N unique random symbols from the year's matches
-      var shuffled = _shuffleInPlace(matches.slice());
-      var picked = [];
+      // 50/50 split when noise is on. ceil() guarantees at least half come
+      // from the chosen year (e.g. N=5 → 3 in-year + 2 noise).
+      var inYearTarget = noiseOn ? Math.ceil(count / 2) : count;
+      var noiseTarget = noiseOn ? (count - inYearTarget) : 0;
+
+      // Pick in-year tickers
+      var shuffledIn = _shuffleInPlace(inYearRows.slice());
+      var pickedIn = [];
       var seen = Object.create(null);
-      for (var i = 0; i < shuffled.length && picked.length < count; i++) {
-        var sym = String((shuffled[i] && shuffled[i].symbol) || '').trim().toUpperCase();
-        if (!sym || seen[sym]) continue;
-        seen[sym] = true;
-        picked.push(shuffled[i]);
+      for (var i = 0; i < shuffledIn.length && pickedIn.length < inYearTarget; i++) {
+        var symI = String((shuffledIn[i] && shuffledIn[i].symbol) || '').trim().toUpperCase();
+        if (!symI || seen[symI]) continue;
+        seen[symI] = true;
+        pickedIn.push(shuffledIn[i]);
       }
-      if (picked.length === 0) {
+      if (pickedIn.length === 0) {
         setStatus('Could not pick any tickers for ' + year + '.', 'error');
         return;
       }
 
-      // Pick a random 4–6 month window inside the year.
-      // Latest start month is Aug so that a min-120-day window doesn't get
-      // clipped against year-end (Aug 1 + 120 = Nov 29; with up to 180 days
-      // we can still bump into Dec 31 — the clamp below handles that).
+      // Pick a random 4–6 month window inside the year. Latest start month is
+      // Aug so that a min-120-day window doesn't get clipped against year-end
+      // (Aug 1 + 120 = Nov 29; with up to 180 days we can bump into Dec 31 —
+      // the clamp below handles that).
       var startMonth = _randInt(0, 7); // Jan..Aug
       var startDay = _randInt(1, 28);
       var startD = new Date(year, startMonth, startDay);
@@ -16333,27 +16443,83 @@ Sim.Ctrl = (function(){
       var sd = _toDateStr(startD);
       var ed = _toDateStr(endD);
 
-      // Push directly to the form + state.
-      var sdEl = $('#portsim-start-date'); if (sdEl) sdEl.value = sd;
-      var edEl = $('#portsim-end-date');   if (edEl) edEl.value = ed;
+      function commitBasket(allRowsPicked, fetchedCount) {
+        // Push directly to the form + state.
+        var sdEl = $('#portsim-start-date'); if (sdEl) sdEl.value = sd;
+        var edEl = $('#portsim-end-date');   if (edEl) edEl.value = ed;
 
-      var rowsState = picked.map(function (r) {
-        return {
-          symbol: String(r.symbol || '').trim().toUpperCase(),
-          hasPreEntry: false,
-          entryPrice: '',
-          stopPrice: '',
-          sizeMode: 'shares',
-          sizeValue: ''
-        };
+        var rowsState = allRowsPicked.map(function (r) {
+          return {
+            symbol: String(r.symbol || '').trim().toUpperCase(),
+            hasPreEntry: false,
+            entryPrice: '',
+            stopPrice: '',
+            sizeMode: 'shares',
+            sizeValue: ''
+          };
+        });
+        Setup._state.startDate = sd;
+        Setup._state.endDate = ed;
+        Setup._state.rows = rowsState;
+        rebuildRowsFromState(rowsState);
+
+        var symList = rowsState.map(function (r) { return r.symbol; }).join(', ');
+        var splitTxt = noiseOn
+          ? (' (' + pickedIn.length + ' from ' + year + ', ' + (allRowsPicked.length - pickedIn.length) + ' noise'
+             + (fetchedCount ? ', ↓' + fetchedCount + ' auto-fetched' : '') + ')')
+          : '';
+        setStatus('🎲 ' + allRowsPicked.length + ' tickers' + splitTxt + ' · ' + sd + ' → ' + ed
+                  + ' · ' + symList + ' · mark ≥1 as Pre-entry to start.', 'success');
+      }
+
+      if (!noiseOn || noiseTarget === 0) {
+        commitBasket(pickedIn, 0);
+        return;
+      }
+
+      // Build the noise candidate pool: rows with year ≠ Y, dedup against
+      // already-picked symbols. Shuffle so we don't always try the same ones.
+      var noiseRows = rows.filter(function (r) {
+        var y = parseInt(r && r.year, 10);
+        if (!Number.isFinite(y) || y === year) return false;
+        var sym = String((r && r.symbol) || '').trim().toUpperCase();
+        return sym && !seen[sym];
       });
-      Setup._state.startDate = sd;
-      Setup._state.endDate = ed;
-      Setup._state.rows = rowsState;
-      rebuildRowsFromState(rowsState);
+      // Dedup by symbol — a ticker may appear in the catalogue multiple times
+      // (different years). Keep only the first row per symbol so we don't
+      // double-count it as a candidate.
+      var bySym = Object.create(null);
+      var noiseUnique = [];
+      noiseRows.forEach(function (r) {
+        var s = String((r && r.symbol) || '').trim().toUpperCase();
+        if (!s || bySym[s]) return;
+        bySym[s] = true;
+        noiseUnique.push(r);
+      });
+      _shuffleInPlace(noiseUnique);
 
-      var symList = rowsState.map(function (r) { return r.symbol; }).join(', ');
-      setStatus('🎲 ' + picked.length + ' tickers · ' + sd + ' → ' + ed + ' · ' + symList + ' · mark ≥1 as Pre-entry to start.', 'success');
+      var yearStart = year + '-01-01';
+      var todayStr = new Date().toISOString().slice(0, 10);
+      setStatus('Picking ' + inYearTarget + ' from ' + year + ' + ' + noiseTarget + ' noise (auto-fetching as needed)…', '');
+
+      _collectNoiseTickers(noiseUnique, noiseTarget, yearStart, todayStr, function (got, want, sym) {
+        setStatus('🌫 Resolving noise ' + (got + 1) + '/' + want + ' (' + sym + ')…', '');
+      }).then(function (res) {
+        if (res.picked.length < noiseTarget) {
+          // Fall back gracefully: top up from in-year if noise pool was thin.
+          var stillNeeded = noiseTarget - res.picked.length;
+          for (var k = 0; k < shuffledIn.length && stillNeeded > 0; k++) {
+            var symX = String((shuffledIn[k] && shuffledIn[k].symbol) || '').trim().toUpperCase();
+            if (seen[symX]) continue;
+            seen[symX] = true;
+            pickedIn.push(shuffledIn[k]);
+            stillNeeded--;
+          }
+        }
+        commitBasket(pickedIn.concat(res.picked), res.fetched || 0);
+      }).catch(function (e) {
+        setStatus('Noise resolution failed: ' + (e && e.message ? e.message : e), 'error');
+      });
     }).catch(function (e) {
       setStatus('Randomize failed: ' + (e && e.message ? e.message : e), 'error');
     });
@@ -17401,6 +17567,10 @@ Sim.Ctrl = (function(){
       throw new Error('config missing tickers');
     }
     const fetched = cfg.fetchedBars || {};
+    // Stash the config so Replay can re-bootstrap from day 0 with the same
+    // basket. fetchedBars stays in memory via this reference, so replay
+    // doesn't need to refetch OHLCV.
+    _state._lastConfig = cfg;
 
     // Reset internal state.
     _state.active = true;
@@ -18598,6 +18768,27 @@ Sim.Ctrl = (function(){
       });
       actions.appendChild(dismissBtn);
     } else {
+      // Replay — re-bootstrap from the stashed config so the user can try a
+      // different approach with the same basket. Shown only when a prior
+      // config exists (always true at end-of-sim) and only at end-of-sim, not
+      // mid-sim peek where it would clobber the live run.
+      if (_state._lastConfig){
+        const replayBtn = _mkEl('button', null, '🔄 Replay');
+        replayBtn.type = 'button';
+        replayBtn.title = 'Re-run this basket from day 0 with the same setup';
+        _setStyle(replayBtn, 'font-family:var(--mono);font-size:11px;padding:6px 14px;background:var(--bg3);color:var(--text);border:1px solid var(--border-bright);border-radius:5px;cursor:pointer;letter-spacing:0.04em;');
+        replayBtn.addEventListener('click', function(){
+          const cfg = _state._lastConfig;
+          try { host.remove(); } catch(e){}
+          try { _bootstrapFromConfig(cfg); }
+          catch (err){
+            console.error('[PortSim.Ctrl] replay failed:', err);
+            alert('Replay failed: ' + (err && err.message ? err.message : err));
+            _hardExit();
+          }
+        });
+        actions.appendChild(replayBtn);
+      }
       // Destructive (end-of-sim or explicit exit): close + tear down sim.
       const closeBtn = _mkEl('button', null, 'Close & Exit');
       closeBtn.type = 'button';
@@ -22602,9 +22793,19 @@ Sim.Ctrl = (function(){
       color: '#d4a574',
       lineWidth: 2.5,
       priceLineVisible: false,
-      lastValueVisible: true,
-      title: 'Portfolio',
+      lastValueVisible: false,
+      crosshairMarkerVisible: true,
     });
+    try {
+      _portfolioSeries.createPriceLine({
+        price: 0,
+        color: border,
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle ? LightweightCharts.LineStyle.Dashed : 2,
+        axisLabelVisible: false,
+        title: '',
+      });
+    } catch(_){ }
     if (typeof ResizeObserver !== 'undefined'){
       _equityResizeObs = new ResizeObserver(function(){
         var r = host.getBoundingClientRect();
@@ -22627,7 +22828,7 @@ Sim.Ctrl = (function(){
       lineWidth: 1.25,
       priceLineVisible: false,
       lastValueVisible: false,
-      title: symbol,
+      crosshairMarkerVisible: false,
     });
     s._color = color;
     _positionSeries[symbol] = s;
@@ -24763,6 +24964,10 @@ Sim.Ctrl = (function(){
           <button type="button" id="portsim-rand-btn" title="Pick N random tickers from this year and a random 4–6 month window">🎲 Randomize</button>
         </div>
       </div>
+      <label class="portsim-randomize-noise" for="portsim-rand-noise">
+        <input type="checkbox" id="portsim-rand-noise">
+        <span>🌫 Cross-year noise — mix in up to 50% tickers that ran in <em>other</em> years (kills the "this is a known runner" sample bias). Will auto-fetch missing price data.</span>
+      </label>
       <div class="portsim-randomize-hint">Picks N random tickers that had a big move in the chosen year (from <code>big_movers_result.csv</code>) plus a random 4–6 month window inside the year. Replaces current basket rows and dates.</div>
     </div>
 
