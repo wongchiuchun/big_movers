@@ -16086,6 +16086,23 @@ Sim.Ctrl = (function(){
       });
   }
 
+  // Required local-data span before we let a sim start: T-4mo (so the user
+  // gets ~4 months of pre-sim chart context for setup judgement) through
+  // today (so live mark-to-market and any future replay extending past
+  // endDate has fresh bars). Data that doesn't span this window gets
+  // auto-fetched from Twelve Data — no warning, no manual click, just done.
+  function _needsExtend(bars, startDate, todayStr) {
+    if (!Array.isArray(bars) || !bars.length) return false;
+    if (!startDate || !todayStr) return false;
+    var dateOf = function(b){ return b && (b.date || b.time || b.t || b.Date || b.DateTime); };
+    var firstDate = dateOf(bars[0]);
+    var lastDate  = dateOf(bars[bars.length - 1]);
+    var requiredStart = _shiftMonths(startDate, -4);
+    if (firstDate && firstDate > requiredStart) return true;
+    if (lastDate  && lastDate  < todayStr) return true;
+    return false;
+  }
+
   function fetchAllTickers(cfg) {
     var tickers = (cfg.tickers || []).filter(function (t) { return t && t.symbol && t.symbol.trim(); });
     var seen = Object.create(null);
@@ -16099,6 +16116,7 @@ Sim.Ctrl = (function(){
 
     var startDate = cfg.startDate;
     var endDate = cfg.endDate;
+    var todayStr = new Date().toISOString().slice(0, 10);
     var statusEl = $('#portsim-setup-status');
 
     function processBars(sym, json) {
@@ -16155,6 +16173,39 @@ Sim.Ctrl = (function(){
         }
         if (first._status !== 200) {
           return { sym: sym, bars: null, error: '✕ ' + sym + ' fetch error (' + (first._httpErr || ('HTTP ' + first._status)) + ')' };
+        }
+        // Coverage check: local file exists, but does it span T-4mo → today?
+        // If not, auto-fetch the wider range (same call the 404 path uses)
+        // and retry. Falls back to the original bars on fetch failure so
+        // the sim can still launch with whatever data we had.
+        var probeBars = _normalizeOhlcvResponse(first.json);
+        if (_needsExtend(probeBars, startDate, todayStr)) {
+          if (statusEl){
+            statusEl.textContent = 'Extending ' + sym + ' to cover T-4mo → today…';
+            statusEl.className = 'fetch-status';
+          }
+          return _autoFetchTicker(sym, startDate, endDate).then(function (af) {
+            if (!af.ok){
+              var fallback = processBars(sym, first.json);
+              fallback.warn = (fallback.warn ? fallback.warn + ' · ' : '')
+                + '⚠ auto-extend failed: ' + af.error;
+              return fallback;
+            }
+            return _fetchOneTicker(sym, startDate, endDate).then(function (third) {
+              if (third._status !== 200){
+                var fb = processBars(sym, first.json);
+                fb.warn = (fb.warn ? fb.warn + ' · ' : '')
+                  + '⚠ refetch after extend failed: HTTP ' + third._status;
+                return fb;
+              }
+              var r = processBars(sym, third.json);
+              if (!r.error){
+                r.warn = (r.warn ? r.warn + ' · ' : '')
+                  + '↓ auto-extended ' + (af.barsAdded || '?') + ' bars';
+              }
+              return r;
+            });
+          });
         }
         return processBars(sym, first.json);
       }).catch(function (e) {
