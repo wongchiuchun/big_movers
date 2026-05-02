@@ -13234,7 +13234,7 @@ window.Sim = Sim;
     const table = _mk('table', 'sim-stats-table');
     const thead = _mk('thead');
     const tr = _mk('tr');
-    ['When','Type','Symbol(s)','Trades','W/L','PF','% Deploy','Session P&L','Return'].forEach(function(h){
+    ['When','Type','Symbol(s)','Days','Trades','W/L','PF','% Deploy','Session P&L','Return','vs Bench'].forEach(function(h){
       tr.appendChild(_mk('th', null, h));
     });
     thead.appendChild(tr); table.appendChild(thead);
@@ -13247,6 +13247,10 @@ window.Sim = Sim;
       const typeTxt = (s.simType === 'portfolio') ? '📦' : '👤';
       row.appendChild(_mk('td', null, typeTxt + (s.migratedFromV1 ? ' ⚠' : '')));
       row.appendChild(_mk('td', null, s.symbol || '—'));
+      // Days simulated for THIS session — lets the user weight any
+      // other column (P&L, win rate) against how much sim time it covers.
+      const days = _tradingDaysBetween(s.simStartDate, s.simEndDate);
+      row.appendChild(_mk('td', null, days > 0 ? String(days) : '—'));
       row.appendChild(_mk('td', null, String(s.tradeCount || 0) + (s.migratedFromV1 ? '*' : '')));
       row.appendChild(_mk('td', null, (s.winCount || 0) + '/' + (s.lossCount || 0)));
       row.appendChild(_mk('td', null, s.profitFactor != null ? s.profitFactor.toFixed(2) : '—'));
@@ -13254,6 +13258,24 @@ window.Sim = Sim;
       const pnlCls = (s.sessionPnL || 0) > 0 ? 'is-pos' : ((s.sessionPnL || 0) < 0 ? 'is-neg' : '');
       row.appendChild(_mk('td', pnlCls, _fmt$Signed(s.sessionPnL)));
       row.appendChild(_mk('td', pnlCls, _fmtPct(s.totalReturnPct, 1)));
+      // vs Bench — alpha vs the relevant benchmark for the sim type.
+      // Portfolio sims compare to the chosen index (SPX/NDQ); individual
+      // sims compare to the ticker's buy-and-hold over the sim window.
+      // Either field can be missing on older / aggregate sessions.
+      const isPort = s.simType === 'portfolio';
+      const bench = isPort ? s.indexReturnPct : s.tickerBhPct;
+      let alphaTxt = '—', alphaCls = '', alphaTitle = '';
+      if (s.totalReturnPct != null && bench != null && isFinite(bench)){
+        const alpha = s.totalReturnPct - bench;
+        alphaCls = alpha > 0 ? 'is-pos' : (alpha < 0 ? 'is-neg' : '');
+        const sign = alpha > 0 ? '+' : '';
+        const benchLabel = isPort ? (s.indexName || 'index') : 'B&H';
+        alphaTxt = (alpha > 0 ? '✓ ' : (alpha < 0 ? '✗ ' : '')) + sign + alpha.toFixed(1) + '%';
+        alphaTitle = 'Sim ' + (s.totalReturnPct >= 0 ? '+' : '') + s.totalReturnPct.toFixed(1) + '% vs ' + benchLabel + ' ' + (bench >= 0 ? '+' : '') + bench.toFixed(1) + '%';
+      }
+      const alphaTd = _mk('td', alphaCls, alphaTxt);
+      if (alphaTitle) alphaTd.title = alphaTitle;
+      row.appendChild(alphaTd);
       tbody.appendChild(row);
     });
     // Footnote if any migrated session is shown.
