@@ -5159,6 +5159,14 @@
         <div class="fetch-modal">
           <h3>Start Simulation</h3>
           <div class="fetch-field">
+            <label>Direction</label>
+            <div class="sim-pill-row" id="sim-setup-direction">
+              <button type="button" class="sim-pill sim-pill-active" data-direction="long">↑ Long</button>
+              <button type="button" class="sim-pill" data-direction="short">↓ Short</button>
+            </div>
+            <input type="hidden" id="sim-direction-value" value="long">
+          </div>
+          <div class="fetch-field">
             <label for="sim-entry-date">Entry date</label>
             <div class="sim-input-with-pick">
               <input type="date" id="sim-entry-date">
@@ -5441,6 +5449,14 @@
           <h3>New Entry (Leg <span id="sim-newleg-num">2</span>)</h3>
           <div class="sim-readout" id="sim-newleg-bar">
             <div>Entering at <strong id="sim-newleg-bardate">—</strong> · close <strong id="sim-newleg-barprice">—</strong></div>
+          </div>
+          <div class="fetch-field">
+            <label>Direction</label>
+            <div class="sim-pill-row" id="sim-newleg-direction">
+              <button type="button" class="sim-pill sim-pill-active" data-direction="long">↑ Long</button>
+              <button type="button" class="sim-pill" data-direction="short">↓ Short</button>
+            </div>
+            <input type="hidden" id="sim-newleg-direction-value" value="long">
           </div>
           <div class="fetch-field">
             <label>Size</label>
@@ -10116,10 +10132,16 @@ const Sim = (function(){
   const rR = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
+  function _mintLegId(){
+    return 'leg_' + Math.random().toString(36).slice(2, 10);
+  }
+
   function createSim(params) {
     params = params || {};
     const { moveKey, direction = 'long', entry, initialEquity = null, noEntry = false } = params;
-    if (direction !== 'long') console.warn('Sim: only direction="long" supported in phase 1');
+    if (direction !== 'long' && direction !== 'short') {
+      throw new Error('createSim: direction must be "long" or "short"');
+    }
 
     // Playback-only mode (used by SimBlind): no initial position. The sim
     // starts at startBarIdx with `between: true`, qty: 0, no stops, no entry
@@ -10162,8 +10184,14 @@ const Sim = (function(){
       ? Math.floor(entry.sizeValue)
       : Math.floor(entry.sizeValue / entry.price);
     if (!(shares > 0)) throw new Error('createSim: computed shares <= 0');
-    const initialRisk = shares * (entry.price - entry.stop);
-    if (!(initialRisk > 0)) throw new Error('createSim: initialRisk must be > 0 (stop below entry for long)');
+    const initialRisk = (Sim.Direction
+      ? shares * Sim.Direction.initialRiskPerShare(direction, entry.price, entry.stop)
+      : shares * (entry.price - entry.stop));
+    if (!(initialRisk > 0)) {
+      throw new Error('createSim: initialRisk must be > 0 ('
+        + (direction === 'short' ? 'stop above entry for short' : 'stop below entry for long')
+        + ')');
+    }
 
     let endBarIdx = null;
     if (entry.endBarIdx != null) {
@@ -10173,9 +10201,11 @@ const Sim = (function(){
       endBarIdx = entry.endBarIdx;
     }
 
+    const legId = _mintLegId();
     return {
       moveKey: moveKey || null,
       direction,
+      legId: legId,
       entry: {
         barIdx: entry.barIdx, date: entry.date || null, price: entry.price,
         sizeMode: entry.sizeMode || 'shares', sizeValue: entry.sizeValue, stop: entry.stop
@@ -10188,7 +10218,7 @@ const Sim = (function(){
                      trail: (entry.stopTrail && entry.stopTrail.type === 'ema') ? { type: 'ema', period: +entry.stopTrail.period || 10, k: +entry.stopTrail.k || 0 } : null }],
       playIdx: entry.barIdx, stoppedOut: false, closed: false,
       pendingActions: [],
-      eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price,
+      eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price, direction: direction, legId: legId,
                     note: 'entry ' + shares + '@' + r2(entry.price) + ' stop ' + r2(entry.stop) }],
       peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
       legs: [], between: false, simStartBarIdx: entry.barIdx,
@@ -10208,25 +10238,44 @@ const Sim = (function(){
   }
 
   // Auto-trailing stop: walks every active stop with a `trail` spec and
-  // ratchets the stop price up (never down) to match the latest rule output.
-  // Currently supports trail.type === 'ema' (Below EMA · auto-trail).
+  // ratchets the stop price toward favorable direction (long: up only;
+  // short: down only) to match the latest rule output.
+  // Currently supports trail.type === 'ema' (Below/Above EMA · auto-trail).
   function _maybeTrailStops(sim, bars, idx, fired) {
     if (!sim || !sim.stopLevels || !bars) return;
     const bar = bars[idx];
     if (!bar) return;
+    const dir = sim.direction || 'long';
     sim.stopLevels.forEach(function(s) {
       if (!s || s.fired || !s.trail) return;
       if (s.trail.type !== 'ema') return;
-      const candidate = Sim.StopRules.emaBelow(bars, idx, s.trail.period || 10, s.trail.k || 0);
+      // emaBelow returns EMA*(1 - k/100). For shorts we want EMA*(1 + k/100) so
+      // the stop sits ABOVE the EMA. Compute via Sim.StopRules: if dir==='short'
+      // pass negative k to flip the offset.
+      const period = s.trail.period || 10;
+      const kRaw = s.trail.k || 0;
+      let candidate;
+      if (dir === 'short'){
+        // emaAt directly + (1 + kRaw/100) so stop sits above EMA.
+        const e = Sim.StopRules.emaAt(bars, idx, period);
+        candidate = (e == null) ? null : Math.round(e * (1 + kRaw / 100) * 100) / 100;
+      } else {
+        candidate = Sim.StopRules.emaBelow(bars, idx, period, kRaw);
+      }
       if (candidate == null || !isFinite(candidate)) return;
-      // Ratchet: only ever move stop UP (longs). Tiny epsilon to avoid noise.
-      if (candidate > (s.price || 0) + 0.005) {
+      // Ratchet: long moves UP only, short moves DOWN only. Tiny epsilon to avoid noise.
+      const prev = s.price || 0;
+      const moves = (dir === 'short')
+        ? (candidate < prev - 0.005)
+        : (candidate > prev + 0.005);
+      if (moves) {
         const oldPrice = s.price;
         s.price = Math.round(candidate * 100) / 100;
+        const arrow = dir === 'short' ? '+' : '−';
         const ev = {
           barIdx: idx, date: bar.time || null, type: 'movestop',
           stopId: s.id, newStop: s.price, pct: s.pct,
-          note: 'auto-trail EMA' + (s.trail.period || 10) + (s.trail.k ? ' −' + s.trail.k + '%' : '')
+          note: 'auto-trail EMA' + period + (kRaw ? ' ' + arrow + kRaw + '%' : '')
                 + ': ' + (oldPrice != null ? oldPrice.toFixed(2) + ' → ' : '')
                 + s.price.toFixed(2)
         };
@@ -10244,8 +10293,8 @@ const Sim = (function(){
   }
 
   function _computeTotalPnLAtBar(sim, bar) {
-    const dir = sim.direction === 'long' ? 1 : -1;
-    const unreal = sim.qty > 0 ? sim.qty * (bar.close - sim.avgCost) * dir : 0;
+    const d = sim.direction || 'long';
+    const unreal = sim.qty > 0 ? sim.qty * Sim.Direction.pnlPerShare(d, bar.close, sim.avgCost) : 0;
     return sim.realizedPnL + unreal;
   }
   function _updateExtremes(sim, totalPnL, barIdx) {
@@ -10255,12 +10304,14 @@ const Sim = (function(){
   }
   function _updateIntradayExtremes(sim, bar, barIdx) {
     if (!bar || sim.qty <= 0) return;
-    const dir = sim.direction === 'long' ? 1 : -1;
-    const lowPnL  = sim.realizedPnL + sim.qty * (bar.low  - sim.avgCost) * dir;
-    const highPnL = sim.realizedPnL + sim.qty * (bar.high - sim.avgCost) * dir;
-    if (highPnL > sim.peakTotal) { sim.peakTotal = highPnL; sim.peakBarIdx = barIdx; }
-    if (highPnL > sim._mfeVal) sim._mfeVal = highPnL;
-    if (lowPnL  < sim._maeVal) sim._maeVal = lowPnL;
+    const d = sim.direction || 'long';
+    // For long: bar.low is adverse (worst), bar.high is favorable (best).
+    // For short: bar.high is adverse, bar.low is favorable.
+    const betterPnL = Sim.Direction.intradayBetterPnL(d, bar, sim.qty, sim.avgCost, sim.realizedPnL);
+    const worsePnL  = Sim.Direction.intradayWorsePnL (d, bar, sim.qty, sim.avgCost, sim.realizedPnL);
+    if (betterPnL > sim.peakTotal) { sim.peakTotal = betterPnL; sim.peakBarIdx = barIdx; }
+    if (betterPnL > sim._mfeVal) sim._mfeVal = betterPnL;
+    if (worsePnL  < sim._maeVal) sim._maeVal = worsePnL;
   }
   function _seedEntryExtremes(sim, bars) {
     const bar = bars[sim.entry.barIdx]; if (!bar) return;
@@ -10271,21 +10322,31 @@ const Sim = (function(){
 
   function _processStopOnBar(sim, bar, barIdx, fired) {
     if (sim.stoppedOut || sim.closed || sim.qty <= 0) return false;
-    const active = (sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price);
+    const d = sim.direction || 'long';
+    // Sort by which fires first as price moves through stops:
+    //   long: highest stop first (price falls past it first)
+    //   short: lowest stop first (price rises past it first)
+    const active = Sim.Direction.sortStopsForFire(d, (sim.stopLevels || []).filter(s => !s.fired));
     let anyFired = false;
     for (const stop of active) {
       if (sim.qty <= 0) break;
-      if (bar.low > stop.price) continue;
-      const fillPx = Math.min(bar.open, stop.price);
+      // Fires when bar adverse extreme reaches stop:
+      //   long: bar.low <= stop.price
+      //   short: bar.high >= stop.price
+      if (!Sim.Direction.stopFires(d, bar, stop.price)) continue;
+      // Fill price:
+      //   long: min(open, stop) — gap-down fills at open
+      //   short: max(open, stop) — gap-up fills at open
+      const fillPx = Sim.Direction.fillAtStop(d, bar, stop.price);
       const targetQty = Math.max(0, Math.floor(sim.shares0 * stop.pct));
       const sellQty = Math.min(targetQty, sim.qty);
       if (sellQty > 0) {
-        sim.realizedPnL += (fillPx - sim.avgCost) * sellQty;
+        sim.realizedPnL += Sim.Direction.pnlPerShare(d, fillPx, sim.avgCost) * sellQty;
         sim.qty -= sellQty;
       }
       stop.fired = true;
       const pctLbl = Math.round(stop.pct * 100);
-      const ev = { barIdx, date: bar.time, type: 'stop', qty: sellQty, price: r2(fillPx),
+      const ev = { barIdx, date: bar.time, type: 'stop', qty: sellQty, price: r2(fillPx), direction: d, legId: sim.legId || null,
         note: 'stop ' + r2(stop.price) + ' hit (' + pctLbl + '%), filled ' + r2(fillPx) + ' qty ' + sellQty };
       sim.eventsLog.push(ev); fired.push(ev);
       anyFired = true;
@@ -10301,31 +10362,34 @@ const Sim = (function(){
 
   function _processActionsOnBar(sim, bar, barIdx, fired) {
     if (sim.closed || sim.stoppedOut) { sim.pendingActions = []; return; }
+    const d = sim.direction || 'long';
     const queue = sim.pendingActions; sim.pendingActions = [];
     for (const a of queue) {
       if (sim.closed || sim.stoppedOut) break;
       const fillPx = (typeof a.price === 'number') ? a.price : bar.open;
       if (a.type === 'add') {
         const addQty = Math.floor(a.qty || 0);
-        if (addQty <= 0) { sim.eventsLog.push({ barIdx, date: bar.time, type: 'add', qty: 0, price: r2(fillPx), note: 'add skipped: qty<=0' }); continue; }
+        if (addQty <= 0) { sim.eventsLog.push({ barIdx, date: bar.time, type: 'add', qty: 0, price: r2(fillPx), direction: d, legId: sim.legId || null, note: 'add skipped: qty<=0' }); continue; }
         const newQty = sim.qty + addQty;
         sim.avgCost = (sim.qty * sim.avgCost + addQty * fillPx) / newQty;
         sim.qty = newQty;
-        const ev = { barIdx, date: bar.time, type: 'add', qty: addQty, price: r2(fillPx), note: 'add ' + addQty + '@' + r2(fillPx) };
+        const ev = { barIdx, date: bar.time, type: 'add', qty: addQty, price: r2(fillPx), direction: d, legId: sim.legId || null, note: 'add ' + addQty + '@' + r2(fillPx) };
         sim.eventsLog.push(ev); fired.push(ev);
       } else if (a.type === 'sell') {
+        // Engine-neutral type 'sell' covers both long-sell and short-cover.
+        // The view layer renders direction-aware labels; engine keeps the type.
         const wantQty = Math.floor(a.qty || 0);
         if (wantQty <= 0 || wantQty > sim.qty) {
-          sim.eventsLog.push({ barIdx, date: bar.time, type: 'sell', qty: 0, price: r2(fillPx), note: 'sell skipped: requested ' + wantQty + ', held ' + sim.qty });
+          sim.eventsLog.push({ barIdx, date: bar.time, type: 'sell', qty: 0, price: r2(fillPx), direction: d, legId: sim.legId || null, note: 'sell skipped: requested ' + wantQty + ', held ' + sim.qty });
           console.warn('Sim: sell ' + wantQty + ' > held ' + sim.qty + ', skipped'); continue;
         }
-        sim.realizedPnL += (fillPx - sim.avgCost) * wantQty;
+        sim.realizedPnL += Sim.Direction.pnlPerShare(d, fillPx, sim.avgCost) * wantQty;
         sim.qty -= wantQty;
-        const ev = { barIdx, date: bar.time, type: 'sell', qty: wantQty, price: r2(fillPx), note: 'sell ' + wantQty + '@' + r2(fillPx) };
+        const ev = { barIdx, date: bar.time, type: 'sell', qty: wantQty, price: r2(fillPx), direction: d, legId: sim.legId || null, note: 'sell ' + wantQty + '@' + r2(fillPx) };
         sim.eventsLog.push(ev); fired.push(ev);
         if (sim.qty === 0) {
           sim.closed = true;
-          const evc = { barIdx, date: bar.time, type: 'close', qty: 0, price: r2(fillPx), note: 'flat via sell' };
+          const evc = { barIdx, date: bar.time, type: 'close', qty: 0, price: r2(fillPx), direction: d, legId: sim.legId || null, note: 'flat via sell' };
           sim.eventsLog.push(evc); fired.push(evc);
         }
       } else if (a.type === 'movestop') {
@@ -10368,12 +10432,13 @@ const Sim = (function(){
     if (sim.endBarIdx != null && sim.playIdx === sim.endBarIdx && !sim.closed && sim.qty > 0) {
       const lastBar = bars[sim.playIdx];
       if (lastBar) {
+        const d = sim.direction || 'long';
         const soldQty = sim.qty;
-        sim.realizedPnL += (lastBar.close - sim.avgCost) * soldQty;
+        sim.realizedPnL += Sim.Direction.pnlPerShare(d, lastBar.close, sim.avgCost) * soldQty;
         sim.qty = 0;
         sim.closed = true;
         const ev = { barIdx: sim.playIdx, date: lastBar.time, type: 'close', qty: soldQty,
-          price: Math.round(lastBar.close * 100) / 100,
+          price: Math.round(lastBar.close * 100) / 100, direction: d, legId: sim.legId || null,
           note: 'reached end bar, force close at close ' + (Math.round(lastBar.close * 100) / 100) };
         sim.eventsLog.push(ev);
         fired.push(ev);
@@ -10386,8 +10451,8 @@ const Sim = (function(){
 
   function computeDerived(sim, bars) {
     const bar = bars[sim.playIdx];
-    const dir = sim.direction === 'long' ? 1 : -1;
-    const unreal = sim.qty > 0 && bar ? sim.qty * (bar.close - sim.avgCost) * dir : 0;
+    const d = sim.direction || 'long';
+    const unreal = sim.qty > 0 && bar ? sim.qty * Sim.Direction.pnlPerShare(d, bar.close, sim.avgCost) : 0;
     const totalPnL = sim.realizedPnL + unreal;
     const positionValue = sim.qty > 0 && bar ? sim.qty * bar.close : 0;
     const denom = sim.shares0 * sim.entry.price;
@@ -10397,6 +10462,7 @@ const Sim = (function(){
     const rCurrent = sim.initialRisk > 0 ? totalPnL / sim.initialRisk : 0;
     return {
       qty: sim.qty, avgCost: r2(sim.avgCost),
+      direction: d,
       unrealizedPnL: r2(unreal), realizedPnL: r2(sim.realizedPnL),
       totalPnL: r2(totalPnL), positionValue: r2(positionValue),
       peakTotal: r2(sim.peakTotal), peakBarIdx: sim.peakBarIdx, peakBarsAgo,
@@ -10406,7 +10472,8 @@ const Sim = (function(){
       rCurrent: rR(rCurrent), dayCount: sim.playIdx - sim.entry.barIdx,
       stoppedOut: sim.stoppedOut, closed: sim.closed,
       currentStop: r2((function(){
-        const active = (sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price);
+        // Sort by which fires first; head of list = the "active" stop level shown to user.
+        const active = Sim.Direction.sortStopsForFire(d, (sim.stopLevels || []).filter(s => !s.fired));
         return active.length ? active[0].price : sim.entry.stop;
       })()),
       stopLevels: (sim.stopLevels || []).map(s => ({ id: s.id, price: r2(s.price), pct: s.pct, fired: s.fired, barIdx: s.barIdx })),
@@ -10421,6 +10488,8 @@ const Sim = (function(){
       simDayCount: sim.playIdx - (sim.simStartBarIdx != null ? sim.simStartBarIdx : sim.entry.barIdx),
       legsSummary: (sim.legs || []).map((l, i) => ({
         index: i + 1,
+        direction: l.direction || 'long',
+        legId: l.legId || null,
         entryPrice: r2(l.entry ? l.entry.price : 0),
         entryDate: l.entry ? l.entry.date : null,
         entryBarIdx: l.entry ? l.entry.barIdx : null,
@@ -10439,10 +10508,11 @@ const Sim = (function(){
     const bar = bars[sim.playIdx]; const px = Number(price);
     if (!Number.isFinite(px)) throw new Error('closeAt: price required');
     if (sim.qty > 0) {
+      const d = sim.direction || 'long';
       const soldQty = sim.qty;
-      sim.realizedPnL += (px - sim.avgCost) * soldQty;
+      sim.realizedPnL += Sim.Direction.pnlPerShare(d, px, sim.avgCost) * soldQty;
       sim.qty = 0; sim.closed = true;
-      sim.eventsLog.push({ barIdx: sim.playIdx, date: bar ? bar.time : null, type: 'close', qty: soldQty, price: r2(px), note: 'manual close ' + soldQty + '@' + r2(px) });
+      sim.eventsLog.push({ barIdx: sim.playIdx, date: bar ? bar.time : null, type: 'close', qty: soldQty, price: r2(px), direction: d, legId: sim.legId || null, note: 'manual close ' + soldQty + '@' + r2(px) });
       if (bar) { _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), sim.playIdx); _pushPnlPoint(sim, bar); }
     }
     sim.pendingActions = [];
@@ -10466,6 +10536,8 @@ const Sim = (function(){
     if (!sim.legs) sim.legs = [];
     sim.legs.push({
       index: sim.legs.length,
+      direction: sim.direction || 'long',
+      legId: sim.legId || null,
       entry: clone(sim.entry),
       shares0: sim.shares0,
       initialRisk: sim.initialRisk,
@@ -10498,13 +10570,26 @@ const Sim = (function(){
     if (!params || typeof params.barIdx !== 'number' || typeof params.price !== 'number' || typeof params.stop !== 'number') {
       throw new Error('startNewLeg: barIdx, price, stop required');
     }
+    // New legs may flip direction (e.g. stopped-long → re-enter short on the same ticker).
+    // Read params.direction; fallback to existing sim.direction; default 'long'.
+    const direction = (params.direction === 'short' || params.direction === 'long')
+      ? params.direction
+      : (sim.direction || 'long');
     const shares = params.sizeMode === 'shares'
       ? Math.floor(params.sizeValue)
       : Math.floor(params.sizeValue / params.price);
     if (!(shares > 0)) throw new Error('startNewLeg: computed shares <= 0');
-    const initialRisk = shares * (params.price - params.stop);
-    if (!(initialRisk > 0)) throw new Error('startNewLeg: initialRisk must be > 0 (stop below price)');
+    const initialRisk = (Sim.Direction
+      ? shares * Sim.Direction.initialRiskPerShare(direction, params.price, params.stop)
+      : shares * (params.price - params.stop));
+    if (!(initialRisk > 0)) {
+      throw new Error('startNewLeg: initialRisk must be > 0 ('
+        + (direction === 'short' ? 'stop above entry for short' : 'stop below entry for long')
+        + ')');
+    }
     const legNum = (sim.legs || []).length + 1;
+    sim.direction = direction;
+    sim.legId = _mintLegId();
     sim.entry = {
       barIdx: params.barIdx, date: params.date || null, price: params.price,
       sizeMode: params.sizeMode || 'shares', sizeValue: params.sizeValue, stop: params.stop
@@ -10514,7 +10599,13 @@ const Sim = (function(){
     sim.qty = shares;
     sim.avgCost = params.price;
     sim.realizedPnL = 0;
-    sim.stopLevels = [{ id: 'stop_initial_l' + legNum, price: params.stop, pct: 1.0, fired: false, barIdx: params.barIdx }];
+    // Inherit stopTrail spec from the new-leg modal (mirrors createSim).
+    // Without this, picking 'ema_trail' on a new leg silently behaved as a
+    // snapshot — the stop never moved over time.
+    const _newLegTrail = (params.stopTrail && params.stopTrail.type === 'ema')
+      ? { type: 'ema', period: +params.stopTrail.period || 10, k: +params.stopTrail.k || 0 }
+      : null;
+    sim.stopLevels = [{ id: 'stop_initial_l' + legNum, price: params.stop, pct: 1.0, fired: false, barIdx: params.barIdx, trail: _newLegTrail }];
     sim.pendingActions = [];
     sim.between = false;
     sim.peakTotal = 0;
@@ -10530,7 +10621,7 @@ const Sim = (function(){
     sim.playIdx = params.barIdx;
     sim.eventsLog.push({
       barIdx: params.barIdx, date: params.date || null, type: 'entry',
-      qty: shares, price: params.price,
+      qty: shares, price: params.price, direction: direction, legId: sim.legId,
       note: 'leg ' + legNum + ' entry ' + shares + '@' + r2(params.price) + ' stop ' + r2(params.stop)
     });
     return sim;
@@ -10617,10 +10708,17 @@ window.Sim = Sim;
     if (!derived) return;
     const { positionValue = 0, peakTotal = 0, totalPnL = 0, pnlPct = 0, giveBack = 0, giveBackPct = 0,
             peakBarsAgo = 0, entry = null, avg = null, qty = null, stop = null, stopDollar = null, stopPct = null,
-            initialNotional = 0, initialShares = 0,
+            initialNotional = 0, initialShares = 0, direction = 'long',
             stoppedOut = false, closed = false, exitPrice = null, exitDay = null, exitReason = null,
             mfe = null, mae = null, r = null, days = null, barIndex = 0, dateISO = '—',
             cumulativePnL = 0, cumulativeR = 0, legCount = 0, legsSummary = [] } = derived;
+    // P4: button labels follow active-leg direction. Long: Sell/Add. Short: Cover/Add Short.
+    (function _updateActionButtons(){
+      const sellBtn = document.getElementById('sim-btn-sell');
+      const addBtn  = document.getElementById('sim-btn-add');
+      if (sellBtn) sellBtn.textContent = direction === 'short' ? 'Cover' : 'Sell';
+      if (addBtn)  addBtn.textContent  = direction === 'short' ? 'Add Short' : 'Add';
+    })();
 
     // Position headline = initial notional (constant for the leg) so users keep sight
     // of the size that contextualises the P&L number, even after a stop-out where qty=0.
@@ -10985,6 +11083,11 @@ window.Sim = Sim;
     if (!isFinite(price) || !isFinite(pct) || pct <= 0) return null;
     return _round2(price * (1 - pct / 100));
   }
+  // P2 direction-aware. Long: price * (1 - pct/100). Short: price * (1 + pct/100).
+  function pctOffset(direction, price, pct){
+    if (!isFinite(price) || !isFinite(pct) || pct <= 0) return null;
+    return _round2(direction === 'short' ? price * (1 + pct / 100) : price * (1 - pct / 100));
+  }
   function atrAt(bars, idx, period){
     if (!Array.isArray(bars) || idx == null || idx < 0) return null;
     period = period || 14;
@@ -11009,6 +11112,12 @@ window.Sim = Sim;
     if (a == null || !isFinite(price) || !isFinite(k)) return null;
     return _round2(price - (k * a));
   }
+  // P2 direction-aware ATR offset.
+  function atrOffset(direction, price, bars, idx, k, period){
+    const a = atrAt(bars, idx, period || 14);
+    if (a == null || !isFinite(price) || !isFinite(k)) return null;
+    return _round2(direction === 'short' ? price + (k * a) : price - (k * a));
+  }
   function swingLowBelow(bars, idx, n, buffer){
     if (!Array.isArray(bars) || idx == null || idx <= 0) return null;
     const start = Math.max(0, idx - n);
@@ -11020,6 +11129,46 @@ window.Sim = Sim;
     if (!isFinite(lo)) return null;
     return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
   }
+  // P2 direction-aware swing. Long: min(low) - buffer. Short: max(high) + buffer.
+  function swingOpposite(direction, bars, idx, n, buffer){
+    if (!Array.isArray(bars) || idx == null || idx <= 0) return null;
+    const start = Math.max(0, idx - n);
+    if (direction === 'short'){
+      let hi = -Infinity;
+      for (let i = start; i < idx; i++){
+        const b = bars[i];
+        if (b && isFinite(b.high) && b.high > hi) hi = b.high;
+      }
+      if (!isFinite(hi)) return null;
+      return _round2(hi + (isFinite(buffer) ? buffer : 0.05));
+    }
+    let lo = Infinity;
+    for (let i = start; i < idx; i++){
+      const b = bars[i];
+      if (b && isFinite(b.low) && b.low < lo) lo = b.low;
+    }
+    if (!isFinite(lo)) return null;
+    return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
+  }
+  // P2 fix off-by-one: use first bar where date >= base_start, last where date <= base_end.
+  function _findBarIdxAtOrAfterDate(bars, dateStr){
+    if (!Array.isArray(bars) || !dateStr) return -1;
+    for (let i = 0; i < bars.length; i++){
+      const t = (bars[i] && (bars[i].time || bars[i].date)) || '';
+      if (t >= dateStr) return i;
+    }
+    return -1;
+  }
+  function _findBarIdxAtOrBeforeDate(bars, dateStr){
+    if (!Array.isArray(bars) || !dateStr) return -1;
+    let last = -1;
+    for (let i = 0; i < bars.length; i++){
+      const t = (bars[i] && (bars[i].time || bars[i].date)) || '';
+      if (t > dateStr) break;
+      if (t <= dateStr) last = i;
+    }
+    return last;
+  }
   function _findBarIdxByDate(bars, dateStr){
     if (!Array.isArray(bars) || !dateStr) return -1;
     for (let i = 0; i < bars.length; i++){
@@ -11029,18 +11178,46 @@ window.Sim = Sim;
     }
     return bars.length - 1;
   }
-  // Base low: read pivot.base_start / base_end from window.aiClassByMoveKey,
-  // then take min(low) of the bars in that window. Falls back to null when
-  // either the AI metadata or the date range is missing.
+  // Base low/high: read pivot.base_start / base_end from window.aiClassByMoveKey.
+  // Codex confirmed neither base_high nor base_low is stored — always compute from
+  // bars in the window. Long: min(low) - buffer. Short: max(high) + buffer.
   function baseLowBelow(bars, moveKey, aiData, buffer){
     if (!Array.isArray(bars) || !moveKey) return null;
     const data = aiData || window.aiClassByMoveKey || {};
     const entry = data[moveKey];
     const piv = entry && entry.pivot;
     if (!piv || !piv.base_start || !piv.base_end) return null;
-    const i0 = _findBarIdxByDate(bars, piv.base_start);
-    const i1 = _findBarIdxByDate(bars, piv.base_end);
+    // P2 fix off-by-one: first bar at-or-after base_start, last bar at-or-before base_end.
+    const i0 = _findBarIdxAtOrAfterDate(bars, piv.base_start);
+    const i1 = _findBarIdxAtOrBeforeDate(bars, piv.base_end);
     if (i0 < 0 || i1 < 0 || i1 < i0) return null;
+    let lo = Infinity;
+    for (let i = i0; i <= i1; i++){
+      const b = bars[i];
+      if (b && isFinite(b.low) && b.low < lo) lo = b.low;
+    }
+    if (!isFinite(lo)) return null;
+    return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
+  }
+  // P2 direction-aware base. Long: same as baseLowBelow. Short: max(high) + buffer.
+  function baseOpposite(direction, bars, moveKey, aiData, buffer){
+    if (!Array.isArray(bars) || !moveKey) return null;
+    const data = aiData || window.aiClassByMoveKey || {};
+    const entry = data[moveKey];
+    const piv = entry && entry.pivot;
+    if (!piv || !piv.base_start || !piv.base_end) return null;
+    const i0 = _findBarIdxAtOrAfterDate(bars, piv.base_start);
+    const i1 = _findBarIdxAtOrBeforeDate(bars, piv.base_end);
+    if (i0 < 0 || i1 < 0 || i1 < i0) return null;
+    if (direction === 'short'){
+      let hi = -Infinity;
+      for (let i = i0; i <= i1; i++){
+        const b = bars[i];
+        if (b && isFinite(b.high) && b.high > hi) hi = b.high;
+      }
+      if (!isFinite(hi)) return null;
+      return _round2(hi + (isFinite(buffer) ? buffer : 0.05));
+    }
     let lo = Infinity;
     for (let i = i0; i <= i1; i++){
       const b = bars[i];
@@ -11067,7 +11244,206 @@ window.Sim = Sim;
     if (pct < 0) return null;
     return _round2(e * (1 - pct / 100));
   }
-  Sim.StopRules = { pctBelow, atrAt, atrBelow, swingLowBelow, baseLowBelow, emaAt, emaBelow, _findBarIdxByDate };
+  // P2 direction-aware EMA offset. Long: ema*(1-pct/100). Short: ema*(1+pct/100).
+  function emaOffset(direction, bars, idx, period, pct){
+    const e = emaAt(bars, idx, period);
+    if (e == null) return null;
+    const p = isFinite(pct) ? pct : 0;
+    if (p < 0) return null;
+    return _round2(direction === 'short' ? e * (1 + p / 100) : e * (1 - p / 100));
+  }
+  Sim.StopRules = {
+    pctBelow, pctOffset,
+    atrAt, atrBelow, atrOffset,
+    swingLowBelow, swingOpposite,
+    baseLowBelow, baseOpposite,
+    emaAt, emaBelow, emaOffset,
+    _findBarIdxByDate, _findBarIdxAtOrAfterDate, _findBarIdxAtOrBeforeDate
+  };
+})();
+
+/* ---------- Sim.Direction — direction-aware sign adapter (P0) ----------
+ * Single source of sign-truth for long/short. All sign-sensitive sim core
+ * operations route through this. Adding new direction-aware behavior?
+ * Add it here, not at the call site.
+ */
+(function(){
+  window.Sim = window.Sim || {};
+  const dir = (d) => d === 'short' ? -1 : 1;
+  Sim.Direction = {
+    sign: dir,
+    // Initial $/share at risk: long = entry-stop, short = stop-entry.
+    initialRiskPerShare: function(d, entry, stop){
+      return d === 'short' ? (stop - entry) : (entry - stop);
+    },
+    // P&L per share for any closing fill at given exit price vs avg cost.
+    pnlPerShare: function(d, exit, avg){
+      return (exit - avg) * dir(d);
+    },
+    // Did the bar trigger the stop? Long: low <= stop. Short: high >= stop.
+    stopFires: function(d, bar, stopPx){
+      if (!bar) return false;
+      return d === 'short' ? (bar.high >= stopPx) : (bar.low <= stopPx);
+    },
+    // Fill price when stop fires. Long: min(open, stop) — gap-down fills at open.
+    // Short: max(open, stop) — gap-up fills at open.
+    fillAtStop: function(d, bar, stopPx){
+      return d === 'short' ? Math.max(bar.open, stopPx) : Math.min(bar.open, stopPx);
+    },
+    // Trail ratchet: long moves up only (cand > prev). Short moves down only (cand < prev).
+    ratchet: function(d, prev, cand){
+      return d === 'short' ? Math.min(prev, cand) : Math.max(prev, cand);
+    },
+    // Intraday best-case P&L within a bar (favorable extreme).
+    intradayBetterPnL: function(d, bar, qty, avg, real){
+      return real + qty * (d === 'short' ? (bar.low  - avg) : (bar.high - avg)) * dir(d);
+    },
+    // Intraday worst-case P&L within a bar (adverse extreme).
+    intradayWorsePnL: function(d, bar, qty, avg, real){
+      return real + qty * (d === 'short' ? (bar.high - avg) : (bar.low  - avg)) * dir(d);
+    },
+    // Stop validation: long requires stop < entry, short requires stop > entry.
+    stopValidates: function(d, entry, stop){
+      return d === 'short' ? (stop > entry) : (stop < entry);
+    },
+    // Sort stops by which fires first as price moves through them.
+    // Long: highest stop first (price falling). Short: lowest stop first (price rising).
+    sortStopsForFire: function(d, stops){
+      return stops.slice().sort(function(a, b){
+        return d === 'short' ? (a.price - b.price) : (b.price - a.price);
+      });
+    }
+  };
+})();
+
+/* ---------- Sim.ShortLocks — fenced per-position short proceeds (P0) ----------
+ * When a short opens, proceeds (shares × entry) lock into shortLocks[legId].
+ * state.cash is NOT credited at open (no leverage). On cover, proceeds are
+ * released proportionally and realized P&L (proceeds - coverCost) hits cash.
+ */
+(function(){
+  window.Sim = window.Sim || {};
+  const r2 = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  Sim.ShortLocks = {
+    // Open a fenced lock for a new short leg. Does NOT touch state.cash.
+    applyOpen: function(locks, legId, shares, entry){
+      if (!locks || !legId || !(shares > 0) || !(entry > 0)) return null;
+      locks[legId] = {
+        shares: shares,
+        proceeds: r2(shares * entry),
+        avgEntry: entry
+      };
+      return locks[legId];
+    },
+    // Cover qty shares of an open short at fillPx. Returns {realized, releaseCash}
+    // where releaseCash is the dollar delta that should be added to state.cash
+    // (= allocated proceeds - cover cost = realized for that partial cover).
+    applyCover: function(locks, legId, qty, fillPx){
+      const lock = locks && locks[legId];
+      if (!lock || !(qty > 0) || qty > lock.shares) return { realized: 0, releaseCash: 0 };
+      const allocProceeds = r2(lock.proceeds * (qty / lock.shares));
+      const coverCost = r2(qty * fillPx);
+      const realized = r2(allocProceeds - coverCost);
+      lock.shares = lock.shares - qty;
+      lock.proceeds = r2(lock.proceeds - allocProceeds);
+      // avgEntry stays the same (fenced lock — only shares/proceeds shrink).
+      // Caller pushes realized into state.cash AND state.realizedPnL.
+      // We return releaseCash = realized so cash-equity stays continuous.
+      return { realized: realized, releaseCash: realized, allocProceeds: allocProceeds, coverCost: coverCost };
+    },
+    // Full close convenience — covers all remaining shares.
+    applyClose: function(locks, legId, fillPx){
+      const lock = locks && locks[legId];
+      if (!lock) return { realized: 0, releaseCash: 0 };
+      const result = Sim.ShortLocks.applyCover(locks, legId, lock.shares, fillPx);
+      // After full cover, lock.shares should be 0 — drop the entry.
+      if (lock.shares <= 0) delete locks[legId];
+      return result;
+    },
+    // Total locked proceeds across all open shorts.
+    totalLocked: function(locks){
+      if (!locks) return 0;
+      let s = 0;
+      for (const k in locks){ if (locks[k]) s += (+locks[k].proceeds || 0); }
+      return r2(s);
+    },
+    // Mark-to-market liability of all shorts at the given price-getter.
+    // priceFor(legId) → mark price (last close); returns total liability.
+    totalLiability: function(locks, priceFor){
+      if (!locks) return 0;
+      let s = 0;
+      for (const k in locks){
+        const lk = locks[k]; if (!lk) continue;
+        const p = priceFor ? priceFor(k) : lk.avgEntry;
+        if (Number.isFinite(p)) s += lk.shares * p;
+      }
+      return r2(s);
+    }
+  };
+})();
+
+/* ---------- Sim.PortfolioValuation — equity helper (P0) ----------
+ * Single source of equity-truth. markPosition(entry, lastClose) returns the
+ * { longMTM, shortLiability, lockedProceeds } trio for a basket entry.
+ *
+ * equity = state.cash
+ *        + Σ longMTM           (long mark-to-market: qty × close)
+ *        + Σ lockedProceeds    (short proceeds still fenced)
+ *        − Σ shortLiability    (short qty × close — what it costs to cover now)
+ */
+(function(){
+  window.Sim = window.Sim || {};
+  const r2 = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  Sim.PortfolioValuation = {
+    // entry = a basket entry { sim, ... } or a {sim, lastClose} pair.
+    // lastClose can be supplied separately or read from entry.lastCloseSeen.
+    markPosition: function(entry, lastClose){
+      if (!entry || !entry.sim) return { longMTM: 0, shortLiability: 0, lockedProceeds: 0 };
+      const sim = entry.sim;
+      const px = (lastClose != null && Number.isFinite(+lastClose))
+        ? +lastClose
+        : (Number.isFinite(+entry.lastCloseSeen) ? +entry.lastCloseSeen : null);
+      const dir = sim.direction === 'short' ? 'short' : 'long';
+      let longMTM = 0, shortLiability = 0, lockedProceeds = 0;
+      if (sim.qty > 0 && px != null){
+        if (dir === 'short'){
+          shortLiability = r2(sim.qty * px);
+          // proceeds are tracked on the lock (sim.legId) — caller passes lock map separately
+          // but for a pure entry walk we can read from sim._lockSnapshot if attached.
+          if (sim._lockSnapshot && Number.isFinite(+sim._lockSnapshot.proceeds)){
+            lockedProceeds = r2(+sim._lockSnapshot.proceeds);
+          } else {
+            // Fallback: assume avgCost × qty is the locked proceeds (no covers yet).
+            lockedProceeds = r2(sim.qty * sim.avgCost);
+          }
+        } else {
+          longMTM = r2(sim.qty * px);
+        }
+      }
+      return { longMTM: longMTM, shortLiability: shortLiability, lockedProceeds: lockedProceeds };
+    },
+    // Sum equity contribution across a basket given a state with cash + shortLocks.
+    // basketEntries: [{ sim, lastCloseSeen }], state: { cash, shortLocks }.
+    computeEquity: function(state, basketEntries){
+      const cash = +state.cash || 0;
+      let longMTM = 0, shortLiability = 0;
+      const locks = state.shortLocks || {};
+      let lockedProceeds = 0;
+      // Sum locked proceeds straight from the locks dict (single source).
+      for (const k in locks){ if (locks[k]) lockedProceeds += (+locks[k].proceeds || 0); }
+      (basketEntries || []).forEach(function(e){
+        if (!e || !e.sim) return;
+        const px = Number.isFinite(+e.lastCloseSeen) ? +e.lastCloseSeen : null;
+        if (px == null || !(e.sim.qty > 0)) return;
+        if (e.sim.direction === 'short'){
+          shortLiability += e.sim.qty * px;
+        } else {
+          longMTM += e.sim.qty * px;
+        }
+      });
+      return r2(cash + longMTM + lockedProceeds - shortLiability);
+    }
+  };
 })();
 
 /* ---------- Sim.UI: modals (no innerHTML) ---------- */
@@ -11115,8 +11491,15 @@ window.Sim = Sim;
     const { stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl,
             priceEl, dateEl, lsKey, defaultK, includeBase,
             emaPeriodEl,
-            barsProvider, moveKeyProvider } = opts || {};
+            barsProvider, moveKeyProvider, directionProvider } = opts || {};
     if (!stratEl || !stopEl) return;
+    function _dir(){
+      if (typeof directionProvider === 'function'){
+        const d = directionProvider();
+        if (d === 'short' || d === 'long') return d;
+      }
+      return 'long';
+    }
 
     let _suppressManualFlip = false;
     const dK = defaultK || { pct: 7, atr: 1.5, ema: 0 };
@@ -11176,6 +11559,24 @@ window.Sim = Sim;
         emaPeriodEl.style.display = (t === 'ema' || t === 'ema_trail') ? '' : 'none';
       }
     }
+    // P2: refresh option labels to match direction (below↔above).
+    function _updateLabelsForDirection(){
+      const isShort = _dir() === 'short';
+      const labels = {
+        manual:    'Manual',
+        pct:       isShort ? '% above entry'        : '% below entry',
+        atr:       'ATR(14) ×',
+        ema:       isShort ? 'Above EMA (snapshot)' : 'Below EMA (snapshot)',
+        ema_trail: isShort ? 'Above EMA · auto-trail ↘' : 'Below EMA · auto-trail ↗',
+        swing5:    isShort ? 'Above 5-bar high'     : 'Below 5-bar low',
+        swing10:   isShort ? 'Above 10-bar high'    : 'Below 10-bar low',
+        base:      isShort ? 'Above base high'      : 'Below base low'
+      };
+      Array.from(stratEl.options).forEach(function(opt){
+        const lbl = labels[opt.value];
+        if (lbl) opt.textContent = lbl;
+      });
+    }
 
     function _computeStop(){
       const t = stratEl.value;
@@ -11183,21 +11584,22 @@ window.Sim = Sim;
       const price = parseFloat(priceEl && priceEl.value);
       if (!isFinite(price) || price <= 0) return null;
       const bars = (typeof barsProvider === 'function') ? barsProvider() : [];
-      if (t === 'pct') return Sim.StopRules.pctBelow(price, _kForType('pct'));
+      const direction = _dir();
+      if (t === 'pct') return Sim.StopRules.pctOffset(direction, price, _kForType('pct'));
       // The remaining strategies need historical bars + an entry-bar index.
       const dateStr = (dateEl && dateEl.value) || (opts.dateProvider ? opts.dateProvider() : null);
       const idx = Sim.StopRules._findBarIdxByDate(bars, dateStr);
       if (idx < 0) return null;
-      if (t === 'atr')    return Sim.StopRules.atrBelow(price, bars, idx, _kForType('atr'), 14);
-      if (t === 'swing5') return Sim.StopRules.swingLowBelow(bars, idx, 5, 0.05);
-      if (t === 'swing10')return Sim.StopRules.swingLowBelow(bars, idx, 10, 0.05);
+      if (t === 'atr')    return Sim.StopRules.atrOffset(direction, price, bars, idx, _kForType('atr'), 14);
+      if (t === 'swing5') return Sim.StopRules.swingOpposite(direction, bars, idx, 5, 0.05);
+      if (t === 'swing10')return Sim.StopRules.swingOpposite(direction, bars, idx, 10, 0.05);
       if (t === 'ema' || t === 'ema_trail'){
         const period = parseInt(emaPeriodEl && emaPeriodEl.value, 10) || 10;
-        return Sim.StopRules.emaBelow(bars, idx, period, _kForType('ema'));
+        return Sim.StopRules.emaOffset(direction, bars, idx, period, _kForType('ema'));
       }
       if (t === 'base'){
         const mk = (typeof moveKeyProvider === 'function') ? moveKeyProvider() : null;
-        return Sim.StopRules.baseLowBelow(bars, mk, null, 0.05);
+        return Sim.StopRules.baseOpposite(direction, bars, mk, null, 0.05);
       }
       return null;
     }
@@ -11218,19 +11620,27 @@ window.Sim = Sim;
       const price = parseFloat(priceEl && priceEl.value);
       const stop = parseFloat(stopEl.value);
       const t = stratEl.value;
-      if (!isFinite(price) || !isFinite(stop) || price <= 0 || stop <= 0 || stop >= price){
+      const direction = _dir();
+      // Validate stop is on the right side of price for the chosen direction.
+      const validStop = (window.Sim && window.Sim.Direction)
+        ? window.Sim.Direction.stopValidates(direction, price, stop)
+        : (direction === 'short' ? stop > price : stop < price);
+      if (!isFinite(price) || !isFinite(stop) || price <= 0 || stop <= 0 || !validStop){
         stopDistEl.textContent = '';
         stopDistEl.classList.remove('is-rule');
         return;
       }
-      const distPct = ((price - stop) / price) * 100;
+      // Distance: long uses (price-stop)/price; short uses (stop-price)/price.
+      const distAbs = Math.abs(stop - price);
+      const distPct = (distAbs / price) * 100;
       const bars = (typeof barsProvider === 'function') ? barsProvider() : [];
       const dateStr = (dateEl && dateEl.value) || (opts.dateProvider ? opts.dateProvider() : null);
       const idx = Sim.StopRules._findBarIdxByDate(bars, dateStr);
       const a = Sim.StopRules.atrAt(bars, idx, 14);
-      const atrMult = (a && a > 0) ? ((price - stop) / a) : null;
+      const atrMult = (a && a > 0) ? (distAbs / a) : null;
       const ruleLabel = (t === 'manual') ? '' : '· auto';
-      stopDistEl.textContent = '−' + distPct.toFixed(2) + '% from entry'
+      const sign = direction === 'short' ? '+' : '−';
+      stopDistEl.textContent = sign + distPct.toFixed(2) + '% from entry'
         + (atrMult != null ? ' · ' + atrMult.toFixed(2) + '× ATR' : '')
         + (ruleLabel ? ' ' + ruleLabel : '');
       stopDistEl.classList.toggle('is-rule', t !== 'manual');
@@ -11238,6 +11648,7 @@ window.Sim = Sim;
 
     let _firstApply = true;
     function _applyStrategy(){
+      _updateLabelsForDirection();
       _updateKVisibility();
       // First paint: if the modal was reopened with an existing stop value
       // (e.g. ctx.restoreFrom.stop), preserve it and force "Manual". The user
@@ -11336,6 +11747,27 @@ window.Sim = Sim;
     container.querySelectorAll('.sim-pill').forEach(p => p.classList.toggle('sim-pill-active', p.getAttribute('data-mode') === mode));
   }
 
+  // P3 — direction radio (long/short). Wires button-pill toggling on the
+  // [data-direction] pill row, persists into a hidden input, and fires onChange.
+  function _setupDirectionPills(containerId, hiddenId, onChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const pills = Array.from(container.querySelectorAll('.sim-pill'));
+    pills.forEach(pill => {
+      pill.onclick = function() {
+        pills.forEach(p => p.classList.remove('sim-pill-active'));
+        pill.classList.add('sim-pill-active');
+        const dir = pill.getAttribute('data-direction') || 'long';
+        const hidden = document.getElementById(hiddenId); if (hidden) hidden.value = dir;
+        onChange && onChange(dir);
+      };
+    });
+  }
+  function _setDirectionPillActive(containerId, dir) {
+    const container = document.getElementById(containerId); if (!container) return;
+    container.querySelectorAll('.sim-pill').forEach(p => p.classList.toggle('sim-pill-active', p.getAttribute('data-direction') === dir));
+  }
+
   Sim.UI.showSetupModal = function(ctx, onSubmit) {
     ctx = ctx || {};
     const dateEl = document.getElementById('sim-entry-date');
@@ -11350,6 +11782,20 @@ window.Sim = Sim;
     const pickEntryBtn = document.getElementById('sim-pick-entry-btn');
     const pickEndBtn = document.getElementById('sim-pick-end-btn');
     const equityEl = document.getElementById('sim-initial-equity');
+    const dirHiddenEl = document.getElementById('sim-direction-value');
+
+    // Default direction: respect ctx.defaultDirection, else metadata.direction
+    // (read-once at modal open; does NOT cascade to existing legs after).
+    const defaultDir = (ctx.defaultDirection === 'short' || ctx.defaultDirection === 'long')
+      ? ctx.defaultDirection
+      : ((function(){
+          const r = window.currentMoveRow;
+          if (!r || typeof window.getMeta !== 'function') return 'long';
+          const m = window.getMeta(r) || {};
+          return (m.direction === 'short') ? 'short' : 'long';
+        })());
+    if (dirHiddenEl) dirHiddenEl.value = defaultDir;
+    _setDirectionPillActive('sim-setup-direction', defaultDir);
 
     if (ctx.defaultDate) dateEl.value = ctx.defaultDate;
     if (ctx.defaultPrice != null) priceEl.value = Number(ctx.defaultPrice).toFixed(2);
@@ -11380,14 +11826,23 @@ window.Sim = Sim;
       const stop = _parseNum(stopEl.value, NaN);
       const size = _parseNum(sizeEl.value, NaN);
       const mode = modeEl.value;
+      const dir = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       let shares = NaN, notional = NaN;
       if (isFinite(price) && price > 0 && isFinite(size) && size > 0) {
         shares = mode === 'shares' ? Math.floor(size) : Math.floor(size / price);
         notional = shares * price;
       }
+      // Direction-aware risk: long = (price - stop), short = (stop - price)
       let risk = NaN, riskPct = NaN;
-      if (isFinite(shares) && isFinite(price) && isFinite(stop) && stop > 0 && stop < price) {
-        risk = shares * (price - stop);
+      const stopValid = isFinite(price) && isFinite(stop) && stop > 0
+        && (window.Sim && window.Sim.Direction
+            ? window.Sim.Direction.stopValidates(dir, price, stop)
+            : (dir === 'short' ? stop > price : stop < price));
+      if (isFinite(shares) && stopValid) {
+        const rps = (window.Sim && window.Sim.Direction)
+          ? window.Sim.Direction.initialRiskPerShare(dir, price, stop)
+          : (price - stop);
+        risk = shares * rps;
         if (notional > 0) riskPct = (risk / notional) * 100;
       }
       const rows = [];
@@ -11398,6 +11853,7 @@ window.Sim = Sim;
       }
       rows.push({ label: 'Notional', value: isFinite(notional) ? _fmt$(notional) : '—' });
       rows.push({ label: 'Risk', value: isFinite(risk) ? _fmt$(risk) : '—', suffix: isFinite(riskPct) ? ' (' + riskPct.toFixed(1) + '%)' : '' });
+      rows.push({ label: 'Direction', value: dir === 'short' ? '↓ Short' : '↑ Long' });
       Sim.UI._fillReadout(summaryEl, rows);
 
       const date = dateEl.value;
@@ -11415,6 +11871,7 @@ window.Sim = Sim;
     }
     [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
     _setupPills('sim-setup-pills', 'sim-size-mode', 'sim-setup-size-label', recompute);
+    // direction pills wired below after _wireStopStrategy returns its handle.
     recompute();
 
     // Stop-strategy picker (wraps existing recompute via _reapplyOnInput chain).
@@ -11423,12 +11880,16 @@ window.Sim = Sim;
     const stratSuffixEl = document.getElementById('sim-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-stop-distance');
     const emaPeriodEl = document.getElementById('sim-stop-strategy-ema-period');
-    _wireStopStrategy({
+    const _stopWire = _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl, dateEl,
       emaPeriodEl,
       lsKey: 'bm_sim_stop_strategy',
       defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: true,
+      // P2: feed direction so presets / labels flip per radio.
+      directionProvider: function(){
+        return (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
+      },
       // PortSim mode: prefer the per-card bars + moveKey passed via ctx.
       // Single-sim mode: fall back to window.currentBars / currentMoveRow.
       barsProvider: function(){
@@ -11440,6 +11901,11 @@ window.Sim = Sim;
         const r = window.currentMoveRow;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
       }
+    });
+    // Re-run strategy when direction toggles (label flip + recompute).
+    _setupDirectionPills('sim-setup-direction', 'sim-direction-value', function(){
+      recompute();
+      if (_stopWire && typeof _stopWire.reapply === 'function') _stopWire.reapply();
     });
 
     document.getElementById('sim-setup-cancel').onclick = () => _closeModal('sim-setup-modal');
@@ -11484,17 +11950,26 @@ window.Sim = Sim;
       const size = _parseNum(sizeEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
       const mode = modeEl.value;
+      const direction = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       if (!date) return _setStatus('sim-setup-status', 'Entry date is required', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-setup-status', 'Entry price must be > 0', true);
       if (!isFinite(size) || size <= 0) return _setStatus('sim-setup-status', 'Size must be > 0', true);
       if (!isFinite(stop) || stop <= 0) return _setStatus('sim-setup-status', 'Stop price must be > 0', true);
-      if (stop >= price) return _setStatus('sim-setup-status', 'Stop must be below entry price', true);
+      // Direction-aware stop validation.
+      const validStop = (window.Sim && window.Sim.Direction)
+        ? window.Sim.Direction.stopValidates(direction, price, stop)
+        : (direction === 'short' ? stop > price : stop < price);
+      if (!validStop) {
+        return _setStatus('sim-setup-status',
+          direction === 'short' ? 'Stop must be above entry for short' : 'Stop must be below entry for long',
+          true);
+      }
       const endDate = endDateEl.value;
       if (endDate && endDate <= date) return _setStatus('sim-setup-status', 'End date must be after entry date', true);
       const equityRaw = equityEl ? _parseNum(equityEl.value, NaN) : NaN;
       const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
-      try { onSubmit && onSubmit({ date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail }); _closeModal('sim-setup-modal'); }
+      try { onSubmit && onSubmit({ direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail }); _closeModal('sim-setup-modal'); }
       catch (err) { _setStatus('sim-setup-status', err && err.message ? err.message : 'Failed to start sim', true); }
     };
     _openModal('sim-setup-modal');
@@ -11563,6 +12038,7 @@ window.Sim = Sim;
     const dateEl = document.getElementById('sim-newleg-bardate');
     const barpriceEl = document.getElementById('sim-newleg-barprice');
     const numEl = document.getElementById('sim-newleg-num');
+    const dirHiddenEl = document.getElementById('sim-newleg-direction-value');
     const barClose = _parseNum(ctx.barClose, NaN);
 
     if (numEl) numEl.textContent = String(ctx.legNum || 2);
@@ -11572,6 +12048,19 @@ window.Sim = Sim;
       dateEl.textContent = _blindLeg || ctx.barDate || '—';
     }
     if (barpriceEl) barpriceEl.textContent = isFinite(barClose) ? _fmt$(barClose) : '—';
+
+    // Default direction: opposite of the just-closed leg if ctx.priorDirection
+    // says so (stop-out re-entry case). Otherwise read prior direction or 'long'.
+    let defaultDir = 'long';
+    if (ctx.defaultDirection === 'short' || ctx.defaultDirection === 'long'){
+      defaultDir = ctx.defaultDirection;
+    } else if (ctx.priorDirection === 'long') {
+      defaultDir = 'short';
+    } else if (ctx.priorDirection === 'short') {
+      defaultDir = 'long';
+    }
+    if (dirHiddenEl) dirHiddenEl.value = defaultDir;
+    _setDirectionPillActive('sim-newleg-direction', defaultDir);
 
     sizeEl.value = ctx.suggestedSize != null ? ctx.suggestedSize : '';
     priceEl.value = isFinite(barClose) ? barClose.toFixed(2) : '';
@@ -11586,13 +12075,19 @@ window.Sim = Sim;
       const size = _parseNum(sizeEl.value, NaN);
       const price = _parseNum(priceEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
+      const dir = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       let shares = NaN;
       if (isFinite(size) && size > 0 && isFinite(price) && price > 0) {
         shares = mode === 'shares' ? Math.floor(size) : Math.floor(size / price);
       }
-      const riskPerShare = (isFinite(price) && isFinite(stop)) ? (price - stop) : NaN;
+      const riskPerShare = (isFinite(price) && isFinite(stop))
+        ? ((window.Sim && window.Sim.Direction)
+            ? window.Sim.Direction.initialRiskPerShare(dir, price, stop)
+            : (price - stop))
+        : NaN;
       const dollarRisk = (isFinite(shares) && isFinite(riskPerShare)) ? shares * riskPerShare : NaN;
       Sim.UI._fillReadout(summaryEl, [
+        { label: 'Direction', value: dir === 'short' ? '↓ Short' : '↑ Long' },
         { label: 'Risk per share', value: isFinite(riskPerShare) ? _fmt$(riskPerShare) : '—' },
         { label: 'Initial $ risk', value: isFinite(dollarRisk) ? _fmt$(dollarRisk) : '—' },
         { label: 'Shares', value: isFinite(shares) ? _fmtInt(shares) : '—' }
@@ -11600,6 +12095,7 @@ window.Sim = Sim;
     }
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
     _setupPills('sim-newleg-pills', 'sim-newleg-size-mode', 'sim-newleg-size-label', recompute);
+    // direction pills wired after _wireStopStrategy returns its handle.
     recompute();
 
     // Stop-strategy picker. NewLeg has no separate date input — we use the
@@ -11609,7 +12105,7 @@ window.Sim = Sim;
     const stratSuffixEl = document.getElementById('sim-newleg-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-newleg-stop-distance');
     const emaPeriodEl = document.getElementById('sim-newleg-stop-strategy-ema-period');
-    _wireStopStrategy({
+    const _newlegStopWire = _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl,
       emaPeriodEl,
       dateEl: null,
@@ -11617,6 +12113,10 @@ window.Sim = Sim;
       lsKey: 'bm_sim_stop_strategy',
       defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: false,
+      // P2: feed direction so presets / labels flip per radio.
+      directionProvider: function(){
+        return (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
+      },
       // PortSim mode: prefer the per-card bars passed via ctx (the active
       // card's OHLCV). Single-sim mode: fall back to window.currentBars.
       barsProvider: function(){
@@ -11629,6 +12129,10 @@ window.Sim = Sim;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
       }
     });
+    _setupDirectionPills('sim-newleg-direction', 'sim-newleg-direction-value', function(){
+      recompute();
+      if (_newlegStopWire && typeof _newlegStopWire.reapply === 'function') _newlegStopWire.reapply();
+    });
 
     document.getElementById('sim-newleg-cancel').onclick = () => _closeModal('sim-newleg-modal');
     _onBackdrop('sim-newleg-modal');
@@ -11638,12 +12142,24 @@ window.Sim = Sim;
       const size = _parseNum(sizeEl.value, NaN);
       const price = _parseNum(priceEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
+      const direction = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       if (!isFinite(size) || size <= 0) return _setStatus('sim-newleg-status', 'Size must be > 0', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-newleg-status', 'Entry price must be > 0', true);
       if (!isFinite(stop) || stop <= 0) return _setStatus('sim-newleg-status', 'Stop must be > 0', true);
-      if (stop >= price) return _setStatus('sim-newleg-status', 'Stop must be below entry price', true);
+      const validStop = (window.Sim && window.Sim.Direction)
+        ? window.Sim.Direction.stopValidates(direction, price, stop)
+        : (direction === 'short' ? stop > price : stop < price);
+      if (!validStop) {
+        return _setStatus('sim-newleg-status',
+          direction === 'short' ? 'Stop must be above entry for short' : 'Stop must be below entry for long',
+          true);
+      }
+      // Pull the EMA-trail spec from the strategy picker if the user picked
+      // 'ema_trail'. Without this, the new-leg modal silently dropped the
+      // trail wiring and the stop behaved as a snapshot instead of trailing.
+      const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
       try {
-        onSubmit && onSubmit({ sizeMode: mode, sizeValue: size, price, stop });
+        onSubmit && onSubmit({ direction, sizeMode: mode, sizeValue: size, price, stop, stopTrail });
         _closeModal('sim-newleg-modal');
       } catch (err) { _setStatus('sim-newleg-status', err && err.message ? err.message : 'Could not start leg', true); }
     };
@@ -11704,7 +12220,18 @@ window.Sim = Sim;
       if (!isFinite(size) || size <= 0) return _setStatus('sim-add-status', 'Size must be > 0', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-add-status', 'Price must be > 0', true);
       if (newStop !== null && (!isFinite(newStop) || newStop <= 0)) return _setStatus('sim-add-status', 'New stop must be > 0', true);
-      if (newStop !== null && newStop >= price) return _setStatus('sim-add-status', 'New stop must be below price', true);
+      // Direction-aware validation: long needs stop < price; short needs stop > price.
+      if (newStop !== null){
+        const dir = ctx.direction || 'long';
+        const validStop = (window.Sim && window.Sim.Direction)
+          ? window.Sim.Direction.stopValidates(dir, price, newStop)
+          : (dir === 'short' ? newStop > price : newStop < price);
+        if (!validStop){
+          return _setStatus('sim-add-status',
+            dir === 'short' ? 'New stop must be above price for short' : 'New stop must be below price',
+            true);
+        }
+      }
       try {
         const payload = { sizeMode: mode, sizeValue: size, price };
         if (newStop !== null) payload.newStop = newStop;
@@ -13236,6 +13763,9 @@ window.Sim = Sim;
     (sim.legs || []).forEach(function(leg, i){
       allLegs.push({
         legIndex: i + 1,
+        // P7: per-leg direction (Codex flagged hardcoded session-level long).
+        direction: leg.direction || 'long',
+        legId: leg.legId || null,
         entry: leg.entry, shares0: leg.shares0, initialRisk: leg.initialRisk,
         realizedPnL: leg.realizedPnL, rMultiple: leg.rMultiple,
         mfe: leg.mfe, mae: leg.mae,
@@ -13250,11 +13780,17 @@ window.Sim = Sim;
       // Mark-to-market for an open leg.
       if (!sim.closed && !sim.stoppedOut && sim.qty > 0){
         const lastBar = bars && bars[sim.playIdx];
-        if (lastBar) realized = (sim.realizedPnL || 0) + sim.qty * (lastBar.close - sim.avgCost);
+        if (lastBar){
+          // Direction-aware MTM: short = (avg - close) * qty.
+          const sgn = (sim.direction === 'short') ? -1 : 1;
+          realized = (sim.realizedPnL || 0) + sim.qty * (lastBar.close - sim.avgCost) * sgn;
+        }
       }
       const r = (sim.initialRisk > 0) ? realized / sim.initialRisk : null;
       allLegs.push({
         legIndex: (sim.legs || []).length + 1,
+        direction: sim.direction || 'long',
+        legId: sim.legId || null,
         entry: sim.entry, shares0: sim.shares0, initialRisk: sim.initialRisk,
         realizedPnL: realized, rMultiple: r,
         mfe: sim._mfeVal, mae: sim._maeVal,
@@ -13286,6 +13822,9 @@ window.Sim = Sim;
       trades.push({
         legIndex: leg.legIndex,
         symbol: symbol,
+        // P7: per-leg direction in CSV/JSON exports.
+        direction: leg.direction || 'long',
+        legId: leg.legId || null,
         entryDate: entryDate, entryPrice: leg.entry.price,
         qty: leg.shares0, stopAtEntry: leg.entry.stop, initialRisk: leg.initialRisk,
         exitDate: exitDate, exitPrice: exitPrice, exitReason: leg.exitReason,
@@ -14416,20 +14955,30 @@ Sim.Ctrl = (function(){
   }
   function _addLegEntryMarker(legNum, barIdx) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
+    // Direction-aware: long entry = green up-arrow below bar; short = red down-arrow above bar.
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
+    const tag = isShort ? 'S' : 'L';
     state._legMarkers.push({
-      time: bar.time, position: 'belowBar',
-      color: '#6ee7b7', shape: 'arrowUp',
-      text: 'L' + legNum + ' entry', size: 1
+      time: bar.time,
+      position: isShort ? 'aboveBar' : 'belowBar',
+      color: isShort ? '#fb7185' : '#6ee7b7',
+      shape: isShort ? 'arrowDown' : 'arrowUp',
+      text: tag + legNum + ' entry', size: 1
     });
     _applyAllMarkers();
   }
   function _addLegExitMarker(legNum, barIdx, exitPrice, exitReason) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
     const isStop = exitReason === 'stop';
+    // Direction-aware: long exit arrow points down (sell); short exit arrow points up (cover).
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
     state._legMarkers.push({
-      time: bar.time, position: 'aboveBar',
+      time: bar.time,
+      position: isShort ? 'belowBar' : 'aboveBar',
       color: isStop ? '#fb7185' : '#9ca3af',
-      shape: 'arrowDown',
+      shape: isShort ? 'arrowUp' : 'arrowDown',
       text: 'L' + legNum + ' ' + (isStop ? '✕ ' : '● ') + (exitPrice != null ? '$' + Number(exitPrice).toFixed(2) : (isStop ? 'stop' : 'close')),
       size: 1
     });
@@ -14437,18 +14986,27 @@ Sim.Ctrl = (function(){
   }
   function _addLegSellMarker(legNum, barIdx, price, qty) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
+    // 'sell' for short = cover. Mirror position to opposite side.
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
+    const label = isShort ? 'cover' : 'sell';
     state._legMarkers.push({
-      time: bar.time, position: 'aboveBar',
+      time: bar.time,
+      position: isShort ? 'belowBar' : 'aboveBar',
       color: '#fbbf24', shape: 'circle',
-      text: 'L' + legNum + ' sell ' + (qty != null ? qty : '') + (price != null ? ' @ $' + Number(price).toFixed(2) : ''),
+      text: 'L' + legNum + ' ' + label + ' ' + (qty != null ? qty : '') + (price != null ? ' @ $' + Number(price).toFixed(2) : ''),
       size: 1
     });
     _applyAllMarkers();
   }
   function _addLegAddMarker(legNum, barIdx, price, qty) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
+    // 'add' marker mirrors entry side.
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
     state._legMarkers.push({
-      time: bar.time, position: 'belowBar',
+      time: bar.time,
+      position: isShort ? 'aboveBar' : 'belowBar',
       color: '#a7f3d0', shape: 'circle',
       text: 'L' + legNum + ' add ' + (qty != null ? '+' + qty : '') + (price != null ? ' @ $' + Number(price).toFixed(2) : ''),
       size: 1
@@ -14959,7 +15517,9 @@ Sim.Ctrl = (function(){
       barClose: bar.close,
       barDate: bar.time,
       legNum: (state.sim.legs || []).length + 1,
-      suggestedSize: state.sim.shares0 || 1000
+      suggestedSize: state.sim.shares0 || 1000,
+      // Default opposite of just-closed leg (stop-out re-entry case).
+      priorDirection: state.sim.direction || 'long'
     }, form => {
       try {
         Sim.startNewLeg(state.sim, {
@@ -14968,7 +15528,11 @@ Sim.Ctrl = (function(){
           price: form.price,
           sizeMode: form.sizeMode,
           sizeValue: form.sizeValue,
-          stop: form.stop
+          stop: form.stop,
+          // P3 wires `form.direction` from the modal radio.
+          direction: form.direction,
+          // Carry through the EMA-trail spec if the user picked 'ema_trail'.
+          stopTrail: form.stopTrail || null
         });
       } catch (e) { alert('Could not start new leg: ' + e.message); return; }
       _ensureInitialStopLine();
@@ -15044,7 +15608,7 @@ Sim.Ctrl = (function(){
     let sim;
     try {
       sim = Sim.createSim({
-        moveKey, direction: 'long',
+        moveKey, direction: form.direction || 'long',
         entry: { barIdx, date: currentBars[barIdx].time, price: form.price, sizeMode: form.sizeMode, sizeValue: form.sizeValue, stop: form.stop, endBarIdx, stopTrail: form.stopTrail || null },
         initialEquity: form.initialEquity || null
       });
@@ -15547,33 +16111,45 @@ Sim.Ctrl = (function(){
       if (!ev || !ev.type) continue;
       const qty = Number(ev.qty);
       const price = Number(ev.price);
+      const dir = ev.direction || 'long';
+      const legId = ev.legId || null;
       switch (ev.type) {
         case 'add': {
           if (!Number.isFinite(qty) || qty <= 0) continue;
           if (!Number.isFinite(price)) continue;
-          state.cash = r2(state.cash - qty * price);
+          if (dir === 'short'){
+            // Adding to a short = enlarging the lock by qty * fillPx.
+            // avgEntry already updated by the engine; we just grow proceeds + shares.
+            const lock = state.shortLocks && state.shortLocks[legId];
+            if (lock){
+              lock.shares = lock.shares + qty;
+              lock.proceeds = r2((+lock.proceeds || 0) + qty * price);
+              // Recompute avgEntry from the new total (defensive).
+              if (lock.shares > 0) lock.avgEntry = r2(lock.proceeds / lock.shares);
+            }
+          } else {
+            state.cash = r2(state.cash - qty * price);
+          }
           break;
         }
-        case 'sell': {
-          if (!Number.isFinite(qty) || qty <= 0) continue;
-          if (!Number.isFinite(price)) continue;
-          state.cash = r2(state.cash + qty * price);
-          break;
-        }
-        case 'stop': {
-          // engine already computed price = min(bar.open, stop.price)
-          if (!Number.isFinite(qty) || qty <= 0) continue;
-          if (!Number.isFinite(price)) continue;
-          state.cash = r2(state.cash + qty * price);
-          break;
-        }
+        case 'sell':
+        case 'stop':
         case 'close': {
-          // Filter out the bookkeeping close(qty=0) emitted after a full sell —
-          // cash was already credited on the `sell` event.
+          // Filter out the bookkeeping close(qty=0) emitted after a full sell.
           if (!Number.isFinite(qty) || qty <= 0) continue;
           if (!Number.isFinite(price)) continue;
-          // Force-close at endBarIdx (qty>0): credit cash at bar.close.
-          state.cash = r2(state.cash + qty * price);
+          if (dir === 'short'){
+            // For shorts, "sell"/"stop"/"close" actually = COVER. Release lock proportionally
+            // and credit realized P&L (proceeds - coverCost) to cash.
+            if (state.shortLocks && state.shortLocks[legId] && window.Sim && window.Sim.ShortLocks){
+              const r = window.Sim.ShortLocks.applyCover(state.shortLocks, legId, qty, price);
+              state.cash = r2((+state.cash || 0) + (r.realized || 0));
+              const lk = state.shortLocks[legId];
+              if (lk && lk.shares <= 0) delete state.shortLocks[legId];
+            }
+          } else {
+            state.cash = r2(state.cash + qty * price);
+          }
           break;
         }
         case 'entry':
@@ -15612,7 +16188,45 @@ Sim.Ctrl = (function(){
     return r2(proceeds);
   }
 
-  window.PortSim.Cash = { fold, preflight, debitInitialEntry, creditManualClose };
+  // P6 unified open: long debits cash; short fences proceeds in shortLocks.
+  // sim must already exist (carries .legId + .direction). Returns the
+  // dollar amount touched (cost for long, proceeds for short).
+  function openPosition(state, sim) {
+    if (!state || !sim) return 0;
+    const dir = sim.direction || 'long';
+    const shares = sim.shares0 || 0;
+    const price = (sim.entry && sim.entry.price) || 0;
+    if (dir === 'short'){
+      if (state.shortLocks && window.Sim && window.Sim.ShortLocks){
+        window.Sim.ShortLocks.applyOpen(state.shortLocks, sim.legId, shares, price);
+      }
+      return r2(shares * price);
+    }
+    return debitInitialEntry(state, shares, price);
+  }
+
+  // P6 unified close: long credits cash; short releases lock + settles realized.
+  // qty + fillPx come from the engine (sell/stop/close event) or manual close.
+  // Returns the dollar amount touched. For shorts, the realized P&L credits
+  // state.cash (proceeds - cover cost) and the lock decrements proportionally.
+  function closePosition(state, sim, qty, fillPx) {
+    if (!state || !sim || !(qty > 0)) return 0;
+    const dir = sim.direction || 'long';
+    if (dir === 'short'){
+      if (state.shortLocks && window.Sim && window.Sim.ShortLocks){
+        const r = window.Sim.ShortLocks.applyCover(state.shortLocks, sim.legId, qty, fillPx);
+        state.cash = r2(state.cash + (r.realized || 0));
+        // Drop lock entry if exhausted.
+        const lk = state.shortLocks[sim.legId];
+        if (lk && lk.shares <= 0) delete state.shortLocks[sim.legId];
+        return r2(r.realized || 0);
+      }
+      return 0;
+    }
+    return creditManualClose(state, qty, fillPx);
+  }
+
+  window.PortSim.Cash = { fold, preflight, debitInitialEntry, creditManualClose, openPosition, closePosition };
 
   // ----- Headless test harness -----
   // Exercises the existing pure Sim core against synthetic OHLCV.
@@ -16427,10 +17041,19 @@ Sim.Ctrl = (function(){
   Modal.openSetupForCard = function(card, currentBar, onSubmit, opts) {
     const bar = _safeBar(currentBar);
     opts = opts || {};
+    // Read card metadata (if any) for default direction.
+    let defaultDir = 'long';
+    try {
+      if (card && card.symbol && typeof window.getMeta === 'function'){
+        const m = window.getMeta({ symbol: card.symbol, year: card.year || '' }) || {};
+        if (m.direction === 'short') defaultDir = 'short';
+      }
+    } catch(e){ /* ignore — fall back to long */ }
     const ctx = {
       portMode: true,
       defaultDate: bar.time || null,
       defaultPrice: bar.close != null ? bar.close : null,
+      defaultDirection: opts.defaultDirection || defaultDir,
       suggestedSize: opts.suggestedSize != null ? opts.suggestedSize : null,
       // Pass through any additional context the controller wants in the modal.
       restoreFrom: opts.restoreFrom || null,
@@ -16456,6 +17079,8 @@ Sim.Ctrl = (function(){
       barClose: bar.close != null ? bar.close : NaN,
       legNum: opts.legNum != null ? opts.legNum : 2,
       suggestedSize: opts.suggestedSize != null ? opts.suggestedSize : null,
+      // Stop-out re-entry: default opposite of just-closed leg's direction.
+      priorDirection: opts.priorDirection || (card && card.sim && card.sim.direction) || null,
       // Card-scoped data so the strategy picker uses this card's bars.
       cardBars: (card && card.bars) || null,
       cardMoveKey: (card && card.symbol) ? (card.symbol + '_' + (card.year || '')) : null
@@ -18631,6 +19256,10 @@ Sim.Ctrl = (function(){
     _state.initialEquity = +cfg.initialCash || 0;
     _state.cash = _state.initialEquity;
     _state.realizedPnL = 0;
+    // shortLocks: { legId → { shares, proceeds, avgEntry } }. Each open short fences
+    // its proceeds here. cash is NOT credited at short open; covers settle realized
+    // P&L back to cash and decrement the lock.
+    _state.shortLocks = {};
     _state.index = cfg.index || 'SPX';
     _state.playing = false;
     _state.speed = 1;
@@ -18853,7 +19482,8 @@ Sim.Ctrl = (function(){
     try {
       sim = window.Sim.createSim({
         moveKey: entry.symbol,
-        direction: 'long',
+        // P3 plumbs req.direction from the per-row setup radio.
+        direction: req.direction || 'long',
         entry: {
           barIdx: entryBarIdx,
           date: bars[entryBarIdx].time,
@@ -18978,20 +19608,31 @@ Sim.Ctrl = (function(){
           alert('Not enough cash for this entry. Need $' + (shares * form.price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
           return;
         }
+        const dir = form.direction || 'long';
         const sim = window.Sim.createSim({
           moveKey: entry.symbol,
-          direction: 'long',
+          direction: dir,
           entry: {
             barIdx: barIdx,
             date: entry.bars[barIdx].time,
             price: +form.price,
             stop: +form.stop,
             sizeMode: form.sizeMode,
-            sizeValue: +form.sizeValue
+            sizeValue: +form.sizeValue,
+            // Per-card Setup modal exposes the full stop-strategy picker
+            // (incl. ema_trail). Without this, picking an auto-trail option
+            // here placed the stop at the EMA value but never ratcheted —
+            // it behaved as a snapshot.
+            stopTrail: form.stopTrail || null
           }
         });
         entry.sim = sim;
-        PortSim.Cash.debitInitialEntry(_state, sim.shares0, sim.entry.price);
+        // Long: debit cash. Short: lock proceeds in shortLocks (no cash debit).
+        if (dir === 'short'){
+          window.Sim.ShortLocks.applyOpen(_state.shortLocks, sim.legId, sim.shares0, sim.entry.price);
+        } else {
+          PortSim.Cash.debitInitialEntry(_state, sim.shares0, sim.entry.price);
+        }
         // Make sure the card's chart has data through the entry bar.
         const upTo = entry.bars.slice(0, barIdx + 1);
         entry.card.setData(upTo);
@@ -19016,6 +19657,9 @@ Sim.Ctrl = (function(){
       try { window.Sim.continueSim(entry.sim); } catch(e){}
     }
     const legNum = (entry.sim.legs ? entry.sim.legs.length : 0) + 1;
+    // Pass priorDirection so re-entry modal defaults to opposite of the
+    // just-closed leg's direction.
+    const opts = { legNum: legNum, priorDirection: entry.sim.direction || 'long' };
     PortSim.Modal.openNewLegForCard(entry, bar, function(card, form){
       try {
         // form: { date, price, sizeMode, sizeValue, stop }
@@ -19032,15 +19676,23 @@ Sim.Ctrl = (function(){
           alert('Not enough cash for new leg. Need $' + (shares * form.price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
           return;
         }
+        const newDir = form.direction || entry.sim.direction || 'long';
         window.Sim.startNewLeg(entry.sim, {
           barIdx: barIdx,
           date: entry.bars[barIdx].time,
           price: +form.price,
           stop: +form.stop,
           sizeMode: form.sizeMode,
-          sizeValue: +form.sizeValue
+          sizeValue: +form.sizeValue,
+          direction: newDir,
+          stopTrail: form.stopTrail || null
         });
-        PortSim.Cash.debitInitialEntry(_state, entry.sim.shares0, entry.sim.entry.price);
+        // Long leg → debit cash. Short leg → lock proceeds (no cash debit).
+        if (entry.sim.direction === 'short'){
+          window.Sim.ShortLocks.applyOpen(_state.shortLocks, entry.sim.legId, entry.sim.shares0, entry.sim.entry.price);
+        } else {
+          PortSim.Cash.debitInitialEntry(_state, entry.sim.shares0, entry.sim.entry.price);
+        }
         entry.lastCloseSeen = +entry.bars[barIdx].close;
         entry.card.setActive(true);
         entry.card.setBadge('active', 'active');
@@ -19050,7 +19702,7 @@ Sim.Ctrl = (function(){
         console.error('[PortSim.Ctrl] new-leg submit failed:', e);
         alert('New leg failed: ' + (e && e.message ? e.message : e));
       }
-    }, { legNum: legNum });
+    }, opts);
   }
 
   function _onCardAction(entry, action){
@@ -19106,13 +19758,15 @@ Sim.Ctrl = (function(){
         if (!isFinite(ns) || ns <= 0) return;
         // Apply at the current bar so the stop line updates immediately on
         // the chart, instead of waiting for the next advance to drain the
-        // pending-actions queue.
+        // pending-actions queue. form.stopTrail carries the ema_trail spec
+        // when the user picks an auto-trail strategy in the modal — without
+        // this, the trail was silently dropped and the stop never ratcheted.
         const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct)
+          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null)
           : false;
         if (!ok){
           // Fallback: queue + advance like the single-ticker sim does.
-          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null });
         }
         _renderAll();
       });
@@ -19125,7 +19779,11 @@ Sim.Ctrl = (function(){
       const qty = entry.sim.qty;
       try {
         window.Sim.closeAt(entry.sim, entry.bars, px);
-        PortSim.Cash.creditManualClose(_state, qty, px);
+        // Direction-aware: long credits qty × px (sale proceeds); short
+        // releases the lock and credits realized P&L (= proceeds − cover cost)
+        // so cash stays continuous through the close. The plain
+        // creditManualClose was double-crediting cover cost on shorts.
+        PortSim.Cash.closePosition(_state, entry.sim, qty, px);
         _accumulateRealizedFromSim(entry);
       } catch (e){
         console.error('[PortSim.Ctrl] closeAt failed:', e);
@@ -19254,10 +19912,15 @@ Sim.Ctrl = (function(){
     catch(e){ console.warn('[PortSim.Ctrl] _cloneSim failed:', e); return null; }
   }
   function _pushSnapshot(){
+    // Deep-clone shortLocks so step-back restores fenced short proceeds correctly.
+    let shortLocksClone = {};
+    try { shortLocksClone = JSON.parse(JSON.stringify(_state.shortLocks || {})); }
+    catch(e){ console.warn('[PortSim.Ctrl] _pushSnapshot shortLocks clone:', e); }
     const snap = {
       playIdx: _state.playIdx,
       cash: _state.cash,
       realizedPnL: _state.realizedPnL,
+      shortLocks: shortLocksClone,
       prevEquity: _state.prevEquity,
       eqPeak: _state.eqPeak,
       eqPeakIdx: _state.eqPeakIdx,
@@ -19286,6 +19949,8 @@ Sim.Ctrl = (function(){
     _state.playIdx     = snap.playIdx;
     _state.cash        = snap.cash;
     _state.realizedPnL = snap.realizedPnL;
+    // Restore shortLocks (deep-cloned at push time).
+    _state.shortLocks  = snap.shortLocks ? JSON.parse(JSON.stringify(snap.shortLocks)) : {};
     _state.prevEquity  = snap.prevEquity;
     _state.eqPeak      = snap.eqPeak;
     _state.eqPeakIdx   = snap.eqPeakIdx;
@@ -19452,9 +20117,9 @@ Sim.Ctrl = (function(){
           const soldQty = sim.qty;
           try {
             window.Sim.closeAt(sim, e.bars, px);
-            // closeAt doesn't touch the cash ledger — credit it here, same
-            // pattern as the manual close flow uses.
-            PortSim.Cash.creditManualClose(_state, soldQty, px);
+            // Direction-aware close: long credits sale proceeds, short
+            // releases the lock and only the realized delta hits cash.
+            PortSim.Cash.closePosition(_state, sim, soldQty, px);
             // Reflect the now-closed state on the card.
             if (e.card){
               e.card.setBadge('closed', 'between');
@@ -19514,15 +20179,26 @@ Sim.Ctrl = (function(){
       if (!e.sim || e.sim.qty <= 0) return;
       const mark = _markFor(e);
       if (mark == null) return;
-      unreal += e.sim.qty * (mark - e.sim.avgCost);
+      // Direction-aware: short P&L = (avg - mark) * qty; long = (mark - avg) * qty.
+      const dir = e.sim.direction || 'long';
+      const sgn = dir === 'short' ? -1 : 1;
+      unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
       openCount += 1;
     });
-    const equity = _r2(_state.cash + _state.basket.reduce(function(s, e){
-      if (!e.sim || e.sim.qty <= 0) return s;
-      const mark = _markFor(e);
-      if (mark == null) return s;
-      return s + e.sim.qty * mark;
-    }, 0));
+    // P6 centralized equity via Sim.PortfolioValuation. Replaces duplicated
+    // formula at this site (and the two below). Note: we inject mark via a
+    // temporary lastCloseSeen so the helper sees the latest price.
+    const _basketForValuation = _state.basket.map(function(e){
+      return { sim: e.sim, lastCloseSeen: _markFor(e) };
+    });
+    const equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(_state, _basketForValuation)
+      : _r2(_state.cash + _state.basket.reduce(function(s, e){
+          if (!e.sim || e.sim.qty <= 0) return s;
+          const mark = _markFor(e);
+          if (mark == null) return s;
+          return s + e.sim.qty * mark;
+        }, 0));
 
     const expected = _r2(_state.initialEquity + _state.realizedPnL + unreal);
     if (Math.abs(equity - expected) > 0.01){
@@ -19580,7 +20256,8 @@ Sim.Ctrl = (function(){
         const soldQty = sim.qty;
         try {
           window.Sim.closeAt(sim, e.bars, px);
-          PortSim.Cash.creditManualClose(_state, soldQty, px);
+          // Direction-aware close (see manual-close path for rationale).
+          PortSim.Cash.closePosition(_state, sim, soldQty, px);
           if (e.card){ e.card.setBadge('closed', 'between'); e.card.setActive(false); }
           if (e._newLegBtn) e._newLegBtn.style.display = '';
         } catch (err){
@@ -19614,7 +20291,7 @@ Sim.Ctrl = (function(){
     }
     const _indexReturnPct = _bhPctOver(_state.indexBars, _firstDate, _lastDate);
 
-    let equity = _state.cash;
+    // P6: equity via centralized Sim.PortfolioValuation.
     let unreal = 0;
     // Include retired (swapped-out) tickers so their trades count toward
     // session stats. Active basket first to preserve grid order.
@@ -19636,8 +20313,8 @@ Sim.Ctrl = (function(){
         if (e.sim.qty > 0){
           const mark = _markFor(e);
           if (mark != null){
-            unreal += e.sim.qty * (mark - e.sim.avgCost);
-            equity += e.sim.qty * mark;
+            const sgn = (e.sim.direction === 'short') ? -1 : 1;
+            unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
           }
           status = 'open';
         } else if (e.sim.stoppedOut){
@@ -19661,7 +20338,18 @@ Sim.Ctrl = (function(){
         bhPct: bhPct
       };
     });
-    equity = _r2(equity);
+    // P6: equity via centralized helper.
+    const _basketForValuationS = _state.basket.map(function(e){
+      return { sim: e.sim, lastCloseSeen: _markFor(e) };
+    });
+    const equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(_state, _basketForValuationS)
+      : _r2(_state.cash + _state.basket.reduce(function(s, e){
+          if (!e.sim || e.sim.qty <= 0) return s;
+          const mark = _markFor(e);
+          if (mark == null) return s;
+          return s + e.sim.qty * mark;
+        }, 0));
     const finalEquity = equity;
     const totalReturn = _state.initialEquity > 0
       ? ((finalEquity - _state.initialEquity) / _state.initialEquity) * 100
@@ -20281,33 +20969,37 @@ Sim.Ctrl = (function(){
   const CardChart = {};
 
   // ---- Markers ----
-  CardChart.addLegEntryMarker = function(card, legNum, time) {
+  CardChart.addLegEntryMarker = function(card, legNum, time, direction) {
     if (!_hasSeries(card) || !time) return;
     const store = _getStore(card);
+    const isShort = direction === 'short';
+    const tag = isShort ? 'S' : 'L';
     store.legs.push({
       time: time,
-      position: 'belowBar',
-      color: ENTRY_COLOR,
-      shape: 'arrowUp',
-      text: 'L' + (legNum != null ? legNum : '?') + ' entry',
+      position: isShort ? 'aboveBar' : 'belowBar',
+      color: isShort ? STOP_EXIT_COLOR : ENTRY_COLOR,
+      shape: isShort ? 'arrowDown' : 'arrowUp',
+      text: tag + (legNum != null ? legNum : '?') + ' entry',
       size: 1
     });
     _applyMarkers(card);
   };
 
-  CardChart.addLegExitMarker = function(card, legNum, time, exitPrice, exitReason) {
+  CardChart.addLegExitMarker = function(card, legNum, time, exitPrice, exitReason, direction) {
     if (!_hasSeries(card) || !time) return;
     const store = _getStore(card);
     const isStop = exitReason === 'stop';
+    const isShort = direction === 'short';
     const sym = isStop ? '✕ ' : '● ';
     const priceTxt = (exitPrice != null && Number.isFinite(+exitPrice))
       ? _fmtPrice(exitPrice)
       : (isStop ? 'stop' : 'close');
     store.legs.push({
       time: time,
-      position: 'aboveBar',
+      // For shorts, exit (cover) arrow points UP (back into long-side position close).
+      position: isShort ? 'belowBar' : 'aboveBar',
       color: isStop ? STOP_EXIT_COLOR : CLOSE_EXIT_COLOR,
-      shape: 'arrowDown',
+      shape: isShort ? 'arrowUp' : 'arrowDown',
       text: 'L' + (legNum != null ? legNum : '?') + ' ' + sym + priceTxt,
       size: 1
     });
@@ -21681,10 +22373,16 @@ Sim.Ctrl = (function(){
       close:    isActive
     };
     var btns = d.actionsEl.querySelectorAll('button[data-action]');
+    var dir = (sim && sim.direction === 'short') ? 'short' : 'long';
     btns.forEach(function(btn){
       var k = btn.getAttribute('data-action');
       if (states[k]) btn.removeAttribute('hidden');
       else btn.setAttribute('hidden', '');
+      // P4: relabel buttons per direction. Engine event types stay neutral
+      // (sell/add/close); the view layer renders cover/short labels.
+      if (k === 'sell') btn.textContent = (dir === 'short') ? '– Cover' : '– Sell';
+      else if (k === 'add')   btn.textContent = (dir === 'short') ? '+ Add Short' : '+ Add';
+      else if (k === 'close') btn.textContent = (dir === 'short') ? '✕ Cover All' : '✕ Close';
     });
     // Chart hint text mirrors the action that bare-click would trigger.
     if (d.chartHint){
@@ -22378,7 +23076,7 @@ Sim.Ctrl = (function(){
       var entryDate = sim.entry && sim.entry.date;
       if (entryDate){
         _safe('addLegEntryMarker', function(){
-          window.PortSim.CardChart.addLegEntryMarker(entry.card, currentLegNum, entryDate);
+          window.PortSim.CardChart.addLegEntryMarker(entry.card, currentLegNum, entryDate, sim.direction || 'long');
         });
         // Highlight entry bar IF it's the latest bar on the chart (LWC v3.8
         // requires bar.time >= last bar's time). After Ctrl appends bars and
@@ -22425,13 +23123,15 @@ Sim.Ctrl = (function(){
         if (!ev) continue;
         if (ev.type === 'stop' && ev.qty > 0){
           var legNum = currentLegNum; // stop fires while current leg is open
+          var dirS = ev.direction || sim.direction || 'long';
           _safe('addLegExitMarker (stop)', function(){
-            window.PortSim.CardChart.addLegExitMarker(entry.card, legNum, ev.date, ev.price, 'stop');
+            window.PortSim.CardChart.addLegExitMarker(entry.card, legNum, ev.date, ev.price, 'stop', dirS);
           });
         } else if (ev.type === 'close' && ev.qty > 0){
           var legNumC = currentLegNum;
+          var dirC = ev.direction || sim.direction || 'long';
           _safe('addLegExitMarker (close)', function(){
-            window.PortSim.CardChart.addLegExitMarker(entry.card, legNumC, ev.date, ev.price, 'close');
+            window.PortSim.CardChart.addLegExitMarker(entry.card, legNumC, ev.date, ev.price, 'close', dirC);
           });
         }
       }
@@ -23628,17 +24328,25 @@ Sim.Ctrl = (function(){
       if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
       var mark = _markFor(e);
       if (mark == null) return;
-      unreal += e.sim.qty * (mark - e.sim.avgCost);
+      var sgn = (e.sim.direction === 'short') ? -1 : 1;
+      unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
       openCount += 1;
     });
-    var equity = cash + initial + (realized + unreal) - initial; // = cash + realized + unreal + cash deficit
-    // Simpler / equivalent: equity = cash + Σ(qty × mark)
-    equity = cash;
-    basket.forEach(function(e){
-      if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
-      var mark = _markFor(e);
-      if (mark != null) equity += e.sim.qty * mark;
-    });
+    // P6: equity via Sim.PortfolioValuation. Single source of equity-truth.
+    var _basketForValuationP = basket
+      .filter(function(e){ return e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
+      .map(function(e){ return { sim: e.sim, lastCloseSeen: _markFor(e) }; });
+    var equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(st, _basketForValuationP)
+      : (function(){
+          var eq = cash;
+          basket.forEach(function(e){
+            if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
+            var mark = _markFor(e);
+            if (mark != null) eq += e.sim.qty * mark;
+          });
+          return eq;
+        })();
     var totalPnL = equity - initial;
     var dayPnL = (st.prevEquity != null && isFinite(st.prevEquity)) ? (equity - st.prevEquity) : 0;
     // Drawdown from running peak — both as $ and %.
@@ -23896,10 +24604,10 @@ Sim.Ctrl = (function(){
               // queueAction would defer until the next advanceTo() and the
               // change wouldn't show up on a paused chart.
               var ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct)
+                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null)
                 : false;
               if (!ok){
-                window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+                window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null });
               }
             } catch(e){ console.error('[PortSim.Positions] movestop:', e); }
             // Track J's 120ms watcher will pick up the new stopLevels entry
@@ -24434,15 +25142,26 @@ Sim.Ctrl = (function(){
     var realized = +st.realizedPnL || 0;
     var unrealOpen = 0;
     var openCount = 0;
-    var equity = cash;
+    // P6: equity via centralized helper.
+    var _basketForVal = basket
+      .filter(function(e){ return e && e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
+      .map(function(e){
+        var mk = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen))
+          ? +e.lastCloseSeen
+          : (e.sim.entry ? +e.sim.entry.price : 0);
+        return { sim: e.sim, lastCloseSeen: mk };
+      });
+    var equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(st, _basketForVal)
+      : cash;
     basket.forEach(function(e){
       if (!e || !e.sim) return;
       if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
         var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen))
           ? +e.lastCloseSeen
           : (e.sim.entry ? +e.sim.entry.price : 0);
-        equity += e.sim.qty * mark;
-        unrealOpen += e.sim.qty * (mark - e.sim.avgCost);
+        var sgn = (e.sim.direction === 'short') ? -1 : 1;
+        unrealOpen += e.sim.qty * (mark - e.sim.avgCost) * sgn;
         openCount += 1;
       }
     });
@@ -24709,6 +25428,9 @@ Sim.Ctrl = (function(){
       var exitBar = bars[l.exitBarIdx | 0];
       out.push({
         idx: i + 1,
+        // P7: emit per-leg direction (default 'long' for legacy reviews).
+        direction: l.direction || 'long',
+        legId: l.legId || null,
         entryDate: entryBar ? entryBar.time : (l.entry && l.entry.date) || null,
         entryPrice: l.entry ? +l.entry.price : 0,
         shares: l.shares0 || 0,
@@ -24736,11 +25458,17 @@ Sim.Ctrl = (function(){
       var curBar = bars[curBarIdx];
       var realized = sim.realizedPnL || 0;
       var unreal = 0;
-      if (sim.qty > 0 && curBar) unreal = sim.qty * (curBar.close - sim.avgCost);
+      if (sim.qty > 0 && curBar){
+        // Direction-aware unrealized for active leg.
+        var sgn = (sim.direction === 'short') ? -1 : 1;
+        unreal = sim.qty * (curBar.close - sim.avgCost) * sgn;
+      }
       var totalPnL = realized + unreal;
       var rUnit = (sim.initialRisk > 0) ? totalPnL / sim.initialRisk : 0;
       out.push({
         idx: out.length + 1,
+        direction: sim.direction || 'long',
+        legId: sim.legId || null,
         entryDate: entryBar2 ? entryBar2.time : (sim.entry.date || null),
         entryPrice: +sim.entry.price,
         shares: sim.shares0 || 0,
@@ -25336,14 +26064,25 @@ Sim.Ctrl = (function(){
     var initial = +st.initialEquity || 0;
     var cash = +st.cash || 0;
     var realized = +st.realizedPnL || 0;
-    var unreal = 0, openCount = 0, equity = cash;
+    var unreal = 0, openCount = 0;
+    // P6: equity via centralized helper.
+    var _basketForValM = basket
+      .filter(function(e){ return e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
+      .map(function(e){
+        var mk = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
+          : (e.sim.entry ? +e.sim.entry.price : 0);
+        return { sim: e.sim, lastCloseSeen: mk };
+      });
+    var equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(st, _basketForValM)
+      : cash;
     basket.forEach(function(e){
       if (!e.sim) return;
       if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
         var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
           : (e.sim.entry ? +e.sim.entry.price : 0);
-        unreal += e.sim.qty * (mark - e.sim.avgCost);
-        equity += e.sim.qty * mark;
+        var sgn = (e.sim.direction === 'short') ? -1 : 1;
+        unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
         openCount += 1;
       }
     });
@@ -25357,6 +26096,8 @@ Sim.Ctrl = (function(){
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
+      // P7 backward-compat: emit shortLocks snapshot in saved-review payload.
+      shortLocks: st.shortLocks ? JSON.parse(JSON.stringify(st.shortLocks)) : {},
       notes: Array.isArray(st.notes) ? st.notes.slice() : [],
       basket: basket.map(function(e){
         var legs = _legSnapshots(e);
@@ -25629,10 +26370,49 @@ Sim.Ctrl = (function(){
     });
   }
 
+  // P7: silent-migrate v1 (pre-shorts) saved reviews on load.
+  // - any leg without `direction` reads as 'long'
+  // - missing meta.shortLocks reads as {}
+  // Verifies the saved equity matches the recomputed equity (byte-for-byte
+  // self-check) and logs a warning if not.
+  function _migrateLoadedReviewV1(loaded){
+    if (!loaded || !loaded.meta) return loaded;
+    var meta = loaded.meta;
+    if (!meta.shortLocks) meta.shortLocks = {};
+    if (Array.isArray(meta.basket)){
+      meta.basket.forEach(function(e){
+        if (!e || !Array.isArray(e.legs)) return;
+        e.legs.forEach(function(l){
+          if (l && l.direction == null) l.direction = 'long';
+        });
+      });
+    }
+    // Self-check: with all-long, no shortLocks, equity should match.
+    if (typeof meta.equity === 'number' && typeof meta.cash === 'number'){
+      var tally = +meta.cash || 0;
+      (meta.basket || []).forEach(function(e){
+        (e.legs || []).forEach(function(l){
+          if (l && l.active && l.qty > 0 && l.avgCost && l.unreal != null){
+            // Reconstruct mark from avg + unreal/qty (long only on v1 reviews).
+            var mark = l.avgCost + (l.unreal / l.qty);
+            tally += l.qty * mark;
+          }
+        });
+      });
+      var diff = Math.abs(tally - meta.equity);
+      if (diff > 0.5 && window.console){
+        console.warn('[PortSim.Review] v1 replay equity drift:', { saved: meta.equity, recomputed: tally, diff: diff });
+      }
+    }
+    return loaded;
+  }
+
   function _loadSavedReview(key){
     if (!key) return;
     var loaded = _loadData(key);
     if (!loaded){ alert('Could not load saved review.'); return; }
+    // P7: silently migrate legacy v1 review payloads (no direction, no shortLocks).
+    loaded = _migrateLoadedReviewV1(loaded);
 
     var st = window.PortSim && window.PortSim._state;
     var liveActive = !!(st && st.active);
@@ -25719,10 +26499,13 @@ Sim.Ctrl = (function(){
       L.push('- Realized P&L: ' + _moneyS(totalRealized));
       L.push('');
       if (legs.length){
-        L.push('| Leg | Entry | Shares | Stop₀ | Risk₀ | Exit | Reason | P&L | R | MFE | MAE |');
-        L.push('|---|---|---|---|---|---|---|---|---|---|---|');
+        // P7: Dir column ('L' / 'S') per leg.
+        L.push('| Leg | Dir | Entry | Shares | Stop₀ | Risk₀ | Exit | Reason | P&L | R | MFE | MAE |');
+        L.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
         legs.forEach(function(l){
+          var dirTag = (l.direction === 'short') ? 'S' : 'L';
           L.push('| L' + l.idx + (l.active ? ' (active)' : '') + ' | '
+            + dirTag + ' | '
             + (l.entryDate || '—') + ' @ ' + _r2(l.entryPrice) + ' | '
             + l.shares + ' | '
             + _r2(l.stop0) + ' | '
