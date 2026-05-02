@@ -24010,6 +24010,37 @@ Sim.Ctrl = (function(){
       wickUpColor: '#26a69a', wickDownColor: '#ef5350'
     });
     s.setData(win.map(function(b){ return { time: b.time, open: +b.open, high: +b.high, low: +b.low, close: +b.close }; }));
+    // EMAs (10/20/50) — compute over the FULL bars array so the EMA at the
+    // start of the visible window is accurate (uses real lookback), then
+    // clip to [sd, ed] to match the candle range. Color convention matches
+    // PortSim.Peek: gold/mint/coral.
+    var emaCalc = (typeof window.calcEMA === 'function') ? window.calcEMA
+                : (typeof calcEMA === 'function') ? calcEMA : null;
+    if (emaCalc){
+      var EMA_DEFS = [
+        { period: 10, color: '#d4a574' },
+        { period: 20, color: '#6ee7b7' },
+        { period: 50, color: '#fb7185' }
+      ];
+      var fullBars = bars.map(function(b){
+        return { time: b.time, close: +b.close };
+      });
+      EMA_DEFS.forEach(function(def){
+        var data = emaCalc(fullBars, def.period);
+        if (!data || !data.length) return;
+        var clipped = data.filter(function(p){
+          return (!sd || p.time >= sd) && (!ed || p.time <= ed);
+        });
+        if (!clipped.length) return;
+        var line = chart.addLineSeries({
+          color: def.color, lineWidth: 1.5,
+          priceLineVisible: false, lastValueVisible: false,
+          crosshairMarkerVisible: false,
+          title: 'EMA ' + def.period
+        });
+        line.setData(clipped);
+      });
+    }
     var vol = chart.addHistogramSeries({
       priceScaleId: '', priceFormat: { type: 'volume' },
       scaleMargins: { top: 0.85, bottom: 0 },
