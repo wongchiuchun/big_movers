@@ -4121,6 +4121,21 @@
     font-family:var(--mono);font-size:10px;color:var(--muted);
     text-transform:uppercase;letter-spacing:0.08em;
   }
+  .portsim-review-ticker-sim-btn{
+    margin-left:auto;
+    font-family:var(--mono);font-size:10px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.1em;
+    background:var(--bg3);color:var(--text);
+    border:1px solid var(--border-bright);border-radius:5px;
+    padding:5px 12px;cursor:pointer;
+    transition:background 0.12s,color 0.12s,border-color 0.12s;
+  }
+  .portsim-review-ticker-sim-btn:hover{
+    background:var(--accent);color:var(--bg);border-color:var(--accent);
+  }
+  .portsim-review-ticker-sim-btn:disabled{
+    opacity:0.4;cursor:not-allowed;
+  }
   .portsim-review-charthost{
     background:var(--bg);
     border:1px solid var(--border);
@@ -23812,8 +23827,26 @@ Sim.Ctrl = (function(){
       +   '<div class="portsim-review-chart" id="portsim-review-chart-index"></div>'
       + '</div>';
     if (_viewOnly){
-      var ph = document.getElementById('portsim-review-chart-index');
-      if (ph) ph.innerHTML = '<div class="portsim-review-chart-placeholder">📊 Chart unavailable for saved reviews — re-run the matching simulation to view it live.</div>';
+      // Use the same loader the live sim uses so we get the same bar
+      // shape, including any cached/pre-warmed copy from PortSim.IndexCache.
+      var phIdx = document.getElementById('portsim-review-chart-index');
+      if (phIdx){
+        phIdx.innerHTML = '<div class="portsim-review-chart-placeholder">Loading index…</div>';
+        var idxName = ctx.index || 'SPX';
+        var loader = (window.PortSim && PortSim.Index && typeof PortSim.Index.fetchAndLoad === 'function')
+          ? PortSim.Index.fetchAndLoad(idxName)
+          : Promise.reject(new Error('PortSim.Index unavailable'));
+        loader.then(function(bars){
+          if (!bars || !bars.length){
+            phIdx.innerHTML = '<div class="portsim-review-chart-placeholder">No index data on disk.</div>';
+            return;
+          }
+          phIdx.innerHTML = '';
+          _drawIndexChart(phIdx, bars, ctx.startDate, ctx.endDate);
+        }).catch(function(e){
+          phIdx.innerHTML = '<div class="portsim-review-chart-placeholder">Failed to load index: ' + _esc(e && e.message ? e.message : 'unknown') + '</div>';
+        });
+      }
       return;
     }
     setTimeout(function(){
@@ -23822,12 +23855,13 @@ Sim.Ctrl = (function(){
     }, 30);
   }
 
-  function _drawIndexChart(host){
+  function _drawIndexChart(host, barsOverride, sdOverride, edOverride){
     if (typeof LightweightCharts === 'undefined') return;
-    var st = window.PortSim._state;
-    var bars = (st && st.indexBars) || [];
+    var st = window.PortSim && window.PortSim._state;
+    var bars = barsOverride || (st && st.indexBars) || [];
     if (!bars.length){ host.innerHTML = '<div class="portsim-review-empty">No index data.</div>'; return; }
-    var sd = st.startDate || '', ed = st.endDate || '';
+    var sd = (sdOverride != null) ? sdOverride : ((st && st.startDate) || '');
+    var ed = (edOverride != null) ? edOverride : ((st && st.endDate) || '');
     var win = bars.filter(function(b){
       var t = b.time;
       return (!sd || t >= sd) && (!ed || t <= ed);
@@ -23863,6 +23897,7 @@ Sim.Ctrl = (function(){
       + '<div class="portsim-review-tickerhead">'
       +   '<div class="portsim-review-tickersym">' + _esc(sym) + '</div>'
       +   '<div class="portsim-review-tickerstat">' + legs.length + ' leg(s)</div>'
+      +   '<button type="button" class="portsim-review-ticker-sim-btn" data-sim-sym="' + _esc(sym) + '" title="Run an independent individual simulation on ' + _esc(sym) + ' for the same window — try a different approach in isolation">🎯 Sim</button>'
       + '</div>'
       + '<div class="portsim-review-charthost">'
       +   '<div class="portsim-review-chartlabel">' + _esc(sym) + ' · sim window with trade markers</div>'
@@ -23903,9 +23938,35 @@ Sim.Ctrl = (function(){
         });
       }
     }
+    var simBtn = body.querySelector('.portsim-review-ticker-sim-btn[data-sim-sym="' + sym + '"]');
+    if (simBtn){
+      simBtn.addEventListener('click', function(){
+        _onTickerSim(sym, ctx);
+      });
+    }
     if (_viewOnly){
-      var ph = document.getElementById('portsim-review-chart-' + sym);
-      if (ph) ph.innerHTML = '<div class="portsim-review-chart-placeholder">📊 Chart unavailable for saved reviews.</div>';
+      // Re-fetch bars from the local OHLCV store and rebuild the chart so
+      // saved reviews stay reviewable later. Markers come from the saved
+      // legs[*].eventsLog (entries, adds, sells, stops, closes) so the
+      // user's actual trade actions are restored on the chart.
+      var phHost = document.getElementById('portsim-review-chart-' + sym);
+      if (phHost){
+        phHost.innerHTML = '<div class="portsim-review-chart-placeholder">Loading chart…</div>';
+        fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+          .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function(j){
+            var bars = Array.isArray(j) ? j : (j && j.bars) || [];
+            if (!bars.length){
+              phHost.innerHTML = '<div class="portsim-review-chart-placeholder">No bars on disk for ' + _esc(sym) + '. Re-fetch via the table\'s Extend-to-Today button.</div>';
+              return;
+            }
+            phHost.innerHTML = '';
+            _drawTickerChart(phHost, { symbol: sym, bars: bars }, legs, ctx.startDate, ctx.endDate);
+          })
+          .catch(function(e){
+            phHost.innerHTML = '<div class="portsim-review-chart-placeholder">Failed to load chart for ' + _esc(sym) + ': ' + _esc(e && e.message ? e.message : 'unknown') + '</div>';
+          });
+      }
       return;
     }
     // Live mode — pull bars from the active sim's basket entry
@@ -23917,12 +23978,13 @@ Sim.Ctrl = (function(){
     }, 30);
   }
 
-  function _drawTickerChart(host, entry, legs){
+  function _drawTickerChart(host, entry, legs, sdOverride, edOverride){
     if (typeof LightweightCharts === 'undefined') return;
     var bars = entry.bars || [];
     if (!bars.length){ host.innerHTML = '<div class="portsim-review-empty">No data.</div>'; return; }
-    var st = window.PortSim._state;
-    var sd = st.startDate || '', ed = st.endDate || '';
+    var st = window.PortSim && window.PortSim._state;
+    var sd = (sdOverride != null) ? sdOverride : ((st && st.startDate) || '');
+    var ed = (edOverride != null) ? edOverride : ((st && st.endDate) || '');
     var win = bars.filter(function(b){
       var t = b.time;
       return (!sd || t >= sd) && (!ed || t <= ed);
@@ -24185,6 +24247,86 @@ Sim.Ctrl = (function(){
     var picker = document.getElementById('portsim-review-picker');
     if (picker) picker.classList.remove('is-open');
   }
+  // Launch an independent individual simulation on a single ticker for the
+  // same window as the saved/active portsim. Used by the "🎯 Sim" button on
+  // each per-ticker review tab — lets the user retry that one ticker in
+  // isolation (e.g. with a different stop trail or hold time) to see if
+  // they could have done better than the basket allocation.
+  function _onTickerSim(sym, ctx){
+    if (!sym){ alert('No symbol to simulate.'); return; }
+    if (!ctx || !ctx.startDate || !ctx.endDate){
+      alert('No window info — cannot launch individual sim.');
+      return;
+    }
+    // `allRows` / `filtered` / `selectRow` / `applyFilters` / `chart` are
+    // top-level `let` bindings on the host page — accessible by identifier
+    // from any script context, but NOT on `window`. Match the pattern used
+    // by SimSaved._loadScenario.
+    if (typeof allRows === 'undefined' || !allRows){
+      alert('Stocks list not loaded yet — open the table once and try again.');
+      return;
+    }
+    var year = +(ctx.startDate || '').slice(0, 4);
+    // Prefer same-year row so the chart-zoom matches the period; fall back
+    // to any year for the symbol (e.g. cross-year noise picks).
+    var target = allRows.find(function(r){
+      return r && r.symbol === sym && (Number.isFinite(year) ? +r.year === year : true);
+    }) || allRows.find(function(r){ return r && r.symbol === sym; });
+    if (!target){
+      alert(sym + ' is not in the stocks table — cannot launch individual sim.');
+      return;
+    }
+
+    // Close the Trade Review modal so the chart is visible.
+    close();
+
+    // Year filter must include the target row so it appears in `filtered`.
+    var fyEl = document.getElementById('f-year');
+    if (fyEl && fyEl.value && +fyEl.value !== +target.year){
+      fyEl.value = String(target.year);
+      if (typeof applyFilters === 'function') applyFilters();
+    }
+    var idx = -1;
+    if (typeof filtered !== 'undefined' && filtered){
+      idx = filtered.findIndex(function(r){
+        return r && r.symbol === target.symbol && +r.year === +target.year;
+      });
+    }
+    if (idx < 0){
+      // Other filters may have hidden it — clear them and retry.
+      ['f-sym','f-tag','f-dir','f-rating','f-ai','f-src'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.value = '';
+      });
+      if (typeof applyFilters === 'function') applyFilters();
+      idx = filtered.findIndex(function(r){
+        return r && r.symbol === target.symbol && +r.year === +target.year;
+      });
+    }
+    if (idx < 0){
+      alert('Could not surface ' + sym + ' in the table.');
+      return;
+    }
+
+    var doSetup = function(){
+      try { chart.timeScale().setVisibleRange({ from: ctx.startDate, to: ctx.endDate }); } catch(e){}
+      if (window.Sim && Sim.Ctrl && typeof Sim.Ctrl.openSetup === 'function'){
+        Sim.Ctrl.openSetup({
+          defaultDate: ctx.startDate,
+          defaultEndDate: ctx.endDate,
+          defaultEquity: +ctx.initialEquity || null
+        });
+      }
+    };
+
+    if (typeof selectRow === 'function'){
+      var p = selectRow(idx);
+      if (p && typeof p.then === 'function') p.then(doSetup, doSetup);
+      else doSetup();
+    } else {
+      doSetup();
+    }
+  }
+
   // Rerun the loaded saved review as a fresh sim. Reconstructs a wizard
   // config from _data.meta, runs the standard fetch-and-publish pipeline so
   // any missing OHLCV gets auto-fetched, then hands off to the live Ctrl
