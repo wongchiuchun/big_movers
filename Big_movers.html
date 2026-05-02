@@ -5727,11 +5727,10 @@
           <div class="sim-transport-sep"></div>
           <div class="sim-speed-group">
             <span class="sim-speed-label">speed</span>
-            <button id="sim-speed-025" class="sim-speed-pill" type="button">0.25×</button>
+            <button id="sim-speed-035" class="sim-speed-pill" type="button">0.35×</button>
             <button id="sim-speed-05" class="sim-speed-pill" type="button">0.5×</button>
             <button id="sim-speed-1" class="sim-speed-pill sim-speed-active" type="button">1×</button>
             <button id="sim-speed-2" class="sim-speed-pill" type="button">2×</button>
-            <button id="sim-speed-5" class="sim-speed-pill" type="button">5×</button>
           </div>
           <div class="sim-transport-sep"></div>
           <div id="sim-date-readout">Day 0 · —</div>
@@ -10627,7 +10626,7 @@ window.Sim = Sim;
   };
 
   Sim.UI.setSpeed = function(speed) {
-    const map = { 0.25: 'sim-speed-025', 0.5: 'sim-speed-05', 1: 'sim-speed-1', 2: 'sim-speed-2', 5: 'sim-speed-5' };
+    const map = { 0.35: 'sim-speed-035', 0.5: 'sim-speed-05', 1: 'sim-speed-1', 2: 'sim-speed-2' };
     Object.values(map).forEach(id => {
       const el = document.getElementById(id); if (!el) return;
       if (id === map[speed]) el.classList.add('sim-speed-active'); else el.classList.remove('sim-speed-active');
@@ -13365,7 +13364,7 @@ Sim.Ctrl = (function(){
     _curve: null
   };
   const PLAY_INTERVAL_MS = 900;
-  const SPEEDS = [0.25, 0.5, 1, 2, 5];
+  const SPEEDS = [0.35, 0.5, 1, 2];
   const HIGHLIGHT_COLOR = '#a7f3d0';
   const STOP_LINE_COLOR = '#fecdd3';
   const INITIAL_STOP_COLOR = '#6b7280';
@@ -14498,11 +14497,10 @@ Sim.Ctrl = (function(){
       ['sim-btn-play', playToggle],
       ['sim-btn-continue', () => { pause(); onContinueClick(); }],
       ['sim-btn-continue-inline', () => { pause(); onContinueClick(); }],
-      ['sim-speed-025', () => setSpeed(0.25)],
+      ['sim-speed-035', () => setSpeed(0.35)],
       ['sim-speed-05',  () => setSpeed(0.5)],
       ['sim-speed-1',   () => setSpeed(1)],
       ['sim-speed-2',   () => setSpeed(2)],
-      ['sim-speed-5',   () => setSpeed(5)],
       ['sim-btn-calendar', _peekCalendar],
       ['sim-btn-export', _exportSimulation],
       ['sim-btn-exit', exit],
@@ -25346,11 +25344,10 @@ Sim.Ctrl = (function(){
       <button id="portsim-btn-play"   class="portsim-tbtn" type="button" title="Play/Pause">▶ Play</button>
       <button id="portsim-btn-fwd"    class="portsim-tbtn" type="button" title="Step forward">▶+</button>
       <span class="portsim-speed">
-        <button class="portsim-spill" data-speed="0.25" type="button">0.25×</button>
+        <button class="portsim-spill" data-speed="0.35" type="button">0.35×</button>
         <button class="portsim-spill" data-speed="0.5" type="button">0.5×</button>
         <button class="portsim-spill is-active" data-speed="1" type="button">1×</button>
         <button class="portsim-spill" data-speed="2" type="button">2×</button>
-        <button class="portsim-spill" data-speed="5" type="button">5×</button>
       </span>
       <button id="portsim-toggle-index" class="portsim-tbtn" type="button" title="Hide / show the index strip">▲ Index</button>
       <button id="portsim-toggle-inactive" class="portsim-tbtn" type="button" title="Hide cards with no active position">👁 Active Only</button>
