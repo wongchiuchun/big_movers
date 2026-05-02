@@ -14321,20 +14321,30 @@ Sim.Ctrl = (function(){
   }
   function _addLegEntryMarker(legNum, barIdx) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
+    // Direction-aware: long entry = green up-arrow below bar; short = red down-arrow above bar.
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
+    const tag = isShort ? 'S' : 'L';
     state._legMarkers.push({
-      time: bar.time, position: 'belowBar',
-      color: '#6ee7b7', shape: 'arrowUp',
-      text: 'L' + legNum + ' entry', size: 1
+      time: bar.time,
+      position: isShort ? 'aboveBar' : 'belowBar',
+      color: isShort ? '#fb7185' : '#6ee7b7',
+      shape: isShort ? 'arrowDown' : 'arrowUp',
+      text: tag + legNum + ' entry', size: 1
     });
     _applyAllMarkers();
   }
   function _addLegExitMarker(legNum, barIdx, exitPrice, exitReason) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
     const isStop = exitReason === 'stop';
+    // Direction-aware: long exit arrow points down (sell); short exit arrow points up (cover).
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
     state._legMarkers.push({
-      time: bar.time, position: 'aboveBar',
+      time: bar.time,
+      position: isShort ? 'belowBar' : 'aboveBar',
       color: isStop ? '#fb7185' : '#9ca3af',
-      shape: 'arrowDown',
+      shape: isShort ? 'arrowUp' : 'arrowDown',
       text: 'L' + legNum + ' ' + (isStop ? '✕ ' : '● ') + (exitPrice != null ? '$' + Number(exitPrice).toFixed(2) : (isStop ? 'stop' : 'close')),
       size: 1
     });
@@ -14342,18 +14352,27 @@ Sim.Ctrl = (function(){
   }
   function _addLegSellMarker(legNum, barIdx, price, qty) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
+    // 'sell' for short = cover. Mirror position to opposite side.
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
+    const label = isShort ? 'cover' : 'sell';
     state._legMarkers.push({
-      time: bar.time, position: 'aboveBar',
+      time: bar.time,
+      position: isShort ? 'belowBar' : 'aboveBar',
       color: '#fbbf24', shape: 'circle',
-      text: 'L' + legNum + ' sell ' + (qty != null ? qty : '') + (price != null ? ' @ $' + Number(price).toFixed(2) : ''),
+      text: 'L' + legNum + ' ' + label + ' ' + (qty != null ? qty : '') + (price != null ? ' @ $' + Number(price).toFixed(2) : ''),
       size: 1
     });
     _applyAllMarkers();
   }
   function _addLegAddMarker(legNum, barIdx, price, qty) {
     const bar = state.bars && state.bars[barIdx]; if (!bar) return;
+    // 'add' marker mirrors entry side.
+    const dir = (state.sim && state.sim.direction) || 'long';
+    const isShort = dir === 'short';
     state._legMarkers.push({
-      time: bar.time, position: 'belowBar',
+      time: bar.time,
+      position: isShort ? 'aboveBar' : 'belowBar',
       color: '#a7f3d0', shape: 'circle',
       text: 'L' + legNum + ' add ' + (qty != null ? '+' + qty : '') + (price != null ? ' @ $' + Number(price).toFixed(2) : ''),
       size: 1
@@ -20172,33 +20191,37 @@ Sim.Ctrl = (function(){
   const CardChart = {};
 
   // ---- Markers ----
-  CardChart.addLegEntryMarker = function(card, legNum, time) {
+  CardChart.addLegEntryMarker = function(card, legNum, time, direction) {
     if (!_hasSeries(card) || !time) return;
     const store = _getStore(card);
+    const isShort = direction === 'short';
+    const tag = isShort ? 'S' : 'L';
     store.legs.push({
       time: time,
-      position: 'belowBar',
-      color: ENTRY_COLOR,
-      shape: 'arrowUp',
-      text: 'L' + (legNum != null ? legNum : '?') + ' entry',
+      position: isShort ? 'aboveBar' : 'belowBar',
+      color: isShort ? STOP_EXIT_COLOR : ENTRY_COLOR,
+      shape: isShort ? 'arrowDown' : 'arrowUp',
+      text: tag + (legNum != null ? legNum : '?') + ' entry',
       size: 1
     });
     _applyMarkers(card);
   };
 
-  CardChart.addLegExitMarker = function(card, legNum, time, exitPrice, exitReason) {
+  CardChart.addLegExitMarker = function(card, legNum, time, exitPrice, exitReason, direction) {
     if (!_hasSeries(card) || !time) return;
     const store = _getStore(card);
     const isStop = exitReason === 'stop';
+    const isShort = direction === 'short';
     const sym = isStop ? '✕ ' : '● ';
     const priceTxt = (exitPrice != null && Number.isFinite(+exitPrice))
       ? _fmtPrice(exitPrice)
       : (isStop ? 'stop' : 'close');
     store.legs.push({
       time: time,
-      position: 'aboveBar',
+      // For shorts, exit (cover) arrow points UP (back into long-side position close).
+      position: isShort ? 'belowBar' : 'aboveBar',
       color: isStop ? STOP_EXIT_COLOR : CLOSE_EXIT_COLOR,
-      shape: 'arrowDown',
+      shape: isShort ? 'arrowUp' : 'arrowDown',
       text: 'L' + (legNum != null ? legNum : '?') + ' ' + sym + priceTxt,
       size: 1
     });
@@ -22269,7 +22292,7 @@ Sim.Ctrl = (function(){
       var entryDate = sim.entry && sim.entry.date;
       if (entryDate){
         _safe('addLegEntryMarker', function(){
-          window.PortSim.CardChart.addLegEntryMarker(entry.card, currentLegNum, entryDate);
+          window.PortSim.CardChart.addLegEntryMarker(entry.card, currentLegNum, entryDate, sim.direction || 'long');
         });
         // Highlight entry bar IF it's the latest bar on the chart (LWC v3.8
         // requires bar.time >= last bar's time). After Ctrl appends bars and
@@ -22316,13 +22339,15 @@ Sim.Ctrl = (function(){
         if (!ev) continue;
         if (ev.type === 'stop' && ev.qty > 0){
           var legNum = currentLegNum; // stop fires while current leg is open
+          var dirS = ev.direction || sim.direction || 'long';
           _safe('addLegExitMarker (stop)', function(){
-            window.PortSim.CardChart.addLegExitMarker(entry.card, legNum, ev.date, ev.price, 'stop');
+            window.PortSim.CardChart.addLegExitMarker(entry.card, legNum, ev.date, ev.price, 'stop', dirS);
           });
         } else if (ev.type === 'close' && ev.qty > 0){
           var legNumC = currentLegNum;
+          var dirC = ev.direction || sim.direction || 'long';
           _safe('addLegExitMarker (close)', function(){
-            window.PortSim.CardChart.addLegExitMarker(entry.card, legNumC, ev.date, ev.price, 'close');
+            window.PortSim.CardChart.addLegExitMarker(entry.card, legNumC, ev.date, ev.price, 'close', dirC);
           });
         }
       }
