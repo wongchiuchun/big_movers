@@ -3021,6 +3021,155 @@
     border-color:var(--border-bright);
     background:var(--bg3);
   }
+  .portsim-notes-badge{
+    background:var(--accent);color:var(--bg);
+    font-family:var(--mono);font-size:9px;font-weight:700;
+    padding:1px 5px;border-radius:8px;
+    min-width:14px;text-align:center;
+    margin-left:2px;letter-spacing:0;text-transform:none;
+  }
+  /* Trade Notes modal — shared modal for CRUD on _state.notes */
+  .portsim-notes-overlay{
+    position:fixed;inset:0;z-index:10001;
+    background:rgba(0,0,0,0.65);
+    display:none;align-items:center;justify-content:center;
+    font-family:var(--ui);
+  }
+  .portsim-notes-overlay.is-open{ display:flex; }
+  .portsim-notes-dialog{
+    background:var(--bg2);color:var(--text);
+    border:1px solid var(--border);border-radius:8px;
+    padding:18px 20px;
+    width:560px;max-width:92vw;
+    max-height:80vh;display:flex;flex-direction:column;gap:12px;
+  }
+  .portsim-notes-head{
+    display:flex;align-items:baseline;gap:14px;
+  }
+  .portsim-notes-title{
+    font-family:var(--display);font-size:18px;font-weight:600;
+  }
+  .portsim-notes-curdate{
+    font-family:var(--mono);font-size:10px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.08em;
+    margin-left:auto;
+  }
+  .portsim-notes-form{
+    display:flex;flex-direction:column;gap:6px;
+    background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+    padding:10px 12px;
+  }
+  .portsim-notes-form-row{
+    display:flex;gap:8px;align-items:center;
+  }
+  .portsim-notes-form label{
+    font-family:var(--mono);font-size:9px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.1em;
+  }
+  .portsim-notes-form input[type=date],
+  .portsim-notes-form input[type=text]{
+    flex:0 0 130px;
+    background:var(--bg);color:var(--text);
+    border:1px solid var(--border);border-radius:4px;
+    padding:5px 8px;font-family:var(--mono);font-size:11px;
+  }
+  .portsim-notes-form textarea{
+    width:100%;min-height:62px;resize:vertical;
+    background:var(--bg);color:var(--text);
+    border:1px solid var(--border);border-radius:4px;
+    padding:6px 8px;font-family:var(--mono);font-size:11px;line-height:1.5;
+  }
+  .portsim-notes-form-actions{
+    display:flex;justify-content:flex-end;gap:6px;
+  }
+  .portsim-notes-btn{
+    font-family:var(--mono);font-size:10px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.08em;
+    background:var(--bg3);color:var(--text);
+    border:1px solid var(--border-bright);border-radius:5px;
+    padding:5px 12px;cursor:pointer;
+    transition:background 0.12s,color 0.12s,border-color 0.12s;
+  }
+  .portsim-notes-btn.is-primary{
+    background:var(--accent);color:var(--bg);border-color:var(--accent);
+  }
+  .portsim-notes-btn.is-danger:hover{
+    background:var(--red);color:var(--bg);border-color:var(--red);
+  }
+  .portsim-notes-btn:hover{
+    background:var(--bg4);
+  }
+  .portsim-notes-btn.is-primary:hover{
+    background:var(--text);color:var(--bg);border-color:var(--text);
+  }
+  .portsim-notes-list{
+    overflow-y:auto;
+    border:1px solid var(--border);border-radius:6px;
+    background:var(--bg3);
+    max-height:340px;
+  }
+  .portsim-notes-empty{
+    padding:18px;text-align:center;
+    color:var(--muted);font-family:var(--mono);font-size:11px;
+  }
+  .portsim-notes-row{
+    display:grid;
+    grid-template-columns:90px 1fr auto;
+    gap:10px;align-items:flex-start;
+    padding:8px 12px;border-bottom:1px solid var(--border);
+  }
+  .portsim-notes-row:last-child{ border-bottom:none; }
+  .portsim-notes-row-date{
+    font-family:var(--mono);font-size:11px;font-weight:600;
+    color:var(--accent);letter-spacing:0.04em;
+  }
+  .portsim-notes-row-text{
+    font-family:var(--mono);font-size:11px;color:var(--text);
+    line-height:1.5;white-space:pre-wrap;word-break:break-word;
+  }
+  .portsim-notes-row-actions{
+    display:flex;gap:4px;flex:0 0 auto;
+  }
+  .portsim-notes-row-icon{
+    background:transparent;color:var(--muted);
+    border:1px solid var(--border);border-radius:3px;
+    width:22px;height:22px;cursor:pointer;font-size:11px;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .portsim-notes-row-icon:hover{ color:var(--accent);border-color:var(--accent); }
+  .portsim-notes-row-icon.is-danger:hover{ color:var(--red);border-color:var(--red); }
+  /* Notes section embedded in Trade Review per-ticker tab */
+  .portsim-review-notes-section{
+    margin-top:14px;
+    border:1px solid var(--border);border-radius:6px;
+    background:var(--bg3);
+    padding:8px 12px;
+  }
+  .portsim-review-notes-section-title{
+    font-family:var(--mono);font-size:10px;font-weight:600;
+    color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;
+    margin-bottom:6px;
+  }
+  .portsim-review-notes-row{
+    display:grid;
+    grid-template-columns:90px 1fr;
+    gap:10px;padding:5px 6px;
+    border-radius:4px;cursor:pointer;
+    transition:background 0.12s;
+    font-family:var(--mono);font-size:11px;
+  }
+  .portsim-review-notes-row:hover{
+    background:var(--bg4);
+  }
+  .portsim-review-notes-row.is-active{
+    background:var(--accent);color:var(--bg);
+  }
+  .portsim-review-notes-row.is-active .portsim-review-notes-row-date{
+    color:var(--bg);
+  }
+  .portsim-review-notes-row-date{
+    color:var(--accent);font-weight:600;letter-spacing:0.04em;
+  }
   #portsim-btn-play.is-playing{
     color:var(--accent);
     border-color:var(--accent);
@@ -17554,7 +17703,8 @@ Sim.Ctrl = (function(){
     eqPeak: 0,
     eqPeakIdx: 0,           // playIdx at which the current peak was set
     maxDDDays: 0,           // longest streak under-water (in unifiedDates steps)
-    _history: []            // snapshot stack for step-back (capped at _HISTORY_MAX)
+    _history: [],           // snapshot stack for step-back (capped at _HISTORY_MAX)
+    notes: []               // [{ id, date, text, ts }] — captured via 📝 Notes button
   };
   const _HISTORY_MAX = 300;
   PortSim._state = _state;
@@ -17620,6 +17770,7 @@ Sim.Ctrl = (function(){
     _state._history = [];
     _state.basket = [];
     _state.initialEntryRequest = [];
+    _state.notes = [];
 
     // Clear and prepare the grid.
     const grid = _byId('portsim-grid');
@@ -23920,6 +24071,7 @@ Sim.Ctrl = (function(){
             + '</tr>';
         }).join('') + '</tbody>'
       + '</table>'
+      + '<div id="portsim-review-tnotes-' + _esc(sym) + '"></div>'
       + '<div class="portsim-review-notes">'
       +   '<label for="portsim-review-note-' + _esc(sym) + '">REVIEW NOTES — ' + _esc(sym) + (_viewOnly ? ' (read-only)' : '') + '</label>'
       +   '<textarea id="portsim-review-note-' + _esc(sym) + '" rows="6" placeholder="What did you learn about ' + _esc(sym) + '? Entry timing, stop placement, sizing, hold discipline…"' + (_viewOnly ? ' readonly' : '') + '></textarea>'
@@ -23936,6 +24088,12 @@ Sim.Ctrl = (function(){
         });
       }
     }
+
+    // Trading notes captured during the live sim (sim-wide, not per-ticker)
+    // — show them on every per-ticker tab so hovering a note focuses THIS
+    // ticker's chart on that date. Lets the user re-read past thoughts in
+    // the visual context of how each ticker actually moved that day.
+    _renderTradingNotesSection(sym, ctx);
     var simBtn = body.querySelector('.portsim-review-ticker-sim-btn[data-sim-sym="' + sym + '"]');
     if (simBtn){
       simBtn.addEventListener('click', function(){
@@ -24049,6 +24207,57 @@ Sim.Ctrl = (function(){
     try { chart.timeScale().fitContent(); } catch(e){}
   }
 
+  // Render the sim-wide trading notes captured via the 📝 Notes button
+  // inside a per-ticker tab. Hovering a row scrolls the tab's chart to
+  // ±14 calendar days around the note date so the user can re-read past
+  // thoughts in the visual context of how this ticker actually moved.
+  function _renderTradingNotesSection(sym, ctx){
+    var host = document.getElementById('portsim-review-tnotes-' + sym);
+    if (!host) return;
+    var st = window.PortSim && window.PortSim._state;
+    var notes = (ctx && Array.isArray(ctx.notes)) ? ctx.notes
+      : (st && Array.isArray(st.notes)) ? st.notes : [];
+    if (!notes.length){ host.innerHTML = ''; return; }
+    var section = document.createElement('div');
+    section.className = 'portsim-review-notes-section';
+    var title = document.createElement('div');
+    title.className = 'portsim-review-notes-section-title';
+    title.textContent = '📝 Trading Notes (' + notes.length + ') — hover a row to focus the chart on that date';
+    section.appendChild(title);
+    notes.forEach(function(n){
+      var row = document.createElement('div');
+      row.className = 'portsim-review-notes-row';
+      var d = document.createElement('div');
+      d.className = 'portsim-review-notes-row-date';
+      d.textContent = n.date || '?';
+      var t = document.createElement('div');
+      t.textContent = n.text || '';
+      row.appendChild(d); row.appendChild(t);
+      row.addEventListener('mouseenter', function(){
+        if (!n.date) return;
+        var chart = _tickerCharts[sym];
+        if (!chart || !chart.timeScale) return;
+        try {
+          var dt = new Date(n.date + 'T00:00:00Z');
+          if (isNaN(dt.getTime())) return;
+          var from = new Date(dt.getTime() - 14 * 86400000);
+          var to   = new Date(dt.getTime() + 14 * 86400000);
+          chart.timeScale().setVisibleRange({
+            from: from.toISOString().slice(0, 10),
+            to:   to.toISOString().slice(0, 10)
+          });
+          row.classList.add('is-active');
+        } catch(e){}
+      });
+      row.addEventListener('mouseleave', function(){
+        row.classList.remove('is-active');
+      });
+      section.appendChild(row);
+    });
+    host.innerHTML = '';
+    host.appendChild(section);
+  }
+
   // ---------- save / export / print ----------
   function _setStatus(msg, kind){
     var el = document.getElementById('portsim-review-status');
@@ -24146,6 +24355,7 @@ Sim.Ctrl = (function(){
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
+      notes: Array.isArray(st.notes) ? st.notes.slice() : [],
       basket: basket.map(function(e){
         var legs = _legSnapshots(e);
         return {
@@ -25144,6 +25354,226 @@ Sim.Ctrl = (function(){
   }
 })();
 // ============ PORTSIM TRACK Q: Index Pre-Cache — END ============
+
+// ============ PORTSIM TRACK S: Trading Notes — START ============
+// Capture-as-you-go journal: 📝 Notes button in transport bar opens a
+// CRUD modal where the user logs what they're thinking at the current
+// sim bar. Notes live on _state.notes and are persisted into the saved
+// Trade Review meta so they're reviewable later — see Track P's
+// per-ticker tab where each note row scrolls the chart to its date on
+// hover ("see what I was right or wrong about, in context").
+(function(){
+  if (typeof window === 'undefined') return;
+  window.PortSim = window.PortSim || {};
+  if (window.PortSim.Notes) return;
+
+  var _modal = null;
+  var _editId = null;
+  var _lastBadgeCount = -1;
+
+  function _esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+  function _state(){ return window.PortSim && window.PortSim._state; }
+  function _currentDate(){
+    var st = _state();
+    if (!st) return '';
+    if (Array.isArray(st.unifiedDates) && st.unifiedDates.length){
+      return st.unifiedDates[st.playIdx] || st.startDate || '';
+    }
+    return st.startDate || '';
+  }
+  function _newId(){ return 'n_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+
+  function _list(){
+    var st = _state();
+    if (!st) return [];
+    if (!Array.isArray(st.notes)) st.notes = [];
+    return st.notes;
+  }
+
+  function _save(text, date){
+    var st = _state(); if (!st) return false;
+    if (!Array.isArray(st.notes)) st.notes = [];
+    text = String(text || '').trim();
+    date = String(date || '').trim() || _currentDate();
+    if (!text) return false;
+    if (_editId){
+      var existing = st.notes.filter(function(n){ return n.id === _editId; })[0];
+      if (existing){ existing.text = text; existing.date = date; existing.ts = Date.now(); }
+      _editId = null;
+    } else {
+      st.notes.push({ id: _newId(), date: date, text: text, ts: Date.now() });
+    }
+    // Keep sorted by date ascending so the list reads chronologically.
+    st.notes.sort(function(a, b){ return (a.date || '').localeCompare(b.date || ''); });
+    _updateBadge();
+    return true;
+  }
+
+  function _remove(id){
+    var st = _state(); if (!st) return;
+    st.notes = (st.notes || []).filter(function(n){ return n.id !== id; });
+    _updateBadge();
+  }
+
+  function _updateBadge(){
+    var badge = document.getElementById('portsim-notes-count');
+    if (!badge) return;
+    var n = _list().length;
+    if (n === _lastBadgeCount) return;
+    _lastBadgeCount = n;
+    badge.textContent = String(n);
+    if (n > 0) badge.removeAttribute('hidden');
+    else badge.setAttribute('hidden', '');
+  }
+
+  function _resetForm(){
+    _editId = null;
+    var textEl = document.getElementById('portsim-note-text'); if (textEl) textEl.value = '';
+    var dateEl = document.getElementById('portsim-note-date'); if (dateEl) dateEl.value = _currentDate();
+    var saveBtn = document.getElementById('portsim-note-save'); if (saveBtn) saveBtn.textContent = '💾 Save';
+  }
+
+  function _renderList(){
+    var host = document.getElementById('portsim-notes-list');
+    if (!host) return;
+    while (host.firstChild) host.removeChild(host.firstChild);
+    var notes = _list();
+    if (!notes.length){
+      var empty = document.createElement('div');
+      empty.className = 'portsim-notes-empty';
+      empty.textContent = 'No notes yet. Capture what you\'re thinking — entry rationale, doubts, character changes, anything you want to second-guess later.';
+      host.appendChild(empty);
+      return;
+    }
+    notes.forEach(function(n){
+      var row = document.createElement('div');
+      row.className = 'portsim-notes-row';
+      var d = document.createElement('div');
+      d.className = 'portsim-notes-row-date';
+      d.textContent = n.date || '?';
+      var t = document.createElement('div');
+      t.className = 'portsim-notes-row-text';
+      t.textContent = n.text;
+      var a = document.createElement('div');
+      a.className = 'portsim-notes-row-actions';
+      var ed = document.createElement('button');
+      ed.type = 'button'; ed.className = 'portsim-notes-row-icon'; ed.title = 'Edit'; ed.textContent = '✎';
+      ed.addEventListener('click', function(){
+        _editId = n.id;
+        var textEl = document.getElementById('portsim-note-text'); if (textEl){ textEl.value = n.text; textEl.focus(); }
+        var dateEl = document.getElementById('portsim-note-date'); if (dateEl) dateEl.value = n.date || '';
+        var saveBtn = document.getElementById('portsim-note-save'); if (saveBtn) saveBtn.textContent = '💾 Update';
+      });
+      var dl = document.createElement('button');
+      dl.type = 'button'; dl.className = 'portsim-notes-row-icon is-danger'; dl.title = 'Delete'; dl.textContent = '×';
+      dl.addEventListener('click', function(){
+        if (!confirm('Delete this note?')) return;
+        _remove(n.id);
+        _renderList();
+      });
+      a.appendChild(ed); a.appendChild(dl);
+      row.appendChild(d); row.appendChild(t); row.appendChild(a);
+      host.appendChild(row);
+    });
+  }
+
+  function _ensureModal(){
+    if (_modal) return _modal;
+    _modal = document.createElement('div');
+    _modal.className = 'portsim-notes-overlay';
+    _modal.innerHTML = ''
+      + '<div class="portsim-notes-dialog">'
+      +   '<div class="portsim-notes-head">'
+      +     '<div class="portsim-notes-title">📝 Trading Notes</div>'
+      +     '<div class="portsim-notes-curdate" id="portsim-notes-curdate">—</div>'
+      +   '</div>'
+      +   '<div class="portsim-notes-form">'
+      +     '<div class="portsim-notes-form-row">'
+      +       '<label for="portsim-note-date">Date</label>'
+      +       '<input type="date" id="portsim-note-date">'
+      +     '</div>'
+      +     '<textarea id="portsim-note-text" placeholder="What are you seeing right now? What\'s your plan? What changed your mind?"></textarea>'
+      +     '<div class="portsim-notes-form-actions">'
+      +       '<button type="button" class="portsim-notes-btn" id="portsim-note-cancel">Cancel</button>'
+      +       '<button type="button" class="portsim-notes-btn is-primary" id="portsim-note-save">💾 Save</button>'
+      +     '</div>'
+      +   '</div>'
+      +   '<div class="portsim-notes-list" id="portsim-notes-list"></div>'
+      +   '<div style="display:flex;justify-content:flex-end;">'
+      +     '<button type="button" class="portsim-notes-btn" id="portsim-notes-close">Close</button>'
+      +   '</div>'
+      + '</div>';
+    document.body.appendChild(_modal);
+
+    _modal.addEventListener('click', function(ev){ if (ev.target === _modal) close(); });
+    document.getElementById('portsim-notes-close').addEventListener('click', close);
+    document.getElementById('portsim-note-cancel').addEventListener('click', _resetForm);
+    document.getElementById('portsim-note-save').addEventListener('click', function(){
+      var text = (document.getElementById('portsim-note-text').value || '').trim();
+      var date = (document.getElementById('portsim-note-date').value || '').trim();
+      if (!text){ alert('Note text is empty.'); return; }
+      _save(text, date);
+      _resetForm();
+      _renderList();
+    });
+    document.addEventListener('keydown', function(ev){
+      if (!_modal || !_modal.classList.contains('is-open')) return;
+      if (ev.key === 'Escape'){
+        var tag = ev.target && ev.target.tagName || '';
+        if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+        close();
+      }
+    });
+    return _modal;
+  }
+
+  function open(){
+    var st = _state();
+    if (!st || !st.active){ alert('Start a portfolio sim first.'); return; }
+    _ensureModal();
+    var cur = document.getElementById('portsim-notes-curdate');
+    if (cur) cur.textContent = 'sim date: ' + _currentDate();
+    _resetForm();
+    _renderList();
+    _modal.classList.add('is-open');
+    var ta = document.getElementById('portsim-note-text');
+    if (ta) ta.focus();
+  }
+
+  function close(){
+    if (_modal) _modal.classList.remove('is-open');
+    _editId = null;
+  }
+
+  function _wire(){
+    var btn = document.getElementById('portsim-btn-notes');
+    if (btn && !btn._notesBound){
+      btn._notesBound = true;
+      btn.addEventListener('click', open);
+    }
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _wire);
+  } else {
+    _wire();
+  }
+  // Cheap watcher: badge count drifts when a sim ends and a fresh one
+  // bootstraps (state.notes resets to []). Polling once a second keeps the
+  // badge in sync without hooking every Ctrl entry point.
+  setInterval(_updateBadge, 1000);
+
+  window.PortSim.Notes = {
+    open: open,
+    close: close,
+    list: _list,
+    refresh: _updateBadge
+  };
+})();
+// ============ PORTSIM TRACK S: Trading Notes — END ============
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
@@ -25355,6 +25785,7 @@ Sim.Ctrl = (function(){
       <button id="portsim-toggle-reorder" class="portsim-tbtn" type="button" title="Drag cards to rearrange order (click again to exit)">↕ Reorder</button>
       <button id="portsim-toggle-hidden" class="portsim-tbtn" type="button" title="Restore hidden cards"><span id="portsim-hidden-count">0</span> Hidden ▾</button>
       <button id="portsim-btn-calendar" class="portsim-tbtn" type="button" title="Open P&amp;L calendar (sim keeps running)">📅 Calendar</button>
+      <button id="portsim-btn-notes" class="portsim-tbtn" type="button" title="Add or browse trading notes — capture what you're thinking at this bar">📝 Notes <span id="portsim-notes-count" class="portsim-notes-badge" hidden>0</span></button>
       <button id="portsim-btn-summary" class="portsim-tbtn" type="button" title="Show per-ticker summary (without exiting)">📊 Summary</button>
       <button id="portsim-btn-review" class="portsim-tbtn" type="button" title="Open trade review (charts + notes + export)">📝 Review</button>
       <button id="portsim-btn-export" class="portsim-tbtn" type="button" title="Export portfolio simulation results as CSV">↓ Export</button>
