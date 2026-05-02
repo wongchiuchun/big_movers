@@ -15327,33 +15327,45 @@ Sim.Ctrl = (function(){
       if (!ev || !ev.type) continue;
       const qty = Number(ev.qty);
       const price = Number(ev.price);
+      const dir = ev.direction || 'long';
+      const legId = ev.legId || null;
       switch (ev.type) {
         case 'add': {
           if (!Number.isFinite(qty) || qty <= 0) continue;
           if (!Number.isFinite(price)) continue;
-          state.cash = r2(state.cash - qty * price);
+          if (dir === 'short'){
+            // Adding to a short = enlarging the lock by qty * fillPx.
+            // avgEntry already updated by the engine; we just grow proceeds + shares.
+            const lock = state.shortLocks && state.shortLocks[legId];
+            if (lock){
+              lock.shares = lock.shares + qty;
+              lock.proceeds = r2((+lock.proceeds || 0) + qty * price);
+              // Recompute avgEntry from the new total (defensive).
+              if (lock.shares > 0) lock.avgEntry = r2(lock.proceeds / lock.shares);
+            }
+          } else {
+            state.cash = r2(state.cash - qty * price);
+          }
           break;
         }
-        case 'sell': {
-          if (!Number.isFinite(qty) || qty <= 0) continue;
-          if (!Number.isFinite(price)) continue;
-          state.cash = r2(state.cash + qty * price);
-          break;
-        }
-        case 'stop': {
-          // engine already computed price = min(bar.open, stop.price)
-          if (!Number.isFinite(qty) || qty <= 0) continue;
-          if (!Number.isFinite(price)) continue;
-          state.cash = r2(state.cash + qty * price);
-          break;
-        }
+        case 'sell':
+        case 'stop':
         case 'close': {
-          // Filter out the bookkeeping close(qty=0) emitted after a full sell —
-          // cash was already credited on the `sell` event.
+          // Filter out the bookkeeping close(qty=0) emitted after a full sell.
           if (!Number.isFinite(qty) || qty <= 0) continue;
           if (!Number.isFinite(price)) continue;
-          // Force-close at endBarIdx (qty>0): credit cash at bar.close.
-          state.cash = r2(state.cash + qty * price);
+          if (dir === 'short'){
+            // For shorts, "sell"/"stop"/"close" actually = COVER. Release lock proportionally
+            // and credit realized P&L (proceeds - coverCost) to cash.
+            if (state.shortLocks && state.shortLocks[legId] && window.Sim && window.Sim.ShortLocks){
+              const r = window.Sim.ShortLocks.applyCover(state.shortLocks, legId, qty, price);
+              state.cash = r2((+state.cash || 0) + (r.realized || 0));
+              const lk = state.shortLocks[legId];
+              if (lk && lk.shares <= 0) delete state.shortLocks[legId];
+            }
+          } else {
+            state.cash = r2(state.cash + qty * price);
+          }
           break;
         }
         case 'entry':
@@ -15392,7 +15404,45 @@ Sim.Ctrl = (function(){
     return r2(proceeds);
   }
 
-  window.PortSim.Cash = { fold, preflight, debitInitialEntry, creditManualClose };
+  // P6 unified open: long debits cash; short fences proceeds in shortLocks.
+  // sim must already exist (carries .legId + .direction). Returns the
+  // dollar amount touched (cost for long, proceeds for short).
+  function openPosition(state, sim) {
+    if (!state || !sim) return 0;
+    const dir = sim.direction || 'long';
+    const shares = sim.shares0 || 0;
+    const price = (sim.entry && sim.entry.price) || 0;
+    if (dir === 'short'){
+      if (state.shortLocks && window.Sim && window.Sim.ShortLocks){
+        window.Sim.ShortLocks.applyOpen(state.shortLocks, sim.legId, shares, price);
+      }
+      return r2(shares * price);
+    }
+    return debitInitialEntry(state, shares, price);
+  }
+
+  // P6 unified close: long credits cash; short releases lock + settles realized.
+  // qty + fillPx come from the engine (sell/stop/close event) or manual close.
+  // Returns the dollar amount touched. For shorts, the realized P&L credits
+  // state.cash (proceeds - cover cost) and the lock decrements proportionally.
+  function closePosition(state, sim, qty, fillPx) {
+    if (!state || !sim || !(qty > 0)) return 0;
+    const dir = sim.direction || 'long';
+    if (dir === 'short'){
+      if (state.shortLocks && window.Sim && window.Sim.ShortLocks){
+        const r = window.Sim.ShortLocks.applyCover(state.shortLocks, sim.legId, qty, fillPx);
+        state.cash = r2(state.cash + (r.realized || 0));
+        // Drop lock entry if exhausted.
+        const lk = state.shortLocks[sim.legId];
+        if (lk && lk.shares <= 0) delete state.shortLocks[sim.legId];
+        return r2(r.realized || 0);
+      }
+      return 0;
+    }
+    return creditManualClose(state, qty, fillPx);
+  }
+
+  window.PortSim.Cash = { fold, preflight, debitInitialEntry, creditManualClose, openPosition, closePosition };
 
   // ----- Headless test harness -----
   // Exercises the existing pure Sim core against synthetic OHLCV.
@@ -19333,15 +19383,26 @@ Sim.Ctrl = (function(){
       if (!e.sim || e.sim.qty <= 0) return;
       const mark = _markFor(e);
       if (mark == null) return;
-      unreal += e.sim.qty * (mark - e.sim.avgCost);
+      // Direction-aware: short P&L = (avg - mark) * qty; long = (mark - avg) * qty.
+      const dir = e.sim.direction || 'long';
+      const sgn = dir === 'short' ? -1 : 1;
+      unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
       openCount += 1;
     });
-    const equity = _r2(_state.cash + _state.basket.reduce(function(s, e){
-      if (!e.sim || e.sim.qty <= 0) return s;
-      const mark = _markFor(e);
-      if (mark == null) return s;
-      return s + e.sim.qty * mark;
-    }, 0));
+    // P6 centralized equity via Sim.PortfolioValuation. Replaces duplicated
+    // formula at this site (and the two below). Note: we inject mark via a
+    // temporary lastCloseSeen so the helper sees the latest price.
+    const _basketForValuation = _state.basket.map(function(e){
+      return { sim: e.sim, lastCloseSeen: _markFor(e) };
+    });
+    const equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(_state, _basketForValuation)
+      : _r2(_state.cash + _state.basket.reduce(function(s, e){
+          if (!e.sim || e.sim.qty <= 0) return s;
+          const mark = _markFor(e);
+          if (mark == null) return s;
+          return s + e.sim.qty * mark;
+        }, 0));
 
     const expected = _r2(_state.initialEquity + _state.realizedPnL + unreal);
     if (Math.abs(equity - expected) > 0.01){
@@ -19433,7 +19494,7 @@ Sim.Ctrl = (function(){
     }
     const _indexReturnPct = _bhPctOver(_state.indexBars, _firstDate, _lastDate);
 
-    let equity = _state.cash;
+    // P6: equity via centralized Sim.PortfolioValuation.
     let unreal = 0;
     // Include retired (swapped-out) tickers so their trades count toward
     // session stats. Active basket first to preserve grid order.
@@ -19455,8 +19516,8 @@ Sim.Ctrl = (function(){
         if (e.sim.qty > 0){
           const mark = _markFor(e);
           if (mark != null){
-            unreal += e.sim.qty * (mark - e.sim.avgCost);
-            equity += e.sim.qty * mark;
+            const sgn = (e.sim.direction === 'short') ? -1 : 1;
+            unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
           }
           status = 'open';
         } else if (e.sim.stoppedOut){
@@ -19480,7 +19541,18 @@ Sim.Ctrl = (function(){
         bhPct: bhPct
       };
     });
-    equity = _r2(equity);
+    // P6: equity via centralized helper.
+    const _basketForValuationS = _state.basket.map(function(e){
+      return { sim: e.sim, lastCloseSeen: _markFor(e) };
+    });
+    const equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(_state, _basketForValuationS)
+      : _r2(_state.cash + _state.basket.reduce(function(s, e){
+          if (!e.sim || e.sim.qty <= 0) return s;
+          const mark = _markFor(e);
+          if (mark == null) return s;
+          return s + e.sim.qty * mark;
+        }, 0));
     const finalEquity = equity;
     const totalReturn = _state.initialEquity > 0
       ? ((finalEquity - _state.initialEquity) / _state.initialEquity) * 100
@@ -23447,17 +23519,25 @@ Sim.Ctrl = (function(){
       if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
       var mark = _markFor(e);
       if (mark == null) return;
-      unreal += e.sim.qty * (mark - e.sim.avgCost);
+      var sgn = (e.sim.direction === 'short') ? -1 : 1;
+      unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
       openCount += 1;
     });
-    var equity = cash + initial + (realized + unreal) - initial; // = cash + realized + unreal + cash deficit
-    // Simpler / equivalent: equity = cash + Σ(qty × mark)
-    equity = cash;
-    basket.forEach(function(e){
-      if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
-      var mark = _markFor(e);
-      if (mark != null) equity += e.sim.qty * mark;
-    });
+    // P6: equity via Sim.PortfolioValuation. Single source of equity-truth.
+    var _basketForValuationP = basket
+      .filter(function(e){ return e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
+      .map(function(e){ return { sim: e.sim, lastCloseSeen: _markFor(e) }; });
+    var equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(st, _basketForValuationP)
+      : (function(){
+          var eq = cash;
+          basket.forEach(function(e){
+            if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
+            var mark = _markFor(e);
+            if (mark != null) eq += e.sim.qty * mark;
+          });
+          return eq;
+        })();
     var totalPnL = equity - initial;
     var dayPnL = (st.prevEquity != null && isFinite(st.prevEquity)) ? (equity - st.prevEquity) : 0;
     // Drawdown from running peak — both as $ and %.
@@ -24253,15 +24333,26 @@ Sim.Ctrl = (function(){
     var realized = +st.realizedPnL || 0;
     var unrealOpen = 0;
     var openCount = 0;
-    var equity = cash;
+    // P6: equity via centralized helper.
+    var _basketForVal = basket
+      .filter(function(e){ return e && e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
+      .map(function(e){
+        var mk = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen))
+          ? +e.lastCloseSeen
+          : (e.sim.entry ? +e.sim.entry.price : 0);
+        return { sim: e.sim, lastCloseSeen: mk };
+      });
+    var equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(st, _basketForVal)
+      : cash;
     basket.forEach(function(e){
       if (!e || !e.sim) return;
       if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
         var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen))
           ? +e.lastCloseSeen
           : (e.sim.entry ? +e.sim.entry.price : 0);
-        equity += e.sim.qty * mark;
-        unrealOpen += e.sim.qty * (mark - e.sim.avgCost);
+        var sgn = (e.sim.direction === 'short') ? -1 : 1;
+        unrealOpen += e.sim.qty * (mark - e.sim.avgCost) * sgn;
         openCount += 1;
       }
     });
@@ -25155,14 +25246,25 @@ Sim.Ctrl = (function(){
     var initial = +st.initialEquity || 0;
     var cash = +st.cash || 0;
     var realized = +st.realizedPnL || 0;
-    var unreal = 0, openCount = 0, equity = cash;
+    var unreal = 0, openCount = 0;
+    // P6: equity via centralized helper.
+    var _basketForValM = basket
+      .filter(function(e){ return e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
+      .map(function(e){
+        var mk = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
+          : (e.sim.entry ? +e.sim.entry.price : 0);
+        return { sim: e.sim, lastCloseSeen: mk };
+      });
+    var equity = (window.Sim && window.Sim.PortfolioValuation)
+      ? window.Sim.PortfolioValuation.computeEquity(st, _basketForValM)
+      : cash;
     basket.forEach(function(e){
       if (!e.sim) return;
       if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
         var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
           : (e.sim.entry ? +e.sim.entry.price : 0);
-        unreal += e.sim.qty * (mark - e.sim.avgCost);
-        equity += e.sim.qty * mark;
+        var sgn = (e.sim.direction === 'short') ? -1 : 1;
+        unreal += e.sim.qty * (mark - e.sim.avgCost) * sgn;
         openCount += 1;
       }
     });
@@ -25176,6 +25278,8 @@ Sim.Ctrl = (function(){
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
+      // P7 backward-compat: emit shortLocks snapshot in saved-review payload.
+      shortLocks: st.shortLocks ? JSON.parse(JSON.stringify(st.shortLocks)) : {},
       notes: Array.isArray(st.notes) ? st.notes.slice() : [],
       basket: basket.map(function(e){
         var legs = _legSnapshots(e);
