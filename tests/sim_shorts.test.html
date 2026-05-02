@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sim Shorts Tests</title>
+<style>
+  body { font-family: monospace; padding: 16px; background: #faf8f3; color: #1a1a1a; }
+  h1 { font-family: serif; font-style: italic; }
+  .pass { color: #1a7f4a; }
+  .fail { color: #c43d3d; font-weight: bold; }
+  .skip { color: #888; }
+  pre { background: #f0ece1; padding: 12px; border-radius: 4px; white-space: pre-wrap; }
+  .summary { padding: 8px 12px; border-radius: 4px; margin-bottom: 12px; }
+  .summary.ok { background: #d4f1dd; }
+  .summary.bad { background: #ffd8d8; }
+</style>
+</head>
+<body>
+<h1>Sim Shorts &mdash; P0 acceptance tests</h1>
+<p>Loads <code>../Big_movers.html</code> in an iframe to access its inline Sim modules,
+   then runs the merge-gate tests against <code>iframe.contentWindow.Sim</code>.</p>
+<div id="summary" class="summary">Loading...</div>
+<pre id="results">Waiting for iframe...</pre>
+<iframe id="host" src="../Big_movers.html" style="width:1px;height:1px;border:0;opacity:0;"></iframe>
+<script>
+(function(){
+  const out = document.getElementById('results');
+  const sum = document.getElementById('summary');
+  const lines = [];
+  let pass = 0, fail = 0;
+  function log(msg, cls){
+    const span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = msg + '\n';
+    lines.push(span);
+    while (out.firstChild) out.removeChild(out.firstChild);
+    lines.forEach(s => out.appendChild(s));
+  }
+  function approxEq(a, b, eps){ return Math.abs(a - b) <= (eps || 0.01); }
+  function record(name, fn){
+    try {
+      fn();
+      pass++;
+      log('  PASS  ' + name, 'pass');
+    } catch (e){
+      fail++;
+      log('  FAIL  ' + name + '  -> ' + (e && e.message ? e.message : e), 'fail');
+      console.error(name, e);
+    }
+  }
+
+  function buildBars(){
+    const baseDate = new Date('2024-01-02');
+    function addDays(d, n){ const dt = new Date(d); dt.setUTCDate(dt.getUTCDate()+n); return dt.toISOString().slice(0,10); }
+    const closes = [100, 102, 101, 99, 100, 103, 105, 104, 106, 110];
+    return closes.map((c, i) => {
+      const prev = i === 0 ? c : closes[i-1];
+      let open = prev;
+      let high = Math.max(open, c) + 1;
+      let low  = Math.min(open, c) - 1;
+      if (i === 3){ open = 99;  high = 100; low = 97;  } // gap-down for long-stop
+      if (i === 5){ open = 104; high = 106; low = 102; } // gap-up for short-stop
+      return { time: addDays(baseDate, i), open, high, low, close: c, volume: 1000000 };
+    });
+  }
+
+  function mirrorBars(bars, center){
+    return bars.map(b => ({
+      time: b.time,
+      open:  2*center - b.open,
+      high:  2*center - b.low,
+      low:   2*center - b.high,
+      close: 2*center - b.close,
+      volume: b.volume
+    }));
+  }
+
+  function runAll(Sim, ShortLocks, Direction){
+    log('=== P0 -- Foundation modules ===');
+    record('Sim.Direction adapter is exposed', () => {
+      if (!Direction) throw new Error('no Sim.Direction');
+      if (Direction.sign('long') !== 1)  throw new Error('long sign');
+      if (Direction.sign('short') !== -1) throw new Error('short sign');
+    });
+    record('Sim.ShortLocks adapter is exposed', () => {
+      if (!ShortLocks) throw new Error('no Sim.ShortLocks');
+      if (typeof ShortLocks.applyOpen !== 'function') throw new Error('applyOpen missing');
+    });
+    record('Sim.PortfolioValuation adapter is exposed', () => {
+      if (!Sim.PortfolioValuation) throw new Error('no Sim.PortfolioValuation');
+      if (typeof Sim.PortfolioValuation.computeEquity !== 'function') throw new Error('computeEquity missing');
+    });
+
+    log('\n=== P1 -- Sim core direction tests ===');
+
+    record('Short initial risk = shares x (stop - entry)', () => {
+      const bars = buildBars();
+      const sim = Sim.createSim({
+        moveKey: 'TEST', direction: 'short',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 102 }
+      });
+      const expected = 100 * (102 - 100);
+      if (!approxEq(sim.initialRisk, expected)) throw new Error('expected ' + expected + ' got ' + sim.initialRisk);
+      if (sim.legId == null) throw new Error('legId not minted');
+      if (sim.direction !== 'short') throw new Error('direction not stored');
+    });
+
+    record('Short stop fires on gap-up: fill = max(open, stop)', () => {
+      const bars = buildBars();
+      const sim = Sim.createSim({
+        moveKey: 'TEST', direction: 'short',
+        entry: { barIdx: 4, date: bars[4].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 103.5 }
+      });
+      const r = Sim.advanceTo(sim, bars, 5);
+      const stopEv = (r.eventsFired || []).find(e => e.type === 'stop');
+      if (!stopEv) throw new Error('stop did not fire');
+      if (!approxEq(stopEv.price, 104)) throw new Error('fill expected 104, got ' + stopEv.price);
+    });
+
+    record('Multi-stop partial cover ordering: lower stop fires first (short)', () => {
+      const bars = [
+        { time: '2024-01-01', open: 100, high: 100, low: 100, close: 100, volume: 1 },
+        { time: '2024-01-02', open: 100, high: 100, low: 100, close: 100, volume: 1 },
+        { time: '2024-01-03', open: 100.5, high: 104, low: 100, close: 103.5, volume: 1 }
+      ];
+      const sim = Sim.createSim({
+        moveKey: 'TEST', direction: 'short',
+        entry: { barIdx: 0, date: bars[0].time, price: 99, sizeMode: 'shares', sizeValue: 100, stop: 105 }
+      });
+      Sim.queueAction(sim, { type: 'movestop', newStop: 101, pct: 0.5 });
+      Sim.queueAction(sim, { type: 'movestop', newStop: 103, pct: 0.5 });
+      Sim.advanceTo(sim, bars, 1);
+      const r = Sim.advanceTo(sim, bars, 2);
+      const stopEvs = (r.eventsFired || []).filter(e => e.type === 'stop');
+      if (stopEvs.length < 1) throw new Error('no stop events');
+      const first = stopEvs[0];
+      if (!approxEq(first.price, 101)) throw new Error('first stop fill expected 101, got ' + first.price);
+    });
+
+    record('Short manual close P&L = (avg - fill) x qty', () => {
+      const bars = buildBars();
+      const sim = Sim.createSim({
+        moveKey: 'TEST', direction: 'short',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 105 }
+      });
+      Sim.advanceTo(sim, bars, 2);
+      Sim.closeAt(sim, bars, 90);
+      if (!approxEq(sim.realizedPnL, 1000)) throw new Error('expected 1000, got ' + sim.realizedPnL);
+    });
+
+    record('Short end-bar force close uses cover semantics', () => {
+      const bars = buildBars();
+      const sim = Sim.createSim({
+        moveKey: 'TEST', direction: 'short',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 110, endBarIdx: 5 }
+      });
+      Sim.advanceTo(sim, bars, 5);
+      if (!sim.closed) throw new Error('not closed');
+      if (!approxEq(sim.realizedPnL, -300)) throw new Error('expected -300, got ' + sim.realizedPnL);
+    });
+
+    log('\n=== Symmetry / equivalence ===');
+
+    record('Long sim on mirrored bars equiv short sim on original bars', () => {
+      const bars = buildBars();
+      const center = 100;
+      const mirrored = mirrorBars(bars, center);
+      const simShort = Sim.createSim({
+        moveKey: 'A', direction: 'short',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 50, stop: 102 }
+      });
+      Sim.advanceTo(simShort, bars, 2);
+      Sim.closeAt(simShort, bars, bars[2].close);
+      const simLong = Sim.createSim({
+        moveKey: 'A', direction: 'long',
+        entry: { barIdx: 0, date: mirrored[0].time, price: 100, sizeMode: 'shares', sizeValue: 50, stop: 98 }
+      });
+      Sim.advanceTo(simLong, mirrored, 2);
+      Sim.closeAt(simLong, mirrored, mirrored[2].close);
+      if (!approxEq(simShort.realizedPnL, simLong.realizedPnL, 0.05)) {
+        throw new Error('short=' + simShort.realizedPnL + ' vs long-mirror=' + simLong.realizedPnL);
+      }
+    });
+
+    log('\n=== P6 -- equity & step-back ===');
+
+    record('Step-back undo restores shortLocks deep-cloned', () => {
+      const locks = {};
+      ShortLocks.applyOpen(locks, 'leg_1', 100, 50);
+      const snap = JSON.parse(JSON.stringify(locks));
+      ShortLocks.applyCover(locks, 'leg_1', 50, 45);
+      if (locks.leg_1.shares !== 50) throw new Error('cover did not reduce shares');
+      const restored = JSON.parse(JSON.stringify(snap));
+      if (restored.leg_1.shares !== 100) throw new Error('snap did not preserve original shares');
+      if (restored.leg_1.proceeds !== 5000) throw new Error('snap did not preserve proceeds');
+      ShortLocks.applyCover(locks, 'leg_1', 50, 40);
+      if (snap.leg_1.shares !== 100) throw new Error('snap aliased live locks');
+    });
+
+    record('ShortLocks.applyOpen + applyCover P&L round-trip', () => {
+      const locks = {};
+      ShortLocks.applyOpen(locks, 'lg_x', 100, 100);
+      if (!approxEq(locks.lg_x.proceeds, 10000)) throw new Error('open proceeds wrong');
+      const r = ShortLocks.applyCover(locks, 'lg_x', 50, 90);
+      if (!approxEq(r.realized, 500)) throw new Error('cover realized ' + r.realized + ', want 500');
+      if (locks.lg_x.shares !== 50) throw new Error('cover shares wrong');
+      if (!approxEq(locks.lg_x.proceeds, 5000)) throw new Error('cover proceeds wrong');
+    });
+
+    record('Equity-equivalence sanity: $100k cash + 1L + 1S marks correctly', () => {
+      const state = { cash: 100000, shortLocks: {} };
+      state.cash -= 50;
+      ShortLocks.applyOpen(state.shortLocks, 'lg_s', 1, 50);
+      const basket = [
+        { sim: { qty: 1, direction: 'long',  avgCost: 50 }, lastCloseSeen: 50 },
+        { sim: { qty: 1, direction: 'short', avgCost: 50 }, lastCloseSeen: 50 }
+      ];
+      const eq = Sim.PortfolioValuation.computeEquity(state, basket);
+      if (!approxEq(eq, 100000)) throw new Error('equity at open should be 100000, got ' + eq);
+      basket[0].lastCloseSeen = 60; basket[1].lastCloseSeen = 60;
+      const eq2 = Sim.PortfolioValuation.computeEquity(state, basket);
+      if (!approxEq(eq2, 100000)) throw new Error('equity at 60 should be 100000, got ' + eq2);
+    });
+
+    log('\n=== P7 -- backward compat ===');
+
+    record('createSim defaults missing direction to long (legacy compat)', () => {
+      const bars = buildBars();
+      const sim = Sim.createSim({
+        moveKey: 'OLD',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 98 }
+      });
+      if (sim.direction !== 'long') throw new Error('default not long');
+      if (!approxEq(sim.initialRisk, 200)) throw new Error('legacy long initialRisk wrong');
+    });
+
+    record('Long sim (legacy path) still produces same realizedPnL pre-shorts', () => {
+      const bars = buildBars();
+      const sim = Sim.createSim({
+        moveKey: 'OLD',
+        entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 98 }
+      });
+      Sim.advanceTo(sim, bars, 4);
+      if (!sim.stoppedOut) throw new Error('not stopped');
+      if (!approxEq(sim.realizedPnL, -200)) throw new Error('expected -200, got ' + sim.realizedPnL);
+    });
+
+    log('\n=== Direction adapter unit checks ===');
+    record('Direction.stopFires: long needs low<=stop, short needs high>=stop', () => {
+      const bar = { open: 100, high: 102, low: 98, close: 100 };
+      if (Direction.stopFires('long', bar, 99) !== true) throw new Error('long should fire @99');
+      if (Direction.stopFires('long', bar, 97) !== false) throw new Error('long should not fire @97');
+      if (Direction.stopFires('short', bar, 101) !== true) throw new Error('short should fire @101');
+      if (Direction.stopFires('short', bar, 103) !== false) throw new Error('short should not fire @103');
+    });
+    record('Direction.fillAtStop: long min, short max', () => {
+      const bar = { open: 99, high: 102, low: 97, close: 100 };
+      if (Direction.fillAtStop('long', bar, 98) !== 98) throw new Error('long fill should be 98');
+      const bar2 = { open: 104, high: 106, low: 102, close: 105 };
+      if (Direction.fillAtStop('short', bar2, 103.5) !== 104) throw new Error('short fill should be 104');
+    });
+    record('Direction.ratchet: long up only, short down only', () => {
+      if (Direction.ratchet('long', 100, 102) !== 102) throw new Error('long should accept higher');
+      if (Direction.ratchet('long', 100, 98) !== 100) throw new Error('long should reject lower');
+      if (Direction.ratchet('short', 100, 98) !== 98) throw new Error('short should accept lower');
+      if (Direction.ratchet('short', 100, 102) !== 100) throw new Error('short should reject higher');
+    });
+    record('Direction.sortStopsForFire: long descending, short ascending', () => {
+      const stops = [{price:100},{price:95},{price:105}];
+      const sl = Direction.sortStopsForFire('long', stops).map(s=>s.price);
+      if (sl[0] !== 105 || sl[2] !== 95) throw new Error('long sort wrong');
+      const ss = Direction.sortStopsForFire('short', stops).map(s=>s.price);
+      if (ss[0] !== 95 || ss[2] !== 105) throw new Error('short sort wrong');
+    });
+    record('Direction.stopValidates: long stop<entry, short stop>entry', () => {
+      if (Direction.stopValidates('long', 100, 98) !== true) throw new Error('long ok');
+      if (Direction.stopValidates('long', 100, 102) !== false) throw new Error('long invalid');
+      if (Direction.stopValidates('short', 100, 102) !== true) throw new Error('short ok');
+      if (Direction.stopValidates('short', 100, 98) !== false) throw new Error('short invalid');
+    });
+  }
+
+  document.getElementById('host').addEventListener('load', function(){
+    const w = this.contentWindow;
+    if (!w || !w.Sim){
+      log('FATAL: Sim not found on iframe', 'fail');
+      sum.className = 'summary bad';
+      sum.textContent = 'Sim not loaded';
+      return;
+    }
+    runAll(w.Sim, w.Sim.ShortLocks, w.Sim.Direction);
+    sum.className = fail === 0 ? 'summary ok' : 'summary bad';
+    sum.textContent = pass + ' passed, ' + fail + ' failed';
+    log('\n=== Total: ' + pass + ' passed, ' + fail + ' failed ===', fail===0 ? 'pass' : 'fail');
+  });
+})();
+</script>
+</body>
+</html>

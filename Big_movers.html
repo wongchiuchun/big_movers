@@ -10030,10 +10030,16 @@ const Sim = (function(){
   const rR = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
+  function _mintLegId(){
+    return 'leg_' + Math.random().toString(36).slice(2, 10);
+  }
+
   function createSim(params) {
     params = params || {};
     const { moveKey, direction = 'long', entry, initialEquity = null } = params;
-    if (direction !== 'long') console.warn('Sim: only direction="long" supported in phase 1');
+    if (direction !== 'long' && direction !== 'short') {
+      throw new Error('createSim: direction must be "long" or "short"');
+    }
     if (!entry || typeof entry.barIdx !== 'number' || typeof entry.price !== 'number' || typeof entry.stop !== 'number') {
       throw new Error('createSim: entry.barIdx, entry.price, entry.stop required');
     }
@@ -10041,8 +10047,14 @@ const Sim = (function(){
       ? Math.floor(entry.sizeValue)
       : Math.floor(entry.sizeValue / entry.price);
     if (!(shares > 0)) throw new Error('createSim: computed shares <= 0');
-    const initialRisk = shares * (entry.price - entry.stop);
-    if (!(initialRisk > 0)) throw new Error('createSim: initialRisk must be > 0 (stop below entry for long)');
+    const initialRisk = (Sim.Direction
+      ? shares * Sim.Direction.initialRiskPerShare(direction, entry.price, entry.stop)
+      : shares * (entry.price - entry.stop));
+    if (!(initialRisk > 0)) {
+      throw new Error('createSim: initialRisk must be > 0 ('
+        + (direction === 'short' ? 'stop above entry for short' : 'stop below entry for long')
+        + ')');
+    }
 
     let endBarIdx = null;
     if (entry.endBarIdx != null) {
@@ -10052,9 +10064,11 @@ const Sim = (function(){
       endBarIdx = entry.endBarIdx;
     }
 
+    const legId = _mintLegId();
     return {
       moveKey: moveKey || null,
       direction,
+      legId: legId,
       entry: {
         barIdx: entry.barIdx, date: entry.date || null, price: entry.price,
         sizeMode: entry.sizeMode || 'shares', sizeValue: entry.sizeValue, stop: entry.stop
@@ -10067,7 +10081,7 @@ const Sim = (function(){
                      trail: (entry.stopTrail && entry.stopTrail.type === 'ema') ? { type: 'ema', period: +entry.stopTrail.period || 10, k: +entry.stopTrail.k || 0 } : null }],
       playIdx: entry.barIdx, stoppedOut: false, closed: false,
       pendingActions: [],
-      eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price,
+      eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price, direction: direction, legId: legId,
                     note: 'entry ' + shares + '@' + r2(entry.price) + ' stop ' + r2(entry.stop) }],
       peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
       legs: [], between: false, simStartBarIdx: entry.barIdx,
@@ -10345,6 +10359,8 @@ const Sim = (function(){
     if (!sim.legs) sim.legs = [];
     sim.legs.push({
       index: sim.legs.length,
+      direction: sim.direction || 'long',
+      legId: sim.legId || null,
       entry: clone(sim.entry),
       shares0: sim.shares0,
       initialRisk: sim.initialRisk,
@@ -10377,13 +10393,26 @@ const Sim = (function(){
     if (!params || typeof params.barIdx !== 'number' || typeof params.price !== 'number' || typeof params.stop !== 'number') {
       throw new Error('startNewLeg: barIdx, price, stop required');
     }
+    // New legs may flip direction (e.g. stopped-long → re-enter short on the same ticker).
+    // Read params.direction; fallback to existing sim.direction; default 'long'.
+    const direction = (params.direction === 'short' || params.direction === 'long')
+      ? params.direction
+      : (sim.direction || 'long');
     const shares = params.sizeMode === 'shares'
       ? Math.floor(params.sizeValue)
       : Math.floor(params.sizeValue / params.price);
     if (!(shares > 0)) throw new Error('startNewLeg: computed shares <= 0');
-    const initialRisk = shares * (params.price - params.stop);
-    if (!(initialRisk > 0)) throw new Error('startNewLeg: initialRisk must be > 0 (stop below price)');
+    const initialRisk = (Sim.Direction
+      ? shares * Sim.Direction.initialRiskPerShare(direction, params.price, params.stop)
+      : shares * (params.price - params.stop));
+    if (!(initialRisk > 0)) {
+      throw new Error('startNewLeg: initialRisk must be > 0 ('
+        + (direction === 'short' ? 'stop above entry for short' : 'stop below entry for long')
+        + ')');
+    }
     const legNum = (sim.legs || []).length + 1;
+    sim.direction = direction;
+    sim.legId = _mintLegId();
     sim.entry = {
       barIdx: params.barIdx, date: params.date || null, price: params.price,
       sizeMode: params.sizeMode || 'shares', sizeValue: params.sizeValue, stop: params.stop
@@ -10409,7 +10438,7 @@ const Sim = (function(){
     sim.playIdx = params.barIdx;
     sim.eventsLog.push({
       barIdx: params.barIdx, date: params.date || null, type: 'entry',
-      qty: shares, price: params.price,
+      qty: shares, price: params.price, direction: direction, legId: sim.legId,
       note: 'leg ' + legNum + ' entry ' + shares + '@' + r2(params.price) + ' stop ' + r2(params.stop)
     });
     return sim;
@@ -10912,6 +10941,190 @@ window.Sim = Sim;
     return _round2(e * (1 - pct / 100));
   }
   Sim.StopRules = { pctBelow, atrAt, atrBelow, swingLowBelow, baseLowBelow, emaAt, emaBelow, _findBarIdxByDate };
+})();
+
+/* ---------- Sim.Direction — direction-aware sign adapter (P0) ----------
+ * Single source of sign-truth for long/short. All sign-sensitive sim core
+ * operations route through this. Adding new direction-aware behavior?
+ * Add it here, not at the call site.
+ */
+(function(){
+  window.Sim = window.Sim || {};
+  const dir = (d) => d === 'short' ? -1 : 1;
+  Sim.Direction = {
+    sign: dir,
+    // Initial $/share at risk: long = entry-stop, short = stop-entry.
+    initialRiskPerShare: function(d, entry, stop){
+      return d === 'short' ? (stop - entry) : (entry - stop);
+    },
+    // P&L per share for any closing fill at given exit price vs avg cost.
+    pnlPerShare: function(d, exit, avg){
+      return (exit - avg) * dir(d);
+    },
+    // Did the bar trigger the stop? Long: low <= stop. Short: high >= stop.
+    stopFires: function(d, bar, stopPx){
+      if (!bar) return false;
+      return d === 'short' ? (bar.high >= stopPx) : (bar.low <= stopPx);
+    },
+    // Fill price when stop fires. Long: min(open, stop) — gap-down fills at open.
+    // Short: max(open, stop) — gap-up fills at open.
+    fillAtStop: function(d, bar, stopPx){
+      return d === 'short' ? Math.max(bar.open, stopPx) : Math.min(bar.open, stopPx);
+    },
+    // Trail ratchet: long moves up only (cand > prev). Short moves down only (cand < prev).
+    ratchet: function(d, prev, cand){
+      return d === 'short' ? Math.min(prev, cand) : Math.max(prev, cand);
+    },
+    // Intraday best-case P&L within a bar (favorable extreme).
+    intradayBetterPnL: function(d, bar, qty, avg, real){
+      return real + qty * (d === 'short' ? (bar.low  - avg) : (bar.high - avg)) * dir(d);
+    },
+    // Intraday worst-case P&L within a bar (adverse extreme).
+    intradayWorsePnL: function(d, bar, qty, avg, real){
+      return real + qty * (d === 'short' ? (bar.high - avg) : (bar.low  - avg)) * dir(d);
+    },
+    // Stop validation: long requires stop < entry, short requires stop > entry.
+    stopValidates: function(d, entry, stop){
+      return d === 'short' ? (stop > entry) : (stop < entry);
+    },
+    // Sort stops by which fires first as price moves through them.
+    // Long: highest stop first (price falling). Short: lowest stop first (price rising).
+    sortStopsForFire: function(d, stops){
+      return stops.slice().sort(function(a, b){
+        return d === 'short' ? (a.price - b.price) : (b.price - a.price);
+      });
+    }
+  };
+})();
+
+/* ---------- Sim.ShortLocks — fenced per-position short proceeds (P0) ----------
+ * When a short opens, proceeds (shares × entry) lock into shortLocks[legId].
+ * state.cash is NOT credited at open (no leverage). On cover, proceeds are
+ * released proportionally and realized P&L (proceeds - coverCost) hits cash.
+ */
+(function(){
+  window.Sim = window.Sim || {};
+  const r2 = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  Sim.ShortLocks = {
+    // Open a fenced lock for a new short leg. Does NOT touch state.cash.
+    applyOpen: function(locks, legId, shares, entry){
+      if (!locks || !legId || !(shares > 0) || !(entry > 0)) return null;
+      locks[legId] = {
+        shares: shares,
+        proceeds: r2(shares * entry),
+        avgEntry: entry
+      };
+      return locks[legId];
+    },
+    // Cover qty shares of an open short at fillPx. Returns {realized, releaseCash}
+    // where releaseCash is the dollar delta that should be added to state.cash
+    // (= allocated proceeds - cover cost = realized for that partial cover).
+    applyCover: function(locks, legId, qty, fillPx){
+      const lock = locks && locks[legId];
+      if (!lock || !(qty > 0) || qty > lock.shares) return { realized: 0, releaseCash: 0 };
+      const allocProceeds = r2(lock.proceeds * (qty / lock.shares));
+      const coverCost = r2(qty * fillPx);
+      const realized = r2(allocProceeds - coverCost);
+      lock.shares = lock.shares - qty;
+      lock.proceeds = r2(lock.proceeds - allocProceeds);
+      // avgEntry stays the same (fenced lock — only shares/proceeds shrink).
+      // Caller pushes realized into state.cash AND state.realizedPnL.
+      // We return releaseCash = realized so cash-equity stays continuous.
+      return { realized: realized, releaseCash: realized, allocProceeds: allocProceeds, coverCost: coverCost };
+    },
+    // Full close convenience — covers all remaining shares.
+    applyClose: function(locks, legId, fillPx){
+      const lock = locks && locks[legId];
+      if (!lock) return { realized: 0, releaseCash: 0 };
+      const result = Sim.ShortLocks.applyCover(locks, legId, lock.shares, fillPx);
+      // After full cover, lock.shares should be 0 — drop the entry.
+      if (lock.shares <= 0) delete locks[legId];
+      return result;
+    },
+    // Total locked proceeds across all open shorts.
+    totalLocked: function(locks){
+      if (!locks) return 0;
+      let s = 0;
+      for (const k in locks){ if (locks[k]) s += (+locks[k].proceeds || 0); }
+      return r2(s);
+    },
+    // Mark-to-market liability of all shorts at the given price-getter.
+    // priceFor(legId) → mark price (last close); returns total liability.
+    totalLiability: function(locks, priceFor){
+      if (!locks) return 0;
+      let s = 0;
+      for (const k in locks){
+        const lk = locks[k]; if (!lk) continue;
+        const p = priceFor ? priceFor(k) : lk.avgEntry;
+        if (Number.isFinite(p)) s += lk.shares * p;
+      }
+      return r2(s);
+    }
+  };
+})();
+
+/* ---------- Sim.PortfolioValuation — equity helper (P0) ----------
+ * Single source of equity-truth. markPosition(entry, lastClose) returns the
+ * { longMTM, shortLiability, lockedProceeds } trio for a basket entry.
+ *
+ * equity = state.cash
+ *        + Σ longMTM           (long mark-to-market: qty × close)
+ *        + Σ lockedProceeds    (short proceeds still fenced)
+ *        − Σ shortLiability    (short qty × close — what it costs to cover now)
+ */
+(function(){
+  window.Sim = window.Sim || {};
+  const r2 = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+  Sim.PortfolioValuation = {
+    // entry = a basket entry { sim, ... } or a {sim, lastClose} pair.
+    // lastClose can be supplied separately or read from entry.lastCloseSeen.
+    markPosition: function(entry, lastClose){
+      if (!entry || !entry.sim) return { longMTM: 0, shortLiability: 0, lockedProceeds: 0 };
+      const sim = entry.sim;
+      const px = (lastClose != null && Number.isFinite(+lastClose))
+        ? +lastClose
+        : (Number.isFinite(+entry.lastCloseSeen) ? +entry.lastCloseSeen : null);
+      const dir = sim.direction === 'short' ? 'short' : 'long';
+      let longMTM = 0, shortLiability = 0, lockedProceeds = 0;
+      if (sim.qty > 0 && px != null){
+        if (dir === 'short'){
+          shortLiability = r2(sim.qty * px);
+          // proceeds are tracked on the lock (sim.legId) — caller passes lock map separately
+          // but for a pure entry walk we can read from sim._lockSnapshot if attached.
+          if (sim._lockSnapshot && Number.isFinite(+sim._lockSnapshot.proceeds)){
+            lockedProceeds = r2(+sim._lockSnapshot.proceeds);
+          } else {
+            // Fallback: assume avgCost × qty is the locked proceeds (no covers yet).
+            lockedProceeds = r2(sim.qty * sim.avgCost);
+          }
+        } else {
+          longMTM = r2(sim.qty * px);
+        }
+      }
+      return { longMTM: longMTM, shortLiability: shortLiability, lockedProceeds: lockedProceeds };
+    },
+    // Sum equity contribution across a basket given a state with cash + shortLocks.
+    // basketEntries: [{ sim, lastCloseSeen }], state: { cash, shortLocks }.
+    computeEquity: function(state, basketEntries){
+      const cash = +state.cash || 0;
+      let longMTM = 0, shortLiability = 0;
+      const locks = state.shortLocks || {};
+      let lockedProceeds = 0;
+      // Sum locked proceeds straight from the locks dict (single source).
+      for (const k in locks){ if (locks[k]) lockedProceeds += (+locks[k].proceeds || 0); }
+      (basketEntries || []).forEach(function(e){
+        if (!e || !e.sim) return;
+        const px = Number.isFinite(+e.lastCloseSeen) ? +e.lastCloseSeen : null;
+        if (px == null || !(e.sim.qty > 0)) return;
+        if (e.sim.direction === 'short'){
+          shortLiability += e.sim.qty * px;
+        } else {
+          longMTM += e.sim.qty * px;
+        }
+      });
+      return r2(cash + longMTM + lockedProceeds - shortLiability);
+    }
+  };
 })();
 
 /* ---------- Sim.UI: modals (no innerHTML) ---------- */
@@ -17907,6 +18120,10 @@ Sim.Ctrl = (function(){
     _state.initialEquity = +cfg.initialCash || 0;
     _state.cash = _state.initialEquity;
     _state.realizedPnL = 0;
+    // shortLocks: { legId → { shares, proceeds, avgEntry } }. Each open short fences
+    // its proceeds here. cash is NOT credited at short open; covers settle realized
+    // P&L back to cash and decrement the lock.
+    _state.shortLocks = {};
     _state.index = cfg.index || 'SPX';
     _state.playing = false;
     _state.speed = 1;
@@ -18530,10 +18747,15 @@ Sim.Ctrl = (function(){
     catch(e){ console.warn('[PortSim.Ctrl] _cloneSim failed:', e); return null; }
   }
   function _pushSnapshot(){
+    // Deep-clone shortLocks so step-back restores fenced short proceeds correctly.
+    let shortLocksClone = {};
+    try { shortLocksClone = JSON.parse(JSON.stringify(_state.shortLocks || {})); }
+    catch(e){ console.warn('[PortSim.Ctrl] _pushSnapshot shortLocks clone:', e); }
     const snap = {
       playIdx: _state.playIdx,
       cash: _state.cash,
       realizedPnL: _state.realizedPnL,
+      shortLocks: shortLocksClone,
       prevEquity: _state.prevEquity,
       eqPeak: _state.eqPeak,
       eqPeakIdx: _state.eqPeakIdx,
@@ -18562,6 +18784,8 @@ Sim.Ctrl = (function(){
     _state.playIdx     = snap.playIdx;
     _state.cash        = snap.cash;
     _state.realizedPnL = snap.realizedPnL;
+    // Restore shortLocks (deep-cloned at push time).
+    _state.shortLocks  = snap.shortLocks ? JSON.parse(JSON.stringify(snap.shortLocks)) : {};
     _state.prevEquity  = snap.prevEquity;
     _state.eqPeak      = snap.eqPeak;
     _state.eqPeakIdx   = snap.eqPeakIdx;
