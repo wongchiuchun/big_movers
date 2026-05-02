@@ -5115,6 +5115,14 @@
         <div class="fetch-modal">
           <h3>Start Simulation</h3>
           <div class="fetch-field">
+            <label>Direction</label>
+            <div class="sim-pill-row" id="sim-setup-direction">
+              <button type="button" class="sim-pill sim-pill-active" data-direction="long">↑ Long</button>
+              <button type="button" class="sim-pill" data-direction="short">↓ Short</button>
+            </div>
+            <input type="hidden" id="sim-direction-value" value="long">
+          </div>
+          <div class="fetch-field">
             <label for="sim-entry-date">Entry date</label>
             <div class="sim-input-with-pick">
               <input type="date" id="sim-entry-date">
@@ -5397,6 +5405,14 @@
           <h3>New Entry (Leg <span id="sim-newleg-num">2</span>)</h3>
           <div class="sim-readout" id="sim-newleg-bar">
             <div>Entering at <strong id="sim-newleg-bardate">—</strong> · close <strong id="sim-newleg-barprice">—</strong></div>
+          </div>
+          <div class="fetch-field">
+            <label>Direction</label>
+            <div class="sim-pill-row" id="sim-newleg-direction">
+              <button type="button" class="sim-pill sim-pill-active" data-direction="long">↑ Long</button>
+              <button type="button" class="sim-pill" data-direction="short">↓ Short</button>
+            </div>
+            <input type="hidden" id="sim-newleg-direction-value" value="long">
           </div>
           <div class="fetch-field">
             <label>Size</label>
@@ -11433,6 +11449,27 @@ window.Sim = Sim;
     container.querySelectorAll('.sim-pill').forEach(p => p.classList.toggle('sim-pill-active', p.getAttribute('data-mode') === mode));
   }
 
+  // P3 — direction radio (long/short). Wires button-pill toggling on the
+  // [data-direction] pill row, persists into a hidden input, and fires onChange.
+  function _setupDirectionPills(containerId, hiddenId, onChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const pills = Array.from(container.querySelectorAll('.sim-pill'));
+    pills.forEach(pill => {
+      pill.onclick = function() {
+        pills.forEach(p => p.classList.remove('sim-pill-active'));
+        pill.classList.add('sim-pill-active');
+        const dir = pill.getAttribute('data-direction') || 'long';
+        const hidden = document.getElementById(hiddenId); if (hidden) hidden.value = dir;
+        onChange && onChange(dir);
+      };
+    });
+  }
+  function _setDirectionPillActive(containerId, dir) {
+    const container = document.getElementById(containerId); if (!container) return;
+    container.querySelectorAll('.sim-pill').forEach(p => p.classList.toggle('sim-pill-active', p.getAttribute('data-direction') === dir));
+  }
+
   Sim.UI.showSetupModal = function(ctx, onSubmit) {
     ctx = ctx || {};
     const dateEl = document.getElementById('sim-entry-date');
@@ -11447,6 +11484,20 @@ window.Sim = Sim;
     const pickEntryBtn = document.getElementById('sim-pick-entry-btn');
     const pickEndBtn = document.getElementById('sim-pick-end-btn');
     const equityEl = document.getElementById('sim-initial-equity');
+    const dirHiddenEl = document.getElementById('sim-direction-value');
+
+    // Default direction: respect ctx.defaultDirection, else metadata.direction
+    // (read-once at modal open; does NOT cascade to existing legs after).
+    const defaultDir = (ctx.defaultDirection === 'short' || ctx.defaultDirection === 'long')
+      ? ctx.defaultDirection
+      : ((function(){
+          const r = window.currentMoveRow;
+          if (!r || typeof window.getMeta !== 'function') return 'long';
+          const m = window.getMeta(r) || {};
+          return (m.direction === 'short') ? 'short' : 'long';
+        })());
+    if (dirHiddenEl) dirHiddenEl.value = defaultDir;
+    _setDirectionPillActive('sim-setup-direction', defaultDir);
 
     if (ctx.defaultDate) dateEl.value = ctx.defaultDate;
     if (ctx.defaultPrice != null) priceEl.value = Number(ctx.defaultPrice).toFixed(2);
@@ -11477,14 +11528,23 @@ window.Sim = Sim;
       const stop = _parseNum(stopEl.value, NaN);
       const size = _parseNum(sizeEl.value, NaN);
       const mode = modeEl.value;
+      const dir = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       let shares = NaN, notional = NaN;
       if (isFinite(price) && price > 0 && isFinite(size) && size > 0) {
         shares = mode === 'shares' ? Math.floor(size) : Math.floor(size / price);
         notional = shares * price;
       }
+      // Direction-aware risk: long = (price - stop), short = (stop - price)
       let risk = NaN, riskPct = NaN;
-      if (isFinite(shares) && isFinite(price) && isFinite(stop) && stop > 0 && stop < price) {
-        risk = shares * (price - stop);
+      const stopValid = isFinite(price) && isFinite(stop) && stop > 0
+        && (window.Sim && window.Sim.Direction
+            ? window.Sim.Direction.stopValidates(dir, price, stop)
+            : (dir === 'short' ? stop > price : stop < price));
+      if (isFinite(shares) && stopValid) {
+        const rps = (window.Sim && window.Sim.Direction)
+          ? window.Sim.Direction.initialRiskPerShare(dir, price, stop)
+          : (price - stop);
+        risk = shares * rps;
         if (notional > 0) riskPct = (risk / notional) * 100;
       }
       const rows = [];
@@ -11495,6 +11555,7 @@ window.Sim = Sim;
       }
       rows.push({ label: 'Notional', value: isFinite(notional) ? _fmt$(notional) : '—' });
       rows.push({ label: 'Risk', value: isFinite(risk) ? _fmt$(risk) : '—', suffix: isFinite(riskPct) ? ' (' + riskPct.toFixed(1) + '%)' : '' });
+      rows.push({ label: 'Direction', value: dir === 'short' ? '↓ Short' : '↑ Long' });
       Sim.UI._fillReadout(summaryEl, rows);
 
       const date = dateEl.value;
@@ -11512,6 +11573,7 @@ window.Sim = Sim;
     }
     [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
     _setupPills('sim-setup-pills', 'sim-size-mode', 'sim-setup-size-label', recompute);
+    _setupDirectionPills('sim-setup-direction', 'sim-direction-value', recompute);
     recompute();
 
     // Stop-strategy picker (wraps existing recompute via _reapplyOnInput chain).
@@ -11581,17 +11643,26 @@ window.Sim = Sim;
       const size = _parseNum(sizeEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
       const mode = modeEl.value;
+      const direction = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       if (!date) return _setStatus('sim-setup-status', 'Entry date is required', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-setup-status', 'Entry price must be > 0', true);
       if (!isFinite(size) || size <= 0) return _setStatus('sim-setup-status', 'Size must be > 0', true);
       if (!isFinite(stop) || stop <= 0) return _setStatus('sim-setup-status', 'Stop price must be > 0', true);
-      if (stop >= price) return _setStatus('sim-setup-status', 'Stop must be below entry price', true);
+      // Direction-aware stop validation.
+      const validStop = (window.Sim && window.Sim.Direction)
+        ? window.Sim.Direction.stopValidates(direction, price, stop)
+        : (direction === 'short' ? stop > price : stop < price);
+      if (!validStop) {
+        return _setStatus('sim-setup-status',
+          direction === 'short' ? 'Stop must be above entry for short' : 'Stop must be below entry for long',
+          true);
+      }
       const endDate = endDateEl.value;
       if (endDate && endDate <= date) return _setStatus('sim-setup-status', 'End date must be after entry date', true);
       const equityRaw = equityEl ? _parseNum(equityEl.value, NaN) : NaN;
       const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
-      try { onSubmit && onSubmit({ date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail }); _closeModal('sim-setup-modal'); }
+      try { onSubmit && onSubmit({ direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail }); _closeModal('sim-setup-modal'); }
       catch (err) { _setStatus('sim-setup-status', err && err.message ? err.message : 'Failed to start sim', true); }
     };
     _openModal('sim-setup-modal');
@@ -11660,11 +11731,25 @@ window.Sim = Sim;
     const dateEl = document.getElementById('sim-newleg-bardate');
     const barpriceEl = document.getElementById('sim-newleg-barprice');
     const numEl = document.getElementById('sim-newleg-num');
+    const dirHiddenEl = document.getElementById('sim-newleg-direction-value');
     const barClose = _parseNum(ctx.barClose, NaN);
 
     if (numEl) numEl.textContent = String(ctx.legNum || 2);
     if (dateEl) dateEl.textContent = ctx.barDate || '—';
     if (barpriceEl) barpriceEl.textContent = isFinite(barClose) ? _fmt$(barClose) : '—';
+
+    // Default direction: opposite of the just-closed leg if ctx.priorDirection
+    // says so (stop-out re-entry case). Otherwise read prior direction or 'long'.
+    let defaultDir = 'long';
+    if (ctx.defaultDirection === 'short' || ctx.defaultDirection === 'long'){
+      defaultDir = ctx.defaultDirection;
+    } else if (ctx.priorDirection === 'long') {
+      defaultDir = 'short';
+    } else if (ctx.priorDirection === 'short') {
+      defaultDir = 'long';
+    }
+    if (dirHiddenEl) dirHiddenEl.value = defaultDir;
+    _setDirectionPillActive('sim-newleg-direction', defaultDir);
 
     sizeEl.value = ctx.suggestedSize != null ? ctx.suggestedSize : '';
     priceEl.value = isFinite(barClose) ? barClose.toFixed(2) : '';
@@ -11679,13 +11764,19 @@ window.Sim = Sim;
       const size = _parseNum(sizeEl.value, NaN);
       const price = _parseNum(priceEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
+      const dir = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       let shares = NaN;
       if (isFinite(size) && size > 0 && isFinite(price) && price > 0) {
         shares = mode === 'shares' ? Math.floor(size) : Math.floor(size / price);
       }
-      const riskPerShare = (isFinite(price) && isFinite(stop)) ? (price - stop) : NaN;
+      const riskPerShare = (isFinite(price) && isFinite(stop))
+        ? ((window.Sim && window.Sim.Direction)
+            ? window.Sim.Direction.initialRiskPerShare(dir, price, stop)
+            : (price - stop))
+        : NaN;
       const dollarRisk = (isFinite(shares) && isFinite(riskPerShare)) ? shares * riskPerShare : NaN;
       Sim.UI._fillReadout(summaryEl, [
+        { label: 'Direction', value: dir === 'short' ? '↓ Short' : '↑ Long' },
         { label: 'Risk per share', value: isFinite(riskPerShare) ? _fmt$(riskPerShare) : '—' },
         { label: 'Initial $ risk', value: isFinite(dollarRisk) ? _fmt$(dollarRisk) : '—' },
         { label: 'Shares', value: isFinite(shares) ? _fmtInt(shares) : '—' }
@@ -11693,6 +11784,7 @@ window.Sim = Sim;
     }
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
     _setupPills('sim-newleg-pills', 'sim-newleg-size-mode', 'sim-newleg-size-label', recompute);
+    _setupDirectionPills('sim-newleg-direction', 'sim-newleg-direction-value', recompute);
     recompute();
 
     // Stop-strategy picker. NewLeg has no separate date input — we use the
@@ -11731,12 +11823,20 @@ window.Sim = Sim;
       const size = _parseNum(sizeEl.value, NaN);
       const price = _parseNum(priceEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
+      const direction = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       if (!isFinite(size) || size <= 0) return _setStatus('sim-newleg-status', 'Size must be > 0', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-newleg-status', 'Entry price must be > 0', true);
       if (!isFinite(stop) || stop <= 0) return _setStatus('sim-newleg-status', 'Stop must be > 0', true);
-      if (stop >= price) return _setStatus('sim-newleg-status', 'Stop must be below entry price', true);
+      const validStop = (window.Sim && window.Sim.Direction)
+        ? window.Sim.Direction.stopValidates(direction, price, stop)
+        : (direction === 'short' ? stop > price : stop < price);
+      if (!validStop) {
+        return _setStatus('sim-newleg-status',
+          direction === 'short' ? 'Stop must be above entry for short' : 'Stop must be below entry for long',
+          true);
+      }
       try {
-        onSubmit && onSubmit({ sizeMode: mode, sizeValue: size, price, stop });
+        onSubmit && onSubmit({ direction, sizeMode: mode, sizeValue: size, price, stop });
         _closeModal('sim-newleg-modal');
       } catch (err) { _setStatus('sim-newleg-status', err && err.message ? err.message : 'Could not start leg', true); }
     };
@@ -14550,7 +14650,9 @@ Sim.Ctrl = (function(){
       barClose: bar.close,
       barDate: bar.time,
       legNum: (state.sim.legs || []).length + 1,
-      suggestedSize: state.sim.shares0 || 1000
+      suggestedSize: state.sim.shares0 || 1000,
+      // Default opposite of just-closed leg (stop-out re-entry case).
+      priorDirection: state.sim.direction || 'long'
     }, form => {
       try {
         Sim.startNewLeg(state.sim, {
@@ -15959,10 +16061,19 @@ Sim.Ctrl = (function(){
   Modal.openSetupForCard = function(card, currentBar, onSubmit, opts) {
     const bar = _safeBar(currentBar);
     opts = opts || {};
+    // Read card metadata (if any) for default direction.
+    let defaultDir = 'long';
+    try {
+      if (card && card.symbol && typeof window.getMeta === 'function'){
+        const m = window.getMeta({ symbol: card.symbol, year: card.year || '' }) || {};
+        if (m.direction === 'short') defaultDir = 'short';
+      }
+    } catch(e){ /* ignore — fall back to long */ }
     const ctx = {
       portMode: true,
       defaultDate: bar.time || null,
       defaultPrice: bar.close != null ? bar.close : null,
+      defaultDirection: opts.defaultDirection || defaultDir,
       suggestedSize: opts.suggestedSize != null ? opts.suggestedSize : null,
       // Pass through any additional context the controller wants in the modal.
       restoreFrom: opts.restoreFrom || null,
@@ -15988,6 +16099,8 @@ Sim.Ctrl = (function(){
       barClose: bar.close != null ? bar.close : NaN,
       legNum: opts.legNum != null ? opts.legNum : 2,
       suggestedSize: opts.suggestedSize != null ? opts.suggestedSize : null,
+      // Stop-out re-entry: default opposite of just-closed leg's direction.
+      priorDirection: opts.priorDirection || (card && card.sim && card.sim.direction) || null,
       // Card-scoped data so the strategy picker uses this card's bars.
       cardBars: (card && card.bars) || null,
       cardMoveKey: (card && card.symbol) ? (card.symbol + '_' + (card.year || '')) : null
@@ -18559,6 +18672,9 @@ Sim.Ctrl = (function(){
       try { window.Sim.continueSim(entry.sim); } catch(e){}
     }
     const legNum = (entry.sim.legs ? entry.sim.legs.length : 0) + 1;
+    // Pass priorDirection so re-entry modal defaults to opposite of the
+    // just-closed leg's direction.
+    const opts = { legNum: legNum, priorDirection: entry.sim.direction || 'long' };
     PortSim.Modal.openNewLegForCard(entry, bar, function(card, form){
       try {
         // form: { date, price, sizeMode, sizeValue, stop }
@@ -18600,7 +18716,7 @@ Sim.Ctrl = (function(){
         console.error('[PortSim.Ctrl] new-leg submit failed:', e);
         alert('New leg failed: ' + (e && e.message ? e.message : e));
       }
-    }, { legNum: legNum });
+    }, opts);
   }
 
   function _onCardAction(entry, action){
