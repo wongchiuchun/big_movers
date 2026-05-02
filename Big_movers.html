@@ -12060,7 +12060,18 @@ window.Sim = Sim;
       if (!isFinite(size) || size <= 0) return _setStatus('sim-add-status', 'Size must be > 0', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-add-status', 'Price must be > 0', true);
       if (newStop !== null && (!isFinite(newStop) || newStop <= 0)) return _setStatus('sim-add-status', 'New stop must be > 0', true);
-      if (newStop !== null && newStop >= price) return _setStatus('sim-add-status', 'New stop must be below price', true);
+      // Direction-aware validation: long needs stop < price; short needs stop > price.
+      if (newStop !== null){
+        const dir = ctx.direction || 'long';
+        const validStop = (window.Sim && window.Sim.Direction)
+          ? window.Sim.Direction.stopValidates(dir, price, newStop)
+          : (dir === 'short' ? newStop > price : newStop < price);
+        if (!validStop){
+          return _setStatus('sim-add-status',
+            dir === 'short' ? 'New stop must be above price for short' : 'New stop must be below price',
+            true);
+        }
+      }
       try {
         const payload = { sizeMode: mode, sizeValue: size, price };
         if (newStop !== null) payload.newStop = newStop;
@@ -18883,7 +18894,12 @@ Sim.Ctrl = (function(){
             price: +form.price,
             stop: +form.stop,
             sizeMode: form.sizeMode,
-            sizeValue: +form.sizeValue
+            sizeValue: +form.sizeValue,
+            // Per-card Setup modal exposes the full stop-strategy picker
+            // (incl. ema_trail). Without this, picking an auto-trail option
+            // here placed the stop at the EMA value but never ratcheted —
+            // it behaved as a snapshot.
+            stopTrail: form.stopTrail || null
           }
         });
         entry.sim = sim;
@@ -19018,13 +19034,15 @@ Sim.Ctrl = (function(){
         if (!isFinite(ns) || ns <= 0) return;
         // Apply at the current bar so the stop line updates immediately on
         // the chart, instead of waiting for the next advance to drain the
-        // pending-actions queue.
+        // pending-actions queue. form.stopTrail carries the ema_trail spec
+        // when the user picks an auto-trail strategy in the modal — without
+        // this, the trail was silently dropped and the stop never ratcheted.
         const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct)
+          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null)
           : false;
         if (!ok){
           // Fallback: queue + advance like the single-ticker sim does.
-          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null });
         }
         _renderAll();
       });
@@ -23862,10 +23880,10 @@ Sim.Ctrl = (function(){
               // queueAction would defer until the next advanceTo() and the
               // change wouldn't show up on a paused chart.
               var ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct)
+                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null)
                 : false;
               if (!ok){
-                window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct });
+                window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null });
               }
             } catch(e){ console.error('[PortSim.Positions] movestop:', e); }
             // Track J's 120ms watcher will pick up the new stopLevels entry
