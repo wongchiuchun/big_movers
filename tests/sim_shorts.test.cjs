@@ -32,11 +32,13 @@ function extractBlockIncl(src, startMarker, endMarker){
 
 // 1) Sim core: from `const Sim = (function(){` through `window.Sim = Sim;`
 const simCore = extractBlockIncl(HTML, 'const Sim = (function(){', 'window.Sim = Sim;');
-// 2) Sim.Direction module — up to next /* ---------- block
+// 2) StopRules module (defined right before Sim.Direction)
+const stopRulesBlock = extractBlockUpTo(HTML, '/* ---------- Sim.StopRules', '/* ---------- Sim.Direction');
+// 3) Sim.Direction module
 const directionBlock = extractBlockUpTo(HTML, '/* ---------- Sim.Direction', '/* ---------- Sim.ShortLocks');
-// 3) Sim.ShortLocks module
+// 4) Sim.ShortLocks module
 const shortLocksBlock = extractBlockUpTo(HTML, '/* ---------- Sim.ShortLocks', '/* ---------- Sim.PortfolioValuation');
-// 4) Sim.PortfolioValuation module
+// 5) Sim.PortfolioValuation module
 const valuationBlock = extractBlockUpTo(HTML, '/* ---------- Sim.PortfolioValuation', '/* ---------- Sim.UI: modals');
 
 // Build a sandbox with a minimal window
@@ -53,6 +55,7 @@ try {
 }
 // At this point, sandbox.Sim = the closure. We must alias sandbox.Sim → window.Sim
 sandbox.Sim = sandbox.window.Sim;
+vm.runInContext(stopRulesBlock, sandbox, { filename: 'stopRules.js' });
 vm.runInContext(directionBlock, sandbox, { filename: 'direction.js' });
 vm.runInContext(shortLocksBlock, sandbox, { filename: 'shortLocks.js' });
 vm.runInContext(valuationBlock, sandbox, { filename: 'valuation.js' });
@@ -297,6 +300,44 @@ record('Direction.stopValidates', () => {
   if (Direction.stopValidates('long', 100, 102) !== false) throw new Error('long bad');
   if (Direction.stopValidates('short', 100, 102) !== true) throw new Error('short ok');
   if (Direction.stopValidates('short', 100, 98) !== false) throw new Error('short bad');
+});
+
+console.log('\n=== P2 StopRules direction-aware ===');
+const StopRules = Sim.StopRules;
+record('pctOffset: long shrinks, short grows', () => {
+  const long = StopRules.pctOffset('long', 100, 5);
+  const short = StopRules.pctOffset('short', 100, 5);
+  if (!approxEq(long, 95)) throw new Error('long pctOffset = ' + long);
+  if (!approxEq(short, 105)) throw new Error('short pctOffset = ' + short);
+});
+record('swingOpposite: long uses min(low), short uses max(high)', () => {
+  const bars = [
+    { time: '2024-01-01', open: 100, high: 105, low: 95, close: 100, volume: 1 },
+    { time: '2024-01-02', open: 100, high: 110, low: 90, close: 100, volume: 1 },
+    { time: '2024-01-03', open: 100, high: 102, low: 98, close: 100, volume: 1 },
+    // entry bar (idx=3): not included in swing window
+    { time: '2024-01-04', open: 100, high: 100, low: 100, close: 100, volume: 1 }
+  ];
+  // Long swing window 3 bars before idx=3 → min low = 90, minus 0.05 = 89.95
+  const long = StopRules.swingOpposite('long', bars, 3, 3, 0.05);
+  if (!approxEq(long, 89.95)) throw new Error('long swing = ' + long);
+  // Short swing → max high = 110, plus 0.05 = 110.05
+  const short = StopRules.swingOpposite('short', bars, 3, 3, 0.05);
+  if (!approxEq(short, 110.05)) throw new Error('short swing = ' + short);
+});
+record('atrOffset: long subtracts, short adds', () => {
+  const bars = [];
+  for (let i = 0; i < 20; i++){
+    bars.push({ time: '2024-01-' + String(i+1).padStart(2,'0'), open: 100, high: 105, low: 95, close: 100, volume: 1 });
+  }
+  // Without window.calcATR, falls through to simple-mean ATR. TR ~10 each bar.
+  const long = StopRules.atrOffset('long', 100, bars, 19, 1.5, 14);
+  const short = StopRules.atrOffset('short', 100, bars, 19, 1.5, 14);
+  // Whatever atrAt returns, long should be < 100 < short.
+  if (!(isFinite(long) && long < 100)) throw new Error('long atrOffset not less than entry: ' + long);
+  if (!(isFinite(short) && short > 100)) throw new Error('short atrOffset not greater than entry: ' + short);
+  // Symmetry: |long - 100| ≈ |short - 100|
+  if (!approxEq(Math.abs(long - 100), Math.abs(short - 100), 0.02)) throw new Error('asymmetric: ' + long + ' / ' + short);
 });
 
 console.log('\n=== Total: ' + pass + ' passed, ' + fail + ' failed ===');

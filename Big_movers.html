@@ -10914,6 +10914,11 @@ window.Sim = Sim;
     if (!isFinite(price) || !isFinite(pct) || pct <= 0) return null;
     return _round2(price * (1 - pct / 100));
   }
+  // P2 direction-aware. Long: price * (1 - pct/100). Short: price * (1 + pct/100).
+  function pctOffset(direction, price, pct){
+    if (!isFinite(price) || !isFinite(pct) || pct <= 0) return null;
+    return _round2(direction === 'short' ? price * (1 + pct / 100) : price * (1 - pct / 100));
+  }
   function atrAt(bars, idx, period){
     if (!Array.isArray(bars) || idx == null || idx < 0) return null;
     period = period || 14;
@@ -10938,6 +10943,12 @@ window.Sim = Sim;
     if (a == null || !isFinite(price) || !isFinite(k)) return null;
     return _round2(price - (k * a));
   }
+  // P2 direction-aware ATR offset.
+  function atrOffset(direction, price, bars, idx, k, period){
+    const a = atrAt(bars, idx, period || 14);
+    if (a == null || !isFinite(price) || !isFinite(k)) return null;
+    return _round2(direction === 'short' ? price + (k * a) : price - (k * a));
+  }
   function swingLowBelow(bars, idx, n, buffer){
     if (!Array.isArray(bars) || idx == null || idx <= 0) return null;
     const start = Math.max(0, idx - n);
@@ -10949,6 +10960,46 @@ window.Sim = Sim;
     if (!isFinite(lo)) return null;
     return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
   }
+  // P2 direction-aware swing. Long: min(low) - buffer. Short: max(high) + buffer.
+  function swingOpposite(direction, bars, idx, n, buffer){
+    if (!Array.isArray(bars) || idx == null || idx <= 0) return null;
+    const start = Math.max(0, idx - n);
+    if (direction === 'short'){
+      let hi = -Infinity;
+      for (let i = start; i < idx; i++){
+        const b = bars[i];
+        if (b && isFinite(b.high) && b.high > hi) hi = b.high;
+      }
+      if (!isFinite(hi)) return null;
+      return _round2(hi + (isFinite(buffer) ? buffer : 0.05));
+    }
+    let lo = Infinity;
+    for (let i = start; i < idx; i++){
+      const b = bars[i];
+      if (b && isFinite(b.low) && b.low < lo) lo = b.low;
+    }
+    if (!isFinite(lo)) return null;
+    return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
+  }
+  // P2 fix off-by-one: use first bar where date >= base_start, last where date <= base_end.
+  function _findBarIdxAtOrAfterDate(bars, dateStr){
+    if (!Array.isArray(bars) || !dateStr) return -1;
+    for (let i = 0; i < bars.length; i++){
+      const t = (bars[i] && (bars[i].time || bars[i].date)) || '';
+      if (t >= dateStr) return i;
+    }
+    return -1;
+  }
+  function _findBarIdxAtOrBeforeDate(bars, dateStr){
+    if (!Array.isArray(bars) || !dateStr) return -1;
+    let last = -1;
+    for (let i = 0; i < bars.length; i++){
+      const t = (bars[i] && (bars[i].time || bars[i].date)) || '';
+      if (t > dateStr) break;
+      if (t <= dateStr) last = i;
+    }
+    return last;
+  }
   function _findBarIdxByDate(bars, dateStr){
     if (!Array.isArray(bars) || !dateStr) return -1;
     for (let i = 0; i < bars.length; i++){
@@ -10958,18 +11009,46 @@ window.Sim = Sim;
     }
     return bars.length - 1;
   }
-  // Base low: read pivot.base_start / base_end from window.aiClassByMoveKey,
-  // then take min(low) of the bars in that window. Falls back to null when
-  // either the AI metadata or the date range is missing.
+  // Base low/high: read pivot.base_start / base_end from window.aiClassByMoveKey.
+  // Codex confirmed neither base_high nor base_low is stored — always compute from
+  // bars in the window. Long: min(low) - buffer. Short: max(high) + buffer.
   function baseLowBelow(bars, moveKey, aiData, buffer){
     if (!Array.isArray(bars) || !moveKey) return null;
     const data = aiData || window.aiClassByMoveKey || {};
     const entry = data[moveKey];
     const piv = entry && entry.pivot;
     if (!piv || !piv.base_start || !piv.base_end) return null;
-    const i0 = _findBarIdxByDate(bars, piv.base_start);
-    const i1 = _findBarIdxByDate(bars, piv.base_end);
+    // P2 fix off-by-one: first bar at-or-after base_start, last bar at-or-before base_end.
+    const i0 = _findBarIdxAtOrAfterDate(bars, piv.base_start);
+    const i1 = _findBarIdxAtOrBeforeDate(bars, piv.base_end);
     if (i0 < 0 || i1 < 0 || i1 < i0) return null;
+    let lo = Infinity;
+    for (let i = i0; i <= i1; i++){
+      const b = bars[i];
+      if (b && isFinite(b.low) && b.low < lo) lo = b.low;
+    }
+    if (!isFinite(lo)) return null;
+    return _round2(lo - (isFinite(buffer) ? buffer : 0.05));
+  }
+  // P2 direction-aware base. Long: same as baseLowBelow. Short: max(high) + buffer.
+  function baseOpposite(direction, bars, moveKey, aiData, buffer){
+    if (!Array.isArray(bars) || !moveKey) return null;
+    const data = aiData || window.aiClassByMoveKey || {};
+    const entry = data[moveKey];
+    const piv = entry && entry.pivot;
+    if (!piv || !piv.base_start || !piv.base_end) return null;
+    const i0 = _findBarIdxAtOrAfterDate(bars, piv.base_start);
+    const i1 = _findBarIdxAtOrBeforeDate(bars, piv.base_end);
+    if (i0 < 0 || i1 < 0 || i1 < i0) return null;
+    if (direction === 'short'){
+      let hi = -Infinity;
+      for (let i = i0; i <= i1; i++){
+        const b = bars[i];
+        if (b && isFinite(b.high) && b.high > hi) hi = b.high;
+      }
+      if (!isFinite(hi)) return null;
+      return _round2(hi + (isFinite(buffer) ? buffer : 0.05));
+    }
     let lo = Infinity;
     for (let i = i0; i <= i1; i++){
       const b = bars[i];
@@ -10996,7 +11075,22 @@ window.Sim = Sim;
     if (pct < 0) return null;
     return _round2(e * (1 - pct / 100));
   }
-  Sim.StopRules = { pctBelow, atrAt, atrBelow, swingLowBelow, baseLowBelow, emaAt, emaBelow, _findBarIdxByDate };
+  // P2 direction-aware EMA offset. Long: ema*(1-pct/100). Short: ema*(1+pct/100).
+  function emaOffset(direction, bars, idx, period, pct){
+    const e = emaAt(bars, idx, period);
+    if (e == null) return null;
+    const p = isFinite(pct) ? pct : 0;
+    if (p < 0) return null;
+    return _round2(direction === 'short' ? e * (1 + p / 100) : e * (1 - p / 100));
+  }
+  Sim.StopRules = {
+    pctBelow, pctOffset,
+    atrAt, atrBelow, atrOffset,
+    swingLowBelow, swingOpposite,
+    baseLowBelow, baseOpposite,
+    emaAt, emaBelow, emaOffset,
+    _findBarIdxByDate, _findBarIdxAtOrAfterDate, _findBarIdxAtOrBeforeDate
+  };
 })();
 
 /* ---------- Sim.Direction — direction-aware sign adapter (P0) ----------
@@ -11228,8 +11322,15 @@ window.Sim = Sim;
     const { stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl,
             priceEl, dateEl, lsKey, defaultK, includeBase,
             emaPeriodEl,
-            barsProvider, moveKeyProvider } = opts || {};
+            barsProvider, moveKeyProvider, directionProvider } = opts || {};
     if (!stratEl || !stopEl) return;
+    function _dir(){
+      if (typeof directionProvider === 'function'){
+        const d = directionProvider();
+        if (d === 'short' || d === 'long') return d;
+      }
+      return 'long';
+    }
 
     let _suppressManualFlip = false;
     const dK = defaultK || { pct: 7, atr: 1.5, ema: 0 };
@@ -11289,6 +11390,24 @@ window.Sim = Sim;
         emaPeriodEl.style.display = (t === 'ema' || t === 'ema_trail') ? '' : 'none';
       }
     }
+    // P2: refresh option labels to match direction (below↔above).
+    function _updateLabelsForDirection(){
+      const isShort = _dir() === 'short';
+      const labels = {
+        manual:    'Manual',
+        pct:       isShort ? '% above entry'        : '% below entry',
+        atr:       'ATR(14) ×',
+        ema:       isShort ? 'Above EMA (snapshot)' : 'Below EMA (snapshot)',
+        ema_trail: isShort ? 'Above EMA · auto-trail ↘' : 'Below EMA · auto-trail ↗',
+        swing5:    isShort ? 'Above 5-bar high'     : 'Below 5-bar low',
+        swing10:   isShort ? 'Above 10-bar high'    : 'Below 10-bar low',
+        base:      isShort ? 'Above base high'      : 'Below base low'
+      };
+      Array.from(stratEl.options).forEach(function(opt){
+        const lbl = labels[opt.value];
+        if (lbl) opt.textContent = lbl;
+      });
+    }
 
     function _computeStop(){
       const t = stratEl.value;
@@ -11296,21 +11415,22 @@ window.Sim = Sim;
       const price = parseFloat(priceEl && priceEl.value);
       if (!isFinite(price) || price <= 0) return null;
       const bars = (typeof barsProvider === 'function') ? barsProvider() : [];
-      if (t === 'pct') return Sim.StopRules.pctBelow(price, _kForType('pct'));
+      const direction = _dir();
+      if (t === 'pct') return Sim.StopRules.pctOffset(direction, price, _kForType('pct'));
       // The remaining strategies need historical bars + an entry-bar index.
       const dateStr = (dateEl && dateEl.value) || (opts.dateProvider ? opts.dateProvider() : null);
       const idx = Sim.StopRules._findBarIdxByDate(bars, dateStr);
       if (idx < 0) return null;
-      if (t === 'atr')    return Sim.StopRules.atrBelow(price, bars, idx, _kForType('atr'), 14);
-      if (t === 'swing5') return Sim.StopRules.swingLowBelow(bars, idx, 5, 0.05);
-      if (t === 'swing10')return Sim.StopRules.swingLowBelow(bars, idx, 10, 0.05);
+      if (t === 'atr')    return Sim.StopRules.atrOffset(direction, price, bars, idx, _kForType('atr'), 14);
+      if (t === 'swing5') return Sim.StopRules.swingOpposite(direction, bars, idx, 5, 0.05);
+      if (t === 'swing10')return Sim.StopRules.swingOpposite(direction, bars, idx, 10, 0.05);
       if (t === 'ema' || t === 'ema_trail'){
         const period = parseInt(emaPeriodEl && emaPeriodEl.value, 10) || 10;
-        return Sim.StopRules.emaBelow(bars, idx, period, _kForType('ema'));
+        return Sim.StopRules.emaOffset(direction, bars, idx, period, _kForType('ema'));
       }
       if (t === 'base'){
         const mk = (typeof moveKeyProvider === 'function') ? moveKeyProvider() : null;
-        return Sim.StopRules.baseLowBelow(bars, mk, null, 0.05);
+        return Sim.StopRules.baseOpposite(direction, bars, mk, null, 0.05);
       }
       return null;
     }
@@ -11331,19 +11451,27 @@ window.Sim = Sim;
       const price = parseFloat(priceEl && priceEl.value);
       const stop = parseFloat(stopEl.value);
       const t = stratEl.value;
-      if (!isFinite(price) || !isFinite(stop) || price <= 0 || stop <= 0 || stop >= price){
+      const direction = _dir();
+      // Validate stop is on the right side of price for the chosen direction.
+      const validStop = (window.Sim && window.Sim.Direction)
+        ? window.Sim.Direction.stopValidates(direction, price, stop)
+        : (direction === 'short' ? stop > price : stop < price);
+      if (!isFinite(price) || !isFinite(stop) || price <= 0 || stop <= 0 || !validStop){
         stopDistEl.textContent = '';
         stopDistEl.classList.remove('is-rule');
         return;
       }
-      const distPct = ((price - stop) / price) * 100;
+      // Distance: long uses (price-stop)/price; short uses (stop-price)/price.
+      const distAbs = Math.abs(stop - price);
+      const distPct = (distAbs / price) * 100;
       const bars = (typeof barsProvider === 'function') ? barsProvider() : [];
       const dateStr = (dateEl && dateEl.value) || (opts.dateProvider ? opts.dateProvider() : null);
       const idx = Sim.StopRules._findBarIdxByDate(bars, dateStr);
       const a = Sim.StopRules.atrAt(bars, idx, 14);
-      const atrMult = (a && a > 0) ? ((price - stop) / a) : null;
+      const atrMult = (a && a > 0) ? (distAbs / a) : null;
       const ruleLabel = (t === 'manual') ? '' : '· auto';
-      stopDistEl.textContent = '−' + distPct.toFixed(2) + '% from entry'
+      const sign = direction === 'short' ? '+' : '−';
+      stopDistEl.textContent = sign + distPct.toFixed(2) + '% from entry'
         + (atrMult != null ? ' · ' + atrMult.toFixed(2) + '× ATR' : '')
         + (ruleLabel ? ' ' + ruleLabel : '');
       stopDistEl.classList.toggle('is-rule', t !== 'manual');
@@ -11351,6 +11479,7 @@ window.Sim = Sim;
 
     let _firstApply = true;
     function _applyStrategy(){
+      _updateLabelsForDirection();
       _updateKVisibility();
       // First paint: if the modal was reopened with an existing stop value
       // (e.g. ctx.restoreFrom.stop), preserve it and force "Manual". The user
@@ -11573,7 +11702,7 @@ window.Sim = Sim;
     }
     [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
     _setupPills('sim-setup-pills', 'sim-size-mode', 'sim-setup-size-label', recompute);
-    _setupDirectionPills('sim-setup-direction', 'sim-direction-value', recompute);
+    // direction pills wired below after _wireStopStrategy returns its handle.
     recompute();
 
     // Stop-strategy picker (wraps existing recompute via _reapplyOnInput chain).
@@ -11582,12 +11711,16 @@ window.Sim = Sim;
     const stratSuffixEl = document.getElementById('sim-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-stop-distance');
     const emaPeriodEl = document.getElementById('sim-stop-strategy-ema-period');
-    _wireStopStrategy({
+    const _stopWire = _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl, dateEl,
       emaPeriodEl,
       lsKey: 'bm_sim_stop_strategy',
       defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: true,
+      // P2: feed direction so presets / labels flip per radio.
+      directionProvider: function(){
+        return (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
+      },
       // PortSim mode: prefer the per-card bars + moveKey passed via ctx.
       // Single-sim mode: fall back to window.currentBars / currentMoveRow.
       barsProvider: function(){
@@ -11599,6 +11732,11 @@ window.Sim = Sim;
         const r = window.currentMoveRow;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
       }
+    });
+    // Re-run strategy when direction toggles (label flip + recompute).
+    _setupDirectionPills('sim-setup-direction', 'sim-direction-value', function(){
+      recompute();
+      if (_stopWire && typeof _stopWire.reapply === 'function') _stopWire.reapply();
     });
 
     document.getElementById('sim-setup-cancel').onclick = () => _closeModal('sim-setup-modal');
@@ -11784,7 +11922,7 @@ window.Sim = Sim;
     }
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
     _setupPills('sim-newleg-pills', 'sim-newleg-size-mode', 'sim-newleg-size-label', recompute);
-    _setupDirectionPills('sim-newleg-direction', 'sim-newleg-direction-value', recompute);
+    // direction pills wired after _wireStopStrategy returns its handle.
     recompute();
 
     // Stop-strategy picker. NewLeg has no separate date input — we use the
@@ -11794,7 +11932,7 @@ window.Sim = Sim;
     const stratSuffixEl = document.getElementById('sim-newleg-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-newleg-stop-distance');
     const emaPeriodEl = document.getElementById('sim-newleg-stop-strategy-ema-period');
-    _wireStopStrategy({
+    const _newlegStopWire = _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl,
       emaPeriodEl,
       dateEl: null,
@@ -11802,6 +11940,10 @@ window.Sim = Sim;
       lsKey: 'bm_sim_stop_strategy',
       defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: false,
+      // P2: feed direction so presets / labels flip per radio.
+      directionProvider: function(){
+        return (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
+      },
       // PortSim mode: prefer the per-card bars passed via ctx (the active
       // card's OHLCV). Single-sim mode: fall back to window.currentBars.
       barsProvider: function(){
@@ -11813,6 +11955,10 @@ window.Sim = Sim;
         const r = window.currentMoveRow;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
       }
+    });
+    _setupDirectionPills('sim-newleg-direction', 'sim-newleg-direction-value', function(){
+      recompute();
+      if (_newlegStopWire && typeof _newlegStopWire.reapply === 'function') _newlegStopWire.reapply();
     });
 
     document.getElementById('sim-newleg-cancel').onclick = () => _closeModal('sim-newleg-modal');
