@@ -2477,7 +2477,8 @@
     line-height:1.4;
   }
   .portcard-badge:empty{display:none;}
-  .portcard-badge.is-stale{background:var(--bg3);color:var(--muted-2);border-color:var(--border);}
+  .portcard-badge.is-stale{background:rgba(212,165,116,0.18);color:var(--accent);border-color:var(--accent);}
+  .portcard-badge.is-stale.is-clickable:hover{background:var(--accent);color:var(--bg);}
   .portcard-badge.is-between{background:rgba(245,200,66,0.12);color:var(--yellow);border-color:rgba(245,200,66,0.35);}
   .portcard-badge.is-active{background:rgba(110,231,183,0.12);color:var(--green);border-color:rgba(110,231,183,0.35);}
   .portcard-badge.is-idle{background:var(--bg3);color:var(--muted);border-color:var(--border);}
@@ -2738,6 +2739,21 @@
     color:var(--green);
     display:block;
   }
+  .portsim-validation-summary.has-warnings{
+    background:rgba(212,165,116,0.08);
+    border-color:var(--accent);
+    color:var(--accent);
+    display:block;
+  }
+  .portsim-validation-summary.has-errors.has-warnings{
+    background:rgba(251,113,133,0.08);
+    border-color:var(--red);
+    color:var(--red);
+  }
+  .portsim-validation-warnhead{
+    margin-top:6px;font-weight:600;color:var(--accent);
+  }
+  .portsim-validation-warnlist li{ color:var(--accent); }
   .portsim-validation-summary ul{
     margin:0;padding-left:18px;
   }
@@ -15509,10 +15525,17 @@ Sim.Ctrl = (function(){
     function setActive(on){
       dom.root.classList.toggle('is-active', !!on);
     }
-    function setBadge(text, cls){
+    function setBadge(text, cls, opts){
       // Wipe known modifier classes, then re-apply caller's class (if any).
-      dom.badgeEl.classList.remove('is-stale','is-between','is-active','is-idle');
+      dom.badgeEl.classList.remove('is-stale','is-between','is-active','is-idle','is-clickable');
       dom.badgeEl.textContent = text || '';
+      // Reset tooltip + click handler from any prior state.
+      dom.badgeEl.removeAttribute('title');
+      dom.badgeEl.style.cursor = '';
+      if (dom.badgeEl._badgeClick){
+        dom.badgeEl.removeEventListener('click', dom.badgeEl._badgeClick);
+        dom.badgeEl._badgeClick = null;
+      }
       if (cls){
         // Allow space-separated class list, or shorthand (e.g. 'stale').
         String(cls).split(/\s+/).forEach(c => {
@@ -15523,6 +15546,18 @@ Sim.Ctrl = (function(){
             dom.badgeEl.classList.add(c);
           }
         });
+      }
+      // Optional tooltip + click handler — used by stale state to show
+      // "data ends YYYY-MM-DD, click to extend" affordance.
+      if (opts && opts.title) dom.badgeEl.title = opts.title;
+      if (opts && typeof opts.onClick === 'function'){
+        dom.badgeEl._badgeClick = function(ev){
+          ev.stopPropagation();
+          opts.onClick(ev);
+        };
+        dom.badgeEl.addEventListener('click', dom.badgeEl._badgeClick);
+        dom.badgeEl.classList.add('is-clickable');
+        dom.badgeEl.style.cursor = 'pointer';
       }
     }
 
@@ -16462,11 +16497,16 @@ Sim.Ctrl = (function(){
     clearChildren(sumEl);
 
     var topErrs = (res && res.errors) ? res.errors.slice() : [];
-    // Aggregate data errors into the summary too
+    var topWarns = [];
+    // Aggregate data errors AND warnings into the summary too. Warnings
+    // (e.g. "data ends YYYY-MM-DD before end YYYY-MM-DD") used to be silent —
+    // user would submit, hit play, then see 'stale' badges with no idea why.
+    // Now we surface them so they can extend data first.
     if (dataResults && dataResults.perTicker) {
       Object.keys(dataResults.perTicker).forEach(function (sym) {
         var info = dataResults.perTicker[sym];
         if (info.error) topErrs.push({ path: sym, msg: info.error });
+        if (info.warn) topWarns.push({ path: sym, msg: info.warn });
       });
     }
 
@@ -16479,6 +16519,21 @@ Sim.Ctrl = (function(){
         ul.appendChild(li);
       });
       sumEl.appendChild(ul);
+    }
+    if (topWarns.length > 0) {
+      sumEl.classList.add('has-warnings');
+      var warnHead = document.createElement('div');
+      warnHead.className = 'portsim-validation-warnhead';
+      warnHead.textContent = '⚠ Data coverage warnings — these tickers will go stale partway through the sim:';
+      sumEl.appendChild(warnHead);
+      var wul = document.createElement('ul');
+      wul.className = 'portsim-validation-warnlist';
+      topWarns.forEach(function (w) {
+        var li = document.createElement('li');
+        li.textContent = w.msg;
+        wul.appendChild(li);
+      });
+      sumEl.appendChild(wul);
     }
   }
 
@@ -18545,7 +18600,19 @@ Sim.Ctrl = (function(){
         const entry = _state.basket[i];
         const barIdx = entry.dateToBarIdx.get(date);
         if (barIdx == null){
-          if (entry.card.setBadge) entry.card.setBadge('stale', 'stale');
+          if (entry.card.setBadge){
+            // Compute the last on-disk date for this ticker so the tooltip
+            // and click action can show / fix the actual coverage gap.
+            const last = entry.bars && entry.bars.length
+              ? (entry.bars[entry.bars.length - 1].time || entry.bars[entry.bars.length - 1].date)
+              : null;
+            const reason = 'No bar for ' + date + (last ? ' — local CSV ends at ' + last : '')
+              + '. Click to fetch missing bars from Twelve Data.';
+            entry.card.setBadge('stale ↻', 'stale', {
+              title: reason,
+              onClick: function(){ _extendStaleTicker(entry); }
+            });
+          }
           continue;
         }
         const bar = entry.bars[barIdx];
@@ -19101,6 +19168,61 @@ Sim.Ctrl = (function(){
         });
       })
       .catch(function(e){ return { ok: false, error: 'network: ' + (e && e.message ? e.message : e) }; });
+  }
+
+  // Triggered by clicking the 'stale ↻' badge: pause, ask Twelve Data to
+  // append from last-on-disk to today, refetch the OHLCV, swap the entry's
+  // bars + rebuild dateToBarIdx, repaint the card chart up to current play
+  // date. Sim stays paused after — user resumes manually if happy.
+  function _extendStaleTicker(entry){
+    if (!entry || !entry.symbol) return;
+    if (entry._extending) return; // de-dupe rapid clicks
+    entry._extending = true;
+    _pause();
+    if (entry.card && entry.card.setBadge){
+      entry.card.setBadge('fetching…', 'stale');
+    }
+    fetch('/api/fetch-ticker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbol: entry.symbol, extend: true })
+    }).then(function(r){
+      return r.json().then(function(d){
+        if (!r.ok || (d && d.error)) throw new Error(d && d.error ? d.error : 'HTTP ' + r.status);
+        return d;
+      });
+    }).then(function(){
+      // Refetch full OHLCV so we get the appended rows.
+      return _runtimeFetchBars(entry.symbol);
+    }).then(function(res){
+      if (!res.ok) throw new Error(res.error || 'refetch failed');
+      var newBars = res.bars;
+      entry.bars = newBars;
+      entry.dateToBarIdx = new Map();
+      for (var i = 0; i < newBars.length; i++){
+        var t = newBars[i] && newBars[i].time;
+        if (t) entry.dateToBarIdx.set(t, i);
+      }
+      // Repaint the card chart with bars up to (and including) the current
+      // sim date so it picks up smoothly when the user resumes.
+      var curDate = (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.startDate;
+      var slice = _sliceUpTo(newBars, curDate);
+      if (entry.card && entry.card.setData) entry.card.setData(slice);
+      if (entry.card && entry.card.setBadge){
+        var nowHasBar = entry.dateToBarIdx.get(curDate) != null;
+        entry.card.setBadge(nowHasBar ? 'idle' : 'still stale', nowHasBar ? 'idle' : 'stale');
+      }
+      entry.lastCloseSeen = slice.length ? +slice[slice.length - 1].close : entry.lastCloseSeen;
+      _renderAll();
+    }).catch(function(e){
+      console.warn('[PortSim.Ctrl] _extendStaleTicker failed:', e);
+      if (entry.card && entry.card.setBadge){
+        entry.card.setBadge('fetch failed', 'stale', { title: String(e && e.message ? e.message : e) });
+      }
+      alert('Failed to extend ' + entry.symbol + ': ' + (e && e.message ? e.message : e));
+    }).then(function(){
+      entry._extending = false;
+    });
   }
 
   function _basketSymbolsSet(){
