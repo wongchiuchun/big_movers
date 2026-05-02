@@ -10581,10 +10581,17 @@ window.Sim = Sim;
     if (!derived) return;
     const { positionValue = 0, peakTotal = 0, totalPnL = 0, pnlPct = 0, giveBack = 0, giveBackPct = 0,
             peakBarsAgo = 0, entry = null, avg = null, qty = null, stop = null, stopDollar = null, stopPct = null,
-            initialNotional = 0, initialShares = 0,
+            initialNotional = 0, initialShares = 0, direction = 'long',
             stoppedOut = false, closed = false, exitPrice = null, exitDay = null, exitReason = null,
             mfe = null, mae = null, r = null, days = null, barIndex = 0, dateISO = '—',
             cumulativePnL = 0, cumulativeR = 0, legCount = 0, legsSummary = [] } = derived;
+    // P4: button labels follow active-leg direction. Long: Sell/Add. Short: Cover/Add Short.
+    (function _updateActionButtons(){
+      const sellBtn = document.getElementById('sim-btn-sell');
+      const addBtn  = document.getElementById('sim-btn-add');
+      if (sellBtn) sellBtn.textContent = direction === 'short' ? 'Cover' : 'Sell';
+      if (addBtn)  addBtn.textContent  = direction === 'short' ? 'Add Short' : 'Add';
+    })();
 
     // Position headline = initial notional (constant for the leg) so users keep sight
     // of the size that contextualises the P&L number, even after a stop-out where qty=0.
@@ -21595,10 +21602,16 @@ Sim.Ctrl = (function(){
       close:    isActive
     };
     var btns = d.actionsEl.querySelectorAll('button[data-action]');
+    var dir = (sim && sim.direction === 'short') ? 'short' : 'long';
     btns.forEach(function(btn){
       var k = btn.getAttribute('data-action');
       if (states[k]) btn.removeAttribute('hidden');
       else btn.setAttribute('hidden', '');
+      // P4: relabel buttons per direction. Engine event types stay neutral
+      // (sell/add/close); the view layer renders cover/short labels.
+      if (k === 'sell') btn.textContent = (dir === 'short') ? '– Cover' : '– Sell';
+      else if (k === 'add')   btn.textContent = (dir === 'short') ? '+ Add Short' : '+ Add';
+      else if (k === 'close') btn.textContent = (dir === 'short') ? '✕ Cover All' : '✕ Close';
     });
     // Chart hint text mirrors the action that bare-click would trigger.
     if (d.chartHint){
