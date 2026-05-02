@@ -12905,6 +12905,25 @@ window.Sim = Sim;
   function _excludeAggregates(trades){
     return trades.filter(function(t){ return t.exitReason !== 'aggregate'; });
   }
+  // Count weekdays (Mon-Fri) between two ISO dates, inclusive. Approximates
+  // trading days — close enough for the "how much sim time have I put in"
+  // tile (no holiday calendar, but the inclusive count is dominated by
+  // weekday density and the bias is consistent across sessions).
+  function _tradingDaysBetween(startISO, endISO){
+    if (!startISO || !endISO) return 0;
+    const s = new Date(startISO + 'T00:00:00Z');
+    const e = new Date(endISO + 'T00:00:00Z');
+    if (isNaN(s.getTime()) || isNaN(e.getTime()) || e < s) return 0;
+    let count = 0;
+    let d = new Date(s.getTime());
+    while (d <= e){
+      const dow = d.getUTCDay();
+      if (dow !== 0 && dow !== 6) count++;
+      d = new Date(d.getTime() + 86400000);
+    }
+    return count;
+  }
+
   function _calcKeyMetrics(rawTrades, sessions){
     const trades = _excludeAggregates(rawTrades);
     const aggCount = (rawTrades || []).length - trades.length;
@@ -12913,6 +12932,9 @@ window.Sim = Sim;
     // unknown but whose total P&L is real.
     const totalPnL = (sessions || []).reduce(function(s, x){ return s + (x.sessionPnL || 0); }, 0);
     const sessionCount = sessions ? sessions.length : 0;
+    const daysSimulated = (sessions || []).reduce(function(a, s){
+      return a + _tradingDaysBetween(s.simStartDate, s.simEndDate);
+    }, 0);
 
     // Deployed % is a session-level metric — averaged across sessions that
     // had a starting equity (older aggregate sessions usually do, since v1
@@ -12938,6 +12960,7 @@ window.Sim = Sim;
                avgPctDeployed: avgPctDeployed,
                peakPctDeployed: peakPctDeployed,
                idlePctOfTime: idlePctOfTime,
+               daysSimulated: daysSimulated,
                winCount: 0, lossCount: 0, breakEvenCount: 0 };
     }
     const wins = trades.filter(function(t){ return (t.realizedPnL || 0) > 0; });
@@ -12964,7 +12987,8 @@ window.Sim = Sim;
       avgReturnPct: avgReturnPct,
       avgPctDeployed: avgPctDeployed,
       peakPctDeployed: peakPctDeployed,
-      idlePctOfTime: idlePctOfTime
+      idlePctOfTime: idlePctOfTime,
+      daysSimulated: daysSimulated
     };
   }
 
@@ -13087,6 +13111,14 @@ window.Sim = Sim;
          + ' (incl. ' + k.aggCount + ' aggregate)')
       : null;
     grid.appendChild(tile('Total P&L', _fmt$Signed(k.totalPnL), pnlSub, k.totalPnL > 0 ? 'is-pos' : (k.totalPnL < 0 ? 'is-neg' : '')));
+    // How much sim time is behind these numbers — context for the P&L
+    // and trade count above. "Trading days" = weekday count summed across
+    // session sim windows (no holiday calendar; close enough as a feel
+    // for "how much screen time have I logged").
+    const daysSub = k.sessionCount > 0
+      ? ('trading days · ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's'))
+      : 'trading days';
+    grid.appendChild(tile('Days Simulated', String(k.daysSimulated || 0), daysSub));
     // Per-trade tiles render '—' when only aggregates exist.
     grid.appendChild(tile('Win Rate', hasRealTrades ? k.winRate.toFixed(1) + '%' : '—', 'per trade', hasRealTrades ? (k.winRate >= 50 ? 'is-pos' : 'is-neg') : ''));
     grid.appendChild(tile('Expected Value', hasRealTrades ? _fmt$Signed(k.expectedValue) : '—', 'per trade', hasRealTrades ? (k.expectedValue > 0 ? 'is-pos' : (k.expectedValue < 0 ? 'is-neg' : '')) : ''));
