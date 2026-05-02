@@ -41,8 +41,23 @@ const shortLocksBlock = extractBlockUpTo(HTML, '/* ---------- Sim.ShortLocks', '
 // 5) Sim.PortfolioValuation module
 const valuationBlock = extractBlockUpTo(HTML, '/* ---------- Sim.PortfolioValuation', '/* ---------- Sim.UI: modals');
 
-// Build a sandbox with a minimal window
+// Build a sandbox with a minimal window. The trail-stop logic resolves
+// `window.calcEMA` at runtime, so we pre-seed a minimal implementation
+// matching the in-browser one at Big_movers.html:6671. Without this, every
+// _maybeTrailStops candidate returns null and trails never move — making the
+// test green on a broken implementation.
 const sandbox = { window: {}, console: console };
+sandbox.window.calcEMA = function calcEMA(bars, p){
+  if (bars.length < p) return [];
+  const k = 2/(p+1);
+  let e = bars.slice(0, p).reduce((s, b) => s + b.close, 0) / p;
+  const out = [{ time: bars[p-1].time, value: parseFloat(e.toFixed(4)) }];
+  for (let i = p; i < bars.length; i++){
+    e = bars[i].close*k + e*(1-k);
+    out.push({ time: bars[i].time, value: parseFloat(e.toFixed(4)) });
+  }
+  return out;
+};
 sandbox.global = sandbox;
 vm.createContext(sandbox);
 
@@ -365,6 +380,118 @@ record('atrOffset: long subtracts, short adds', () => {
   if (!(isFinite(short) && short > 100)) throw new Error('short atrOffset not greater than entry: ' + short);
   // Symmetry: |long - 100| ≈ |short - 100|
   if (!approxEq(Math.abs(long - 100), Math.abs(short - 100), 0.02)) throw new Error('asymmetric: ' + long + ' / ' + short);
+});
+
+console.log('\n=== Bugfix regression tests (post-P8) ===');
+
+record('EMA trail (long): stop ratchets UP as price rises', () => {
+  // Strictly rising bars so the EMA also rises.
+  const closes = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112];
+  const bars = closes.map((c, i) => {
+    const baseDate = new Date('2024-01-02');
+    const dt = new Date(baseDate); dt.setUTCDate(dt.getUTCDate() + i);
+    return { time: dt.toISOString().slice(0,10), open: c-0.5, high: c+0.5, low: c-1, close: c, volume: 1000000 };
+  });
+  const sim = Sim.createSim({
+    moveKey: 'TRAIL_LONG',
+    direction: 'long',
+    entry: {
+      barIdx: 5, date: bars[5].time, price: 105,
+      sizeMode: 'shares', sizeValue: 100, stop: 100,
+      stopTrail: { type: 'ema', period: 5, k: 0 }
+    }
+  });
+  if (!sim.stopLevels[0].trail) throw new Error('initial stop missing trail spec');
+  const initialStop = sim.stopLevels[0].price;
+  Sim.advanceTo(sim, bars, 12); // walk 7 bars forward
+  const finalStop = sim.stopLevels[0].price;
+  if (!(finalStop > initialStop + 0.5)) {
+    throw new Error('long trail did not move up enough: ' + initialStop + ' → ' + finalStop);
+  }
+});
+
+record('EMA trail (short): stop ratchets DOWN as price falls', () => {
+  // Strictly falling bars so the EMA also falls.
+  const closes = [120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 108];
+  const bars = closes.map((c, i) => {
+    const baseDate = new Date('2024-01-02');
+    const dt = new Date(baseDate); dt.setUTCDate(dt.getUTCDate() + i);
+    return { time: dt.toISOString().slice(0,10), open: c+0.5, high: c+1, low: c-0.5, close: c, volume: 1000000 };
+  });
+  const sim = Sim.createSim({
+    moveKey: 'TRAIL_SHORT',
+    direction: 'short',
+    entry: {
+      barIdx: 5, date: bars[5].time, price: 115,
+      sizeMode: 'shares', sizeValue: 100, stop: 120,
+      stopTrail: { type: 'ema', period: 5, k: 0 }
+    }
+  });
+  if (!sim.stopLevels[0].trail) throw new Error('initial stop missing trail spec');
+  const initialStop = sim.stopLevels[0].price;
+  Sim.advanceTo(sim, bars, 12);
+  const finalStop = sim.stopLevels[0].price;
+  if (!(finalStop < initialStop - 0.5)) {
+    throw new Error('short trail did not move down enough: ' + initialStop + ' → ' + finalStop);
+  }
+});
+
+record('startNewLeg propagates stopTrail (covers new-leg modal regression)', () => {
+  const bars = buildBars();
+  const sim = Sim.createSim({
+    moveKey: 'NEWLEG_TRAIL',
+    entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 98 }
+  });
+  Sim.advanceTo(sim, bars, 4); // stop fires bar 3
+  Sim.continueSim(sim);
+  Sim.startNewLeg(sim, {
+    barIdx: 5, date: bars[5].time,
+    price: bars[5].close, stop: bars[5].close - 5,
+    sizeMode: 'shares', sizeValue: 100,
+    direction: 'long',
+    stopTrail: { type: 'ema', period: 5, k: 0 }
+  });
+  if (!sim.stopLevels[0].trail) throw new Error('new-leg stop trail not set');
+  if (sim.stopLevels[0].trail.type !== 'ema') throw new Error('trail type wrong: ' + sim.stopLevels[0].trail.type);
+  if (sim.stopLevels[0].trail.period !== 5) throw new Error('trail period wrong: ' + sim.stopLevels[0].trail.period);
+});
+
+record('Short full-close math: cash gets realized only, NOT cover cost', () => {
+  // Simulate the PortSim cash bookkeeping. Open 100sh short at $100 on $100k
+  // initial cash; cover at $90. Cash should rise by $1000 (the realized P&L),
+  // NOT by $9000 (the cover cost). The original bug routed all closes through
+  // creditManualClose which treats every close as a long-style sale.
+  const locks = {};
+  const cashBefore = 100000;
+  ShortLocks.applyOpen(locks, 'leg1', 100, 100);
+  // applyOpen: cash UNCHANGED, lock.proceeds = $10k.
+  if (!approxEq(locks.leg1.proceeds, 10000)) throw new Error('proceeds = ' + locks.leg1.proceeds);
+  // Full close at $90:
+  const r = ShortLocks.applyClose(locks, 'leg1', 90);
+  if (!approxEq(r.realized, 1000)) throw new Error('realized = ' + r.realized + ', expected +1000');
+  if (!approxEq(r.releaseCash, 1000)) throw new Error('releaseCash should equal realized');
+  // After full close, lock removed.
+  if (locks.leg1) throw new Error('lock not removed after full close');
+  // Cash math the wrapper performs: cashBefore + r.realized = 101000.
+  // (The buggy path would have done cashBefore + 100*90 = 109000.)
+  const cashAfter = cashBefore + r.realized;
+  if (!approxEq(cashAfter, 101000)) throw new Error('cashAfter = ' + cashAfter);
+});
+
+record('Short partial cover: proceeds release proportionally', () => {
+  const locks = {};
+  ShortLocks.applyOpen(locks, 'leg1', 100, 100);
+  const r1 = ShortLocks.applyCover(locks, 'leg1', 50, 90);
+  // 50/100 of proceeds = $5000 released; cover cost = 50*90 = $4500; realized = +$500.
+  if (!approxEq(r1.realized, 500)) throw new Error('partial realized = ' + r1.realized);
+  // Lock should still hold the other half.
+  if (!locks.leg1) throw new Error('lock dropped prematurely');
+  if (!approxEq(locks.leg1.shares, 50)) throw new Error('lock shares = ' + locks.leg1.shares);
+  if (!approxEq(locks.leg1.proceeds, 5000)) throw new Error('lock proceeds = ' + locks.leg1.proceeds);
+  // Now close the rest at $80 → +$1000 more realized.
+  const r2 = ShortLocks.applyClose(locks, 'leg1', 80);
+  if (!approxEq(r2.realized, 1000)) throw new Error('final realized = ' + r2.realized);
+  if (locks.leg1) throw new Error('lock not removed after final close');
 });
 
 console.log('\n=== Total: ' + pass + ' passed, ' + fail + ' failed ===');

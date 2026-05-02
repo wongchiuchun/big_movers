@@ -10478,7 +10478,13 @@ const Sim = (function(){
     sim.qty = shares;
     sim.avgCost = params.price;
     sim.realizedPnL = 0;
-    sim.stopLevels = [{ id: 'stop_initial_l' + legNum, price: params.stop, pct: 1.0, fired: false, barIdx: params.barIdx }];
+    // Inherit stopTrail spec from the new-leg modal (mirrors createSim).
+    // Without this, picking 'ema_trail' on a new leg silently behaved as a
+    // snapshot — the stop never moved over time.
+    const _newLegTrail = (params.stopTrail && params.stopTrail.type === 'ema')
+      ? { type: 'ema', period: +params.stopTrail.period || 10, k: +params.stopTrail.k || 0 }
+      : null;
+    sim.stopLevels = [{ id: 'stop_initial_l' + legNum, price: params.stop, pct: 1.0, fired: false, barIdx: params.barIdx, trail: _newLegTrail }];
     sim.pendingActions = [];
     sim.between = false;
     sim.peakTotal = 0;
@@ -11988,8 +11994,12 @@ window.Sim = Sim;
           direction === 'short' ? 'Stop must be above entry for short' : 'Stop must be below entry for long',
           true);
       }
+      // Pull the EMA-trail spec from the strategy picker if the user picked
+      // 'ema_trail'. Without this, the new-leg modal silently dropped the
+      // trail wiring and the stop behaved as a snapshot instead of trailing.
+      const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
       try {
-        onSubmit && onSubmit({ direction, sizeMode: mode, sizeValue: size, price, stop });
+        onSubmit && onSubmit({ direction, sizeMode: mode, sizeValue: size, price, stop, stopTrail });
         _closeModal('sim-newleg-modal');
       } catch (err) { _setStatus('sim-newleg-status', err && err.message ? err.message : 'Could not start leg', true); }
     };
@@ -14846,9 +14856,10 @@ Sim.Ctrl = (function(){
           sizeMode: form.sizeMode,
           sizeValue: form.sizeValue,
           stop: form.stop,
-          // P3 wires `form.direction` from the modal radio. Until then this is
-          // undefined → startNewLeg falls back to existing sim.direction (long).
-          direction: form.direction
+          // P3 wires `form.direction` from the modal radio.
+          direction: form.direction,
+          // Carry through the EMA-trail spec if the user picked 'ema_trail'.
+          stopTrail: form.stopTrail || null
         });
       } catch (e) { alert('Could not start new leg: ' + e.message); return; }
       _ensureInitialStopLine();
@@ -18933,7 +18944,8 @@ Sim.Ctrl = (function(){
           stop: +form.stop,
           sizeMode: form.sizeMode,
           sizeValue: +form.sizeValue,
-          direction: newDir
+          direction: newDir,
+          stopTrail: form.stopTrail || null
         });
         // Long leg → debit cash. Short leg → lock proceeds (no cash debit).
         if (entry.sim.direction === 'short'){
@@ -19025,7 +19037,11 @@ Sim.Ctrl = (function(){
       const qty = entry.sim.qty;
       try {
         window.Sim.closeAt(entry.sim, entry.bars, px);
-        PortSim.Cash.creditManualClose(_state, qty, px);
+        // Direction-aware: long credits qty × px (sale proceeds); short
+        // releases the lock and credits realized P&L (= proceeds − cover cost)
+        // so cash stays continuous through the close. The plain
+        // creditManualClose was double-crediting cover cost on shorts.
+        PortSim.Cash.closePosition(_state, entry.sim, qty, px);
         _accumulateRealizedFromSim(entry);
       } catch (e){
         console.error('[PortSim.Ctrl] closeAt failed:', e);
@@ -19359,9 +19375,9 @@ Sim.Ctrl = (function(){
           const soldQty = sim.qty;
           try {
             window.Sim.closeAt(sim, e.bars, px);
-            // closeAt doesn't touch the cash ledger — credit it here, same
-            // pattern as the manual close flow uses.
-            PortSim.Cash.creditManualClose(_state, soldQty, px);
+            // Direction-aware close: long credits sale proceeds, short
+            // releases the lock and only the realized delta hits cash.
+            PortSim.Cash.closePosition(_state, sim, soldQty, px);
             // Reflect the now-closed state on the card.
             if (e.card){
               e.card.setBadge('closed', 'between');
@@ -19498,7 +19514,8 @@ Sim.Ctrl = (function(){
         const soldQty = sim.qty;
         try {
           window.Sim.closeAt(sim, e.bars, px);
-          PortSim.Cash.creditManualClose(_state, soldQty, px);
+          // Direction-aware close (see manual-close path for rationale).
+          PortSim.Cash.closePosition(_state, sim, soldQty, px);
           if (e.card){ e.card.setBadge('closed', 'between'); e.card.setActive(false); }
           if (e._newLegBtn) e._newLegBtn.style.display = '';
         } catch (err){
