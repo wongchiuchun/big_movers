@@ -302,6 +302,33 @@ record('Direction.stopValidates', () => {
   if (Direction.stopValidates('short', 100, 98) !== false) throw new Error('short bad');
 });
 
+console.log('\n=== P7 backward-compat v1 review ===');
+record('createSim accepts legacy entry (no direction) → defaults long', () => {
+  const bars = buildBars();
+  const sim = Sim.createSim({
+    moveKey: 'V1',
+    entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 50, stop: 95 }
+  });
+  // Walk through bars, then close: result should be identical to a fresh long sim.
+  Sim.advanceTo(sim, bars, 9);
+  Sim.closeAt(sim, bars, bars[9].close);
+  // bars[9].close = 110, entry = 100, qty = 50, realized = 50 * (110 - 100) = 500
+  if (!approxEq(sim.realizedPnL, 500)) throw new Error('legacy P&L = ' + sim.realizedPnL);
+});
+
+record('continueSim archives legs with direction', () => {
+  const bars = buildBars();
+  const sim = Sim.createSim({
+    moveKey: 'V2',
+    entry: { barIdx: 0, date: bars[0].time, price: 100, sizeMode: 'shares', sizeValue: 100, stop: 98 }
+  });
+  Sim.advanceTo(sim, bars, 4); // stop at bar 3
+  Sim.continueSim(sim);
+  if (!sim.legs || sim.legs.length !== 1) throw new Error('legs not archived');
+  if (sim.legs[0].direction !== 'long') throw new Error('archived leg direction missing: ' + sim.legs[0].direction);
+  if (!sim.legs[0].legId) throw new Error('archived leg legId missing');
+});
+
 console.log('\n=== P2 StopRules direction-aware ===');
 const StopRules = Sim.StopRules;
 record('pctOffset: long shrinks, short grows', () => {

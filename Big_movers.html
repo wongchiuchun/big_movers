@@ -13148,6 +13148,9 @@ window.Sim = Sim;
     (sim.legs || []).forEach(function(leg, i){
       allLegs.push({
         legIndex: i + 1,
+        // P7: per-leg direction (Codex flagged hardcoded session-level long).
+        direction: leg.direction || 'long',
+        legId: leg.legId || null,
         entry: leg.entry, shares0: leg.shares0, initialRisk: leg.initialRisk,
         realizedPnL: leg.realizedPnL, rMultiple: leg.rMultiple,
         mfe: leg.mfe, mae: leg.mae,
@@ -13162,11 +13165,17 @@ window.Sim = Sim;
       // Mark-to-market for an open leg.
       if (!sim.closed && !sim.stoppedOut && sim.qty > 0){
         const lastBar = bars && bars[sim.playIdx];
-        if (lastBar) realized = (sim.realizedPnL || 0) + sim.qty * (lastBar.close - sim.avgCost);
+        if (lastBar){
+          // Direction-aware MTM: short = (avg - close) * qty.
+          const sgn = (sim.direction === 'short') ? -1 : 1;
+          realized = (sim.realizedPnL || 0) + sim.qty * (lastBar.close - sim.avgCost) * sgn;
+        }
       }
       const r = (sim.initialRisk > 0) ? realized / sim.initialRisk : null;
       allLegs.push({
         legIndex: (sim.legs || []).length + 1,
+        direction: sim.direction || 'long',
+        legId: sim.legId || null,
         entry: sim.entry, shares0: sim.shares0, initialRisk: sim.initialRisk,
         realizedPnL: realized, rMultiple: r,
         mfe: sim._mfeVal, mae: sim._maeVal,
@@ -13198,6 +13207,9 @@ window.Sim = Sim;
       trades.push({
         legIndex: leg.legIndex,
         symbol: symbol,
+        // P7: per-leg direction in CSV/JSON exports.
+        direction: leg.direction || 'long',
+        legId: leg.legId || null,
         entryDate: entryDate, entryPrice: leg.entry.price,
         qty: leg.shares0, stopAtEntry: leg.entry.stop, initialRisk: leg.initialRisk,
         exitDate: exitDate, exitPrice: exitPrice, exitReason: leg.exitReason,
@@ -24657,6 +24669,9 @@ Sim.Ctrl = (function(){
       var exitBar = bars[l.exitBarIdx | 0];
       out.push({
         idx: i + 1,
+        // P7: emit per-leg direction (default 'long' for legacy reviews).
+        direction: l.direction || 'long',
+        legId: l.legId || null,
         entryDate: entryBar ? entryBar.time : (l.entry && l.entry.date) || null,
         entryPrice: l.entry ? +l.entry.price : 0,
         shares: l.shares0 || 0,
@@ -24684,11 +24699,17 @@ Sim.Ctrl = (function(){
       var curBar = bars[curBarIdx];
       var realized = sim.realizedPnL || 0;
       var unreal = 0;
-      if (sim.qty > 0 && curBar) unreal = sim.qty * (curBar.close - sim.avgCost);
+      if (sim.qty > 0 && curBar){
+        // Direction-aware unrealized for active leg.
+        var sgn = (sim.direction === 'short') ? -1 : 1;
+        unreal = sim.qty * (curBar.close - sim.avgCost) * sgn;
+      }
       var totalPnL = realized + unreal;
       var rUnit = (sim.initialRisk > 0) ? totalPnL / sim.initialRisk : 0;
       out.push({
         idx: out.length + 1,
+        direction: sim.direction || 'long',
+        legId: sim.legId || null,
         entryDate: entryBar2 ? entryBar2.time : (sim.entry.date || null),
         entryPrice: +sim.entry.price,
         shares: sim.shares0 || 0,
@@ -25590,10 +25611,49 @@ Sim.Ctrl = (function(){
     });
   }
 
+  // P7: silent-migrate v1 (pre-shorts) saved reviews on load.
+  // - any leg without `direction` reads as 'long'
+  // - missing meta.shortLocks reads as {}
+  // Verifies the saved equity matches the recomputed equity (byte-for-byte
+  // self-check) and logs a warning if not.
+  function _migrateLoadedReviewV1(loaded){
+    if (!loaded || !loaded.meta) return loaded;
+    var meta = loaded.meta;
+    if (!meta.shortLocks) meta.shortLocks = {};
+    if (Array.isArray(meta.basket)){
+      meta.basket.forEach(function(e){
+        if (!e || !Array.isArray(e.legs)) return;
+        e.legs.forEach(function(l){
+          if (l && l.direction == null) l.direction = 'long';
+        });
+      });
+    }
+    // Self-check: with all-long, no shortLocks, equity should match.
+    if (typeof meta.equity === 'number' && typeof meta.cash === 'number'){
+      var tally = +meta.cash || 0;
+      (meta.basket || []).forEach(function(e){
+        (e.legs || []).forEach(function(l){
+          if (l && l.active && l.qty > 0 && l.avgCost && l.unreal != null){
+            // Reconstruct mark from avg + unreal/qty (long only on v1 reviews).
+            var mark = l.avgCost + (l.unreal / l.qty);
+            tally += l.qty * mark;
+          }
+        });
+      });
+      var diff = Math.abs(tally - meta.equity);
+      if (diff > 0.5 && window.console){
+        console.warn('[PortSim.Review] v1 replay equity drift:', { saved: meta.equity, recomputed: tally, diff: diff });
+      }
+    }
+    return loaded;
+  }
+
   function _loadSavedReview(key){
     if (!key) return;
     var loaded = _loadData(key);
     if (!loaded){ alert('Could not load saved review.'); return; }
+    // P7: silently migrate legacy v1 review payloads (no direction, no shortLocks).
+    loaded = _migrateLoadedReviewV1(loaded);
 
     var st = window.PortSim && window.PortSim._state;
     var liveActive = !!(st && st.active);
@@ -25680,10 +25740,13 @@ Sim.Ctrl = (function(){
       L.push('- Realized P&L: ' + _moneyS(totalRealized));
       L.push('');
       if (legs.length){
-        L.push('| Leg | Entry | Shares | Stop₀ | Risk₀ | Exit | Reason | P&L | R | MFE | MAE |');
-        L.push('|---|---|---|---|---|---|---|---|---|---|---|');
+        // P7: Dir column ('L' / 'S') per leg.
+        L.push('| Leg | Dir | Entry | Shares | Stop₀ | Risk₀ | Exit | Reason | P&L | R | MFE | MAE |');
+        L.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
         legs.forEach(function(l){
+          var dirTag = (l.direction === 'short') ? 'S' : 'L';
           L.push('| L' + l.idx + (l.active ? ' (active)' : '') + ' | '
+            + dirTag + ' | '
             + (l.entryDate || '—') + ' @ ' + _r2(l.entryPrice) + ' | '
             + l.shares + ' | '
             + _r2(l.stop0) + ' | '
