@@ -1195,6 +1195,46 @@
     font-feature-settings: "tnum" 1, "lnum" 1;
   }
   .sim-active #sim-panel { display: block; }
+  /* Resizable splitter between the chart and sim panel. Hidden until a sim is
+     active; on drag, JS sets explicit height on #sim-panel — chart-container's
+     flex:1 takes the remaining space. Double-click clears the explicit height
+     so the panel snaps back to natural content size. */
+  .sim-resize-handle {
+    display: none;
+    height: 6px;
+    margin: 4px 0;
+    cursor: row-resize;
+    background: transparent;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    flex: 0 0 auto;
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+    z-index: 5;
+  }
+  .sim-resize-handle::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 2px;
+    background: var(--border-bright);
+    border-radius: 1px;
+    transition: background 0.15s;
+  }
+  .sim-resize-handle:hover { background: rgba(212,165,116,0.08); border-color: var(--accent); }
+  .sim-resize-handle:hover::before { background: var(--accent); }
+  .sim-resize-handle.is-dragging { background: rgba(212,165,116,0.16); border-color: var(--accent); }
+  .sim-resize-handle.is-dragging::before { background: var(--accent); }
+  .sim-active .sim-resize-handle { display: block; }
+  /* Popout mode lays chart + sim side-by-side, so a horizontal splitter
+     doesn't apply — keep it hidden. */
+  body.sim-popout .sim-resize-handle { display: none !important; }
+  /* When height is forced via drag, allow scroll inside the panel so content
+     doesn't overflow the viewport. */
+  #sim-panel.is-resized { overflow-y: auto; }
   .sim-hero {
     display: flex;
     align-items: stretch;
@@ -2265,9 +2305,10 @@
   #sim-start-btn:hover,
   #portsim-start-btn:hover { background: var(--accent); color: var(--bg); }
 
-  /* Sim-related auxiliary topbar buttons (Random / Saved / Stats) — match
+  /* Sim-related auxiliary topbar buttons (Random / Blind / Saved / Stats) — match
      the +Add button's text-with-icon shape rather than the 32×32 icon shell. */
   #sim-random-btn,
+  #sim-blind-btn,
   #sim-saved-btn,
   #sim-stats-btn,
   #portsim-saved-btn {
@@ -2280,6 +2321,7 @@
     border: 1px solid var(--border);
   }
   #sim-random-btn:hover,
+  #sim-blind-btn:hover,
   #sim-saved-btn:hover,
   #sim-stats-btn:hover,
   #portsim-saved-btn:hover { color: var(--accent); border-color: var(--accent); }
@@ -4825,6 +4867,7 @@
     <button id="add-ticker-btn" class="tb-btn" title="Fetch new ticker or extend existing" style="font-size:10px;padding:4px 12px;width:auto;border-radius:5px;">+ Add</button>
     <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
     <button id="sim-random-btn" class="tb-btn" title="Pick a random big-mover from a chosen year and load a year-long sim window">🎲 Random</button>
+    <button id="sim-blind-btn" class="tb-btn" title="Blind replay — random historical big mover with hidden symbol/year/dates. 4mo of context + open setup form to set size, stop, equity. Shift+Click to include current-year tickers (capped to ≥2mo forward data).">🕶 Blind</button>
     <button id="sim-saved-btn" class="tb-btn" title="Browse saved Sim scenarios">📂 Saved Sim</button>
     <button id="sim-stats-btn" class="tb-btn" title="View lifetime sim statistics">📊 Sim Stats</button>
     <button id="portsim-start-btn" class="tb-btn" title="Open Portfolio Simulator">▶ Port Sim</button>
@@ -4857,6 +4900,7 @@
         <span class="chart-gain"   id="ct-gain"></span>
         <span class="chart-info"   id="ct-range"></span>
         <span class="chart-info"   id="ct-vol"></span>
+        <button id="ct-blind-reveal" class="tb-btn" type="button" style="display:none;margin-left:8px;font-size:11px;padding:3px 10px;width:auto;border-radius:6px;border:1px solid var(--accent);color:var(--accent);" title="Reveal symbol, year, and real dates">🕶 Reveal</button>
         <div class="tf-controls" style="display:flex;align-items:center;gap:3px;">
           <button class="tb-btn active" id="tf-D" title="Daily">D</button>
           <button class="tb-btn" id="tf-W" title="Weekly">W</button>
@@ -5794,6 +5838,9 @@
         </div>
         <canvas id="crosshair-overlay"></canvas>
       </div>
+      <!-- Drag handle to resize the sim panel vs the chart. Visible only when
+           a sim is active (see CSS). Double-click resets to natural height. -->
+      <div class="sim-resize-handle" id="sim-resize-handle" title="Drag to resize · double-click to reset"></div>
       <!-- P&L Simulator Panel -->
       <div id="sim-panel" aria-label="Position simulator">
         <div class="sim-hero">
@@ -5827,6 +5874,13 @@
                 <span id="sim-cum-value">$0</span>
                 <span id="sim-cum-r">+0.00R</span>
                 <span id="sim-cum-meta">0 legs</span>
+              </div>
+            </div>
+            <div id="sim-equity-row" class="sim-row" style="display:none;">
+              <div class="sim-label">Total equity</div>
+              <div id="sim-equity-value-row">
+                <span id="sim-equity-value">$0</span>
+                <span id="sim-equity-meta" style="color:var(--muted);font-size:11px;margin-left:6px;">init $0</span>
               </div>
             </div>
             <div id="sim-giveback-row" class="sim-row">
@@ -5923,6 +5977,13 @@ let _syncingVolRange=false;
 let priceSeries=null;
 let currentBars=[],currentSymbol='';
 let currentMoveRow=null; // cache selected row for re-applying markers after setData()
+// `let` at script top-level does NOT create a window property. The shared
+// _wireStopStrategy helper (used by both the individual sim's setup/new-leg
+// modals and PortSim) reads window.currentBars / window.currentMoveRow as a
+// fallback when the caller doesn't pass per-card bars. Mirror them on every
+// assignment so the EMA / ATR / swing-low / base-low stop computations work.
+function _syncWindowBars(){ window.currentBars = currentBars; window.currentMoveRow = currentMoveRow; }
+_syncWindowBars();
 let activeOhlcvController=null;
 let sortCol='year',sortDir=1;
 let isLogScale=false;
@@ -6888,7 +6949,9 @@ function updateCrosshairInfo(param) {
   if (!bar) { clear(); return; }
 
   // ── 6. Render ──
-  infoDate.textContent = bar.time || timeStr;
+  // Blind replay: replace the calendar date with "Day +N / Day −N" relative to entry.
+  const _blindBarLabel = (window.SimBlind && typeof window.SimBlind.formatDate === 'function') ? window.SimBlind.formatDate(bar.time || timeStr) : null;
+  infoDate.textContent = _blindBarLabel || (bar.time || timeStr);
 
   const barIdx = resampledBars.findIndex(b => b.time === bar.time);
   const prevBar = barIdx > 0 ? resampledBars[barIdx - 1] : bar;
@@ -7262,10 +7325,30 @@ function time2p(t){
 function redrawAll(){
   ctx2.clearRect(0,0,canvas.width,canvas.height);
   const dk=drawKey();
-  if(dk&&drawings[dk])
-    for(const d of drawings[dk])drawOne(d,d.id===selectedId);
+  if(dk&&drawings[dk]){
+    // While a sim is active, skip drawings whose anchor is beyond the current
+    // playback bar — otherwise text annotations that name future events ("Aug
+    // round-trip to $7.50") leak the move's outcome.
+    const cutoff = (window.Sim && Sim.Ctrl && typeof Sim.Ctrl.getCutoffBarTime === 'function') ? Sim.Ctrl.getCutoffBarTime() : null;
+    for(const d of drawings[dk]){
+      if (cutoff && _drawingExceedsCutoff(d, cutoff)) continue;
+      drawOne(d,d.id===selectedId);
+    }
+  }
   if(pendingP1)drawPreview();
   if(measureStart)drawMeasure();
+}
+
+// True when ANY anchor point of the drawing is past the cutoff. hline /
+// untimed drawings always render (they have no time component).
+function _drawingExceedsCutoff(d, cutoffTime){
+  if (!d || !cutoffTime) return false;
+  if (d.type === 'hline') return false;
+  const t1 = d.p1 && d.p1.time;
+  const t2 = d.p2 && d.p2.time;
+  if (t1 && t1 > cutoffTime) return true;
+  if (t2 && t2 > cutoffTime) return true;
+  return false;
 }
 
 function drawPreview(){
@@ -8899,6 +8982,7 @@ async function loadIndexInChart(idxName){
     currentBars = bars;
     currentSymbol = sym;
     currentMoveRow = null;
+    _syncWindowBars();
     // Update chart title strip
     document.getElementById('ct-sym').textContent = idxName + ' (' + sym + ')';
     document.getElementById('ct-cond').textContent = year;
@@ -8947,6 +9031,7 @@ async function selectRow(i){
   document.getElementById('idx-ndq-btn')?.classList.remove('is-active');
   const r=filtered[i];
   currentMoveRow = r;
+  _syncWindowBars();
   currentSymbol=r.symbol;
   document.getElementById('ct-sym').textContent=r.symbol;
   document.getElementById('ct-cond').textContent=r.year;
@@ -8965,6 +9050,7 @@ async function selectRow(i){
     if(bars.error)throw new Error(bars.error);
     if (activeOhlcvController !== reqController) return;
     currentBars=bars;
+    _syncWindowBars();
     candleSeries.setData(bars.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close})));
     volSeries.setData(bars.map(b => {
       const volUp = isLightTheme ? '#d4efe6' : '#1a3a35';
@@ -10032,8 +10118,43 @@ const Sim = (function(){
 
   function createSim(params) {
     params = params || {};
-    const { moveKey, direction = 'long', entry, initialEquity = null } = params;
+    const { moveKey, direction = 'long', entry, initialEquity = null, noEntry = false } = params;
     if (direction !== 'long') console.warn('Sim: only direction="long" supported in phase 1');
+
+    // Playback-only mode (used by SimBlind): no initial position. The sim
+    // starts at startBarIdx with `between: true`, qty: 0, no stops, no entry
+    // marker. The user opens their first leg via the "+ New Entry" button
+    // (Sim.startNewLeg) once they've watched enough bars to decide.
+    if (noEntry) {
+      if (typeof params.startBarIdx !== 'number' || params.startBarIdx < 0) {
+        throw new Error('createSim noEntry: numeric startBarIdx required');
+      }
+      let endIdxNE = null;
+      if (params.endBarIdx != null) {
+        if (typeof params.endBarIdx !== 'number' || !(params.endBarIdx > params.startBarIdx)) {
+          throw new Error('createSim noEntry: endBarIdx must be > startBarIdx');
+        }
+        endIdxNE = params.endBarIdx;
+      }
+      return {
+        moveKey: moveKey || null,
+        direction,
+        entry: { barIdx: params.startBarIdx, date: params.startDate || null, price: 0, sizeMode: 'shares', sizeValue: 0, stop: 0 },
+        endBarIdx: endIdxNE,
+        shares0: 0, initialRisk: 0,
+        qty: 0, avgCost: 0,
+        realizedPnL: 0,
+        stopLevels: [],
+        playIdx: params.startBarIdx, stoppedOut: false, closed: false,
+        pendingActions: [],
+        eventsLog: [],
+        peakTotal: 0, peakBarIdx: params.startBarIdx, _maeVal: 0, _mfeVal: 0,
+        legs: [], between: true, simStartBarIdx: params.startBarIdx,
+        pnlSeries: [],
+        initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null
+      };
+    }
+
     if (!entry || typeof entry.barIdx !== 'number' || typeof entry.price !== 'number' || typeof entry.stop !== 'number') {
       throw new Error('createSim: entry.barIdx, entry.price, entry.stop required');
     }
@@ -10507,7 +10628,13 @@ window.Sim = Sim;
     const subEl = document.getElementById('sim-value-sub');
     if (subEl) {
       if (initialShares > 0 && entry != null) {
-        subEl.textContent = fmtQty(initialShares) + ' shares @ ' + fmtPrice(entry);
+        // After partial sells (or adds) qty diverges from initialShares — show
+        // both so the user sees how many shares are still in the leg without
+        // having to scan the small chip row at the bottom.
+        const showSplit = (typeof qty === 'number' && qty !== initialShares);
+        subEl.textContent = showSplit
+          ? (fmtQty(qty) + ' / ' + fmtQty(initialShares) + ' shares @ ' + fmtPrice(entry))
+          : (fmtQty(initialShares) + ' shares @ ' + fmtPrice(entry));
       } else {
         subEl.textContent = '—';
       }
@@ -10628,7 +10755,9 @@ window.Sim = Sim;
              r != null ? (r >= 0 ? 'sim-pos' : 'sim-neg') : null);
     _setChip('sim-statsrow', 'days', days != null ? String(days) : '—');
 
-    _setText('sim-date-readout', 'Day ' + (barIndex || 0) + ' · ' + (dateISO || '—'));
+    // Blind replay: hide the absolute calendar date, show "Day +N / Day −N" relative to the entry.
+    const _blindLabel = (window.SimBlind && typeof window.SimBlind.formatBarIdx === 'function') ? window.SimBlind.formatBarIdx(barIndex || 0) : null;
+    _setText('sim-date-readout', _blindLabel || ('Day ' + (barIndex || 0) + ' · ' + (dateISO || '—')));
 
     const panel = document.getElementById('sim-panel');
     if (panel) {
@@ -10659,6 +10788,33 @@ window.Sim = Sim;
     if (cumREl) cumREl.textContent = (cumulativeR >= 0 ? '+' : '') + Number(cumulativeR).toFixed(2) + 'R';
     const cumMetaEl = document.getElementById('sim-cum-meta');
     if (cumMetaEl) cumMetaEl.textContent = totalLegs + (totalLegs === 1 ? ' leg' : ' legs');
+
+    // ---- Total Equity row (only when initialEquity is set) ----
+    // Shows: equity (=initial+cumP&L), cash (=equity−deployed), initial.
+    const equityRow = document.getElementById('sim-equity-row');
+    const equityValEl = document.getElementById('sim-equity-value');
+    const equityMetaEl = document.getElementById('sim-equity-meta');
+    const initEq = derived.initialEquity;
+    const curEq = derived.currentEquity;
+    const curCash = derived.currentCash;
+    if (equityRow) {
+      if (initEq != null && initEq > 0) {
+        equityRow.style.display = '';
+        if (equityValEl) {
+          equityValEl.textContent = fmt$(curEq != null ? curEq : initEq);
+          equityValEl.classList.remove('sim-pnl-pos', 'sim-pnl-neg');
+          if (curEq != null && curEq > initEq) equityValEl.classList.add('sim-pnl-pos');
+          else if (curEq != null && curEq < initEq) equityValEl.classList.add('sim-pnl-neg');
+        }
+        if (equityMetaEl) {
+          const cashTxt = (curCash != null) ? ('cash ' + fmt$(curCash)) : '';
+          const initTxt = 'init ' + fmt$(initEq);
+          equityMetaEl.textContent = (cashTxt ? cashTxt + ' · ' : '') + initTxt;
+        }
+      } else {
+        equityRow.style.display = 'none';
+      }
+    }
 
     // Update P&L label so user knows it's the current leg only when multi-leg
     const pnlLabelEl = document.getElementById('sim-pnl-label');
@@ -11410,7 +11566,11 @@ window.Sim = Sim;
     const barClose = _parseNum(ctx.barClose, NaN);
 
     if (numEl) numEl.textContent = String(ctx.legNum || 2);
-    if (dateEl) dateEl.textContent = ctx.barDate || '—';
+    if (dateEl) {
+      // Blind replay: swap the calendar date for "Day +N" so we don't leak it.
+      const _blindLeg = (window.SimBlind && typeof window.SimBlind.formatDate === 'function') ? window.SimBlind.formatDate(ctx.barDate) : null;
+      dateEl.textContent = _blindLeg || ctx.barDate || '—';
+    }
     if (barpriceEl) barpriceEl.textContent = isFinite(barClose) ? _fmt$(barClose) : '—';
 
     sizeEl.value = ctx.suggestedSize != null ? ctx.suggestedSize : '';
@@ -12303,6 +12463,440 @@ window.Sim = Sim;
     _wire();
   }
   window.SimRandom = { open: _open };
+})();
+
+/* ---------- SimBlind: blind random replay (anonymized symbol/year/dates) ----------
+ * Random-ticker, random-start-bar playback drill. The picker loads a CSV with
+ * ≥4mo of context behind and ≥30 bars ahead of the chosen start, then masks
+ * the ticker's identity (symbol = "BLIND TICKER", year = "????", date axis =
+ * "Day −N / Day +N"). The user sets initial equity + bars-to-simulate, then the
+ * sim launches with NO position — they enter via "+ New Entry" once they've
+ * watched enough bars to decide. Multiple legs allowed. Sim ends at the bar cap
+ * or when the user manually exits.
+ *
+ * Year filter:
+ *   - Default: rows with year < currentYear only (current-year CSVs are
+ *     incomplete — you'd land in a 10-bar tail).
+ *   - Shift+Click the Blind button: include current-year rows BUT cap the start
+ *     date to today−2mo so there's always ≥2mo of forward bars to play.
+ *
+ * No fetch: the picker uses ONLY data already on disk. /api/fetch-ticker with
+ * start_date/end_date OVERWRITES the CSV with just that range — calling it for
+ * a 4-month window destroys years of existing bars. We filter rows that already
+ * have enough coverage and skip ones that don't.
+ *
+ * Reveal: a button in the chart-topbar unmasks anytime; end-of-sim summary
+ * auto-reveals so stats show real labels.
+ *
+ * Engine: launched via Sim.Ctrl.startBlindPlayback, which uses Sim.createSim's
+ * `noEntry: true` path — sim starts in `between` state with qty=0, no stop, no
+ * entry marker. The user opens their first leg via the existing "+ New Entry"
+ * flow.
+ */
+(function(){
+  'use strict';
+
+  let _state = null;              // { active, revealed, row, startDate, endDate, dayZeroIdx, contextBars }
+
+  function _shiftMonths(dateStr, monthDelta) {
+    const d = new Date(dateStr + 'T00:00:00Z');
+    if (isNaN(+d)) return dateStr;
+    d.setUTCMonth(d.getUTCMonth() + monthDelta);
+    return d.toISOString().slice(0, 10);
+  }
+  function _todayISO() { return new Date().toISOString().slice(0, 10); }
+
+  function _candidates() {
+    if (typeof allRows === 'undefined' || !Array.isArray(allRows)) return [];
+    return allRows.filter(function(r){ return r && r.symbol && r.low_date && r.high_date; });
+  }
+  function _findFilteredIdx(row) {
+    if (typeof filtered === 'undefined' || !Array.isArray(filtered)) return -1;
+    return filtered.findIndex(function(r){
+      return r && r.symbol === row.symbol && String(r.year) === String(row.year);
+    });
+  }
+  function _clearFilters() {
+    const ids = ['f-year', 'f-sym', 'f-tag', 'f-dir', 'f-rating', 'f-ai', 'f-src'];
+    let changed = false;
+    ids.forEach(function(id){
+      const el = document.getElementById(id);
+      if (el && el.value !== '') { el.value = ''; changed = true; }
+    });
+    if (changed && typeof applyFilters === 'function') applyFilters();
+  }
+
+  function _findBarIdx(dateStr) {
+    if (typeof currentBars === 'undefined' || !currentBars.length) return -1;
+    let idx = currentBars.findIndex(function(b){ return b.time === dateStr; });
+    if (idx >= 0) return idx;
+    // Roll forward to next available bar (handles weekends/holidays).
+    idx = currentBars.findIndex(function(b){ return b.time >= dateStr; });
+    return idx;
+  }
+
+  function _lwcTimeToStr(t) {
+    if (t == null) return null;
+    if (typeof t === 'string') return t;
+    if (typeof t === 'number') { try { return new Date(t * 1000).toISOString().slice(0, 10); } catch(e) { return null; } }
+    if (typeof t === 'object' && t.year != null) {
+      return t.year + '-' + String(t.month).padStart(2, '0') + '-' + String(t.day).padStart(2, '0');
+    }
+    return null;
+  }
+
+  function _applyMask() {
+    if (!_state || !_state.active) return;
+    const sym = document.getElementById('ct-sym');
+    const cond = document.getElementById('ct-cond');
+    const gain = document.getElementById('ct-gain');
+    const range = document.getElementById('ct-range');
+    const vol = document.getElementById('ct-vol');
+    if (sym) sym.textContent = '🕶 BLIND TICKER';
+    if (cond) cond.textContent = '????';
+    // Hide gain (e.g. "+184%" is often guessable from move catalogue) but keep
+    // avg dollar volume — that's a generic liquidity signal that doesn't leak
+    // the ticker's identity, and it's useful context for trade sizing.
+    if (gain) gain.textContent = '';
+    if (range) {
+      const remain = Math.max(0, currentBars.length - 1 - _state.dayZeroIdx);
+      range.textContent = 'Day −' + _state.contextBars + ' → Day +' + remain;
+    }
+    if (vol && _state.row) vol.textContent = '$' + _state.row.avg_vol_b + 'B/mo';
+    _applyChartFormatters(true);
+    _showRevealBtn(true);
+  }
+
+  function _revealMask() {
+    if (!_state) return;
+    const sym = document.getElementById('ct-sym');
+    const cond = document.getElementById('ct-cond');
+    const gain = document.getElementById('ct-gain');
+    const range = document.getElementById('ct-range');
+    const vol = document.getElementById('ct-vol');
+    const row = _state.row;
+    if (sym && row) sym.textContent = row.symbol;
+    if (cond && row) cond.textContent = row.year;
+    if (gain && row) gain.textContent = '+' + parseFloat(row.gain_pct).toFixed(2) + '%';
+    if (range && row) range.textContent = row.low_date + ' → ' + row.high_date;
+    if (vol && row) vol.textContent = '$' + row.avg_vol_b + 'B/mo';
+    _applyChartFormatters(false);
+    _showRevealBtn(false);
+    _state.revealed = true;
+  }
+
+  function _applyChartFormatters(blindOn) {
+    if (typeof chart === 'undefined' || !chart) return;
+    if (blindOn) {
+      try {
+        chart.applyOptions({
+          localization: {
+            locale: 'en-US',
+            timeFormatter: function(time){
+              const dateStr = _lwcTimeToStr(time);
+              if (!dateStr) return '';
+              const idx = _findBarIdx(dateStr);
+              if (idx < 0) return '';
+              const rel = idx - _state.dayZeroIdx;
+              return rel >= 0 ? 'Day +' + rel : 'Day ' + rel;
+            }
+          }
+        });
+        chart.timeScale().applyOptions({
+          tickMarkFormatter: function(time){
+            const dateStr = _lwcTimeToStr(time);
+            if (!dateStr) return '';
+            const idx = _findBarIdx(dateStr);
+            if (idx < 0) return '';
+            const rel = idx - _state.dayZeroIdx;
+            return rel >= 0 ? '+' + rel : String(rel);
+          }
+        });
+      } catch(e) { console.warn('[SimBlind] applyOptions failed:', e); }
+    } else {
+      // LWC v3 applyOptions treats `undefined` as "leave alone" so we can't
+      // remove the override that way. Returning undefined from a formatter
+      // also breaks v3 — the literal string "undefined" appears on ticks.
+      // Install real formatters that produce a sensible YYYY-MM-DD / MM/DD.
+      try {
+        chart.applyOptions({
+          localization: {
+            locale: 'en-US',
+            timeFormatter: function(time){
+              const s = _lwcTimeToStr(time);
+              return s || '';
+            }
+          }
+        });
+        chart.timeScale().applyOptions({
+          tickMarkFormatter: function(time){
+            const s = _lwcTimeToStr(time);
+            if (!s) return '';
+            // Compact MM/DD/YY for axis ticks, matching LWC's default-ish look.
+            const parts = s.split('-');
+            if (parts.length === 3) return parts[1] + '/' + parts[2] + '/' + parts[0].slice(2);
+            return s;
+          }
+        });
+      } catch(e) { console.warn('[SimBlind] restore failed:', e); }
+    }
+  }
+
+  function _showRevealBtn(visible) {
+    const btn = document.getElementById('ct-blind-reveal');
+    if (btn) btn.style.display = visible ? '' : 'none';
+  }
+
+  /* ---------- Mini-modal: Initial Equity + Bars to Simulate ---------- */
+  // The blind setup modal asks ONLY for initial capital and how many bars to
+  // play. Day-0 is randomized by the picker, the user has no entry/stop yet —
+  // they enter later via "+ New Entry" once they've watched bars play out.
+  function _openBlindMiniModal({onSubmit, onCancel}) {
+    _closeBlindMiniModal(); // safety: remove any stale instance
+    const overlay = document.createElement('div');
+    overlay.id = 'sim-blind-modal';
+    overlay.className = 'fetch-modal-overlay open';
+    overlay.style.zIndex = '10001';
+    overlay.innerHTML =
+      '<div class="fetch-modal" style="max-width:420px;">' +
+        '<h3>🕶 Blind Replay</h3>' +
+        '<div style="background:rgba(212,165,116,0.12);border:1px solid var(--accent);color:var(--accent);padding:8px 12px;border-radius:6px;margin:0 0 14px;font-family:var(--mono);font-size:11px;line-height:1.5;">' +
+          '🕶 <strong>BLIND</strong> — Random ticker, year, and start bar. You see ~4 months of context. Trade it cold using <strong>+ New Entry</strong> once playback begins.' +
+        '</div>' +
+        '<div class="fetch-field">' +
+          '<label for="sim-blind-equity">Initial equity ($)</label>' +
+          '<input type="number" id="sim-blind-equity" min="100" step="100" value="' + DEFAULT_EQUITY + '">' +
+        '</div>' +
+        '<div class="fetch-field">' +
+          '<label for="sim-blind-bars">Bars to simulate</label>' +
+          '<input type="number" id="sim-blind-bars" min="10" max="500" step="1" value="' + DEFAULT_BARS + '">' +
+          '<div class="sim-stop-distance" id="sim-blind-bars-hint" style="margin-top:4px;">~' + Math.round(DEFAULT_BARS / 21) + ' months of trading days</div>' +
+        '</div>' +
+        '<div class="fetch-actions">' +
+          '<button class="fetch-btn-cancel" id="sim-blind-cancel">Cancel</button>' +
+          '<button class="fetch-btn-primary" id="sim-blind-submit">▶ Start Blind Sim</button>' +
+        '</div>' +
+        '<div class="fetch-status" id="sim-blind-status"></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    const equityEl = overlay.querySelector('#sim-blind-equity');
+    const barsEl = overlay.querySelector('#sim-blind-bars');
+    const hintEl = overlay.querySelector('#sim-blind-bars-hint');
+    const statusEl = overlay.querySelector('#sim-blind-status');
+
+    barsEl.addEventListener('input', function(){
+      const n = parseInt(barsEl.value, 10);
+      if (isFinite(n) && n > 0) hintEl.textContent = '~' + Math.round(n / 21) + ' months of trading days';
+    });
+
+    function cleanup(){ _closeBlindMiniModal(); }
+    overlay.querySelector('#sim-blind-cancel').onclick = function(){ cleanup(); if (typeof onCancel === 'function') onCancel(); };
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) { cleanup(); if (typeof onCancel === 'function') onCancel(); } });
+    overlay.querySelector('#sim-blind-submit').onclick = function(){
+      const equity = parseFloat(equityEl.value);
+      const bars = parseInt(barsEl.value, 10);
+      if (!isFinite(equity) || equity < 100) { statusEl.textContent = 'Initial equity must be ≥ $100.'; statusEl.style.color = 'var(--red)'; return; }
+      if (!isFinite(bars) || bars < 10) { statusEl.textContent = 'Bars must be ≥ 10.'; statusEl.style.color = 'var(--red)'; return; }
+      cleanup();
+      if (typeof onSubmit === 'function') onSubmit({ initialEquity: equity, bars: bars });
+    };
+    setTimeout(function(){ equityEl.focus(); equityEl.select && equityEl.select(); }, 30);
+  }
+  function _closeBlindMiniModal() {
+    const m = document.getElementById('sim-blind-modal');
+    if (m && m.parentNode) m.parentNode.removeChild(m);
+  }
+
+  /* ---------- Open: pick row + start bar from data ALREADY on disk ---------- */
+  //   1. Filter candidate rows by year (default: exclude current year — its CSV
+  //      coverage is incomplete, you'd land in a 10-bar-tail sim).
+  //   2. For each candidate (random order, with retries), call selectRow to load
+  //      its CSV, then validate that currentBars has at least MIN_CONTEXT
+  //      (~85 weekdays) before AND MIN_FORWARD (~30) after a viable pick. If so,
+  //      pick startIdx randomly in [MIN_CONTEXT, length−MIN_FORWARD].
+  //   3. Open the mini-modal: user sets initial equity + bars-to-simulate.
+  //      Submit launches Sim.Ctrl.startBlindPlayback (no entry, sim.between=true).
+  //
+  // Override: Shift+Click the Blind button (or opts.includeCurrentYear) to
+  // include current-year rows. Their startIdx is capped to today−2mo so there's
+  // always ≥2 months of forward bars to play.
+  const MIN_CONTEXT = 85;       // ~4 months of weekday bars before day 0
+  const MIN_FORWARD = 30;       // ~6 weeks of weekday bars after day 0
+  const DEFAULT_EQUITY = 300000;
+  const DEFAULT_BARS = 90;
+
+  async function _open(opts) {
+    opts = opts || {};
+    const includeCurrentYear = !!opts.includeCurrentYear;
+
+    if (_state && _state.active && !_state.revealed) {
+      if (!confirm('Blind replay already running. Start a new one (current sim will be exited)?')) return;
+      if (window.Sim && Sim.Ctrl && Sim.Ctrl.exit) try { Sim.Ctrl.exit(); } catch(e){}
+    }
+
+    const currentYear = new Date().getFullYear();
+    const today = _todayISO();
+
+    let cands = _candidates();
+    if (!includeCurrentYear) cands = cands.filter(function(r){ return +r.year < currentYear; });
+    if (!cands.length) {
+      if (!includeCurrentYear) {
+        if (confirm('No historical big movers (year < ' + currentYear + ') eligible. Include current-year tickers (forward data may be limited)?')) {
+          return _open({ includeCurrentYear: true });
+        }
+        return;
+      }
+      alert('No big movers loaded yet. Wait for the table to populate.');
+      return;
+    }
+
+    // Surface table without filters so selectRow can find any candidate.
+    _clearFilters();
+
+    // Try multiple rows until one has enough context + forward data.
+    let pickedRow = null, pickedStartIdx = -1;
+    const tried = new Set();
+    for (let attempts = 0; attempts < 12 && !pickedRow; attempts++) {
+      let row = null, tries = 0;
+      while (tries++ < 30) {
+        const r = cands[Math.floor(Math.random() * cands.length)];
+        const k = r.symbol + '_' + r.year;
+        if (!tried.has(k)) { row = r; tried.add(k); break; }
+      }
+      if (!row) break;
+      const idx = _findFilteredIdx(row);
+      if (idx < 0) continue;
+      if (typeof selectRow === 'function') {
+        try { await selectRow(idx); } catch(e){ continue; }
+      }
+      if (typeof currentBars === 'undefined' || !Array.isArray(currentBars) || currentBars.length < MIN_CONTEXT + MIN_FORWARD) continue;
+
+      // Compute the upper bound on startIdx. For current-year rows, also cap so
+      // there's at least 2 months of forward weekday bars before today.
+      let maxStartIdx = currentBars.length - 1 - MIN_FORWARD;
+      if (+row.year === currentYear) {
+        const cap = _shiftMonths(today, -2);
+        let capIdx = -1;
+        for (let i = currentBars.length - 1; i >= 0; i--) {
+          if (currentBars[i].time <= cap) { capIdx = i; break; }
+        }
+        if (capIdx >= 0 && capIdx < maxStartIdx) maxStartIdx = capIdx;
+      }
+      if (maxStartIdx < MIN_CONTEXT) continue;
+
+      const startIdx = MIN_CONTEXT + Math.floor(Math.random() * (maxStartIdx - MIN_CONTEXT + 1));
+      pickedRow = row;
+      pickedStartIdx = startIdx;
+      break;
+    }
+
+    if (!pickedRow) {
+      alert('Could not find a ticker with ≥4 months of prior context + ≥30 forward bars. Try again or Shift+Click for current-year tickers.');
+      return;
+    }
+
+    const dayZeroBar = currentBars[pickedStartIdx];
+    const entryPrice = dayZeroBar && +(dayZeroBar.open || dayZeroBar.close);
+    if (!dayZeroBar || !isFinite(entryPrice) || entryPrice <= 0) {
+      alert('Day-0 bar has no usable price for ' + pickedRow.symbol + '.');
+      return;
+    }
+
+    _state = {
+      active: true, revealed: false, row: pickedRow,
+      startDate: dayZeroBar.time, dayZeroIdx: pickedStartIdx,
+      contextBars: pickedStartIdx
+    };
+
+    // Center chart on day 0 so the user sees ~60 bars of context + ~30 forward.
+    try {
+      const fromIdx = Math.max(0, pickedStartIdx - 60);
+      const toIdx = Math.min(currentBars.length - 1, pickedStartIdx + 30);
+      if (chart && chart.timeScale && currentBars[fromIdx] && currentBars[toIdx]) {
+        chart.timeScale().setVisibleRange({ from: currentBars[fromIdx].time, to: currentBars[toIdx].time });
+      }
+    } catch(e){}
+
+    _applyMask();
+
+    // Open the mini-modal. User sets initial equity + bars to simulate. On
+    // submit we hand off to the no-entry playback launcher; on cancel we clear
+    // blind state so the chart goes back to normal.
+    if (!window.Sim || !Sim.Ctrl || typeof Sim.Ctrl.startBlindPlayback !== 'function') {
+      alert('Sim.Ctrl.startBlindPlayback missing — cannot launch blind sim.');
+      _clearBlind(); return;
+    }
+    _openBlindMiniModal({
+      onSubmit: function(form){
+        // Cap end bar to whatever's available (don't exceed loaded data length).
+        const endIdx = Math.min(currentBars.length - 1, pickedStartIdx + form.bars - 1);
+        if (endIdx <= pickedStartIdx) {
+          alert('Not enough forward bars to run a sim of that length.');
+          _clearBlind(); return;
+        }
+        try {
+          Sim.Ctrl.startBlindPlayback({
+            startBarIdx: pickedStartIdx,
+            endBarIdx: endIdx,
+            initialEquity: form.initialEquity
+          });
+        } catch(e){
+          alert('Could not start blind sim: ' + (e && e.message || e));
+          _clearBlind(); return;
+        }
+        // Re-apply mask after sim init runs (it may repaint topbar bits).
+        setTimeout(_applyMask, 50);
+      },
+      onCancel: function(){ _clearBlind(); }
+    });
+  }
+
+  function _clearBlind() {
+    if (!_state) return;
+    if (!_state.revealed) { try { _revealMask(); } catch(e){} }
+    _state = null;
+  }
+
+  function _wire() {
+    const open = document.getElementById('sim-blind-btn');
+    if (open && !open._blindBound) {
+      open._blindBound = true;
+      // Shift+Click overrides the default "exclude current year" filter.
+      open.addEventListener('click', function(e){ _open({ includeCurrentYear: !!(e && e.shiftKey) }); });
+    }
+    const reveal = document.getElementById('ct-blind-reveal');
+    if (reveal && !reveal._blindBound) {
+      reveal._blindBound = true;
+      reveal.addEventListener('click', function(){ if (_state && _state.active && !_state.revealed) _revealMask(); });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _wire);
+  else _wire();
+
+  window.SimBlind = {
+    open: _open,
+    reveal: _revealMask,
+    clear: _clearBlind,
+    isActive: function(){ return !!(_state && _state.active && !_state.revealed); },
+    // Used by the bottom Day-readout and the crosshair info-date setter to swap
+    // calendar dates for "Day +N / Day −N" relative to the entry bar. Returns
+    // null when blind is not active so the caller falls back to default text.
+    formatBarIdx: function(barIdx) {
+      if (!_state || !_state.active || _state.revealed) return null;
+      if (typeof barIdx !== 'number') return null;
+      const rel = barIdx - _state.dayZeroIdx;
+      return (rel >= 0 ? 'Day +' : 'Day ') + rel;
+    },
+    formatDate: function(dateStr) {
+      if (!_state || !_state.active || _state.revealed) return null;
+      if (typeof currentBars === 'undefined' || !currentBars.length) return null;
+      const idx = currentBars.findIndex(function(b){ return b.time === dateStr; });
+      if (idx < 0) return null;
+      const rel = idx - _state.dayZeroIdx;
+      return (rel >= 0 ? 'Day +' : 'Day ') + rel;
+    }
+  };
 })();
 
 /* ---------- SimSaved: localStorage save/load of sim scenarios ---------- */
@@ -14047,6 +14641,42 @@ Sim.Ctrl = (function(){
     });
   }
 
+  // AI overlay EMAs (window.aiSeries / window.aiIndicators) live outside maList
+  // and would otherwise leak the future trend — slice them to the current bar
+  // alongside candles and user MAs.
+  function _maskAiOverlays(sliceIdx) {
+    const series = (typeof aiSeries !== 'undefined') ? aiSeries : null;
+    const data = (typeof aiIndicators !== 'undefined') ? aiIndicators : null;
+    if (!series || !data) return;
+    const cutoff = state.bars[sliceIdx] ? state.bars[sliceIdx].time : null;
+    if (!cutoff) return;
+    Object.keys(series).forEach(function(key){
+      const ser = series[key];
+      const arr = data[key];
+      if (!ser || !Array.isArray(arr)) return;
+      const sliced = [];
+      for (let i = 0; i < arr.length; i++) {
+        const p = arr[i];
+        if (p.time <= cutoff) sliced.push({ time: p.time, value: p.value });
+        else break;
+      }
+      try { ser.setData(sliced); } catch(e){}
+    });
+  }
+  function _appendAiOverlays(idx) {
+    const series = (typeof aiSeries !== 'undefined') ? aiSeries : null;
+    const data = (typeof aiIndicators !== 'undefined') ? aiIndicators : null;
+    if (!series || !data) return;
+    const b = state.bars[idx]; if (!b) return;
+    Object.keys(series).forEach(function(key){
+      const ser = series[key];
+      const arr = data[key];
+      if (!ser || !Array.isArray(arr)) return;
+      const point = arr.find(function(p){ return p.time === b.time; });
+      if (point) try { ser.update({ time: point.time, value: point.value }); } catch(e){}
+    });
+  }
+
   function _candleBar(b) { return { time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }; }
   function _volColor(b) {
     const up = (typeof isLightTheme !== 'undefined' && isLightTheme) ? '#d4efe6' : '#1a3a35';
@@ -14085,6 +14715,9 @@ Sim.Ctrl = (function(){
     state._legMarkers = [];
     try { (priceSeries || candleSeries).setMarkers([]); } catch(e) {}
     _maskMAs(sliceIdx);
+    _maskAiOverlays(sliceIdx);
+    // Trigger a drawings redraw so text annotations beyond the cutoff hide too.
+    try { if (typeof redrawAll === 'function') redrawAll(); } catch(e){}
     ['spyLineSeries','spyCandleSeries','spyBarSeries'].forEach(k => {
       try { if (window[k]) window[k].setData([]); } catch(e) {}
     });
@@ -14105,13 +14738,21 @@ Sim.Ctrl = (function(){
     } catch(e) {}
     try { volSeries.update(_volBar(b)); } catch(e) {}
     _appendMAs(idx);
+    _appendAiOverlays(idx);
+    // Drawings can be anchored anywhere — the simplest correct approach is to
+    // re-run the drawings layer's filter on each step so newly-revealed bar
+    // brings any anchored notes/text into view.
+    try { if (typeof redrawAll === 'function') redrawAll(); } catch(e){}
     state._highlightedIdx = idx;
   }
 
   function _deriveForUI(d) {
     const sim = state.sim;
     const bar = state.bars[sim.playIdx];
-    const notional = sim.shares0 * sim.entry.price;
+    // When between legs (or in noEntry/blind playback before first entry),
+    // there's no current position — show $0 / — instead of the previous
+    // leg's notional. The cumulative P&L row carries the running total.
+    const notional = (d.between || sim.qty <= 0) ? 0 : (sim.shares0 * sim.entry.price);
     const stopDollar = d.currentStop - sim.entry.price;
     const stopPct = sim.entry.price > 0 ? stopDollar / sim.entry.price : 0;
     // Find the most recent exit event (stop or close) to surface exit context
@@ -14151,8 +14792,8 @@ Sim.Ctrl = (function(){
       // % of capital (initial notional), so the number stays meaningful even after P&L flips negative
       giveBackPct: notional > 0 ? d.giveBack / notional : 0,
       peakBarsAgo: d.peakBarsAgo,
-      entry: sim.entry.price, avg: d.avgCost, qty: d.qty,
-      initialNotional: notional, initialShares: sim.shares0,
+      entry: (d.between || sim.qty <= 0) ? null : sim.entry.price, avg: d.avgCost, qty: d.qty,
+      initialNotional: notional, initialShares: (d.between || sim.qty <= 0) ? 0 : sim.shares0,
       stoppedOut: !!d.stoppedOut, closed: !!d.closed,
       exitPrice, exitDay, exitReason,
       stop: d.currentStop, stopDollar, stopPct,
@@ -14161,6 +14802,12 @@ Sim.Ctrl = (function(){
       dateISO: bar ? bar.time : '—',
       between: d.between, legCount: d.legCount, legIndex: d.legIndex,
       cumulativePnL: d.cumulativePnL, cumulativeR: d.cumulativeR,
+      // Equity tracking — used by the "Total equity" row in the position panel.
+      // Null when the user didn't set an initial equity (regular sims pre-2024).
+      // Cash = equity − current position market value (uninvested money).
+      initialEquity: sim.initialEquity || null,
+      currentEquity: sim.initialEquity != null ? (sim.initialEquity + d.cumulativePnL) : null,
+      currentCash: sim.initialEquity != null ? (sim.initialEquity + d.cumulativePnL - (d.positionValue || 0)) : null,
       legsSummary
     };
   }
@@ -14246,12 +14893,27 @@ Sim.Ctrl = (function(){
       });
     }
     if (d.stoppedOut || d.closed) { pause(); setTimeout(() => _showSummary(d), 400); }
+    else if (state.sim.endBarIdx != null && state.sim.playIdx >= state.sim.endBarIdx) {
+      // Hit the user-set bar cap. For blind playback (no auto-close because qty
+      // may be 0), still trigger the summary AND auto-reveal — sim is done.
+      pause();
+      if (window.SimBlind && typeof window.SimBlind.isActive === 'function' && window.SimBlind.isActive()) {
+        setTimeout(() => _showSummary(d, { revealBlind: true }), 400);
+      }
+    }
     else if (state.sim.playIdx >= state.bars.length - 1) { pause(); }
     return d;
   }
   function _showSummary(d, opts) {
     if (!d) d = Sim.computeDerived(state.sim, state.bars);
     opts = opts || {};
+    // Auto-reveal ONLY on opts.revealBlind (passed from end-of-sim paths). The
+    // summary fires after every leg's stop/close so the user can review the
+    // leg, but blind mode should stay masked across leg boundaries — only
+    // unmask when the sim is truly done (endBarIdx hit, or manual exit).
+    if (opts.revealBlind && window.SimBlind && typeof window.SimBlind.isActive === 'function' && window.SimBlind.isActive()) {
+      try { window.SimBlind.reveal(); } catch(e){}
+    }
     Sim.UI.showSummaryModal(_deriveForSummary(d), {
       onClose: () => {},
       onScreenshot: () => { if (typeof takeScreenshot === 'function') takeScreenshot(); },
@@ -14421,6 +15083,11 @@ Sim.Ctrl = (function(){
     state._legMarkers = [];
     Sim.UI.setActive(false);
     _unbindKeys();
+    // Clear blind-replay state on exit so the chart goes back to normal
+    // (real symbol, year, and date axis).
+    if (window.SimBlind && typeof window.SimBlind.clear === 'function') {
+      try { window.SimBlind.clear(); } catch(e){}
+    }
     if (wasActive && typeof activeIdx !== 'undefined' && activeIdx >= 0 && typeof selectRow === 'function') {
       try { selectRow(activeIdx); } catch(e) {}
     }
@@ -14742,7 +15409,64 @@ Sim.Ctrl = (function(){
     _clearInitialStopLine();
     _onSetupSubmit(Object.assign({}, state._lastSetup));
   }
-  return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null), replay };
+  // Playback-only launcher for SimBlind. Creates a no-entry sim at startBarIdx
+  // (sim.between = true, qty = 0, no stop) and wires the same chart/UI state
+  // that _onSetupSubmit does, minus stop-line/R-level/leg-marker setup since
+  // there's no position yet. The user opens their first leg via "+ New Entry".
+  function _onBlindPlaybackSubmit(p) {
+    p = p || {};
+    if (typeof currentBars === 'undefined' || !Array.isArray(currentBars) || !currentBars.length) {
+      alert('No bars loaded for blind playback.'); return;
+    }
+    if (typeof p.startBarIdx !== 'number' || p.startBarIdx < 0 || p.startBarIdx >= currentBars.length) {
+      alert('Invalid startBarIdx for blind playback.'); return;
+    }
+    state._lastSetup = null;
+    let sim;
+    try {
+      sim = Sim.createSim({
+        moveKey: 'BLIND', direction: 'long', noEntry: true,
+        startBarIdx: p.startBarIdx, endBarIdx: p.endBarIdx != null ? p.endBarIdx : null,
+        startDate: currentBars[p.startBarIdx] && currentBars[p.startBarIdx].time,
+        initialEquity: p.initialEquity || null
+      });
+    } catch (e) { alert('Could not start blind sim: ' + e.message); return; }
+    state.sim = sim;
+    state.bars = currentBars.slice();
+    state.active = true;
+    state.speed = 1;
+    _precomputeMAs();
+    Sim.UI.setSpeed(1);
+    Sim.UI.setActive(true);
+    _maskChart(sim.playIdx);
+    _centerOnEntry(sim.playIdx);
+    _clearStopHistory();
+    _clearInitialStopLine();
+    state._legMarkers = [];
+    state._curve = [];
+    _appendCurvePoint(sim.playIdx);
+    _render();
+    _bindKeys();
+  }
+
+  return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null), replay,
+    // SimBlind dispatches into the same submit path the modal uses, so blind
+    // mode can launch a sim without ever opening the setup form (which would
+    // leak the real entry date in its <input type="date">).
+    startWithForm: function(form){ state._lastSetup = Object.assign({}, form); _onSetupSubmit(form); },
+    // Playback-only entry point for SimBlind: starts the sim with no position;
+    // user enters via "+ New Entry" once they've decided.
+    startBlindPlayback: function(p){ _onBlindPlaybackSubmit(p); },
+    // Returns the time-string of the current playhead bar, or null when no sim
+    // is active. Used by the drawings layer (redrawAll) to skip annotations /
+    // text labels that are anchored beyond the current bar — otherwise the
+    // future leaks ("Aug round-trip to $7.50" labels appearing pre-Aug, etc.).
+    getCutoffBarTime: function(){
+      if (!state.active || !state.sim || !state.bars) return null;
+      const b = state.bars[state.sim.playIdx];
+      return b ? b.time : null;
+    }
+  };
 })();
 
 // ============ PORTSIM TRACK N: Sim Action Helpers — START ============
@@ -25852,6 +26576,84 @@ Sim.Ctrl = (function(){
   };
 })();
 // ============ PORTSIM TRACK S: Trading Notes — END ============
+
+/* ---------- Sim panel splitter (resize chart vs sim panel) ----------
+ * The sim panel grows over time as legs accumulate, equity row appears, etc.,
+ * and squeezes the chart. This wires a row-resize handle between the chart
+ * container and the sim panel: drag to set an explicit height on #sim-panel
+ * (chart-container's flex:1 takes the remainder), double-click to clear and
+ * snap back to natural content size. Saved per-browser in localStorage.
+ */
+(function(){
+  'use strict';
+  const LS_KEY = 'bm_sim_panel_height';
+  const MIN_H = 120;       // px — keep at least the hero row visible
+  const MAX_RATIO = 0.75;  // never let sim panel eat more than 75% of viewport
+
+  function _init(){
+    const handle = document.getElementById('sim-resize-handle');
+    const panel = document.getElementById('sim-panel');
+    if (!handle || !panel || handle._splitterBound) return;
+    handle._splitterBound = true;
+
+    // Restore saved height (only applied while a sim is active — when no sim
+    // is running the panel is display:none and the height is irrelevant).
+    try {
+      const saved = parseInt(localStorage.getItem(LS_KEY), 10);
+      if (isFinite(saved) && saved >= MIN_H) {
+        panel.style.height = saved + 'px';
+        panel.classList.add('is-resized');
+      }
+    } catch(e){}
+
+    let dragging = false, startY = 0, startH = 0;
+
+    function _maxH(){ return Math.floor(window.innerHeight * MAX_RATIO); }
+
+    function onMove(e){
+      if (!dragging) return;
+      // Drag DOWN (dy > 0) = sim panel SHRINKS, chart grows.
+      const dy = e.clientY - startY;
+      const newH = Math.max(MIN_H, Math.min(_maxH(), startH - dy));
+      panel.style.height = newH + 'px';
+      panel.classList.add('is-resized');
+      // Trigger any dependent layout (chart resize observers, vol pane, etc.).
+      try { window.dispatchEvent(new Event('resize')); } catch(_){}
+      e.preventDefault();
+    }
+    function onUp(){
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove('is-dragging');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.body.style.userSelect = '';
+      try { localStorage.setItem(LS_KEY, parseInt(panel.style.height, 10)); } catch(e){}
+    }
+    handle.addEventListener('pointerdown', function(e){
+      // Skip on right-click / middle-click.
+      if (e.button !== 0) return;
+      dragging = true;
+      startY = e.clientY;
+      startH = panel.getBoundingClientRect().height;
+      handle.classList.add('is-dragging');
+      document.body.style.userSelect = 'none';
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      e.preventDefault();
+    });
+    // Double-click resets to natural content height.
+    handle.addEventListener('dblclick', function(){
+      panel.style.height = '';
+      panel.classList.remove('is-resized');
+      try { localStorage.removeItem(LS_KEY); } catch(e){}
+      try { window.dispatchEvent(new Event('resize')); } catch(_){}
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _init);
+  else _init();
+})();
+
 </script>
 <!-- ============ PORTSIM TRACK B: Card Template — START ============ -->
 <template id="portcard-template">
