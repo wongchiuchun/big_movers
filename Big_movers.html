@@ -17704,7 +17704,8 @@ Sim.Ctrl = (function(){
     eqPeakIdx: 0,           // playIdx at which the current peak was set
     maxDDDays: 0,           // longest streak under-water (in unifiedDates steps)
     _history: [],           // snapshot stack for step-back (capped at _HISTORY_MAX)
-    notes: []               // [{ id, date, text, ts }] — captured via 📝 Notes button
+    notes: [],              // [{ id, date, text, ts }] — captured via 📝 Notes button
+    retiredEntries: []      // tickers swapped out mid-sim — kept so their trades still count toward session stats
   };
   const _HISTORY_MAX = 300;
   PortSim._state = _state;
@@ -17771,6 +17772,7 @@ Sim.Ctrl = (function(){
     _state.basket = [];
     _state.initialEntryRequest = [];
     _state.notes = [];
+    _state.retiredEntries = [];
 
     // Clear and prepare the grid.
     const grid = _byId('portsim-grid');
@@ -18576,7 +18578,10 @@ Sim.Ctrl = (function(){
 
   function _recomputeRealizedFromCash(){
     let totalRealized = 0;
-    _state.basket.forEach(function(e){
+    // Sum across both live + retired so a swap-out doesn't erase the
+    // realized P&L the swapped ticker contributed during its run.
+    const _allEntries = (_state.basket || []).concat(_state.retiredEntries || []);
+    _allEntries.forEach(function(e){
       if (!e.sim) return;
       const legSum = (e.sim.legs || []).reduce(function(s, l){ return s + (l.realizedPnL || 0); }, 0);
       totalRealized += legSum + (e.sim.realizedPnL || 0);
@@ -18715,7 +18720,10 @@ Sim.Ctrl = (function(){
 
     let equity = _state.cash;
     let unreal = 0;
-    const rows = _state.basket.map(function(e){
+    // Include retired (swapped-out) tickers so their trades count toward
+    // session stats. Active basket first to preserve grid order.
+    const _allBasketForStats = (_state.basket || []).concat(_state.retiredEntries || []);
+    const rows = _allBasketForStats.map(function(e){
       let realized = 0;
       let stops = 0;
       let legs = 0;
@@ -18752,7 +18760,8 @@ Sim.Ctrl = (function(){
         realized: _r2(realized),
         avgR: Math.round(avgR * 100) / 100,
         stops: stops,
-        status: status,
+        status: e._retired ? (status + ' · retired') : status,
+        retired: !!e._retired,
         bhPct: bhPct
       };
     });
@@ -18917,7 +18926,10 @@ Sim.Ctrl = (function(){
             indexReturnPct: _indexReturnPct,
             firstDate: _firstDate,
             lastDate: _lastDate,
-            basket: _state.basket,
+            // Merge retired (swapped-out) tickers so their per-leg trades
+            // count toward win-rate, profit factor, EV, etc. Same union
+            // _showSummary uses for the summary table.
+            basket: (_state.basket || []).concat(_state.retiredEntries || []),
             rows: rows,
             indexName: _state.index || null
           });
@@ -19078,6 +19090,31 @@ Sim.Ctrl = (function(){
     grid.classList.add('cols-' + clamp);
   }
 
+  // Snapshot a basket entry that's about to be destroyed (replaced via swap).
+  // Keeps just the bits needed for stats — symbol, bars, sim, dateToBarIdx —
+  // so SimStats / Trade Review / summary rows can still surface its trades.
+  // No card/chart refs are kept (those are getting destroyed). Only entries
+  // that actually traded (have legs or an open entry) get archived; idle
+  // swaps with no fills are silently dropped to keep the retired list clean.
+  function _archiveEntry(prev){
+    if (!prev || !prev.sim) return;
+    var sim = prev.sim;
+    var hasLegs = (sim.legs && sim.legs.length) || sim.entry;
+    if (!hasLegs) return;
+    if (!Array.isArray(_state.retiredEntries)) _state.retiredEntries = [];
+    _state.retiredEntries.push({
+      symbol: prev.symbol,
+      year: prev.year || null,
+      bars: prev.bars,
+      dateToBarIdx: prev.dateToBarIdx,
+      lastCloseSeen: prev.lastCloseSeen,
+      sim: sim,
+      _retired: true,
+      _retiredAt: (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.startDate || null,
+      _lastRealized: prev._lastRealized || 0
+    });
+  }
+
   // _addOrReplaceTicker(sym, opts) → Promise<{ ok, error?, entry? }>
   // opts.replaceIndex : if set, destroys the basket entry at this index and
   //                     splices the new card into the same DOM position.
@@ -19122,6 +19159,11 @@ Sim.Ctrl = (function(){
 
       if (opts.replaceIndex != null){
         var prev = _state.basket[opts.replaceIndex];
+        // Archive the swapped-out entry so its trades still count toward
+        // session stats (win rate, P&L, leg history). We only keep the
+        // data needed by Trade Review + SimStats — chart/series get
+        // destroyed below since the card disappears from the grid.
+        _archiveEntry(prev);
         // Insert the new card before the old one's DOM node so DOM order
         // matches basket order, then destroy the old card.
         if (prev && prev.cardEl && prev.cardEl.parentNode){
@@ -24125,9 +24167,14 @@ Sim.Ctrl = (function(){
       }
       return;
     }
-    // Live mode — pull bars from the active sim's basket entry
+    // Live mode — pull bars from the active basket OR the retired list
+    // (swapped-out tickers live there). A retired entry has its sim/bars
+    // intact so the chart and markers still render.
     var st = window.PortSim._state;
-    var liveEntry = st && (st.basket || []).filter(function(e){ return e.symbol === sym; })[0];
+    var liveEntry = st && (
+      (st.basket || []).filter(function(e){ return e.symbol === sym; })[0] ||
+      (st.retiredEntries || []).filter(function(e){ return e.symbol === sym; })[0]
+    );
     setTimeout(function(){
       var host = document.getElementById('portsim-review-chart-' + sym);
       if (host && liveEntry) _drawTickerChart(host, liveEntry, legs);
@@ -24330,7 +24377,11 @@ Sim.Ctrl = (function(){
   function _buildMeta(){
     var st = window.PortSim && window.PortSim._state;
     if (!st) return null;
-    var basket = st.basket || [];
+    // Include swapped-out tickers (st.retiredEntries) so their trades count
+    // toward win/loss, P&L, leg counts, and per-ticker tabs in the review.
+    // Live basket goes first so the active grid order stays intact; retired
+    // entries land at the end with status='retired'.
+    var basket = (st.basket || []).concat(st.retiredEntries || []);
     var initial = +st.initialEquity || 0;
     var cash = +st.cash || 0;
     var realized = +st.realizedPnL || 0;
