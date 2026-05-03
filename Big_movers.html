@@ -15041,8 +15041,28 @@ window.Sim = Sim;
     return s + Number(n).toFixed(2) + '%';
   }
 
+  // Per-attempt run identifier. Lazy-stamped onto the sim so subsequent
+  // saves in the same attempt reuse the key. A re-run of the same setup
+  // gets a fresh runInstanceId and therefore its own review record — fixing
+  // the prior clobber where two attempts on the same entry overwrote notes.
+  function _genInstanceId(){
+    return 'inst_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
   function _computeRunId(summary){
     if (!summary) return STORAGE_PREFIX + 'default';
+    var sim = summary.sim;
+    if (sim){
+      if (!sim.runInstanceId) sim.runInstanceId = _genInstanceId();
+      return STORAGE_PREFIX + sim.runInstanceId;
+    }
+    return STORAGE_PREFIX + 'default';
+  }
+  // Legacy key derivation — read-only fallback for reviews saved before
+  // per-attempt keying. Used to seed a fresh attempt with the most recent
+  // notes for the same setup, which the user can then edit and re-save
+  // under the new instance key.
+  function _computeLegacyRunId(summary){
+    if (!summary) return null;
     var sym = summary.symbol || (summary.sim && summary.sim.moveKey) || 'POS';
     var entry = (summary.sim && summary.sim.entry) || {};
     var dir = (summary.sim && summary.sim.direction) || 'long';
@@ -15157,7 +15177,21 @@ window.Sim = Sim;
     if (!textEl || !saveEl || !exportBtn) return;
 
     var runId = _computeRunId(summary);
-    var loaded = _loadData(runId) || { notes: '', savedAt: null };
+    var loaded = _loadData(runId);
+    if (!loaded){
+      // Legacy fallback: seed from a setup-keyed review if one exists.
+      // Saving will write to the new instance key; legacy data stays put
+      // as a safety net.
+      var legacyKey = _computeLegacyRunId(summary);
+      if (legacyKey && legacyKey !== runId){
+        var legacy = _loadData(legacyKey);
+        if (legacy){
+          loaded = legacy;
+          loaded.__legacySource = legacyKey;
+        }
+      }
+    }
+    if (!loaded) loaded = { notes: '', savedAt: null };
     textEl.value = loaded.notes || '';
     textEl.readOnly = !!opts.viewOnly;
 
@@ -25943,8 +25977,24 @@ Sim.Ctrl = (function(){
   }
 
   // ---------- run id + persistence ----------
+  // Per-attempt run identifier. Lazy-stamped onto the active state so
+  // subsequent saves reuse the key. A fresh sim run gets a new
+  // runInstanceId and therefore its own review record — fixing the prior
+  // clobber where two attempts on the same basket+window overwrote notes.
+  function _genInstanceId(){
+    return 'inst_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
   function _computeRunId(st){
     if (!st) return STORAGE_PREFIX + 'default';
+    if (!st.runInstanceId) st.runInstanceId = _genInstanceId();
+    return STORAGE_PREFIX + st.runInstanceId;
+  }
+  // Legacy key derivation — read-only fallback for reviews saved before
+  // per-attempt keying. Lets a fresh attempt seed from the most recent
+  // setup-keyed notes, which the user can edit and re-save under the
+  // new instance key.
+  function _computeLegacyRunId(st){
+    if (!st) return null;
     var sd = st.startDate || '';
     var ed = st.endDate || '';
     var syms = (st.basket || []).map(function(e){ return e.symbol; }).sort().join('-');
@@ -27308,6 +27358,18 @@ Sim.Ctrl = (function(){
       _viewOnly = false;
       _runId = _computeRunId(st);
       var loaded = _loadData(_runId);
+      if (!loaded){
+        // Legacy fallback: seed from a setup-keyed review if one exists.
+        // Saving writes to the new instance key; legacy data stays put.
+        var legacyKey = _computeLegacyRunId(st);
+        if (legacyKey && legacyKey !== _runId){
+          var legacy = _loadData(legacyKey);
+          if (legacy){
+            loaded = legacy;
+            loaded.__legacySource = legacyKey;
+          }
+        }
+      }
       _data = loaded || { notes: {}, portfolio: '', savedAt: null };
       _ensureModal();
       _modal.classList.add('is-open');
