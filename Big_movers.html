@@ -5481,6 +5481,7 @@
           </div>
           <div class="fetch-actions">
             <button class="fetch-btn-cancel" id="sim-stats-export">↓ Export CSV</button>
+            <button class="fetch-btn-cancel" id="sim-stats-export-deep" title="Includes structured review fields (v3 schema). See STATS_DATA_GUIDE.md.">↓ Deep CSV</button>
             <button class="fetch-btn-cancel" id="sim-stats-clear">🗑 Clear All</button>
             <button class="fetch-btn-cancel" id="sim-stats-close">Close</button>
           </div>
@@ -14915,6 +14916,156 @@ window.Sim = Sim;
     setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
   }
 
+  // Phase 5: deep export — every column from _exportCSV plus structured
+  // review fields. Sessions without a populated review export with empty
+  // values in the review columns rather than crashing. Schema in
+  // STATS_DATA_GUIDE.md "Deep CSV columns".
+  function _exportDeepCSV(){
+    const allTrades = _loadTrades();
+    const allSessions = _loadSessions();
+    if (!allTrades.length && !allSessions.length){ alert('No stats to export.'); return; }
+    const filteredTrades = _currentFilteredSet();
+    let dataset = filteredTrades;
+    let suffix = '_' + _currentRange + '_' + _currentType;
+    const filteredNarrows = filteredTrades.length < allTrades.length;
+    if (filteredNarrows){
+      const choice = confirm('Export ' + filteredTrades.length + ' filtered trade' + (filteredTrades.length === 1 ? '' : 's') + '?\n\nOK = export filtered\nCancel = export all ' + allTrades.length);
+      if (!choice){ dataset = allTrades; suffix = '_all'; }
+    } else {
+      suffix = '_all';
+    }
+    if (!dataset.length){ alert('Nothing in the current filter to export.'); return; }
+    const sessionById = {};
+    allSessions.forEach(function(s){ sessionById[s.id] = s; });
+
+    const baseCols = [
+      'tradeId','sessionId','tradeTs','simType','symbol','year','direction','legIndex',
+      'entryDate','entryPrice','qty','stopAtEntry','initialRisk',
+      'exitDate','exitPrice','exitReason','holdingDays',
+      'realizedPnL','rMultiple','returnPctOfNotional','mfe','mae',
+      'sessionTs','sessionInitialEquity','sessionFinalEquity','sessionPnL','sessionTotalReturnPct',
+      'sessionAvgPctDeployed','sessionPeakPctDeployed','sessionIdlePctOfTime',
+      'sessionTradeCount','sessionWinCount','sessionLossCount','sessionWinRate','sessionProfitFactor',
+      'sessionSymbols','sessionSimStartDate','sessionSimEndDate',
+      'sessionIndexReturnPct','sessionIndexName','sessionTickerBhPct'
+    ];
+    const reviewCols = [
+      // Session-level review (denormalized)
+      'reviewSchemaVersion','reviewSkipped','reviewRetroactive','reviewCompletedAt',
+      'sessionEmotionalScore','sessionRegimeFelt','sessionStreakBefore','sessionGateOverridden',
+      'sessionPainNext24h','sessionPainNextDayAction','sessionPainOutOfHowMany','sessionPortfolioNote',
+      // Per-leg review (joined by tradeId)
+      'legSetupType','legIntendedHold','legConviction','legEntryState',
+      'legPlanFidelity','legWouldHoldReal','legAtHeatResponse','legThesis','legNote'
+    ];
+    const cols = baseCols.concat(reviewCols);
+
+    function csvCell(v){
+      if (v == null) return '';
+      if (typeof v === 'boolean') return v ? 'true' : 'false';
+      if (Array.isArray(v)) v = v.join('|');
+      if (typeof v === 'string' && (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0)){
+        return '"' + v.replace(/"/g, '""') + '"';
+      }
+      return String(v);
+    }
+    function rs(s){ return (s && s.review) ? s.review.session : null; }
+    function rl(s, tradeId){
+      return (s && s.review && s.review.legs && s.review.legs[tradeId]) || null;
+    }
+    function pc(rsObj, key){
+      return (rsObj && rsObj.painCalibration && rsObj.painCalibration[key] != null) ? rsObj.painCalibration[key] : null;
+    }
+
+    const lines = [cols.join(',')];
+    dataset.forEach(function(t){
+      const s = sessionById[t.sessionId] || {};
+      const rev = s.review || null;
+      const rsObj = rs(s);
+      const rlObj = rl(s, t.id);
+      lines.push(cols.map(function(c){
+        let v;
+        switch (c){
+          // Trade-level
+          case 'tradeId': v = t.id; break;
+          case 'sessionId': v = t.sessionId; break;
+          case 'tradeTs': v = t.ts ? new Date(t.ts).toISOString() : ''; break;
+          case 'simType': v = t.simType || s.simType; break;
+          case 'symbol': v = t.symbol; break;
+          case 'year': v = t.year; break;
+          case 'direction': v = t.direction; break;
+          case 'legIndex': v = t.legIndex; break;
+          case 'entryDate': v = t.entryDate; break;
+          case 'entryPrice': v = t.entryPrice; break;
+          case 'qty': v = t.qty; break;
+          case 'stopAtEntry': v = t.stopAtEntry; break;
+          case 'initialRisk': v = t.initialRisk; break;
+          case 'exitDate': v = t.exitDate; break;
+          case 'exitPrice': v = t.exitPrice; break;
+          case 'exitReason': v = t.exitReason; break;
+          case 'holdingDays': v = t.holdingDays; break;
+          case 'realizedPnL': v = t.realizedPnL; break;
+          case 'rMultiple': v = t.rMultiple; break;
+          case 'returnPctOfNotional': v = t.returnPctOfNotional; break;
+          case 'mfe': v = t.mfe; break;
+          case 'mae': v = t.mae; break;
+          // Session-level outcome (existing)
+          case 'sessionTs': v = s.ts ? new Date(s.ts).toISOString() : ''; break;
+          case 'sessionInitialEquity': v = s.initialEquity; break;
+          case 'sessionFinalEquity': v = s.finalEquity; break;
+          case 'sessionPnL': v = s.sessionPnL; break;
+          case 'sessionTotalReturnPct': v = s.totalReturnPct; break;
+          case 'sessionAvgPctDeployed': v = s.avgPctDeployed; break;
+          case 'sessionPeakPctDeployed': v = s.peakPctDeployed; break;
+          case 'sessionIdlePctOfTime': v = s.idlePctOfTime; break;
+          case 'sessionTradeCount': v = s.tradeCount; break;
+          case 'sessionWinCount': v = s.winCount; break;
+          case 'sessionLossCount': v = s.lossCount; break;
+          case 'sessionWinRate': v = s.winRate; break;
+          case 'sessionProfitFactor': v = s.profitFactor; break;
+          case 'sessionSymbols': v = s.symbols; break;
+          case 'sessionSimStartDate': v = s.simStartDate; break;
+          case 'sessionSimEndDate': v = s.simEndDate; break;
+          case 'sessionIndexReturnPct': v = s.indexReturnPct; break;
+          case 'sessionIndexName': v = s.indexName; break;
+          case 'sessionTickerBhPct': v = s.tickerBhPct; break;
+          // Review session-level (denormalized)
+          case 'reviewSchemaVersion': v = rev ? rev.schemaVersion : null; break;
+          case 'reviewSkipped': v = rev ? rev.reviewSkipped : null; break;
+          case 'reviewRetroactive': v = rev ? rev.retroactive : null; break;
+          case 'reviewCompletedAt': v = rev ? rev.completedAt : null; break;
+          case 'sessionEmotionalScore': v = rsObj ? rsObj.emotionalScore : null; break;
+          case 'sessionRegimeFelt': v = rsObj ? rsObj.regimeFelt : null; break;
+          case 'sessionStreakBefore': v = rsObj ? rsObj.streakBefore : null; break;
+          case 'sessionGateOverridden': v = rsObj ? rsObj.gateOverridden : null; break;
+          case 'sessionPainNext24h': v = pc(rsObj, 'next24h'); break;
+          case 'sessionPainNextDayAction': v = pc(rsObj, 'nextDayAction'); break;
+          case 'sessionPainOutOfHowMany': v = pc(rsObj, 'outOfHowMany'); break;
+          case 'sessionPortfolioNote': v = rsObj ? rsObj.portfolioNote : null; break;
+          // Review per-leg (joined by tradeId)
+          case 'legSetupType': v = rlObj ? rlObj.setupType : null; break;
+          case 'legIntendedHold': v = rlObj ? rlObj.intendedHold : null; break;
+          case 'legConviction': v = rlObj ? rlObj.conviction : null; break;
+          case 'legEntryState': v = rlObj ? rlObj.entryState : null; break;
+          case 'legPlanFidelity': v = rlObj ? rlObj.planFidelity : null; break;
+          case 'legWouldHoldReal': v = rlObj ? rlObj.wouldHoldReal : null; break;
+          case 'legAtHeatResponse': v = rlObj ? rlObj.atHeatResponse : null; break;
+          case 'legThesis': v = rlObj ? rlObj.thesis : null; break;
+          case 'legNote': v = rlObj ? rlObj.legNote : null; break;
+          default: v = '';
+        }
+        return csvCell(v);
+      }).join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sim_stats_deep' + suffix + '_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 100);
+  }
+
   function _open(){
     _renderAll();
     const m = document.getElementById('sim-stats-modal');
@@ -14984,6 +15135,11 @@ window.Sim = Sim;
     if (exp && !exp._simStatsBound){
       exp._simStatsBound = true;
       exp.addEventListener('click', _exportCSV);
+    }
+    const expDeep = document.getElementById('sim-stats-export-deep');
+    if (expDeep && !expDeep._simStatsBound){
+      expDeep._simStatsBound = true;
+      expDeep.addEventListener('click', _exportDeepCSV);
     }
     const clr = document.getElementById('sim-stats-clear');
     if (clr && !clr._simStatsBound){
