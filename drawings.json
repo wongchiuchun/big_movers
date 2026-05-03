@@ -3270,10 +3270,10 @@
         }
       },
       "p2": {
-        "price": 4,
+        "price": 3.1263,
         "time": {
-          "day": 25,
-          "month": 4,
+          "day": 1,
+          "month": 5,
           "year": 2025
         }
       },
@@ -3288,18 +3288,18 @@
       "fontSize": 12,
       "id": 907,
       "p1": {
-        "price": 8.5,
+        "price": 7.1021,
         "time": {
-          "day": 8,
+          "day": 12,
           "month": 5,
           "year": 2025
         }
       },
       "p2": {
-        "price": 5,
+        "price": 3.8642,
         "time": {
-          "day": 15,
-          "month": 5,
+          "day": 3,
+          "month": 6,
           "year": 2025
         }
       },
@@ -3322,11 +3322,11 @@
         }
       },
       "p2": {
-        "price": 5,
+        "price": 14.6977,
         "time": {
-          "day": 22,
-          "month": 5,
-          "year": 2025
+          "day": 18,
+          "month": 11,
+          "year": 2024
         }
       },
       "style": "solid",
@@ -3340,10 +3340,10 @@
       "fontSize": 12,
       "id": 909,
       "p1": {
-        "price": 10,
+        "price": 9.1263,
         "time": {
-          "day": 23,
-          "month": 5,
+          "day": 9,
+          "month": 6,
           "year": 2025
         }
       },
@@ -3366,10 +3366,10 @@
       "fontSize": 12,
       "id": 910,
       "p1": {
-        "price": 18,
+        "price": 13.8064,
         "time": {
-          "day": 4,
-          "month": 8,
+          "day": 10,
+          "month": 9,
           "year": 2025
         }
       },
@@ -3400,10 +3400,10 @@
         }
       },
       "p2": {
-        "price": 18,
+        "price": 31.2361,
         "time": {
-          "day": 20,
-          "month": 10,
+          "day": 21,
+          "month": 4,
           "year": 2025
         }
       },
@@ -3426,10 +3426,10 @@
         }
       },
       "p2": {
-        "price": 20,
+        "price": 29.3919,
         "time": {
-          "day": 17,
-          "month": 10,
+          "day": 3,
+          "month": 11,
           "year": 2025
         }
       },
