@@ -14669,6 +14669,176 @@ window.Sim = Sim;
     }
   }
 
+  // Phase 4: drill-down detail for a session row. Rendered lazily on first
+  // expand. Shows per-leg list with review tags + session review summary +
+  // Re-review button. Built via DOM construction (no innerHTML).
+  function _buildSessionDetailRow(session){
+    const allTrades = _loadTrades();
+    const legs = allTrades.filter(function(t){ return t.sessionId === session.id; })
+      .sort(function(a, b){ return (a.legIndex || 0) - (b.legIndex || 0); });
+    const review = session.review || null;
+    const rs = review && review.session;
+    const rl = (review && review.legs) || {};
+
+    const wrap = _mk('tr', 'sim-stats-detail-row');
+    wrap.dataset.detailFor = session.id;
+    const td = _mk('td');
+    td.setAttribute('colspan', '12');
+    td.style.padding = '0';
+    td.style.background = 'var(--bg2, rgba(255,255,255,0.02))';
+    wrap.appendChild(td);
+
+    const inner = _mk('div', 'sim-stats-detail');
+    inner.style.padding = '12px 16px';
+    inner.style.borderTop = '1px solid var(--border)';
+    td.appendChild(inner);
+
+    // Header line: review status + Re-review button
+    const headRow = _mk('div', 'sim-stats-detail-head');
+    headRow.style.display = 'flex';
+    headRow.style.alignItems = 'center';
+    headRow.style.justifyContent = 'space-between';
+    headRow.style.gap = '12px';
+    headRow.style.marginBottom = '10px';
+
+    let statusText;
+    if (!review) statusText = 'No review (legacy v2 session)';
+    else if (review.reviewSkipped) statusText = '⊘ Review skipped';
+    else if (review.retroactive) statusText = '✓ Reviewed (retroactive · ' + (review.completedAt || '?').slice(0, 10) + ')';
+    else statusText = '✓ Reviewed · ' + (review.completedAt || '?').slice(0, 10);
+
+    const statusEl = _mk('span', 'sim-stats-detail-status');
+    statusEl.style.fontFamily = 'var(--mono)';
+    statusEl.style.fontSize = '11px';
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = statusText
+      + (session.runInstanceId ? ' · run ' + session.runInstanceId.slice(-6) : '');
+
+    const reviewBtn = document.createElement('button');
+    reviewBtn.className = 'sim-trades-more';
+    reviewBtn.type = 'button';
+    reviewBtn.textContent = (review && !review.reviewSkipped) ? 'Re-review' : 'Review now';
+    reviewBtn.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      if (window.SimReviewGuided){
+        if (review && !review.reviewSkipped){
+          window.SimReviewGuided.openRetroactive(session.id);
+        } else {
+          window.SimReviewGuided.openForSession(session.id);
+        }
+      }
+    });
+
+    headRow.appendChild(statusEl);
+    headRow.appendChild(reviewBtn);
+    inner.appendChild(headRow);
+
+    // Legs table
+    if (legs.length){
+      const legsTable = _mk('table', 'sim-stats-table');
+      legsTable.style.fontSize = '11px';
+      const thead = _mk('thead');
+      const thr = _mk('tr');
+      ['#','Symbol','Entry → Exit','Hold','Exit','R','MFE / MAE','Setup','Intent','Conv','Plan'].forEach(function(h){
+        thr.appendChild(_mk('th', null, h));
+      });
+      thead.appendChild(thr); legsTable.appendChild(thead);
+      const tbody = _mk('tbody');
+      legs.forEach(function(t){
+        const r = _mk('tr');
+        r.appendChild(_mk('td', null, String(t.legIndex || '?')));
+        r.appendChild(_mk('td', null, t.symbol || '—'));
+        r.appendChild(_mk('td', null, (t.entryDate || '?') + ' → ' + (t.exitDate || '?')));
+        r.appendChild(_mk('td', null, t.holdingDays != null ? t.holdingDays + 'd' : '—'));
+        r.appendChild(_mk('td', null, t.exitReason || '—'));
+        const rCls = (t.realizedPnL || 0) > 0 ? 'is-pos' : (t.realizedPnL || 0) < 0 ? 'is-neg' : '';
+        r.appendChild(_mk('td', rCls, t.rMultiple != null ? ((t.rMultiple >= 0 ? '+' : '') + t.rMultiple.toFixed(2) + 'R') : '—'));
+        const mfeMae = (t.mfe != null ? '+' + Number(t.mfe).toFixed(0) : '—') + ' / ' + (t.mae != null ? Number(t.mae).toFixed(0) : '—');
+        r.appendChild(_mk('td', null, mfeMae));
+        const tag = rl[t.id] || {};
+        r.appendChild(_mk('td', null, tag.setupType || '—'));
+        r.appendChild(_mk('td', null, tag.intendedHold || '—'));
+        r.appendChild(_mk('td', null, tag.conviction != null ? String(tag.conviction) : '—'));
+        const planTd = _mk('td', null, tag.planFidelity || '—');
+        if (tag.planFidelity && tag.planFidelity !== 'as_planned') planTd.style.color = 'var(--red)';
+        else if (tag.planFidelity === 'as_planned') planTd.style.color = 'var(--green)';
+        r.appendChild(planTd);
+        tbody.appendChild(r);
+      });
+      legsTable.appendChild(tbody);
+      inner.appendChild(legsTable);
+    }
+
+    // Session review summary
+    if (rs){
+      const summary = _mk('div', 'sim-stats-detail-summary');
+      summary.style.marginTop = '12px';
+      summary.style.padding = '10px 12px';
+      summary.style.background = 'var(--bg3, rgba(255,255,255,0.03))';
+      summary.style.borderRadius = '4px';
+      summary.style.fontSize = '11px';
+      summary.style.lineHeight = '1.5';
+
+      function _row(label, val){
+        if (val == null || val === '') return null;
+        const row = _mk('div');
+        row.style.display = 'flex';
+        row.style.gap = '10px';
+        row.style.marginBottom = '4px';
+        const lbl = _mk('span');
+        lbl.textContent = label;
+        lbl.style.color = 'var(--muted)';
+        lbl.style.minWidth = '140px';
+        lbl.style.textTransform = 'uppercase';
+        lbl.style.fontSize = '10px';
+        lbl.style.letterSpacing = '0.06em';
+        lbl.style.fontWeight = '600';
+        const v = _mk('span');
+        v.textContent = String(val);
+        row.appendChild(lbl); row.appendChild(v);
+        return row;
+      }
+      const rows = [];
+      rows.push(_row('Emotional score', rs.emotionalScore != null ? rs.emotionalScore + '/5' : null));
+      rows.push(_row('Regime felt', rs.regimeFelt));
+      rows.push(_row('Streak before', rs.streakBefore != null && rs.streakBefore > 0 ? rs.streakBefore + ' losing session(s)' : null));
+      const pc = rs.painCalibration || null;
+      if (pc){
+        rows.push(_row('Pain · next 24h', pc.next24h));
+        rows.push(_row('Pain · next day', pc.nextDayAction));
+        rows.push(_row('Pain · out of how many', pc.outOfHowMany));
+      }
+      rows.push(_row('Portfolio note', rs.portfolioNote));
+      const filtered = rows.filter(function(x){ return x; });
+      if (filtered.length){
+        filtered.forEach(function(r){ summary.appendChild(r); });
+        inner.appendChild(summary);
+      }
+    } else if (review && review.reviewSkipped){
+      const skip = _mk('div');
+      skip.style.marginTop = '10px';
+      skip.style.fontSize = '11px';
+      skip.style.color = 'var(--muted)';
+      skip.style.fontStyle = 'italic';
+      skip.textContent = 'No structured review captured for this session. Click Review now to add one.';
+      inner.appendChild(skip);
+    }
+
+    return wrap;
+  }
+
+  function _toggleSessionDetail(row, session){
+    const existing = row.nextElementSibling;
+    if (existing && existing.dataset && existing.dataset.detailFor === session.id){
+      existing.parentNode.removeChild(existing);
+      row.classList.remove('is-expanded');
+      return;
+    }
+    const detail = _buildSessionDetailRow(session);
+    row.parentNode.insertBefore(detail, row.nextElementSibling);
+    row.classList.add('is-expanded');
+  }
+
   function _renderSessions(host, sessions){
     while (host.firstChild) host.removeChild(host.firstChild);
     if (!sessions.length){
@@ -14726,7 +14896,8 @@ window.Sim = Sim;
       delBtn.type = 'button';
       delBtn.textContent = '×';
       delBtn.title = 'Delete this session (and its linked trades)';
-      delBtn.addEventListener('click', function(){
+      delBtn.addEventListener('click', function(ev){
+        ev.stopPropagation();
         const allSessions = _loadSessions();
         const target = allSessions.find(function(x){ return x.id === s.id; });
         if (!target){ _renderAll(); return; }
@@ -14747,6 +14918,14 @@ window.Sim = Sim;
       });
       delTd.appendChild(delBtn);
       row.appendChild(delTd);
+      // Phase 4: clicking the row (anywhere except the delete cell) toggles
+      // the drill-down detail tr below it. Per-leg list + review summary.
+      row.style.cursor = 'pointer';
+      row.title = 'Click to expand legs and review detail';
+      row.addEventListener('click', function(ev){
+        if (ev.target.closest('.sim-row-del-cell')) return;
+        _toggleSessionDetail(row, s);
+      });
       tbody.appendChild(row);
     });
     // Footnote if any migrated session is shown.
