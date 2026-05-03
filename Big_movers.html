@@ -14182,6 +14182,11 @@ window.Sim = Sim;
       status.style.color = 'var(--green)';
       status.textContent = '✓ Logged session with ' + tradeRows.length + ' trade' + (tradeRows.length === 1 ? '' : 's') + '. Total sessions: ' + sessions.length + '.';
     }
+    // Phase 3: open the guided review modal for this session.
+    if (window.SimReviewGuided && typeof window.SimReviewGuided.openForSession === 'function'){
+      try { window.SimReviewGuided.openForSession(sessionId); }
+      catch(e){ console.warn('[SimStats] guided review open failed:', e); }
+    }
   }
 
   // ---- Add to stats — portfolio sim ----
@@ -14256,6 +14261,11 @@ window.Sim = Sim;
     _storeSessions(sessions);
     _storeTrades(trades);
     alert('✓ Logged portfolio session: ' + symbols.length + ' tickers, ' + allTrades.length + ' trades. Total sessions: ' + sessions.length);
+    // Phase 3: open the guided review modal for this session.
+    if (window.SimReviewGuided && typeof window.SimReviewGuided.openForSession === 'function'){
+      try { window.SimReviewGuided.openForSession(sessionId); }
+      catch(e){ console.warn('[SimStats] guided review open failed:', e); }
+    }
   }
 
   function _filterByRange(rows, range){
@@ -15287,6 +15297,450 @@ window.Sim = Sim;
   }
 
   window.Sim.Review = { populate: populate, buildMD: _buildMD };
+})();
+
+/* ---------- SimReviewGuided: structured post-session review ----------
+ * Phase 3 of the review-flywheel plan. After a session is saved by
+ * addCurrent / addCurrentPortfolio, this modal opens and walks the user
+ * through structured per-leg tags + session-level reflection prompts.
+ * On Save, writes session.review and flips reviewSkipped to false.
+ * On Skip, leaves the v3 skeleton in place (reviewSkipped stays true).
+ * Self-contained — uses DOM construction (no innerHTML) for safety.
+ */
+(function(){
+  if (typeof window === 'undefined') return;
+  if (window.SimReviewGuided) return;
+
+  var SESSIONS_KEY = 'bm_sim_sessions_v2';
+  var TRADES_KEY   = 'bm_sim_trades_v2';
+
+  var SETUP_OPTS = [
+    ['', '— pick —'],
+    ['EP', 'EP catalyst'],
+    ['breakout_VCP', 'Breakout / VCP'],
+    ['pullback_10EMA', 'Pullback to 10EMA'],
+    ['pullback_20EMA', 'Pullback to 20EMA'],
+    ['continuation', 'Continuation'],
+    ['parabolic', 'Parabolic'],
+    ['other', 'Other']
+  ];
+  var INTENT_OPTS = [
+    ['', '— pick —'],
+    ['scalp_intraday', 'Scalp (intraday)'],
+    ['short_swing_3_10d', 'Short swing (3–10d)'],
+    ['core_swing_10_30d', 'Core swing (10–30d)'],
+    ['runner_30d_plus', 'Runner (30d+)']
+  ];
+  var STATE_OPTS = [
+    ['', '— pick —'],
+    ['calm', 'Calm'],
+    ['itchy', 'Itchy'],
+    ['fomo', 'FOMO'],
+    ['revenge', 'Revenge']
+  ];
+  var FIDELITY_OPTS = [
+    ['', '— pick —'],
+    ['as_planned', 'As planned'],
+    ['cut_early_nervous', 'Cut early (nervous)'],
+    ['held_past_plan', 'Held past plan'],
+    ['added_unplanned', 'Added unplanned'],
+    ['moved_stop_wider', 'Moved stop wider']
+  ];
+  var HEAT_OPTS = [
+    ['', '— pick —'],
+    ['none_needed', 'No heat (MAE < 0.5R)'],
+    ['held', 'Held through'],
+    ['widened_stop', 'Widened stop'],
+    ['panic_cut', 'Panic cut']
+  ];
+  var REGIME_OPTS = [
+    ['', '— pick —'],
+    ['trending', 'Trending'],
+    ['choppy', 'Choppy'],
+    ['declining', 'Declining'],
+    ['mixed', 'Mixed'],
+    ['recovery', 'Recovery']
+  ];
+  var NEXT_DAY_OPTS = [
+    ['', '— pick —'],
+    ['enter_more', 'Enter more positions'],
+    ['hold_steady', 'Hold steady, no new entries'],
+    ['step_away', 'Step away from market'],
+    ['unsure', 'Unsure']
+  ];
+
+  // Compact element builder. text/data-* via attrs object; children via array.
+  function _el(tag, attrs, children){
+    var e = document.createElement(tag);
+    if (attrs){
+      Object.keys(attrs).forEach(function(k){
+        var v = attrs[k];
+        if (v == null) return;
+        if (k === 'class') e.className = v;
+        else if (k === 'text') e.textContent = v;
+        else if (k === 'html') { /* explicitly disallowed */ }
+        else if (k.indexOf('on') === 0 && typeof v === 'function') e.addEventListener(k.slice(2), v);
+        else if (k.indexOf('data-') === 0) e.setAttribute(k, v);
+        else e.setAttribute(k, v);
+      });
+    }
+    if (children){
+      (Array.isArray(children) ? children : [children]).forEach(function(c){
+        if (c == null || c === false) return;
+        if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+        else e.appendChild(c);
+      });
+    }
+    return e;
+  }
+  function _selectEl(name, opts){
+    var sel = _el('select', { 'data-field': name });
+    opts.forEach(function(o){
+      var opt = _el('option', { value: o[0], text: o[1] });
+      sel.appendChild(opt);
+    });
+    return sel;
+  }
+
+  function _injectStyles(){
+    if (document.getElementById('sim-review-guided-styles')) return;
+    var css = ''
+      + '#sim-review-guided-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;}'
+      + '#sim-review-guided-overlay.is-open{display:flex;}'
+      + '.srg-modal{background:var(--bg,#1a1a1a);color:var(--text,#e8e8e8);border:1px solid var(--border,#333);border-radius:8px;width:100%;max-width:880px;font-family:var(--sans,system-ui,-apple-system,sans-serif);box-shadow:0 8px 40px rgba(0,0,0,0.5);}'
+      + '.srg-head{padding:14px 20px;border-bottom:1px solid var(--border,#333);display:flex;align-items:center;justify-content:space-between;gap:12px;}'
+      + '.srg-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent,#d4a574);margin:0;}'
+      + '.srg-meta{font-family:var(--mono,monospace);font-size:11px;color:var(--muted,#888);}'
+      + '.srg-banner{margin:12px 20px 0;padding:10px 12px;border:1px solid var(--red,#ef4444);border-radius:4px;background:rgba(239,68,68,0.08);font-size:12px;color:var(--red,#ef4444);}'
+      + '.srg-banner-title{font-weight:600;text-transform:uppercase;letter-spacing:0.08em;font-size:10px;margin-bottom:4px;}'
+      + '.srg-tabs{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--border,#333);margin-top:12px;}'
+      + '.srg-tab{background:transparent;border:none;color:var(--muted,#888);font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;}'
+      + '.srg-tab.is-active{color:var(--text);border-bottom-color:var(--accent,#d4a574);}'
+      + '.srg-pane{display:none;padding:16px 20px;}'
+      + '.srg-pane.is-active{display:block;}'
+      + '.srg-leg{border:1px solid var(--border,#333);border-radius:4px;padding:12px;margin-bottom:10px;background:var(--bg2,#222);}'
+      + '.srg-leg-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border,#333);}'
+      + '.srg-leg-sym{font-weight:600;font-size:13px;}'
+      + '.srg-leg-stats{font-family:var(--mono,monospace);font-size:11px;color:var(--muted,#888);}'
+      + '.srg-leg-r{font-family:var(--mono,monospace);font-size:12px;font-weight:600;margin-left:auto;}'
+      + '.srg-leg-r.is-pos{color:var(--green,#4ade80);}'
+      + '.srg-leg-r.is-neg{color:var(--red,#ef4444);}'
+      + '.srg-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;}'
+      + '.srg-field{display:flex;flex-direction:column;gap:3px;}'
+      + '.srg-field-label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted,#888);font-weight:600;}'
+      + '.srg-field select,.srg-field input,.srg-field textarea{background:var(--bg3,#2a2a2a);color:var(--text,#e8e8e8);border:1px solid var(--border,#444);border-radius:3px;padding:5px 8px;font-family:var(--sans);font-size:12px;}'
+      + '.srg-field textarea{font-family:var(--mono,monospace);min-height:46px;resize:vertical;}'
+      + '.srg-field select:focus,.srg-field input:focus,.srg-field textarea:focus{outline:none;border-color:var(--accent,#d4a574);}'
+      + '.srg-field-wide{grid-column:1/-1;}'
+      + '.srg-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:12px;}'
+      + '.srg-foot{padding:14px 20px;border-top:1px solid var(--border,#333);display:flex;justify-content:space-between;gap:12px;align-items:center;}'
+      + '.srg-status{font-family:var(--mono,monospace);font-size:11px;color:var(--muted,#888);}'
+      + '.srg-actions{display:flex;gap:8px;}'
+      + '.srg-btn{background:transparent;border:1px solid var(--border,#444);color:var(--text,#e8e8e8);font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;padding:7px 14px;border-radius:4px;cursor:pointer;transition:color 0.12s,background 0.12s,border-color 0.12s;}'
+      + '.srg-btn:hover{border-color:var(--accent,#d4a574);color:var(--accent,#d4a574);}'
+      + '.srg-btn-primary{background:var(--accent,#d4a574);color:var(--bg,#1a1a1a);border-color:var(--accent,#d4a574);}'
+      + '.srg-btn-primary:hover{background:transparent;color:var(--accent,#d4a574);}'
+      + '.srg-btn-danger{color:var(--muted,#888);}'
+      + '.srg-btn-danger:hover{color:var(--red,#ef4444);border-color:var(--red,#ef4444);}'
+      + '.srg-rating{display:inline-flex;gap:4px;}'
+      + '.srg-rating button{background:var(--bg3,#2a2a2a);border:1px solid var(--border,#444);color:var(--muted,#888);width:30px;height:28px;cursor:pointer;border-radius:3px;font-family:var(--mono,monospace);font-size:12px;font-weight:600;}'
+      + '.srg-rating button.is-active{background:var(--accent,#d4a574);color:var(--bg,#1a1a1a);border-color:var(--accent,#d4a574);}';
+    var styleEl = document.createElement('style');
+    styleEl.id = 'sim-review-guided-styles';
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
+  }
+
+  function _streakBefore(sessionId, sessions){
+    var idx = sessions.findIndex(function(s){ return s.id === sessionId; });
+    if (idx < 0 || idx >= sessions.length - 1) return 0;
+    var streak = 0;
+    for (var i = idx + 1; i < sessions.length; i++){
+      if ((sessions[i].sessionPnL || 0) < 0) streak++;
+      else break;
+    }
+    return streak;
+  }
+  function _loadSessions(){
+    try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]') || []; }
+    catch(e){ return []; }
+  }
+  function _loadTrades(){
+    try { return JSON.parse(localStorage.getItem(TRADES_KEY) || '[]') || []; }
+    catch(e){ return []; }
+  }
+  function _writeSessionUpdate(sessionId, mutator){
+    var sessions = _loadSessions();
+    var idx = sessions.findIndex(function(s){ return s.id === sessionId; });
+    if (idx < 0) return false;
+    mutator(sessions[idx]);
+    try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); return true; }
+    catch(e){ console.warn('[SimReviewGuided] write failed:', e && e.message); return false; }
+  }
+
+  function _ratingEl(name){
+    var wrap = _el('span', { class: 'srg-rating', 'data-rating': name });
+    [1,2,3,4,5].forEach(function(n){
+      wrap.appendChild(_el('button', { type: 'button', 'data-val': String(n), text: String(n) }));
+    });
+    return wrap;
+  }
+  function _field(label, control){
+    return _el('div', { class: 'srg-field' }, [
+      _el('span', { class: 'srg-field-label', text: label }),
+      control
+    ]);
+  }
+
+  function _renderLegRow(trade){
+    var pnl = trade.realizedPnL || 0;
+    var pnlCls = 'srg-leg-r ' + (pnl > 0 ? 'is-pos' : pnl < 0 ? 'is-neg' : '');
+    var rTxt = trade.rMultiple != null
+      ? (trade.rMultiple >= 0 ? '+' : '') + Number(trade.rMultiple).toFixed(2) + 'R'
+      : '—';
+    var holdTxt = trade.holdingDays != null ? trade.holdingDays + 'd' : '—';
+
+    var head = _el('div', { class: 'srg-leg-head' }, [
+      _el('span', { class: 'srg-leg-sym', text: trade.symbol || '?' }),
+      _el('span', { class: 'srg-leg-stats',
+        text: (trade.entryDate || '?') + ' → ' + (trade.exitDate || '?')
+            + ' · ' + holdTxt + ' · exit:' + (trade.exitReason || '?') }),
+      _el('span', { class: pnlCls, text: rTxt })
+    ]);
+
+    var convictionRow = _ratingEl('conviction');
+
+    var holdRealSelect = _el('select', { 'data-field': 'wouldHoldReal' }, [
+      _el('option', { value: '', text: '— pick —' }),
+      _el('option', { value: 'true', text: 'Yes' }),
+      _el('option', { value: 'false', text: 'No' })
+    ]);
+
+    var thesisInput = _el('input', { type: 'text', 'data-field': 'thesis',
+      placeholder: 'What had to be true for this to work?', maxlength: '200' });
+    var legNoteTa = _el('textarea', { 'data-field': 'legNote',
+      placeholder: 'Anything specific about this leg…', maxlength: '500' });
+
+    var fields = _el('div', { class: 'srg-fields' }, [
+      _field('Setup', _selectEl('setupType', SETUP_OPTS)),
+      _field('Intended hold', _selectEl('intendedHold', INTENT_OPTS)),
+      _field('Conviction (1–5) · at entry', convictionRow),
+      _field('Entry state', _selectEl('entryState', STATE_OPTS)),
+      _field('Plan fidelity', _selectEl('planFidelity', FIDELITY_OPTS)),
+      _field('Would hold if real $?', holdRealSelect),
+      _field('At-heat response (if MAE ≤ -0.5R)', _selectEl('atHeatResponse', HEAT_OPTS)),
+      (function(){ var f = _field('Thesis (one line, optional)', thesisInput); f.classList.add('srg-field-wide'); return f; })(),
+      (function(){ var f = _field('Note (optional)', legNoteTa); f.classList.add('srg-field-wide'); return f; })()
+    ]);
+
+    return _el('div', { class: 'srg-leg', 'data-trade-id': trade.id }, [head, fields]);
+  }
+
+  function _renderSessionPane(){
+    var pain24 = _el('textarea', { 'data-field': 'painNext24h',
+      placeholder: 'One short paragraph.', maxlength: '400' });
+    var painOut = _el('input', { type: 'text', 'data-field': 'painOutOfHowMany',
+      placeholder: 'e.g., 1 in 5' });
+    var portfolio = _el('textarea', { 'data-field': 'portfolioNote',
+      placeholder: 'Overall observation about the session…', maxlength: '2000' });
+
+    var row1 = _el('div', { class: 'srg-row-2' }, [
+      _field('Emotional score (1–5) · "if real $, would I have stuck with this?"', _ratingEl('emotionalScore')),
+      _field('Regime felt (post-hoc observation)', _selectEl('regimeFelt', REGIME_OPTS))
+    ]);
+    var painField = _field('If this had been real $, what would you be doing for the next 24h?', pain24);
+    painField.style.marginBottom = '12px';
+    var row2 = _el('div', { class: 'srg-row-2' }, [
+      _field('Next day action', _selectEl('painNextDayAction', NEXT_DAY_OPTS)),
+      _field('Out of how many sessions like this would you expect this outcome?', painOut)
+    ]);
+    var portFld = _field('Portfolio note (free-form, optional)', portfolio);
+
+    var pane = _el('div', { class: 'srg-pane', 'data-pane': 'session' }, [row1, painField, row2, portFld]);
+    return pane;
+  }
+
+  function _wireRating(scope){
+    Array.prototype.forEach.call(scope.querySelectorAll('.srg-rating'), function(r){
+      r.addEventListener('click', function(ev){
+        var btn = ev.target.closest('button');
+        if (!btn) return;
+        Array.prototype.forEach.call(r.querySelectorAll('button'), function(b){ b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        r.dataset.value = btn.dataset.val;
+      });
+    });
+  }
+  function _collectLegs(modal){
+    var out = {};
+    Array.prototype.forEach.call(modal.querySelectorAll('.srg-leg'), function(leg){
+      var id = leg.dataset.tradeId;
+      if (!id) return;
+      var entry = {};
+      Array.prototype.forEach.call(leg.querySelectorAll('[data-field]'), function(el){
+        var k = el.dataset.field;
+        var v = el.value;
+        if (v === '') return;
+        if (k === 'wouldHoldReal') v = (v === 'true');
+        entry[k] = v;
+      });
+      var rating = leg.querySelector('[data-rating="conviction"]');
+      if (rating && rating.dataset.value) entry.conviction = +rating.dataset.value;
+      if (Object.keys(entry).length) out[id] = entry;
+    });
+    return out;
+  }
+  function _collectSession(modal){
+    var pane = modal.querySelector('[data-pane="session"]');
+    var entry = {};
+    Array.prototype.forEach.call(pane.querySelectorAll('[data-field]'), function(el){
+      var k = el.dataset.field;
+      var v = el.value;
+      if (v === '') return;
+      entry[k] = v;
+    });
+    var rating = pane.querySelector('[data-rating="emotionalScore"]');
+    if (rating && rating.dataset.value) entry.emotionalScore = +rating.dataset.value;
+    var pain = {};
+    if (entry.painNext24h){ pain.next24h = entry.painNext24h; delete entry.painNext24h; }
+    if (entry.painNextDayAction){ pain.nextDayAction = entry.painNextDayAction; delete entry.painNextDayAction; }
+    if (entry.painOutOfHowMany){ pain.outOfHowMany = entry.painOutOfHowMany; delete entry.painOutOfHowMany; }
+    if (Object.keys(pain).length) entry.painCalibration = pain;
+    return entry;
+  }
+
+  function _buildModal(session, trades, streak){
+    var modal = _el('div', { class: 'srg-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Guided Review' });
+
+    var head = _el('div', { class: 'srg-head' }, [
+      _el('h3', { class: 'srg-title', text: 'Guided Review · ' + session.simType }),
+      _el('span', { class: 'srg-meta',
+        text: (session.simStartDate || '?') + ' → ' + (session.simEndDate || '?')
+            + ' · ' + ((session.symbols || []).slice(0, 6).join(', ')) + ((session.symbols || []).length > 6 ? '…' : '')
+            + ' · ' + (session.sessionPnL >= 0 ? '+' : '') + Number(session.sessionPnL).toFixed(0) })
+    ]);
+    modal.appendChild(head);
+
+    if (streak >= 3){
+      modal.appendChild(_el('div', { class: 'srg-banner' }, [
+        _el('div', { class: 'srg-banner-title', text: streak + 'rd losing session in a row' }),
+        document.createTextNode('State the bet you are making before saving this review. Were these losses process-driven or execution-driven?')
+      ]));
+    }
+
+    var legsTab = _el('button', { class: 'srg-tab is-active', 'data-tab': 'legs', text: 'Legs (' + trades.length + ')' });
+    var sessTab = _el('button', { class: 'srg-tab', 'data-tab': 'session', text: 'Session' });
+    modal.appendChild(_el('div', { class: 'srg-tabs' }, [legsTab, sessTab]));
+
+    var legsPane = _el('div', { class: 'srg-pane is-active', 'data-pane': 'legs' });
+    if (trades.length){
+      trades.forEach(function(t){ legsPane.appendChild(_renderLegRow(t)); });
+    } else {
+      legsPane.appendChild(_el('div', { class: 'srg-meta', text: 'No legs to review.' }));
+    }
+    modal.appendChild(legsPane);
+
+    var sessPane = _renderSessionPane();
+    modal.appendChild(sessPane);
+
+    var statusEl = _el('span', { class: 'srg-status', id: 'srg-status',
+      text: 'Session #' + session.id.slice(-8) + (streak >= 3 ? ' · streak ' + streak : '') });
+    var skipBtn = _el('button', { class: 'srg-btn srg-btn-danger', id: 'srg-skip', text: 'Skip review' });
+    var saveBtn = _el('button', { class: 'srg-btn srg-btn-primary', id: 'srg-save', text: 'Save review' });
+
+    modal.appendChild(_el('div', { class: 'srg-foot' }, [
+      statusEl,
+      _el('div', { class: 'srg-actions' }, [skipBtn, saveBtn])
+    ]));
+
+    return { modal: modal, statusEl: statusEl, skipBtn: skipBtn, saveBtn: saveBtn,
+             legsTab: legsTab, sessTab: sessTab, legsPane: legsPane, sessPane: sessPane };
+  }
+
+  function openForSession(sessionId, opts){
+    opts = opts || {};
+    if (!sessionId){ console.warn('[SimReviewGuided] no sessionId'); return; }
+    _injectStyles();
+
+    var sessions = _loadSessions();
+    var session = sessions.find(function(s){ return s.id === sessionId; });
+    if (!session){ console.warn('[SimReviewGuided] session not found:', sessionId); return; }
+
+    var trades = _loadTrades().filter(function(t){ return t.sessionId === sessionId; });
+    trades.sort(function(a, b){ return (a.legIndex || 0) - (b.legIndex || 0); });
+
+    var streak = _streakBefore(sessionId, sessions);
+
+    var overlay = document.getElementById('sim-review-guided-overlay');
+    if (!overlay){
+      overlay = document.createElement('div');
+      overlay.id = 'sim-review-guided-overlay';
+      document.body.appendChild(overlay);
+    }
+    while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
+
+    var built = _buildModal(session, trades, streak);
+    overlay.appendChild(built.modal);
+    overlay.classList.add('is-open');
+
+    [built.legsTab, built.sessTab].forEach(function(tab){
+      tab.addEventListener('click', function(){
+        [built.legsTab, built.sessTab].forEach(function(t){ t.classList.remove('is-active'); });
+        [built.legsPane, built.sessPane].forEach(function(p){ p.classList.remove('is-active'); });
+        tab.classList.add('is-active');
+        if (tab === built.legsTab) built.legsPane.classList.add('is-active');
+        else built.sessPane.classList.add('is-active');
+      });
+    });
+    _wireRating(built.modal);
+
+    built.skipBtn.addEventListener('click', function(){
+      _writeSessionUpdate(sessionId, function(s){
+        if (!s.review) s.review = { schemaVersion: 1, reviewSkipped: true, retroactive: false, completedAt: null, session: null, legs: null };
+        s.review.reviewSkipped = true;
+        s.review.completedAt = null;
+        s.review.session = null;
+        s.review.legs = null;
+        if (streak){
+          s.review.session = { streakBefore: streak };
+        }
+      });
+      overlay.classList.remove('is-open');
+      console.info('[SimReviewGuided] skipped review for', sessionId);
+    });
+
+    built.saveBtn.addEventListener('click', function(){
+      var legs = _collectLegs(built.modal);
+      var sessFields = _collectSession(built.modal);
+      sessFields.streakBefore = streak;
+      var ok = _writeSessionUpdate(sessionId, function(s){
+        if (!s.review) s.review = { schemaVersion: 1, reviewSkipped: false, retroactive: false, completedAt: null, session: null, legs: null };
+        s.review.schemaVersion = 1;
+        s.review.reviewSkipped = false;
+        s.review.completedAt = new Date().toISOString();
+        s.review.retroactive = !!opts.retroactive;
+        s.review.session = Object.keys(sessFields).length ? sessFields : null;
+        s.review.legs = Object.keys(legs).length ? legs : null;
+      });
+      if (ok){
+        built.statusEl.textContent = '✓ Review saved.';
+        built.statusEl.style.color = 'var(--green)';
+        setTimeout(function(){ overlay.classList.remove('is-open'); }, 700);
+      } else {
+        built.statusEl.textContent = 'Save failed — see console.';
+        built.statusEl.style.color = 'var(--red)';
+      }
+    });
+  }
+
+  function openRetroactive(sessionId){
+    openForSession(sessionId, { retroactive: true });
+  }
+
+  window.SimReviewGuided = {
+    openForSession: openForSession,
+    openRetroactive: openRetroactive
+  };
 })();
 
 /* ---------- Sim.Ctrl: controller ---------- */
