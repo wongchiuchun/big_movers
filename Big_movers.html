@@ -14128,8 +14128,15 @@ window.Sim = Sim;
     }
     const dep = _deployedIndividual(sim, bars);
     const agg = _aggSession(tradeRows);
+    // Stamp a runInstanceId on the sim if one wasn't already lazy-set by a
+    // review modal open. This becomes the join key between this session and
+    // any standalone PortSim.Review/Sim.Review record for the same attempt.
+    if (!sim.runInstanceId){
+      sim.runInstanceId = 'inst_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    }
     const session = {
-      v: 2, id: sessionId, ts: Date.now(),
+      v: 3, id: sessionId, ts: Date.now(),
+      runInstanceId: sim.runInstanceId,
       simType: 'individual',
       symbols: [symbol], symbol: symbol, year: year,
       moveKey: moveKey, direction: sim.direction || 'long',
@@ -14142,7 +14149,18 @@ window.Sim = Sim;
       winRate: +agg.winRate.toFixed(1),
       profitFactor: agg.profitFactor === Infinity ? null : (isFinite(agg.profitFactor) ? +agg.profitFactor.toFixed(2) : null),
       tickerBhPct: derived && derived.tickerBhPct != null ? +(+derived.tickerBhPct).toFixed(2) : null,
-      simStartDate: simStartDate, simEndDate: simEndDate
+      simStartDate: simStartDate, simEndDate: simEndDate,
+      // Phase 2 review skeleton — populated by the guided review modal
+      // (Phase 3). reviewSkipped defaults to true; flips to false when the
+      // user completes the structured review. legs is keyed by tradeId.
+      review: {
+        schemaVersion: 1,
+        reviewSkipped: true,
+        retroactive: false,
+        completedAt: null,
+        session: null,
+        legs: null
+      }
     };
 
     const sessions = _loadSessions();
@@ -14184,8 +14202,15 @@ window.Sim = Sim;
     }
     const dep = _deployedPortfolio();
     const agg = _aggSession(allTrades);
+    // Stamp a runInstanceId on the portfolio state if one wasn't already
+    // lazy-set by a review modal open. Join key between session and review.
+    const psState = (window.PortSim && window.PortSim._state) || null;
+    if (psState && !psState.runInstanceId){
+      psState.runInstanceId = 'inst_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    }
     const session = {
-      v: 2, id: sessionId, ts: ts,
+      v: 3, id: sessionId, ts: ts,
+      runInstanceId: psState ? psState.runInstanceId : null,
       simType: 'portfolio',
       symbols: symbols,
       symbol: symbols.length === 1 ? symbols[0] : ('Basket (' + symbols.length + ')'),
@@ -14202,7 +14227,18 @@ window.Sim = Sim;
       indexReturnPct: payload.indexReturnPct != null ? +(+payload.indexReturnPct).toFixed(2) : null,
       indexName: payload.indexName || null,
       simStartDate: payload.firstDate || null,
-      simEndDate: payload.lastDate || null
+      simEndDate: payload.lastDate || null,
+      // Phase 2 review skeleton — populated by the guided review modal
+      // (Phase 3). reviewSkipped defaults to true; flips to false when the
+      // user completes the structured review. legs is keyed by tradeId.
+      review: {
+        schemaVersion: 1,
+        reviewSkipped: true,
+        retroactive: false,
+        completedAt: null,
+        session: null,
+        legs: null
+      }
     };
 
     const sessions = _loadSessions();
