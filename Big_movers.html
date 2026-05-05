@@ -4983,6 +4983,71 @@
       color:#666 !important;
     }
   }
+
+  /* ----- Structured review form (merged from former Guided Review) ----- */
+  .portsim-review-srform{
+    margin-top:12px;margin-bottom:12px;
+    background:var(--bg3);border:1px solid var(--border);
+    border-radius:6px;padding:10px 12px;
+  }
+  .portsim-review-srform-head{
+    display:flex;align-items:baseline;gap:10px;
+    font-family:var(--mono);font-size:11px;
+    color:var(--text-2);
+    margin-bottom:8px;padding-bottom:6px;
+    border-bottom:1px solid var(--border);
+  }
+  .portsim-review-srform-leg{
+    font-weight:700;color:var(--accent-cream);
+    font-size:12px;letter-spacing:0.04em;
+  }
+  .portsim-review-srform-meta{font-size:10px;color:var(--muted);}
+  .portsim-review-srform-r{margin-left:auto;font-weight:600;}
+  .portsim-review-srform-r.is-pos{color:var(--green);}
+  .portsim-review-srform-r.is-neg{color:var(--red);}
+  .portsim-review-srform-grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px 14px;
+  }
+  .portsim-review-srform-field{display:flex;flex-direction:column;gap:3px;}
+  .portsim-review-srform-field label{
+    font-family:var(--mono);font-size:9px;font-weight:600;
+    color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;
+  }
+  .portsim-review-srform-field select,
+  .portsim-review-srform-field input,
+  .portsim-review-srform-field textarea{
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:4px;
+    color:var(--text);
+    font-family:var(--ui);font-size:12px;line-height:1.4;
+    padding:5px 8px;outline:none;
+    box-sizing:border-box;width:100%;
+  }
+  .portsim-review-srform-field textarea{
+    font-family:var(--mono);font-size:11px;
+    min-height:46px;resize:vertical;
+  }
+  .portsim-review-srform-field select:focus,
+  .portsim-review-srform-field input:focus,
+  .portsim-review-srform-field textarea:focus{border-color:var(--accent);}
+  .portsim-review-srform-wide{grid-column:1/-1;}
+  .portsim-review-srform-rating{display:inline-flex;gap:4px;}
+  .portsim-review-srform-rating button{
+    background:var(--bg2);border:1px solid var(--border);
+    color:var(--muted);
+    width:30px;height:28px;cursor:pointer;border-radius:3px;
+    font-family:var(--mono);font-size:12px;font-weight:600;
+    padding:0;
+  }
+  .portsim-review-srform-rating button.is-active{
+    background:var(--accent);color:var(--bg);border-color:var(--accent);
+  }
+  /* Loaded snapshots stay editable — _onSave preserves _data.meta in
+     view-only mode, so the reflection notes are intentionally writable.
+     The [VIEW-ONLY] badge + accent header signal "you're editing a saved
+     snapshot, the basket/equity is frozen" without locking inputs. */
   /* ============ PORTSIM TRACK P: Trade Review Modal Styles — END ============ */
 </style>
 </head>
@@ -12433,6 +12498,10 @@ window.Sim = Sim;
     priceEl.value = isFinite(currentStop) ? currentStop.toFixed(2) : '';
     pctEl.value = 100;
     _clearStatus('sim-movestop-status');
+    // Port sim "Move Stop" replaces existing unfired stops (applyMoveStopNow);
+    // single-ticker sim queues the action and keeps prior stops intact.
+    const submitBtn = document.getElementById('sim-movestop-submit');
+    if (submitBtn) submitBtn.textContent = ctx.portMode ? 'Set Stop' : 'Add Stop';
 
     function recompute() {
       const newStop = _parseNum(priceEl.value, NaN);
@@ -14183,10 +14252,11 @@ window.Sim = Sim;
       status.style.color = 'var(--green)';
       status.textContent = '✓ Logged session with ' + tradeRows.length + ' trade' + (tradeRows.length === 1 ? '' : 's') + '. Total sessions: ' + sessions.length + '.';
     }
-    // Phase 3: open the guided review modal for this session.
-    if (window.SimReviewGuided && typeof window.SimReviewGuided.openForSession === 'function'){
-      try { window.SimReviewGuided.openForSession(sessionId); }
-      catch(e){ console.warn('[SimStats] guided review open failed:', e); }
+    // Open the merged Trade Review modal for this session — replaces the
+    // former SimReviewGuided post-session prompt.
+    if (window.PortSim && PortSim.Review && typeof PortSim.Review.openForSession === 'function'){
+      try { PortSim.Review.openForSession(sessionId); }
+      catch(e){ console.warn('[SimStats] review open failed:', e); }
     }
   }
 
@@ -14262,10 +14332,11 @@ window.Sim = Sim;
     _storeSessions(sessions);
     _storeTrades(trades);
     alert('✓ Logged portfolio session: ' + symbols.length + ' tickers, ' + allTrades.length + ' trades. Total sessions: ' + sessions.length);
-    // Phase 3: open the guided review modal for this session.
-    if (window.SimReviewGuided && typeof window.SimReviewGuided.openForSession === 'function'){
-      try { window.SimReviewGuided.openForSession(sessionId); }
-      catch(e){ console.warn('[SimStats] guided review open failed:', e); }
+    // Open the merged Trade Review modal for this session — replaces the
+    // former SimReviewGuided post-session prompt.
+    if (window.PortSim && PortSim.Review && typeof PortSim.Review.openForSession === 'function'){
+      try { PortSim.Review.openForSession(sessionId); }
+      catch(e){ console.warn('[SimStats] review open failed:', e); }
     }
   }
 
@@ -14720,11 +14791,11 @@ window.Sim = Sim;
     reviewBtn.textContent = (review && !review.reviewSkipped) ? 'Re-review' : 'Review now';
     reviewBtn.addEventListener('click', function(ev){
       ev.stopPropagation();
-      if (window.SimReviewGuided){
+      if (window.PortSim && PortSim.Review){
         if (review && !review.reviewSkipped){
-          window.SimReviewGuided.openRetroactive(session.id);
+          PortSim.Review.openRetroactive(session.id);
         } else {
-          window.SimReviewGuided.openForSession(session.id);
+          PortSim.Review.openForSession(session.id);
         }
       }
     });
@@ -15632,450 +15703,6 @@ window.Sim = Sim;
   }
 
   window.Sim.Review = { populate: populate, buildMD: _buildMD };
-})();
-
-/* ---------- SimReviewGuided: structured post-session review ----------
- * Phase 3 of the review-flywheel plan. After a session is saved by
- * addCurrent / addCurrentPortfolio, this modal opens and walks the user
- * through structured per-leg tags + session-level reflection prompts.
- * On Save, writes session.review and flips reviewSkipped to false.
- * On Skip, leaves the v3 skeleton in place (reviewSkipped stays true).
- * Self-contained — uses DOM construction (no innerHTML) for safety.
- */
-(function(){
-  if (typeof window === 'undefined') return;
-  if (window.SimReviewGuided) return;
-
-  var SESSIONS_KEY = 'bm_sim_sessions_v2';
-  var TRADES_KEY   = 'bm_sim_trades_v2';
-
-  var SETUP_OPTS = [
-    ['', '— pick —'],
-    ['EP', 'EP catalyst'],
-    ['breakout_VCP', 'Breakout / VCP'],
-    ['pullback_10EMA', 'Pullback to 10EMA'],
-    ['pullback_20EMA', 'Pullback to 20EMA'],
-    ['continuation', 'Continuation'],
-    ['parabolic', 'Parabolic'],
-    ['other', 'Other']
-  ];
-  var INTENT_OPTS = [
-    ['', '— pick —'],
-    ['scalp_intraday', 'Scalp (intraday)'],
-    ['short_swing_3_10d', 'Short swing (3–10d)'],
-    ['core_swing_10_30d', 'Core swing (10–30d)'],
-    ['runner_30d_plus', 'Runner (30d+)']
-  ];
-  var STATE_OPTS = [
-    ['', '— pick —'],
-    ['calm', 'Calm'],
-    ['itchy', 'Itchy'],
-    ['fomo', 'FOMO'],
-    ['revenge', 'Revenge']
-  ];
-  var FIDELITY_OPTS = [
-    ['', '— pick —'],
-    ['as_planned', 'As planned'],
-    ['cut_early_nervous', 'Cut early (nervous)'],
-    ['held_past_plan', 'Held past plan'],
-    ['added_unplanned', 'Added unplanned'],
-    ['moved_stop_wider', 'Moved stop wider']
-  ];
-  var HEAT_OPTS = [
-    ['', '— pick —'],
-    ['none_needed', 'No heat (MAE < 0.5R)'],
-    ['held', 'Held through'],
-    ['widened_stop', 'Widened stop'],
-    ['panic_cut', 'Panic cut']
-  ];
-  var REGIME_OPTS = [
-    ['', '— pick —'],
-    ['trending', 'Trending'],
-    ['choppy', 'Choppy'],
-    ['declining', 'Declining'],
-    ['mixed', 'Mixed'],
-    ['recovery', 'Recovery']
-  ];
-  var NEXT_DAY_OPTS = [
-    ['', '— pick —'],
-    ['enter_more', 'Enter more positions'],
-    ['hold_steady', 'Hold steady, no new entries'],
-    ['step_away', 'Step away from market'],
-    ['unsure', 'Unsure']
-  ];
-
-  // Compact element builder. text/data-* via attrs object; children via array.
-  function _el(tag, attrs, children){
-    var e = document.createElement(tag);
-    if (attrs){
-      Object.keys(attrs).forEach(function(k){
-        var v = attrs[k];
-        if (v == null) return;
-        if (k === 'class') e.className = v;
-        else if (k === 'text') e.textContent = v;
-        else if (k === 'html') { /* explicitly disallowed */ }
-        else if (k.indexOf('on') === 0 && typeof v === 'function') e.addEventListener(k.slice(2), v);
-        else if (k.indexOf('data-') === 0) e.setAttribute(k, v);
-        else e.setAttribute(k, v);
-      });
-    }
-    if (children){
-      (Array.isArray(children) ? children : [children]).forEach(function(c){
-        if (c == null || c === false) return;
-        if (typeof c === 'string') e.appendChild(document.createTextNode(c));
-        else e.appendChild(c);
-      });
-    }
-    return e;
-  }
-  function _selectEl(name, opts){
-    var sel = _el('select', { 'data-field': name });
-    opts.forEach(function(o){
-      var opt = _el('option', { value: o[0], text: o[1] });
-      sel.appendChild(opt);
-    });
-    return sel;
-  }
-
-  function _injectStyles(){
-    if (document.getElementById('sim-review-guided-styles')) return;
-    var css = ''
-      + '#sim-review-guided-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;}'
-      + '#sim-review-guided-overlay.is-open{display:flex;}'
-      + '.srg-modal{background:var(--bg,#1a1a1a);color:var(--text,#e8e8e8);border:1px solid var(--border,#333);border-radius:8px;width:100%;max-width:880px;font-family:var(--sans,system-ui,-apple-system,sans-serif);box-shadow:0 8px 40px rgba(0,0,0,0.5);}'
-      + '.srg-head{padding:14px 20px;border-bottom:1px solid var(--border,#333);display:flex;align-items:center;justify-content:space-between;gap:12px;}'
-      + '.srg-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent,#d4a574);margin:0;}'
-      + '.srg-meta{font-family:var(--mono,monospace);font-size:11px;color:var(--muted,#888);}'
-      + '.srg-banner{margin:12px 20px 0;padding:10px 12px;border:1px solid var(--red,#ef4444);border-radius:4px;background:rgba(239,68,68,0.08);font-size:12px;color:var(--red,#ef4444);}'
-      + '.srg-banner-title{font-weight:600;text-transform:uppercase;letter-spacing:0.08em;font-size:10px;margin-bottom:4px;}'
-      + '.srg-tabs{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--border,#333);margin-top:12px;}'
-      + '.srg-tab{background:transparent;border:none;color:var(--muted,#888);font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;}'
-      + '.srg-tab.is-active{color:var(--text);border-bottom-color:var(--accent,#d4a574);}'
-      + '.srg-pane{display:none;padding:16px 20px;}'
-      + '.srg-pane.is-active{display:block;}'
-      + '.srg-leg{border:1px solid var(--border,#333);border-radius:4px;padding:12px;margin-bottom:10px;background:var(--bg2,#222);}'
-      + '.srg-leg-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border,#333);}'
-      + '.srg-leg-sym{font-weight:600;font-size:13px;}'
-      + '.srg-leg-stats{font-family:var(--mono,monospace);font-size:11px;color:var(--muted,#888);}'
-      + '.srg-leg-r{font-family:var(--mono,monospace);font-size:12px;font-weight:600;margin-left:auto;}'
-      + '.srg-leg-r.is-pos{color:var(--green,#4ade80);}'
-      + '.srg-leg-r.is-neg{color:var(--red,#ef4444);}'
-      + '.srg-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;}'
-      + '.srg-field{display:flex;flex-direction:column;gap:3px;}'
-      + '.srg-field-label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted,#888);font-weight:600;}'
-      + '.srg-field select,.srg-field input,.srg-field textarea{background:var(--bg3,#2a2a2a);color:var(--text,#e8e8e8);border:1px solid var(--border,#444);border-radius:3px;padding:5px 8px;font-family:var(--sans);font-size:12px;}'
-      + '.srg-field textarea{font-family:var(--mono,monospace);min-height:46px;resize:vertical;}'
-      + '.srg-field select:focus,.srg-field input:focus,.srg-field textarea:focus{outline:none;border-color:var(--accent,#d4a574);}'
-      + '.srg-field-wide{grid-column:1/-1;}'
-      + '.srg-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-bottom:12px;}'
-      + '.srg-foot{padding:14px 20px;border-top:1px solid var(--border,#333);display:flex;justify-content:space-between;gap:12px;align-items:center;}'
-      + '.srg-status{font-family:var(--mono,monospace);font-size:11px;color:var(--muted,#888);}'
-      + '.srg-actions{display:flex;gap:8px;}'
-      + '.srg-btn{background:transparent;border:1px solid var(--border,#444);color:var(--text,#e8e8e8);font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;padding:7px 14px;border-radius:4px;cursor:pointer;transition:color 0.12s,background 0.12s,border-color 0.12s;}'
-      + '.srg-btn:hover{border-color:var(--accent,#d4a574);color:var(--accent,#d4a574);}'
-      + '.srg-btn-primary{background:var(--accent,#d4a574);color:var(--bg,#1a1a1a);border-color:var(--accent,#d4a574);}'
-      + '.srg-btn-primary:hover{background:transparent;color:var(--accent,#d4a574);}'
-      + '.srg-btn-danger{color:var(--muted,#888);}'
-      + '.srg-btn-danger:hover{color:var(--red,#ef4444);border-color:var(--red,#ef4444);}'
-      + '.srg-rating{display:inline-flex;gap:4px;}'
-      + '.srg-rating button{background:var(--bg3,#2a2a2a);border:1px solid var(--border,#444);color:var(--muted,#888);width:30px;height:28px;cursor:pointer;border-radius:3px;font-family:var(--mono,monospace);font-size:12px;font-weight:600;}'
-      + '.srg-rating button.is-active{background:var(--accent,#d4a574);color:var(--bg,#1a1a1a);border-color:var(--accent,#d4a574);}';
-    var styleEl = document.createElement('style');
-    styleEl.id = 'sim-review-guided-styles';
-    styleEl.textContent = css;
-    document.head.appendChild(styleEl);
-  }
-
-  function _streakBefore(sessionId, sessions){
-    var idx = sessions.findIndex(function(s){ return s.id === sessionId; });
-    if (idx < 0 || idx >= sessions.length - 1) return 0;
-    var streak = 0;
-    for (var i = idx + 1; i < sessions.length; i++){
-      if ((sessions[i].sessionPnL || 0) < 0) streak++;
-      else break;
-    }
-    return streak;
-  }
-  function _loadSessions(){
-    try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]') || []; }
-    catch(e){ return []; }
-  }
-  function _loadTrades(){
-    try { return JSON.parse(localStorage.getItem(TRADES_KEY) || '[]') || []; }
-    catch(e){ return []; }
-  }
-  function _writeSessionUpdate(sessionId, mutator){
-    var sessions = _loadSessions();
-    var idx = sessions.findIndex(function(s){ return s.id === sessionId; });
-    if (idx < 0) return false;
-    mutator(sessions[idx]);
-    try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); return true; }
-    catch(e){ console.warn('[SimReviewGuided] write failed:', e && e.message); return false; }
-  }
-
-  function _ratingEl(name){
-    var wrap = _el('span', { class: 'srg-rating', 'data-rating': name });
-    [1,2,3,4,5].forEach(function(n){
-      wrap.appendChild(_el('button', { type: 'button', 'data-val': String(n), text: String(n) }));
-    });
-    return wrap;
-  }
-  function _field(label, control){
-    return _el('div', { class: 'srg-field' }, [
-      _el('span', { class: 'srg-field-label', text: label }),
-      control
-    ]);
-  }
-
-  function _renderLegRow(trade){
-    var pnl = trade.realizedPnL || 0;
-    var pnlCls = 'srg-leg-r ' + (pnl > 0 ? 'is-pos' : pnl < 0 ? 'is-neg' : '');
-    var rTxt = trade.rMultiple != null
-      ? (trade.rMultiple >= 0 ? '+' : '') + Number(trade.rMultiple).toFixed(2) + 'R'
-      : '—';
-    var holdTxt = trade.holdingDays != null ? trade.holdingDays + 'd' : '—';
-
-    var head = _el('div', { class: 'srg-leg-head' }, [
-      _el('span', { class: 'srg-leg-sym', text: trade.symbol || '?' }),
-      _el('span', { class: 'srg-leg-stats',
-        text: (trade.entryDate || '?') + ' → ' + (trade.exitDate || '?')
-            + ' · ' + holdTxt + ' · exit:' + (trade.exitReason || '?') }),
-      _el('span', { class: pnlCls, text: rTxt })
-    ]);
-
-    var convictionRow = _ratingEl('conviction');
-
-    var holdRealSelect = _el('select', { 'data-field': 'wouldHoldReal' }, [
-      _el('option', { value: '', text: '— pick —' }),
-      _el('option', { value: 'true', text: 'Yes' }),
-      _el('option', { value: 'false', text: 'No' })
-    ]);
-
-    var thesisInput = _el('input', { type: 'text', 'data-field': 'thesis',
-      placeholder: 'What had to be true for this to work?', maxlength: '200' });
-    var legNoteTa = _el('textarea', { 'data-field': 'legNote',
-      placeholder: 'Anything specific about this leg…', maxlength: '500' });
-
-    var fields = _el('div', { class: 'srg-fields' }, [
-      _field('Setup', _selectEl('setupType', SETUP_OPTS)),
-      _field('Intended hold', _selectEl('intendedHold', INTENT_OPTS)),
-      _field('Conviction (1–5) · at entry', convictionRow),
-      _field('Entry state', _selectEl('entryState', STATE_OPTS)),
-      _field('Plan fidelity', _selectEl('planFidelity', FIDELITY_OPTS)),
-      _field('Would hold if real $?', holdRealSelect),
-      _field('At-heat response (if MAE ≤ -0.5R)', _selectEl('atHeatResponse', HEAT_OPTS)),
-      (function(){ var f = _field('Thesis (one line, optional)', thesisInput); f.classList.add('srg-field-wide'); return f; })(),
-      (function(){ var f = _field('Note (optional)', legNoteTa); f.classList.add('srg-field-wide'); return f; })()
-    ]);
-
-    return _el('div', { class: 'srg-leg', 'data-trade-id': trade.id }, [head, fields]);
-  }
-
-  function _renderSessionPane(){
-    var pain24 = _el('textarea', { 'data-field': 'painNext24h',
-      placeholder: 'One short paragraph.', maxlength: '400' });
-    var painOut = _el('input', { type: 'text', 'data-field': 'painOutOfHowMany',
-      placeholder: 'e.g., 1 in 5' });
-    var portfolio = _el('textarea', { 'data-field': 'portfolioNote',
-      placeholder: 'Overall observation about the session…', maxlength: '2000' });
-
-    var row1 = _el('div', { class: 'srg-row-2' }, [
-      _field('Emotional score (1–5) · "if real $, would I have stuck with this?"', _ratingEl('emotionalScore')),
-      _field('Regime felt (post-hoc observation)', _selectEl('regimeFelt', REGIME_OPTS))
-    ]);
-    var painField = _field('If this had been real $, what would you be doing for the next 24h?', pain24);
-    painField.style.marginBottom = '12px';
-    var row2 = _el('div', { class: 'srg-row-2' }, [
-      _field('Next day action', _selectEl('painNextDayAction', NEXT_DAY_OPTS)),
-      _field('Out of how many sessions like this would you expect this outcome?', painOut)
-    ]);
-    var portFld = _field('Portfolio note (free-form, optional)', portfolio);
-
-    var pane = _el('div', { class: 'srg-pane', 'data-pane': 'session' }, [row1, painField, row2, portFld]);
-    return pane;
-  }
-
-  function _wireRating(scope){
-    Array.prototype.forEach.call(scope.querySelectorAll('.srg-rating'), function(r){
-      r.addEventListener('click', function(ev){
-        var btn = ev.target.closest('button');
-        if (!btn) return;
-        Array.prototype.forEach.call(r.querySelectorAll('button'), function(b){ b.classList.remove('is-active'); });
-        btn.classList.add('is-active');
-        r.dataset.value = btn.dataset.val;
-      });
-    });
-  }
-  function _collectLegs(modal){
-    var out = {};
-    Array.prototype.forEach.call(modal.querySelectorAll('.srg-leg'), function(leg){
-      var id = leg.dataset.tradeId;
-      if (!id) return;
-      var entry = {};
-      Array.prototype.forEach.call(leg.querySelectorAll('[data-field]'), function(el){
-        var k = el.dataset.field;
-        var v = el.value;
-        if (v === '') return;
-        if (k === 'wouldHoldReal') v = (v === 'true');
-        entry[k] = v;
-      });
-      var rating = leg.querySelector('[data-rating="conviction"]');
-      if (rating && rating.dataset.value) entry.conviction = +rating.dataset.value;
-      if (Object.keys(entry).length) out[id] = entry;
-    });
-    return out;
-  }
-  function _collectSession(modal){
-    var pane = modal.querySelector('[data-pane="session"]');
-    var entry = {};
-    Array.prototype.forEach.call(pane.querySelectorAll('[data-field]'), function(el){
-      var k = el.dataset.field;
-      var v = el.value;
-      if (v === '') return;
-      entry[k] = v;
-    });
-    var rating = pane.querySelector('[data-rating="emotionalScore"]');
-    if (rating && rating.dataset.value) entry.emotionalScore = +rating.dataset.value;
-    var pain = {};
-    if (entry.painNext24h){ pain.next24h = entry.painNext24h; delete entry.painNext24h; }
-    if (entry.painNextDayAction){ pain.nextDayAction = entry.painNextDayAction; delete entry.painNextDayAction; }
-    if (entry.painOutOfHowMany){ pain.outOfHowMany = entry.painOutOfHowMany; delete entry.painOutOfHowMany; }
-    if (Object.keys(pain).length) entry.painCalibration = pain;
-    return entry;
-  }
-
-  function _buildModal(session, trades, streak){
-    var modal = _el('div', { class: 'srg-modal', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Guided Review' });
-
-    var head = _el('div', { class: 'srg-head' }, [
-      _el('h3', { class: 'srg-title', text: 'Guided Review · ' + session.simType }),
-      _el('span', { class: 'srg-meta',
-        text: (session.simStartDate || '?') + ' → ' + (session.simEndDate || '?')
-            + ' · ' + ((session.symbols || []).slice(0, 6).join(', ')) + ((session.symbols || []).length > 6 ? '…' : '')
-            + ' · ' + (session.sessionPnL >= 0 ? '+' : '') + Number(session.sessionPnL).toFixed(0) })
-    ]);
-    modal.appendChild(head);
-
-    if (streak >= 3){
-      modal.appendChild(_el('div', { class: 'srg-banner' }, [
-        _el('div', { class: 'srg-banner-title', text: streak + 'rd losing session in a row' }),
-        document.createTextNode('State the bet you are making before saving this review. Were these losses process-driven or execution-driven?')
-      ]));
-    }
-
-    var legsTab = _el('button', { class: 'srg-tab is-active', 'data-tab': 'legs', text: 'Legs (' + trades.length + ')' });
-    var sessTab = _el('button', { class: 'srg-tab', 'data-tab': 'session', text: 'Session' });
-    modal.appendChild(_el('div', { class: 'srg-tabs' }, [legsTab, sessTab]));
-
-    var legsPane = _el('div', { class: 'srg-pane is-active', 'data-pane': 'legs' });
-    if (trades.length){
-      trades.forEach(function(t){ legsPane.appendChild(_renderLegRow(t)); });
-    } else {
-      legsPane.appendChild(_el('div', { class: 'srg-meta', text: 'No legs to review.' }));
-    }
-    modal.appendChild(legsPane);
-
-    var sessPane = _renderSessionPane();
-    modal.appendChild(sessPane);
-
-    var statusEl = _el('span', { class: 'srg-status', id: 'srg-status',
-      text: 'Session #' + session.id.slice(-8) + (streak >= 3 ? ' · streak ' + streak : '') });
-    var skipBtn = _el('button', { class: 'srg-btn srg-btn-danger', id: 'srg-skip', text: 'Skip review' });
-    var saveBtn = _el('button', { class: 'srg-btn srg-btn-primary', id: 'srg-save', text: 'Save review' });
-
-    modal.appendChild(_el('div', { class: 'srg-foot' }, [
-      statusEl,
-      _el('div', { class: 'srg-actions' }, [skipBtn, saveBtn])
-    ]));
-
-    return { modal: modal, statusEl: statusEl, skipBtn: skipBtn, saveBtn: saveBtn,
-             legsTab: legsTab, sessTab: sessTab, legsPane: legsPane, sessPane: sessPane };
-  }
-
-  function openForSession(sessionId, opts){
-    opts = opts || {};
-    if (!sessionId){ console.warn('[SimReviewGuided] no sessionId'); return; }
-    _injectStyles();
-
-    var sessions = _loadSessions();
-    var session = sessions.find(function(s){ return s.id === sessionId; });
-    if (!session){ console.warn('[SimReviewGuided] session not found:', sessionId); return; }
-
-    var trades = _loadTrades().filter(function(t){ return t.sessionId === sessionId; });
-    trades.sort(function(a, b){ return (a.legIndex || 0) - (b.legIndex || 0); });
-
-    var streak = _streakBefore(sessionId, sessions);
-
-    var overlay = document.getElementById('sim-review-guided-overlay');
-    if (!overlay){
-      overlay = document.createElement('div');
-      overlay.id = 'sim-review-guided-overlay';
-      document.body.appendChild(overlay);
-    }
-    while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
-
-    var built = _buildModal(session, trades, streak);
-    overlay.appendChild(built.modal);
-    overlay.classList.add('is-open');
-
-    [built.legsTab, built.sessTab].forEach(function(tab){
-      tab.addEventListener('click', function(){
-        [built.legsTab, built.sessTab].forEach(function(t){ t.classList.remove('is-active'); });
-        [built.legsPane, built.sessPane].forEach(function(p){ p.classList.remove('is-active'); });
-        tab.classList.add('is-active');
-        if (tab === built.legsTab) built.legsPane.classList.add('is-active');
-        else built.sessPane.classList.add('is-active');
-      });
-    });
-    _wireRating(built.modal);
-
-    built.skipBtn.addEventListener('click', function(){
-      _writeSessionUpdate(sessionId, function(s){
-        if (!s.review) s.review = { schemaVersion: 1, reviewSkipped: true, retroactive: false, completedAt: null, session: null, legs: null };
-        s.review.reviewSkipped = true;
-        s.review.completedAt = null;
-        s.review.session = null;
-        s.review.legs = null;
-        if (streak){
-          s.review.session = { streakBefore: streak };
-        }
-      });
-      overlay.classList.remove('is-open');
-      console.info('[SimReviewGuided] skipped review for', sessionId);
-    });
-
-    built.saveBtn.addEventListener('click', function(){
-      var legs = _collectLegs(built.modal);
-      var sessFields = _collectSession(built.modal);
-      sessFields.streakBefore = streak;
-      var ok = _writeSessionUpdate(sessionId, function(s){
-        if (!s.review) s.review = { schemaVersion: 1, reviewSkipped: false, retroactive: false, completedAt: null, session: null, legs: null };
-        s.review.schemaVersion = 1;
-        s.review.reviewSkipped = false;
-        s.review.completedAt = new Date().toISOString();
-        s.review.retroactive = !!opts.retroactive;
-        s.review.session = Object.keys(sessFields).length ? sessFields : null;
-        s.review.legs = Object.keys(legs).length ? legs : null;
-      });
-      if (ok){
-        built.statusEl.textContent = '✓ Review saved.';
-        built.statusEl.style.color = 'var(--green)';
-        setTimeout(function(){ overlay.classList.remove('is-open'); }, 700);
-      } else {
-        built.statusEl.textContent = 'Save failed — see console.';
-        built.statusEl.style.color = 'var(--red)';
-      }
-    });
-  }
-
-  function openRetroactive(sessionId){
-    openForSession(sessionId, { retroactive: true });
-  }
-
-  window.SimReviewGuided = {
-    openForSession: openForSession,
-    openRetroactive: openRetroactive
-  };
 })();
 
 /* ---------- Sim.Ctrl: controller ---------- */
@@ -17473,6 +17100,21 @@ Sim.Ctrl = (function(){
     if (p <= 0) return false;
     var bar = bars && bars[sim.playIdx];
     if (!bar) return false;
+    // "Move Stop" = replace, not append. Drop all currently-unfired stops so
+    // the user-entered value becomes the single active stop. Without this,
+    // lowering the stop on a long just stacked a redundant lower level —
+    // the higher original still won sortStopsForFire and still fired first.
+    // Per-stop editing for layered pyramids stays available via the
+    // manage-stops popover (Sim.editStop / Sim.deleteStop).
+    var replaced = 0;
+    if (Array.isArray(sim.stopLevels)) {
+      for (var i = sim.stopLevels.length - 1; i >= 0; i--) {
+        if (!sim.stopLevels[i].fired) {
+          sim.stopLevels.splice(i, 1);
+          replaced++;
+        }
+      }
+    }
     var stopId = 'stop_' + Math.random().toString(36).slice(2, 8);
     var trail = (stopTrail && stopTrail.type === 'ema')
       ? { type: 'ema', period: +stopTrail.period || 10, k: +stopTrail.k || 0 }
@@ -17480,10 +17122,12 @@ Sim.Ctrl = (function(){
     sim.stopLevels.push({ id: stopId, price: ns, pct: p, fired: false, barIdx: sim.playIdx, trail: trail });
     var rounded = _r2(ns);
     var trailLbl = trail ? ' · trail EMA' + trail.period + (trail.k ? ' −' + trail.k + '%' : '') : '';
+    var verb = replaced > 0 ? 'set' : 'added';
+    var replacedLbl = replaced > 1 ? ' (replaced ' + replaced + ' prior)' : '';
     sim.eventsLog.push({
       barIdx: sim.playIdx, date: bar.time, type: 'movestop',
       qty: sim.qty, price: null, newStop: rounded, pct: p, stopId: stopId,
-      note: 'stop ' + rounded + ' added (' + Math.round(p * 100) + '%)' + trailLbl
+      note: 'stop ' + rounded + ' ' + verb + ' (' + Math.round(p * 100) + '%)' + trailLbl + replacedLbl
     });
     return stopId;
   };
@@ -26757,12 +26401,20 @@ Sim.Ctrl = (function(){
   if (window.PortSim.Review) return;
 
   var STORAGE_PREFIX = 'bm_portsim_review_';
+  var SESSIONS_KEY   = 'bm_sim_sessions_v2';
+  var TRADES_KEY     = 'bm_sim_trades_v2';
   var _modal = null;
   var _activeTab = null;
   var _tickerCharts = {};
   var _indexChart = null;
   var _runId = null;
-  var _data = { notes: {}, portfolio: '', savedAt: null };
+  // _sessionId links this review to a SimStats session (bm_sim_sessions_v2),
+  // so structured fields are written back into session.review on save and
+  // hydrated from session.review on open. null when the modal is opened
+  // outside any session context (e.g. browse via the 📂 Saved button).
+  var _sessionId = null;
+  var _sessionTrades = [];
+  var _data = { notes: {}, portfolio: '', savedAt: null, review: { legs: {}, session: {} } };
   var _dirty = false;
   // View-only mode: set by _onLoad when the user opens a saved review
   // that doesn't match the active sim (or there's no active sim). In this
@@ -26799,6 +26451,237 @@ Sim.Ctrl = (function(){
     if (n == null || !isFinite(n)) return '—';
     var s = n > 0 ? '+' : '';
     return s + n.toFixed(2) + '%';
+  }
+
+  // ---------- structured review form (merged from former Guided Review) ----------
+  // Schema target: session.review.legs[tradeId] and session.review.session
+  // (consumed by SimStats detail table + deep CSV export).
+  var SR_SETUP_OPTS = [
+    ['', '— pick —'],
+    ['EP', 'EP catalyst'],
+    ['breakout_VCP', 'Breakout / VCP'],
+    ['pullback_10EMA', 'Pullback to 10EMA'],
+    ['pullback_20EMA', 'Pullback to 20EMA'],
+    ['continuation', 'Continuation'],
+    ['parabolic', 'Parabolic'],
+    ['other', 'Other']
+  ];
+  var SR_INTENT_OPTS = [
+    ['', '— pick —'],
+    ['scalp_intraday', 'Scalp (intraday)'],
+    ['short_swing_3_10d', 'Short swing (3–10d)'],
+    ['core_swing_10_30d', 'Core swing (10–30d)'],
+    ['runner_30d_plus', 'Runner (30d+)']
+  ];
+  var SR_STATE_OPTS = [
+    ['', '— pick —'],
+    ['calm', 'Calm'],
+    ['itchy', 'Itchy'],
+    ['fomo', 'FOMO'],
+    ['revenge', 'Revenge']
+  ];
+  var SR_FIDELITY_OPTS = [
+    ['', '— pick —'],
+    ['as_planned', 'As planned'],
+    ['cut_early_nervous', 'Cut early (nervous)'],
+    ['held_past_plan', 'Held past plan'],
+    ['added_unplanned', 'Added unplanned'],
+    ['moved_stop_wider', 'Moved stop wider']
+  ];
+  var SR_HEAT_OPTS = [
+    ['', '— pick —'],
+    ['none_needed', 'No heat (MAE < 0.5R)'],
+    ['held', 'Held through'],
+    ['widened_stop', 'Widened stop'],
+    ['panic_cut', 'Panic cut']
+  ];
+  var SR_REGIME_OPTS = [
+    ['', '— pick —'],
+    ['trending', 'Trending'],
+    ['choppy', 'Choppy'],
+    ['declining', 'Declining'],
+    ['mixed', 'Mixed'],
+    ['recovery', 'Recovery']
+  ];
+  var SR_NEXT_DAY_OPTS = [
+    ['', '— pick —'],
+    ['enter_more', 'Enter more positions'],
+    ['hold_steady', 'Hold steady, no new entries'],
+    ['step_away', 'Step away from market'],
+    ['unsure', 'Unsure']
+  ];
+  var SR_HOLDREAL_OPTS = [
+    ['', '— pick —'],
+    ['true', 'Yes'],
+    ['false', 'No']
+  ];
+
+  function _srEl(tag, attrs, children){
+    var e = document.createElement(tag);
+    if (attrs){
+      Object.keys(attrs).forEach(function(k){
+        var v = attrs[k];
+        if (v == null) return;
+        if (k === 'class') e.className = v;
+        else if (k === 'text') e.textContent = v;
+        else e.setAttribute(k, v);
+      });
+    }
+    (children || []).forEach(function(c){
+      if (c == null) return;
+      e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return e;
+  }
+  function _srSelect(field, opts, val){
+    var sel = document.createElement('select');
+    sel.setAttribute('data-srfield', field);
+    opts.forEach(function(pair){
+      var o = document.createElement('option');
+      o.value = pair[0]; o.textContent = pair[1];
+      if (String(val == null ? '' : val) === pair[0]) o.selected = true;
+      sel.appendChild(o);
+    });
+    return sel;
+  }
+  function _srField(label, control, wide){
+    var w = _srEl('div', { class: 'portsim-review-srform-field' + (wide ? ' portsim-review-srform-wide' : '') });
+    w.appendChild(_srEl('label', { text: label }));
+    w.appendChild(control);
+    return w;
+  }
+  function _srRating(field, val){
+    var wrap = _srEl('span', { class: 'portsim-review-srform-rating', 'data-srrating': field });
+    if (val != null && val !== '') wrap.dataset.value = String(val);
+    [1,2,3,4,5].forEach(function(n){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.val = String(n);
+      b.textContent = String(n);
+      if (val != null && +val === n) b.classList.add('is-active');
+      wrap.appendChild(b);
+    });
+    return wrap;
+  }
+  function _srWireRating(scope){
+    Array.prototype.forEach.call(scope.querySelectorAll('.portsim-review-srform-rating'), function(r){
+      r.addEventListener('click', function(ev){
+        var btn = ev.target.closest('button');
+        if (!btn || !r.contains(btn)) return;
+        Array.prototype.forEach.call(r.querySelectorAll('button'), function(b){ b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        r.dataset.value = btn.dataset.val;
+        r.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+  }
+  // Read field values from a leg form block.
+  function _srReadLeg(host){
+    var out = {};
+    Array.prototype.forEach.call(host.querySelectorAll('[data-srfield]'), function(el){
+      var k = el.getAttribute('data-srfield');
+      var v = el.value;
+      if (v === '' || v == null) return;
+      if (k === 'wouldHoldReal') v = (v === 'true');
+      out[k] = v;
+    });
+    var rating = host.querySelector('[data-srrating="conviction"]');
+    if (rating && rating.dataset.value) out.conviction = +rating.dataset.value;
+    return out;
+  }
+  // Read field values from the session form block.
+  function _srReadSession(host){
+    var out = {};
+    Array.prototype.forEach.call(host.querySelectorAll('[data-srfield]'), function(el){
+      var k = el.getAttribute('data-srfield');
+      var v = el.value;
+      if (v === '' || v == null) return;
+      out[k] = v;
+    });
+    var rating = host.querySelector('[data-srrating="emotionalScore"]');
+    if (rating && rating.dataset.value) out.emotionalScore = +rating.dataset.value;
+    // Roll up pain* fields into nested painCalibration to match the SimStats
+    // detail reader at line ~14805 (rs.painCalibration.{next24h,...}).
+    var pain = {};
+    if (out.painNext24h){ pain.next24h = out.painNext24h; delete out.painNext24h; }
+    if (out.painNextDayAction){ pain.nextDayAction = out.painNextDayAction; delete out.painNextDayAction; }
+    if (out.painOutOfHowMany){ pain.outOfHowMany = out.painOutOfHowMany; delete out.painOutOfHowMany; }
+    if (Object.keys(pain).length) out.painCalibration = pain;
+    return out;
+  }
+  // Build the per-leg structured form. `tag` is the existing
+  // session.review.legs[tradeId] entry (may be undefined).
+  function _renderLegSRForm(leg, tradeId, tag, viewOnly){
+    tag = tag || {};
+    var rTxt = (leg.rMult != null && isFinite(leg.rMult))
+      ? ((leg.rMult >= 0 ? '+' : '') + (+leg.rMult).toFixed(2) + 'R')
+      : '—';
+    var rCls = 'portsim-review-srform-r ' + (leg.rPnL > 0 ? 'is-pos' : (leg.rPnL < 0 ? 'is-neg' : ''));
+    var head = _srEl('div', { class: 'portsim-review-srform-head' }, [
+      _srEl('span', { class: 'portsim-review-srform-leg', text: 'L' + leg.idx + (leg.active ? ' · active' : '') }),
+      _srEl('span', { class: 'portsim-review-srform-meta',
+        text: (leg.entryDate || '?') + ' → ' + (leg.exitDate || '?')
+            + ' · exit:' + (leg.exitReason || '?') }),
+      _srEl('span', { class: rCls, text: rTxt })
+    ]);
+
+    var thesis = _srEl('input', { type: 'text', 'data-srfield': 'thesis',
+      placeholder: 'What had to be true for this to work?', maxlength: '200' });
+    if (tag.thesis) thesis.value = tag.thesis;
+    var legNote = _srEl('textarea', { 'data-srfield': 'legNote',
+      placeholder: 'Anything specific about this leg…', maxlength: '500' });
+    if (tag.legNote) legNote.value = tag.legNote;
+
+    var grid = _srEl('div', { class: 'portsim-review-srform-grid' }, [
+      _srField('Setup', _srSelect('setupType', SR_SETUP_OPTS, tag.setupType)),
+      _srField('Intended hold', _srSelect('intendedHold', SR_INTENT_OPTS, tag.intendedHold)),
+      _srField('Conviction (1–5) · at entry', _srRating('conviction', tag.conviction)),
+      _srField('Entry state', _srSelect('entryState', SR_STATE_OPTS, tag.entryState)),
+      _srField('Plan fidelity', _srSelect('planFidelity', SR_FIDELITY_OPTS, tag.planFidelity)),
+      _srField('Would hold if real $?', _srSelect('wouldHoldReal', SR_HOLDREAL_OPTS,
+        tag.wouldHoldReal === true ? 'true' : (tag.wouldHoldReal === false ? 'false' : ''))),
+      _srField('At-heat response (if MAE ≤ -0.5R)', _srSelect('atHeatResponse', SR_HEAT_OPTS, tag.atHeatResponse)),
+      _srField('Thesis (one line, optional)', thesis, true),
+      _srField('Note (optional)', legNote, true)
+    ]);
+
+    var host = _srEl('div', {
+      class: 'portsim-review-srform' + (viewOnly ? ' is-readonly' : ''),
+      'data-srleg': tradeId || ''
+    }, [head, grid]);
+    return host;
+  }
+  function _renderSessionSRForm(rs, viewOnly){
+    rs = rs || {};
+    var pc = rs.painCalibration || {};
+    var head = _srEl('div', { class: 'portsim-review-srform-head' }, [
+      _srEl('span', { class: 'portsim-review-srform-leg', text: 'SESSION REFLECTION' }),
+      _srEl('span', { class: 'portsim-review-srform-meta',
+        text: (rs.streakBefore != null && rs.streakBefore > 0)
+          ? (rs.streakBefore + ' losing session(s) before this one') : '' })
+    ]);
+
+    var pain24 = _srEl('textarea', { 'data-srfield': 'painNext24h',
+      placeholder: 'One short paragraph — if real $, what would I be doing?',
+      maxlength: '400' });
+    if (pc.next24h) pain24.value = pc.next24h;
+    var painOut = _srEl('input', { type: 'text', 'data-srfield': 'painOutOfHowMany',
+      placeholder: 'e.g., 1 in 5' });
+    if (pc.outOfHowMany) painOut.value = pc.outOfHowMany;
+
+    var grid = _srEl('div', { class: 'portsim-review-srform-grid' }, [
+      _srField('Emotional score (1–5) · would I have stuck with this for real $?', _srRating('emotionalScore', rs.emotionalScore)),
+      _srField('Regime felt (post-hoc)', _srSelect('regimeFelt', SR_REGIME_OPTS, rs.regimeFelt)),
+      _srField('If real $, what for the next 24h?', pain24, true),
+      _srField('Next day action', _srSelect('painNextDayAction', SR_NEXT_DAY_OPTS, pc.nextDayAction)),
+      _srField('Out of how many sessions like this would you expect this?', painOut)
+    ]);
+
+    var host = _srEl('div', {
+      class: 'portsim-review-srform' + (viewOnly ? ' is-readonly' : ''),
+      'data-srsession': '1'
+    }, [head, grid]);
+    return host;
   }
 
   // ---------- run id + persistence ----------
@@ -27109,6 +26992,30 @@ Sim.Ctrl = (function(){
       ta.value = _data.portfolio || '';
       ta.addEventListener('input', function(){ _data.portfolio = ta.value; _markDirty(); });
     }
+
+    // Structured session reflection (merged from former Guided Review).
+    // Renders before the portfolio notes textarea. Hydrates from
+    // _data.review.session and writes back on every change. Only shown
+    // when this review is linked to a session (otherwise there is no
+    // session record to receive the structured fields).
+    if (_sessionId){
+      var rs = (_data.review && _data.review.session) || {};
+      var sessForm = _renderSessionSRForm(rs, _viewOnly);
+      var notesBlock = body.querySelector('.portsim-review-notes');
+      sessForm.addEventListener('input', function(){
+        _data.review = _data.review || { legs: {}, session: {} };
+        _data.review.session = _srReadSession(sessForm);
+        _markDirty();
+      });
+      sessForm.addEventListener('change', function(){
+        _data.review = _data.review || { legs: {}, session: {} };
+        _data.review.session = _srReadSession(sessForm);
+        _markDirty();
+      });
+      _srWireRating(sessForm);
+      if (notesBlock) body.insertBefore(sessForm, notesBlock);
+      else body.appendChild(sessForm);
+    }
   }
 
   // ---------- index tab ----------
@@ -27241,6 +27148,37 @@ Sim.Ctrl = (function(){
       +   '<label for="portsim-review-note-' + _esc(sym) + '">REVIEW NOTES — ' + _esc(sym) + '</label>'
       +   '<textarea id="portsim-review-note-' + _esc(sym) + '" rows="6" placeholder="What did you learn about ' + _esc(sym) + '? Entry timing, stop placement, sizing, hold discipline…"></textarea>'
       + '</div>';
+
+    // Structured per-leg review forms (merged from former Guided Review).
+    // Render one form block per leg, hydrated from session.review.legs[tradeId].
+    // Trade IDs come from the loaded session trades (_sessionTrades), filtered
+    // by symbol and matched by legIndex to ctxEntry.legs[i].idx.
+    var tickerTrades = (_sessionTrades || []).filter(function(t){ return t.symbol === sym; })
+      .sort(function(a, b){ return (a.legIndex || 0) - (b.legIndex || 0); });
+    var notesBlock = body.querySelector('.portsim-review-notes');
+    if (legs.length){
+      legs.forEach(function(l, i){
+        var trade = tickerTrades[i] || null;
+        var tradeId = trade ? trade.id : ('leg_' + sym + '_' + (l.idx || (i+1)));
+        var tag = (_data.review && _data.review.legs && _data.review.legs[tradeId]) || {};
+        var formEl = _renderLegSRForm(l, tradeId, tag, _viewOnly);
+        formEl.addEventListener('input', function(){
+          _data.review = _data.review || { legs: {}, session: {} };
+          _data.review.legs = _data.review.legs || {};
+          _data.review.legs[tradeId] = _srReadLeg(formEl);
+          _markDirty();
+        });
+        formEl.addEventListener('change', function(){
+          _data.review = _data.review || { legs: {}, session: {} };
+          _data.review.legs = _data.review.legs || {};
+          _data.review.legs[tradeId] = _srReadLeg(formEl);
+          _markDirty();
+        });
+        _srWireRating(formEl);
+        if (notesBlock) body.insertBefore(formEl, notesBlock);
+        else body.appendChild(formEl);
+      });
+    }
 
     var note = document.getElementById('portsim-review-note-' + sym);
     if (note){
@@ -27542,10 +27480,36 @@ Sim.Ctrl = (function(){
       try { _data.meta = _buildMeta(); } catch(e){ console.warn('[PortSim.Review] meta snapshot:', e); }
     }
     var ok = _saveData(_runId, _data);
-    if (ok){
+    // When this review is linked to a SimStats session, also patch
+    // session.review so the analytics path (per-session leg table, deep
+    // CSV export, summaries) sees the structured fields. The portfolio
+    // textarea piggybacks as session.session.portfolioNote to preserve
+    // the format SimStats already reads.
+    var sessionPatched = true;
+    if (ok && _sessionId){
+      var legs = (_data.review && _data.review.legs) ? _data.review.legs : {};
+      var sessFields = (_data.review && _data.review.session) ? _data.review.session : {};
+      if (_data.portfolio) sessFields = Object.assign({}, sessFields, { portfolioNote: _data.portfolio });
+      var sessionsForStreak = _loadSessionsRaw();
+      var streak = _streakBefore(_sessionId, sessionsForStreak);
+      if (streak) sessFields.streakBefore = streak;
+      var hasAny = Object.keys(legs).length || Object.keys(sessFields).length;
+      sessionPatched = _writeSessionPatch(_sessionId, function(s){
+        if (!s.review) s.review = { schemaVersion: 1, reviewSkipped: true, retroactive: false, completedAt: null, session: null, legs: null };
+        s.review.schemaVersion = 1;
+        s.review.reviewSkipped = !hasAny;
+        s.review.completedAt = new Date().toISOString();
+        s.review.session = Object.keys(sessFields).length ? sessFields : null;
+        s.review.legs = Object.keys(legs).length ? legs : null;
+      });
+    }
+    if (ok && sessionPatched){
       _dirty = false;
       _setStatus('Saved · ' + _data.savedAt.replace('T',' ').slice(0,19), 'ok');
       _flashSaveBtn('✓ SAVED', 'ok');
+    } else if (ok && !sessionPatched){
+      _setStatus('Saved review · session.review patch failed', 'err');
+      _flashSaveBtn('⚠ PARTIAL', 'err');
     } else {
       _setStatus('Save failed (storage full?)', 'err');
       _flashSaveBtn('✗ FAILED', 'err');
@@ -28172,8 +28136,114 @@ Sim.Ctrl = (function(){
     }, PAINT_DELAY);
   }
 
+  // ---------- session-linked open path ----------
+  // Reads bm_sim_sessions_v2 + bm_sim_trades_v2 directly. SimStats writes
+  // these on "Add to Stats" and we read them here when openForSession is
+  // called from a session row or post-session prompt.
+  function _loadSessionsRaw(){
+    try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]') || []; }
+    catch(e){ return []; }
+  }
+  function _loadTradesRaw(){
+    try { return JSON.parse(localStorage.getItem(TRADES_KEY) || '[]') || []; }
+    catch(e){ return []; }
+  }
+  function _writeSessionPatch(sessionId, mutator){
+    var sessions = _loadSessionsRaw();
+    var idx = sessions.findIndex(function(s){ return s.id === sessionId; });
+    if (idx < 0) return false;
+    mutator(sessions[idx]);
+    try { localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); return true; }
+    catch(e){ console.warn('[PortSim.Review] session patch failed:', e && e.message); return false; }
+  }
+  function _streakBefore(sessionId, sessions){
+    var idx = sessions.findIndex(function(s){ return s.id === sessionId; });
+    if (idx < 0 || idx >= sessions.length - 1) return 0;
+    var streak = 0;
+    for (var i = idx + 1; i < sessions.length; i++){
+      if ((sessions[i].sessionPnL || 0) < 0) streak++;
+      else break;
+    }
+    return streak;
+  }
+  // Synthesize a meta object (same shape as _buildMeta) from a session
+  // record + its trades. Lets the per-ticker tab render charts (bars
+  // fetched from /api/ohlcv) and the leg table from the persisted trades
+  // alone, without needing the live sim state.
+  function _synthMetaFromSession(session, trades){
+    if (!session) return null;
+    var bySym = {};
+    var order = [];
+    trades.forEach(function(t){
+      if (!t || !t.symbol) return;
+      if (!bySym[t.symbol]){ bySym[t.symbol] = []; order.push(t.symbol); }
+      // Synthesize an exit event so _markersFromLegs draws an exit marker
+      // even though we don't have the live sim's eventsLog. Entry markers
+      // are drawn off leg.entryDate directly so no synth needed there.
+      var events = [];
+      if (t.exitDate && t.exitPrice != null && t.exitReason && t.exitReason !== 'aggregate'){
+        var evType = t.exitReason === 'stop' ? 'stop'
+                   : t.exitReason === 'close' ? 'close'
+                   : 'sell';
+        events.push({ type: evType, date: t.exitDate, price: t.exitPrice, qty: t.qty || 0 });
+      }
+      bySym[t.symbol].push({
+        idx: t.legIndex || (bySym[t.symbol].length + 1),
+        direction: t.direction || 'long',
+        legId: t.legId || null,
+        entryDate: t.entryDate || null,
+        entryPrice: +t.entryPrice || 0,
+        shares: t.qty || 0,
+        stop0: +t.stopAtEntry || 0,
+        risk0: +t.initialRisk || 0,
+        exitDate: t.exitDate || null,
+        exitReason: t.exitReason || '—',
+        rPnL: +t.realizedPnL || 0,
+        rMult: +t.rMultiple || 0,
+        mfe: +t.mfe || 0,
+        mae: +t.mae || 0,
+        eventsLog: events,
+        active: false
+      });
+    });
+    Object.keys(bySym).forEach(function(sym){
+      bySym[sym].sort(function(a, b){ return (a.idx || 0) - (b.idx || 0); });
+    });
+    var basket = order.map(function(sym){
+      var legs = bySym[sym];
+      return {
+        symbol: sym,
+        legs: legs,
+        totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
+        stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
+        status: legs.length ? legs[legs.length - 1].exitReason : 'idle'
+      };
+    });
+    var initial = +session.initialEquity || 0;
+    var equity = +session.finalEquity || (initial + (+session.sessionPnL || 0));
+    var totalPnL = equity - initial;
+    return {
+      startDate: session.simStartDate || '',
+      endDate: session.simEndDate || '',
+      index: session.indexName || 'SPX',
+      initialEquity: initial,
+      cash: equity, equity: equity,
+      realized: trades.reduce(function(s, t){ return s + (+t.realizedPnL || 0); }, 0),
+      unreal: 0,
+      totalPnL: totalPnL,
+      peak: equity, maxDDDol: 0, openCount: 0,
+      shortLocks: {}, notes: [],
+      basket: basket
+    };
+  }
+
   // ---------- public open/close ----------
+  function _resetSessionLink(){
+    _sessionId = null;
+    _sessionTrades = [];
+  }
   function open(){
+    _resetSessionLink();
     var st = window.PortSim && window.PortSim._state;
     if (st && st.active){
       // Live mode — pause sim and load any matching saved review by runId
@@ -28195,7 +28265,8 @@ Sim.Ctrl = (function(){
           }
         }
       }
-      _data = loaded || { notes: {}, portfolio: '', savedAt: null };
+      _data = loaded || { notes: {}, portfolio: '', savedAt: null, review: { legs: {}, session: {} } };
+      _data.review = _data.review || { legs: {}, session: {} };
       _ensureModal();
       _modal.classList.add('is-open');
       _modal.classList.remove('is-viewonly');
@@ -28210,13 +28281,74 @@ Sim.Ctrl = (function(){
       // No active sim — open in browse mode so the user can hit 📂 LOAD
       _viewOnly = false;
       _runId = null;
-      _data = { notes: {}, portfolio: '', savedAt: null };
+      _data = { notes: {}, portfolio: '', savedAt: null, review: { legs: {}, session: {} } };
       _ensureModal();
       _modal.classList.add('is-open');
       _modal.classList.remove('is-viewonly');
       _populate();
       _setStatus('No active sim — click 📂 LOAD to browse saved reviews.', '');
     }
+  }
+  // Open the review for a specific SimStats session — replaces the former
+  // SimReviewGuided modal. Hydrates the structured form from session.review
+  // and stamps a runInstanceId on the session if one is missing so the
+  // free-form notes get their own review record under bm_portsim_review_*.
+  function openForSession(sessionId, opts){
+    opts = opts || {};
+    if (!sessionId){ console.warn('[PortSim.Review] openForSession: no sessionId'); return; }
+    var sessions = _loadSessionsRaw();
+    var session = sessions.find(function(s){ return s.id === sessionId; });
+    if (!session){ console.warn('[PortSim.Review] session not found:', sessionId); return; }
+
+    _resetSessionLink();
+    _sessionId = sessionId;
+    _sessionTrades = _loadTradesRaw().filter(function(t){ return t.sessionId === sessionId; })
+      .sort(function(a, b){ return (a.legIndex || 0) - (b.legIndex || 0); });
+
+    // Stamp a runInstanceId on the session if missing so the free-form
+    // notes/charts get their own keyed review record. Persists immediately
+    // so subsequent re-opens of this session land on the same record.
+    if (!session.runInstanceId){
+      _writeSessionPatch(sessionId, function(s){
+        s.runInstanceId = _genInstanceId();
+      });
+      session.runInstanceId = _loadSessionsRaw().find(function(s){ return s.id === sessionId; }).runInstanceId;
+    }
+    _runId = STORAGE_PREFIX + session.runInstanceId;
+
+    // View-only chart-loading path: bars come from /api/ohlcv, leg table
+    // from the synthesized basket. Textareas + form fields stay editable.
+    _viewOnly = true;
+    var loaded = _loadData(_runId) || { notes: {}, portfolio: '', savedAt: null };
+    loaded.review = loaded.review || { legs: {}, session: {} };
+    // Hydrate _data.review from session.review so the structured form
+    // reflects whatever the user previously captured. Last-write-wins:
+    // session.review is authoritative since SimStats analytics read it.
+    if (session.review){
+      var sr = session.review;
+      if (sr.legs && Object.keys(sr.legs).length){
+        loaded.review.legs = JSON.parse(JSON.stringify(sr.legs));
+      }
+      if (sr.session && Object.keys(sr.session).length){
+        loaded.review.session = JSON.parse(JSON.stringify(sr.session));
+      }
+      if (sr.session && sr.session.portfolioNote && !loaded.portfolio){
+        loaded.portfolio = sr.session.portfolioNote;
+      }
+    }
+    loaded.meta = _synthMetaFromSession(session, _sessionTrades);
+    _data = loaded;
+    _ensureModal();
+    _modal.classList.add('is-open');
+    _modal.classList.add('is-viewonly');
+    _populate();
+    _dirty = false;
+    var label = opts.retroactive ? 'Retroactive review' : 'Review';
+    var stamp = _data.savedAt ? (' · saved ' + _data.savedAt.replace('T',' ').slice(0,19)) : '';
+    _setStatus(label + ' · session #' + sessionId.slice(-8) + stamp, '');
+  }
+  function openRetroactive(sessionId){
+    openForSession(sessionId, { retroactive: true });
   }
   function close(){
     if (!_modal) return;
@@ -28226,9 +28358,16 @@ Sim.Ctrl = (function(){
     });
     _tickerCharts = {};
     if (_indexChart){ try { _indexChart.remove(); } catch(e){} _indexChart = null; }
+    _resetSessionLink();
   }
 
-  window.PortSim.Review = { open: open, close: close, openLoadPicker: _onLoad };
+  window.PortSim.Review = {
+    open: open,
+    openForSession: openForSession,
+    openRetroactive: openRetroactive,
+    close: close,
+    openLoadPicker: _onLoad
+  };
 
   // ---------- topbar button wiring (Summary + Review) ----------
   function _wireButtons(){
