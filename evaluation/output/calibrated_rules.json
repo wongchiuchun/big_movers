@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "generated": "2026-06-11",
+  "source": "evaluation myth-testing study v1 \u2014 see myth_report.html",
+  "caveat": "Calibrated on winners only (n labeled = 45). Holdability thresholds are robust; predictive power vs non-winners is untested.",
+  "verdicts": {
+    "U1": "CONFIRMED",
+    "U2": "CONFIRMED",
+    "U3": "PARTIAL",
+    "Q3": "CONFIRMED",
+    "U4": "CONFIRMED",
+    "U5": "BUSTED",
+    "U6": "CONFIRMED",
+    "Q1": "PARTIAL",
+    "Q2": "BUSTED",
+    "Q4": "BUSTED",
+    "Q5": "CONFIRMED",
+    "Q6": "BUSTED",
+    "M1": "BUSTED",
+    "M2": "BUSTED",
+    "M3": "BUSTED",
+    "S1": "PARTIAL",
+    "X1": "UNTESTABLE"
+  },
+  "holdability_gates": {
+    "ema10_adherence_move": {
+      "skip_below": 65,
+      "promising_above": 75,
+      "tradable_median": 81.61,
+      "tradable_p25": 79.37,
+      "not_median": 64.1
+    },
+    "sma50_touches_move": {
+      "skip_above": 10,
+      "ideal_max": 2,
+      "tradable_median": 3.0,
+      "not_median": 15.0
+    },
+    "adr_pct": {
+      "comfortable_below": 5.5,
+      "hard_above": 7,
+      "tradable_median": 5.52,
+      "not_median": 7.39
+    }
+  },
+  "entry_filters_within_winners": {
+    "gap_close_in_range": {
+      "clean_above": 75,
+      "trap_below": 50
+    },
+    "ema_stack_bull_required": true,
+    "breakout_rel_vol20": {
+      "note": "see Q1 verdict \u2014 surge size vs follow-through"
+    },
+    "prior_gain_3m": {
+      "note": "see Q2 verdict"
+    },
+    "pct_off_52wk_high": {
+      "note": "see M2 verdict"
+    }
+  }
+}

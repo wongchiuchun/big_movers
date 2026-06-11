@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Big Movers — Myth-Testing Study</title>
+<style>
+  :root {
+    --ink:#1a1c20; --ink2:#4a4e58; --muted:#7a7e8a; --line:#e4e2dc;
+    --paper:#fbfaf7; --card:#ffffff; --accent:#8a6d3b;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+        font:15px/1.55 "Plus Jakarta Sans","Segoe UI",system-ui,sans-serif; }
+  .wrap { max-width:980px; margin:0 auto; padding:48px 28px 80px; }
+  h1 { font-family:Fraunces,Georgia,serif; font-weight:600; font-size:34px; margin:0 0 6px; }
+  h2 { font-family:Fraunces,Georgia,serif; font-weight:600; font-size:23px; margin:42px 0 12px; }
+  h3 { font-size:17px; margin:10px 0 2px; }
+  .sub { color:var(--muted); margin-bottom:28px; }
+  .mono { font-family:"JetBrains Mono",ui-monospace,monospace; }
+  .meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:20px 0; }
+  .meta { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .meta .v { font-size:22px; font-weight:700; font-family:"JetBrains Mono",monospace; }
+  .meta .l { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .note { background:#fdf6e8; border:1px solid #ecdcb8; border-radius:10px; padding:14px 18px; margin:18px 0; font-size:14px; }
+  table { border-collapse:collapse; width:100%; margin:10px 0 18px; font-size:13.5px; }
+  th,td { text-align:left; padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); }
+  td.k { color:var(--ink2); font-weight:600; white-space:nowrap; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:12px; font-weight:700;
+           letter-spacing:.04em; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+          padding:22px 26px; margin:18px 0; }
+  .card-head { display:flex; gap:10px; align-items:center; }
+  .rule-id { font-weight:700; color:var(--accent); }
+  .klass { margin-left:auto; font-size:12px; color:var(--muted); }
+  .source { font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .finding { margin:10px 0 8px; }
+  details summary { cursor:pointer; color:var(--accent); font-size:13.5px; margin:6px 0; }
+  .grid td, .grid th { font-family:"JetBrains Mono",ui-monospace,monospace; font-size:12.5px; }
+  .grid td.k { font-family:"Plus Jakarta Sans",sans-serif; }
+  .subhead { font-size:13px; font-weight:700; color:var(--ink2); margin-top:12px; }
+  ul { padding-left:22px; }
+  li { margin:6px 0; }
+  @media print { .card { break-inside:avoid; } }
+</style></head><body><div class="wrap">
+
+<h1>Big Movers — Myth-Testing Study</h1>
+<div class="sub">Claimed trading principles, cross-referenced against 1,474 historical big-mover moves
+(2000–2026) · generated 2026-06-11 12:29</div>
+
+<div class="meta-grid">
+  <div class="meta"><div class="v">1,474</div><div class="l">moves analyzed</div></div>
+  <div class="meta"><div class="v">24,580</div><div class="l">entry events</div></div>
+  <div class="meta"><div class="v">45</div><div class="l">human-labeled moves</div></div>
+  <div class="meta"><div class="v">6 / 3 / 7</div><div class="l">confirmed / partial / busted</div></div>
+</div>
+
+<div class="note"><strong>How to read this.</strong> Events are deterministic — move starts, 20d/50d-high
+breakout crosses, and ≥5% gaps on ≥1.5× volume — so every number is reproducible; there is no fuzzy
+"base detection" anywhere. Trailing features use only data available at the event close. Forward windows
+measure what happened next. <strong>Lateness control:</strong> in a winners-only bank, conditions that only exist
+early in a move (weak RS, broken EMA stack, far from highs) mechanically inherit the huge remaining upside of early
+entries — naive comparisons make textbook filters look terrible. Every entry-filter rule is therefore tested twice:
+on all events AND on the early third of each move, and risk (2R-before-stop rate, adverse excursion) is weighed
+separately from raw return. <strong>One honest limit:</strong> this bank contains only winners. It can tell you
+what big winners look like, and which entry conditions led to better follow-through <em>within</em> winners — it
+cannot yet tell you whether a condition separates winners from losers (that needs a control group; see X1).
+Label counts: {&#x27;not&#x27;: 20, &#x27;partial&#x27;: 14, &#x27;tradable&#x27;: 11}. Events: {&#x27;breakout20&#x27;: 10462, &#x27;breakout50&#x27;: 8508, &#x27;gap&#x27;: 4136, &#x27;move_start&#x27;: 1474}.</div>
+
+<h2>Verdict summary</h2>
+<table>
+<tr><th>ID</th><th>Claim</th><th>Source</th><th>Test class</th><th>Verdict</th></tr>
+<tr><td class='mono'>U1</td><td>10EMA adherence &lt;65% → skip; &gt;75% → promising</td><td>Your framework (ANNOTATION_TRACKER)</td><td>holdability</td><td><span class='badge' style='color:#0a7a45;background:#e6f5ec'>CONFIRMED</span></td></tr><tr><td class='mono'>U2</td><td>&gt;10 SMA50 touches → skip; ≤2 → ideal</td><td>Your framework (ANNOTATION_TRACKER)</td><td>holdability</td><td><span class='badge' style='color:#0a7a45;background:#e6f5ec'>CONFIRMED</span></td></tr><tr><td class='mono'>U3</td><td>ADR &gt;7% → hard to hold; &lt;5.5% → comfortable</td><td>Your framework (ANNOTATION_TRACKER)</td><td>holdability</td><td><span class='badge' style='color:#9a6b00;background:#fdf3dd'>PARTIAL</span></td></tr><tr><td class='mono'>Q3</td><td>Tension test: Qullamaggie wants high-ADR names (&#x27;they move&#x27;), you flag high ADR as unholdable</td><td>Qullamaggie vs your framework</td><td>holdability</td><td><span class='badge' style='color:#0a7a45;background:#e6f5ec'>CONFIRMED</span></td></tr><tr><td class='mono'>U4</td><td>Gap close &gt;75% in range = clean EP; &lt;50% = trap (overrides gap %)</td><td>Your framework (close-in-range rule)</td><td>within-winner predictive</td><td><span class='badge' style='color:#0a7a45;background:#e6f5ec'>CONFIRMED</span></td></tr><tr><td class='mono'>U5</td><td>Tradable requires full bullish EMA stack (10&gt;20&gt;50) and price above the 50</td><td>Your framework (watchlist-vs-tradable gate)</td><td>within-winner predictive</td><td><span class='badge' style='color:#b3261e;background:#fceeed'>BUSTED</span></td></tr><tr><td class='mono'>U6</td><td>Gain size has zero correlation with tradability</td><td>Your framework (ANNOTATION_TRACKER insight)</td><td>holdability</td><td><span class='badge' style='color:#0a7a45;background:#e6f5ec'>CONFIRMED</span></td></tr><tr><td class='mono'>Q1</td><td>Real breakouts need a volume surge (≥2x average)</td><td>Qullamaggie / Minervini</td><td>prevalence + within-winner predictive</td><td><span class='badge' style='color:#9a6b00;background:#fdf3dd'>PARTIAL</span></td></tr><tr><td class='mono'>Q2</td><td>The best setups already ran 30-100% in the prior 1-3 months</td><td>Qullamaggie</td><td>prevalence + within-winner predictive</td><td><span class='badge' style='color:#b3261e;background:#fceeed'>BUSTED</span></td></tr><tr><td class='mono'>Q4</td><td>Breakouts work when the index is above its 50SMA; fight the tape and lose</td><td>Qullamaggie (market regime)</td><td>within-winner predictive</td><td><span class='badge' style='color:#b3261e;background:#fceeed'>BUSTED</span></td></tr><tr><td class='mono'>Q5</td><td>The first breakout of a move works best; late breakouts are adds, not cold entries</td><td>Qullamaggie + your ADD-vs-cold rule</td><td>within-winner predictive</td><td><span class='badge' style='color:#0a7a45;background:#e6f5ec'>CONFIRMED</span></td></tr><tr><td class='mono'>Q6</td><td>Big winners ride the 10/20EMA for the duration of the move</td><td>Qullamaggie (&#x27;magic line&#x27;)</td><td>prevalence</td><td><span class='badge' style='color:#b3261e;background:#fceeed'>BUSTED</span></td></tr><tr><td class='mono'>M1</td><td>Buy only stage-2 stocks: price&gt;50SMA&gt;150SMA&gt;200SMA with 200 rising</td><td>Minervini (trend template)</td><td>prevalence + within-winner predictive</td><td><span class='badge' style='color:#b3261e;background:#fceeed'>BUSTED</span></td></tr><tr><td class='mono'>M2</td><td>Buy within 25% of the 52-week high; closer is better</td><td>Minervini / O&#x27;Neil</td><td>prevalence + within-winner predictive</td><td><span class='badge' style='color:#b3261e;background:#fceeed'>BUSTED</span></td></tr><tr><td class='mono'>M3</td><td>Demand positive relative strength vs the index before entry</td><td>Minervini / IBD (RS line)</td><td>prevalence + within-winner predictive</td><td><span class='badge' style='color:#b3261e;background:#fceeed'>BUSTED</span></td></tr><tr><td class='mono'>S1</td><td>Tighter pre-breakout price action → better breakout</td><td>VCP doctrine (Minervini/Qullamaggie)</td><td>within-winner predictive</td><td><span class='badge' style='color:#9a6b00;background:#fdf3dd'>PARTIAL</span></td></tr><tr><td class='mono'>X1</td><td>&#x27;These criteria find the next big winner&#x27;</td><td>All schools</td><td>predictive (no control group)</td><td><span class='badge' style='color:#5b5f6b;background:#eef0f3'>UNTESTABLE</span></td></tr>
+</table>
+
+<h2>Rule-by-rule findings</h2>
+
+<section class="card" id="U1">
+  <div class="card-head">
+    <span class="rule-id mono">U1</span>
+    <span class="badge" style="color:#0a7a45;background:#e6f5ec">CONFIRMED</span>
+    <span class="klass">holdability</span>
+  </div>
+  <h3>10EMA adherence &lt;65% → skip; &gt;75% → promising</h3>
+  <div class="source">Your framework (ANNOTATION_TRACKER)</div>
+  <p class="finding">Median 10EMA adherence: tradable 81.61% vs not-my-style 64.1% (p=0.0). Across ALL movers, 37.4% spend ≥75% of the move above the 10EMA while 26.6% sit below the 65% skip line — clean trenders are the minority of big winners.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>share_movers_adh_ge75</td><td>37.4</td></tr><tr><td class='k'>share_movers_adh_lt65</td><td>26.6</td></tr></table><table class='grid'><tr><th>by_label</th><th>n</th><th>median</th></tr><tr><td class='k'>not</td><td>20</td><td>64.1</td></tr><tr><td class='k'>partial</td><td>14</td><td>76.94</td></tr><tr><td class='k'>tradable</td><td>11</td><td>81.61</td></tr><tr><td class='k'>p_tradable_vs_not</td><td colspan='2'>0.0</td></tr></table></details>
+</section>
+<section class="card" id="U2">
+  <div class="card-head">
+    <span class="rule-id mono">U2</span>
+    <span class="badge" style="color:#0a7a45;background:#e6f5ec">CONFIRMED</span>
+    <span class="klass">holdability</span>
+  </div>
+  <h3>&gt;10 SMA50 touches → skip; ≤2 → ideal</h3>
+  <div class="source">Your framework (ANNOTATION_TRACKER)</div>
+  <p class="finding">Median 50SMA touches: tradable 3.0 vs not-my-style 15.0 (p=0.0015). 48.1% of all movers exceed the &gt;10-touch skip line.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>share_movers_touches_gt10</td><td>48.1</td></tr></table><table class='grid'><tr><th>by_label</th><th>n</th><th>median</th></tr><tr><td class='k'>not</td><td>20</td><td>15.0</td></tr><tr><td class='k'>partial</td><td>14</td><td>10.5</td></tr><tr><td class='k'>tradable</td><td>11</td><td>3.0</td></tr><tr><td class='k'>p_tradable_vs_not</td><td colspan='2'>0.0015</td></tr></table></details>
+</section>
+<section class="card" id="U3">
+  <div class="card-head">
+    <span class="rule-id mono">U3</span>
+    <span class="badge" style="color:#9a6b00;background:#fdf3dd">PARTIAL</span>
+    <span class="klass">holdability</span>
+  </div>
+  <h3>ADR &gt;7% → hard to hold; &lt;5.5% → comfortable</h3>
+  <div class="source">Your framework (ANNOTATION_TRACKER)</div>
+  <p class="finding">Median ADR: tradable 5.52% vs not-my-style 7.39% (p=0.08875). Across all movers, higher ADR correlates with deeper drawdowns (ρ=-0.6 vs worst DD) and more time &gt;10% underwater (ρ=0.75).</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>spearman_adr_vs_worst_dd</td><td>-0.6</td></tr><tr><td class='k'>spearman_adr_vs_pct_days_underwater10</td><td>0.75</td></tr></table><table class='grid'><tr><th>by_label</th><th>n</th><th>median</th></tr><tr><td class='k'>not</td><td>20</td><td>7.39</td></tr><tr><td class='k'>partial</td><td>14</td><td>6.06</td></tr><tr><td class='k'>tradable</td><td>11</td><td>5.52</td></tr><tr><td class='k'>p_tradable_vs_not</td><td colspan='2'>0.08875</td></tr></table></details>
+</section>
+<section class="card" id="Q3">
+  <div class="card-head">
+    <span class="rule-id mono">Q3</span>
+    <span class="badge" style="color:#0a7a45;background:#e6f5ec">CONFIRMED</span>
+    <span class="klass">holdability</span>
+  </div>
+  <h3>Tension test: Qullamaggie wants high-ADR names (&#x27;they move&#x27;), you flag high ADR as unholdable</h3>
+  <div class="source">Qullamaggie vs your framework</div>
+  <p class="finding">Both schools are right about different things: ADR vs move size ρ=0.53 (higher ADR → bigger gains: median 419.05% vs 159.35%), but the cost is drawdown (median worst DD -35.24% vs -19.58%). High ADR buys move size with pain; pick your seat on that curve deliberately.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>spearman_adr_vs_move_gain</td><td>0.53</td></tr><tr><td class='k'>median_gain_adr_ge7</td><td>419.05</td></tr><tr><td class='k'>n_ge7</td><td>570</td></tr><tr><td class='k'>median_gain_adr_lt55</td><td>159.35</td></tr><tr><td class='k'>n_lt55</td><td>653</td></tr><tr><td class='k'>median_worst_dd_adr_ge7</td><td>-35.24</td></tr><tr><td class='k'>median_worst_dd_adr_lt55</td><td>-19.58</td></tr></table></details>
+</section>
+<section class="card" id="U4">
+  <div class="card-head">
+    <span class="rule-id mono">U4</span>
+    <span class="badge" style="color:#0a7a45;background:#e6f5ec">CONFIRMED</span>
+    <span class="klass">within-winner predictive</span>
+  </div>
+  <h3>Gap close &gt;75% in range = clean EP; &lt;50% = trap (overrides gap %)</h3>
+  <div class="source">Your framework (close-in-range rule)</div>
+  <p class="finding">The rule is about stop survival, not raw return: clean closes reach 2R before a LOD stop 54.6% of the time vs 39.7% for trap closes — a monotonic ladder across the three buckets — while 20-bar returns are similar. Signals: early-of-move fwd20 edge -2.57pp (p=0.14325); 2R-before-stop +14.9pp all events, +22.4pp early; MAE -0.02pp all events, -1.22pp early (positive = shallower).</p>
+  <details><summary>Underlying numbers</summary><table class='grid'><tr><th>by_close_in_range</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>&lt;50 trap</td><td>1831</td><td>9.26</td><td>22.5</td><td>-14.66</td><td>-33.8</td><td>40.0</td></tr><tr><td class='k'>50-75 mid</td><td>980</td><td>7.45</td><td>18.71</td><td>-13.93</td><td>-30.88</td><td>50.4</td></tr><tr><td class='k'>&gt;75 clean</td><td>1325</td><td>8.42</td><td>19.72</td><td>-14.64</td><td>-31.48</td><td>54.6</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>clean &gt;75</th><th>trap &lt;50</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 1325, &#x27;fwd_ret_20&#x27;: 8.42, &#x27;fwd_ret_60&#x27;: 19.72, &#x27;fwd_mae_60&#x27;: -14.64, &#x27;reach_2r_rate&#x27;: 54.6}</td><td>{&#x27;n&#x27;: 1804, &#x27;fwd_ret_20&#x27;: 9.29, &#x27;fwd_ret_60&#x27;: 22.59, &#x27;fwd_mae_60&#x27;: -14.62, &#x27;reach_2r_rate&#x27;: 39.7}</td><td>0.38425</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 480, &#x27;fwd_ret_20&#x27;: 10.97, &#x27;fwd_ret_60&#x27;: 31.75, &#x27;fwd_mae_60&#x27;: -11.98, &#x27;reach_2r_rate&#x27;: 61.9}</td><td>{&#x27;n&#x27;: 668, &#x27;fwd_ret_20&#x27;: 13.54, &#x27;fwd_ret_60&#x27;: 39.23, &#x27;fwd_mae_60&#x27;: -10.76, &#x27;reach_2r_rate&#x27;: 39.5}</td><td>0.14325</td></tr></table></details>
+</section>
+<section class="card" id="U5">
+  <div class="card-head">
+    <span class="rule-id mono">U5</span>
+    <span class="badge" style="color:#b3261e;background:#fceeed">BUSTED</span>
+    <span class="klass">within-winner predictive</span>
+  </div>
+  <h3>Tradable requires full bullish EMA stack (10&gt;20&gt;50) and price above the 50</h3>
+  <div class="source">Your framework (watchlist-vs-tradable gate)</div>
+  <p class="finding">90.6% of winners&#x27; breakout events already have the full bullish stack, so as a FILTER it costs little. But broken-stack breakouts (early, off the lows) show the bigger forward returns — the naive full-sample comparison is pure lateness bias. After controlling: early-of-move fwd20 edge -6.33pp (p=0.0); 2R-before-stop -6.5pp all events, -3.1pp early; MAE -1.21pp all events, +0.23pp early (positive = shallower). Treat the stack as a holdability/trend-quality gate (its real role in your framework), not a return edge.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>prevalence_at_breakouts_pct</td><td>90.6</td></tr></table><table class='grid'><tr><th>by_stack</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>stack bullish</td><td>17180</td><td>6.52</td><td>17.13</td><td>-9.57</td><td>-21.39</td><td>46.9</td></tr><tr><td class='k'>stack not bullish</td><td>1790</td><td>12.91</td><td>31.5</td><td>-8.36</td><td>-22.52</td><td>53.4</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>stack bullish</th><th>stack broken</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 17180, &#x27;fwd_ret_20&#x27;: 6.52, &#x27;fwd_ret_60&#x27;: 17.13, &#x27;fwd_mae_60&#x27;: -9.57, &#x27;reach_2r_rate&#x27;: 46.9}</td><td>{&#x27;n&#x27;: 1790, &#x27;fwd_ret_20&#x27;: 12.91, &#x27;fwd_ret_60&#x27;: 31.5, &#x27;fwd_mae_60&#x27;: -8.36, &#x27;reach_2r_rate&#x27;: 53.4}</td><td>0.0</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 4897, &#x27;fwd_ret_20&#x27;: 8.66, &#x27;fwd_ret_60&#x27;: 26.95, &#x27;fwd_mae_60&#x27;: -7.0, &#x27;reach_2r_rate&#x27;: 49.9}</td><td>{&#x27;n&#x27;: 883, &#x27;fwd_ret_20&#x27;: 14.99, &#x27;fwd_ret_60&#x27;: 41.05, &#x27;fwd_mae_60&#x27;: -7.23, &#x27;reach_2r_rate&#x27;: 53.0}</td><td>0.0</td></tr></table></details>
+</section>
+<section class="card" id="U6">
+  <div class="card-head">
+    <span class="rule-id mono">U6</span>
+    <span class="badge" style="color:#0a7a45;background:#e6f5ec">CONFIRMED</span>
+    <span class="klass">holdability</span>
+  </div>
+  <h3>Gain size has zero correlation with tradability</h3>
+  <div class="source">Your framework (ANNOTATION_TRACKER insight)</div>
+  <p class="finding">Move size barely relates to tradability (ρ=-0.09); median gains by label: not 496.85%, partial 460.47%, tradable 410.82%.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>spearman_gain_vs_label</td><td>-0.09</td></tr></table><table class='grid'><tr><th>by_label</th><th>n</th><th>median</th></tr><tr><td class='k'>not</td><td>20</td><td>496.85</td></tr><tr><td class='k'>partial</td><td>14</td><td>460.47</td></tr><tr><td class='k'>tradable</td><td>11</td><td>410.82</td></tr><tr><td class='k'>p_tradable_vs_not</td><td colspan='2'>0.37875</td></tr></table></details>
+</section>
+<section class="card" id="Q1">
+  <div class="card-head">
+    <span class="rule-id mono">Q1</span>
+    <span class="badge" style="color:#9a6b00;background:#fdf3dd">PARTIAL</span>
+    <span class="klass">prevalence + within-winner predictive</span>
+  </div>
+  <h3>Real breakouts need a volume surge (≥2x average)</h3>
+  <div class="source">Qullamaggie / Minervini</div>
+  <p class="finding">Two halves to this myth. As a PREREQUISITE it fails: only 25.9% of winners&#x27; breakout days print ≥2x volume — winners break out quietly all the time. As a STOP-SURVIVAL signal it works: 2R-before-stop climbs monotonically with volume (&lt;1x 42.7% → 1-1.5x 45.3% → 1.5-2x 48.5% → 2-3x 50.6% → &gt;3x 58.9%). Signals: early-of-move fwd20 edge +0.09pp (p=0.8625); 2R-before-stop +10.8pp all events, +16.0pp early; MAE -1.39pp all events, -0.88pp early (positive = shallower).</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>share_breakouts_ge2x_pct</td><td>25.9</td></tr></table><table class='grid'><tr><th>by_relvol</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>&lt;1x</td><td>5071</td><td>5.72</td><td>17.92</td><td>-8.58</td><td>-19.43</td><td>42.7</td></tr><tr><td class='k'>1-1.5x</td><td>5986</td><td>7.36</td><td>18.21</td><td>-9.14</td><td>-20.85</td><td>45.3</td></tr><tr><td class='k'>1.5-2x</td><td>3030</td><td>7.53</td><td>18.05</td><td>-10.21</td><td>-23.83</td><td>48.5</td></tr><tr><td class='k'>2-3x</td><td>2309</td><td>7.75</td><td>18.51</td><td>-10.3</td><td>-24.82</td><td>50.6</td></tr><tr><td class='k'>&gt;3x</td><td>2559</td><td>7.65</td><td>17.9</td><td>-10.25</td><td>-25.08</td><td>58.9</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>vol ≥2x</th><th>vol &lt;1.5x</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 4911, &#x27;fwd_ret_20&#x27;: 7.71, &#x27;fwd_ret_60&#x27;: 18.28, &#x27;fwd_mae_60&#x27;: -10.29, &#x27;reach_2r_rate&#x27;: 54.8}</td><td>{&#x27;n&#x27;: 10963, &#x27;fwd_ret_20&#x27;: 6.63, &#x27;fwd_ret_60&#x27;: 18.13, &#x27;fwd_mae_60&#x27;: -8.9, &#x27;reach_2r_rate&#x27;: 44.0}</td><td>0.0005</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 1566, &#x27;fwd_ret_20&#x27;: 9.54, &#x27;fwd_ret_60&#x27;: 27.65, &#x27;fwd_mae_60&#x27;: -7.52, &#x27;reach_2r_rate&#x27;: 61.0}</td><td>{&#x27;n&#x27;: 3219, &#x27;fwd_ret_20&#x27;: 9.45, &#x27;fwd_ret_60&#x27;: 28.58, &#x27;fwd_mae_60&#x27;: -6.64, &#x27;reach_2r_rate&#x27;: 45.0}</td><td>0.8625</td></tr></table></details>
+</section>
+<section class="card" id="Q2">
+  <div class="card-head">
+    <span class="rule-id mono">Q2</span>
+    <span class="badge" style="color:#b3261e;background:#fceeed">BUSTED</span>
+    <span class="klass">prevalence + within-winner predictive</span>
+  </div>
+  <h3>The best setups already ran 30-100% in the prior 1-3 months</h3>
+  <div class="source">Qullamaggie</div>
+  <p class="finding">60.7% of breakout events already ran ≥30% in the prior 3 months, so momentum-begets-momentum is the normal state of a big mover. But the &gt;100%-prior bucket pays for it in risk (median MAE -20.37% vs -6.12% for 0-30%) — matching your ADD-vs-cold-entry rule. After lateness control: early-of-move fwd20 edge -2.6pp (p=0.0); 2R-before-stop -4.8pp all events, -4.2pp early; MAE -5.12pp all events, -2.94pp early (positive = shallower).</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>share_breakouts_prior3m_ge30_pct</td><td>60.7</td></tr></table><table class='grid'><tr><th>by_prior_gain</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>down 3m</td><td>1593</td><td>13.62</td><td>30.43</td><td>-8.83</td><td>-23.45</td><td>51.6</td></tr><tr><td class='k'>0-30%</td><td>5663</td><td>7.8</td><td>21.64</td><td>-6.12</td><td>-16.87</td><td>50.0</td></tr><tr><td class='k'>30-100%</td><td>8841</td><td>5.99</td><td>15.53</td><td>-10.08</td><td>-21.72</td><td>45.4</td></tr><tr><td class='k'>&gt;100%</td><td>2666</td><td>3.74</td><td>9.88</td><td>-20.37</td><td>-36.57</td><td>45.9</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>prior 3m ≥30%</th><th>prior 3m &lt;30%</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 11511, &#x27;fwd_ret_20&#x27;: 5.6, &#x27;fwd_ret_60&#x27;: 14.72, &#x27;fwd_mae_60&#x27;: -11.76, &#x27;reach_2r_rate&#x27;: 45.6}</td><td>{&#x27;n&#x27;: 7252, &#x27;fwd_ret_20&#x27;: 8.55, &#x27;fwd_ret_60&#x27;: 23.21, &#x27;fwd_mae_60&#x27;: -6.64, &#x27;reach_2r_rate&#x27;: 50.4}</td><td>0.0</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 2714, &#x27;fwd_ret_20&#x27;: 8.08, &#x27;fwd_ret_60&#x27;: 24.37, &#x27;fwd_mae_60&#x27;: -8.81, &#x27;reach_2r_rate&#x27;: 48.2}</td><td>{&#x27;n&#x27;: 2946, &#x27;fwd_ret_20&#x27;: 10.68, &#x27;fwd_ret_60&#x27;: 32.43, &#x27;fwd_mae_60&#x27;: -5.87, &#x27;reach_2r_rate&#x27;: 52.4}</td><td>0.0</td></tr></table></details>
+</section>
+<section class="card" id="Q4">
+  <div class="card-head">
+    <span class="rule-id mono">Q4</span>
+    <span class="badge" style="color:#b3261e;background:#fceeed">BUSTED</span>
+    <span class="klass">within-winner predictive</span>
+  </div>
+  <h3>Breakouts work when the index is above its 50SMA; fight the tape and lose</h3>
+  <div class="source">Qullamaggie (market regime)</div>
+  <p class="finding">17.6% of winners&#x27; entry events fired with SPY BELOW its 50SMA — and those events did NOT underperform (weak tape is when the next cycle&#x27;s leaders bottom). After lateness control: early-of-move fwd20 edge -2.76pp (p=0.0); 2R-before-stop +0.6pp all events, +1.1pp early; MAE +0.26pp all events, +0.79pp early (positive = shallower). The folklore overstates the tape filter for THESE stocks; what a weak tape really changes is how many such setups exist at all, which a winners-only bank cannot measure (see X1).</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>share_events_spy_below_50sma_pct</td><td>17.6</td></tr></table><table class='grid'><tr><th>by_regime</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>SPY&lt;50SMA</td><td>4066</td><td>8.3</td><td>23.01</td><td>-10.34</td><td>-21.97</td><td>46.9</td></tr><tr><td class='k'>SPY&gt;50SMA</td><td>19008</td><td>7.01</td><td>17.66</td><td>-10.08</td><td>-23.27</td><td>47.5</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>SPY&gt;50SMA</th><th>SPY&lt;50SMA</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 19008, &#x27;fwd_ret_20&#x27;: 7.01, &#x27;fwd_ret_60&#x27;: 17.66, &#x27;fwd_mae_60&#x27;: -10.08, &#x27;reach_2r_rate&#x27;: 47.5}</td><td>{&#x27;n&#x27;: 4066, &#x27;fwd_ret_20&#x27;: 8.3, &#x27;fwd_ret_60&#x27;: 23.01, &#x27;fwd_mae_60&#x27;: -10.34, &#x27;reach_2r_rate&#x27;: 46.9}</td><td>0.0</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 5834, &#x27;fwd_ret_20&#x27;: 9.38, &#x27;fwd_ret_60&#x27;: 27.34, &#x27;fwd_mae_60&#x27;: -7.53, &#x27;reach_2r_rate&#x27;: 50.3}</td><td>{&#x27;n&#x27;: 1453, &#x27;fwd_ret_20&#x27;: 12.14, &#x27;fwd_ret_60&#x27;: 39.8, &#x27;fwd_mae_60&#x27;: -8.32, &#x27;reach_2r_rate&#x27;: 49.2}</td><td>0.0</td></tr></table></details>
+</section>
+<section class="card" id="Q5">
+  <div class="card-head">
+    <span class="rule-id mono">Q5</span>
+    <span class="badge" style="color:#0a7a45;background:#e6f5ec">CONFIRMED</span>
+    <span class="klass">within-winner predictive</span>
+  </div>
+  <h3>The first breakout of a move works best; late breakouts are adds, not cold entries</h3>
+  <div class="source">Qullamaggie + your ADD-vs-cold rule</div>
+  <p class="finding">Median fwd 60-bar return: 1st breakout 38.82% vs 4th+ 14.99% (p=0.0). By extension off the move low: &lt;50% up: fwd60 30.59%, 50-100% up: fwd60 19.44%, &gt;100% up: fwd60 9.88%.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>p_1st_vs_4thplus_fwd60</td><td>0.0</td></tr></table><table class='grid'><tr><th>by_ordinal</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>1st</td><td>1421</td><td>16.66</td><td>38.82</td><td>-7.07</td><td>-22.85</td><td>59.8</td></tr><tr><td class='k'>2nd-3rd</td><td>2527</td><td>8.99</td><td>25.45</td><td>-8.96</td><td>-22.45</td><td>49.4</td></tr><tr><td class='k'>4th+</td><td>6514</td><td>5.56</td><td>14.99</td><td>-9.99</td><td>-21.08</td><td>44.9</td></tr></table><table class='grid'><tr><th>by_extension_from_move_start</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>&lt;50% up</td><td>2898</td><td>11.28</td><td>30.59</td><td>-5.34</td><td>-16.64</td><td>54.2</td></tr><tr><td class='k'>50-100% up</td><td>2946</td><td>7.09</td><td>19.44</td><td>-8.56</td><td>-19.69</td><td>47.7</td></tr><tr><td class='k'>&gt;100% up</td><td>4618</td><td>4.64</td><td>9.88</td><td>-14.87</td><td>-27.23</td><td>44.3</td></tr></table></details>
+</section>
+<section class="card" id="Q6">
+  <div class="card-head">
+    <span class="rule-id mono">Q6</span>
+    <span class="badge" style="color:#b3261e;background:#fceeed">BUSTED</span>
+    <span class="klass">prevalence</span>
+  </div>
+  <h3>Big winners ride the 10/20EMA for the duration of the move</h3>
+  <div class="source">Qullamaggie (&#x27;magic line&#x27;)</div>
+  <p class="finding">Median big mover holds the 10EMA 71.43% of days and the 20EMA 76.71%. 73.4% clear your 65% 10EMA line; 39.8% hold the 20EMA ≥80% of the time. The 20EMA, not the 10, is the real &#x27;magic line&#x27; for the median winner.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>median_ema10_adh</td><td>71.43</td></tr><tr><td class='k'>median_ema20_adh</td><td>76.71</td></tr><tr><td class='k'>share_ema10_ge65_pct</td><td>73.4</td></tr><tr><td class='k'>share_ema20_ge80_pct</td><td>39.8</td></tr></table></details>
+</section>
+<section class="card" id="M1">
+  <div class="card-head">
+    <span class="rule-id mono">M1</span>
+    <span class="badge" style="color:#b3261e;background:#fceeed">BUSTED</span>
+    <span class="klass">prevalence + within-winner predictive</span>
+  </div>
+  <h3>Buy only stage-2 stocks: price&gt;50SMA&gt;150SMA&gt;200SMA with 200 rising</h3>
+  <div class="source">Minervini (trend template)</div>
+  <p class="finding">Only 11.3% of big moves BEGIN in full stage-2 (price&gt;50&gt;150&gt;200, 200 rising) — the biggest moves start from broken charts, which the template excludes by design. By breakout time 59.1% pass. After lateness control: early-of-move fwd20 edge -2.27pp (p=0.0); 2R-before-stop -4.2pp all events, +1.2pp early; MAE +0.24pp all events, +1.94pp early (positive = shallower). The template buys cleaner risk, not bigger returns, and it makes you structurally late on the largest winners.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>prevalence_at_breakouts_pct</td><td>59.1</td></tr><tr><td class='k'>prevalence_at_move_start_pct</td><td>11.3</td></tr></table><table class='grid'><tr><th>by_template</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>template fail</td><td>7751</td><td>8.9</td><td>22.52</td><td>-9.57</td><td>-23.44</td><td>50.0</td></tr><tr><td class='k'>template pass</td><td>11219</td><td>5.85</td><td>15.84</td><td>-9.33</td><td>-20.44</td><td>45.8</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>template pass</th><th>template fail</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 11219, &#x27;fwd_ret_20&#x27;: 5.85, &#x27;fwd_ret_60&#x27;: 15.84, &#x27;fwd_mae_60&#x27;: -9.33, &#x27;reach_2r_rate&#x27;: 45.8}</td><td>{&#x27;n&#x27;: 7751, &#x27;fwd_ret_20&#x27;: 8.9, &#x27;fwd_ret_60&#x27;: 22.52, &#x27;fwd_mae_60&#x27;: -9.57, &#x27;reach_2r_rate&#x27;: 50.0}</td><td>0.0</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 2403, &#x27;fwd_ret_20&#x27;: 8.32, &#x27;fwd_ret_60&#x27;: 25.41, &#x27;fwd_mae_60&#x27;: -5.99, &#x27;reach_2r_rate&#x27;: 51.1}</td><td>{&#x27;n&#x27;: 3377, &#x27;fwd_ret_20&#x27;: 10.59, &#x27;fwd_ret_60&#x27;: 31.65, &#x27;fwd_mae_60&#x27;: -7.93, &#x27;reach_2r_rate&#x27;: 49.9}</td><td>0.0</td></tr></table></details>
+</section>
+<section class="card" id="M2">
+  <div class="card-head">
+    <span class="rule-id mono">M2</span>
+    <span class="badge" style="color:#b3261e;background:#fceeed">BUSTED</span>
+    <span class="klass">prevalence + within-winner predictive</span>
+  </div>
+  <h3>Buy within 25% of the 52-week high; closer is better</h3>
+  <div class="source">Minervini / O&#x27;Neil</div>
+  <p class="finding">78.5% of breakout events fire within 25% of the 52wk high, so the filter passes most of what matters. Risk profile: near-high entries have shallower MAE (-9.07%) than deep-recovery entries (-15.36%). After lateness control: early-of-move fwd20 edge -5.3pp (p=0.0); 2R-before-stop -5.6pp all events, -1.8pp early; MAE +2.8pp all events, +3.56pp early (positive = shallower).</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>share_within_25pct_of_high</td><td>78.5</td></tr></table><table class='grid'><tr><th>by_distance</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>&gt;50% off</td><td>1828</td><td>11.59</td><td>20.96</td><td>-15.36</td><td>-31.13</td><td>50.9</td></tr><tr><td class='k'>25-50% off</td><td>2075</td><td>11.36</td><td>25.96</td><td>-9.52</td><td>-23.15</td><td>52.1</td></tr><tr><td class='k'>10-25% off</td><td>2071</td><td>8.38</td><td>25.23</td><td>-7.9</td><td>-20.11</td><td>48.9</td></tr><tr><td class='k'>&lt;10% off</td><td>12813</td><td>5.89</td><td>16.01</td><td>-9.07</td><td>-20.18</td><td>45.9</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>&lt;10% off high</th><th>&gt;25% off high</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 12816, &#x27;fwd_ret_20&#x27;: 5.89, &#x27;fwd_ret_60&#x27;: 16.01, &#x27;fwd_mae_60&#x27;: -9.07, &#x27;reach_2r_rate&#x27;: 45.9}</td><td>{&#x27;n&#x27;: 3900, &#x27;fwd_ret_20&#x27;: 11.43, &#x27;fwd_ret_60&#x27;: 23.63, &#x27;fwd_mae_60&#x27;: -11.87, &#x27;reach_2r_rate&#x27;: 51.5}</td><td>0.0</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 2966, &#x27;fwd_ret_20&#x27;: 7.98, &#x27;fwd_ret_60&#x27;: 25.52, &#x27;fwd_mae_60&#x27;: -6.05, &#x27;reach_2r_rate&#x27;: 49.5}</td><td>{&#x27;n&#x27;: 1855, &#x27;fwd_ret_20&#x27;: 13.28, &#x27;fwd_ret_60&#x27;: 34.1, &#x27;fwd_mae_60&#x27;: -9.61, &#x27;reach_2r_rate&#x27;: 51.3}</td><td>0.0</td></tr></table></details>
+</section>
+<section class="card" id="M3">
+  <div class="card-head">
+    <span class="rule-id mono">M3</span>
+    <span class="badge" style="color:#b3261e;background:#fceeed">BUSTED</span>
+    <span class="klass">prevalence + within-winner predictive</span>
+  </div>
+  <h3>Demand positive relative strength vs the index before entry</h3>
+  <div class="source">Minervini / IBD (RS line)</div>
+  <p class="finding">89.3% of winners&#x27; breakouts already outperform SPY over the trailing 63d — RS&gt;1 is near-universal in big movers (prevalence holds). But demanding MORE RS (&gt;1.3) at entry buys nothing further: early-of-move fwd20 edge -5.69pp (p=0.0); 2R-before-stop -7.3pp all events, -4.4pp early; MAE -4.56pp all events, -2.37pp early (positive = shallower). Extreme trailing RS at the event is extension, not extra edge.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>share_rs_gt1_pct</td><td>89.3</td></tr></table><table class='grid'><tr><th>by_rs</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>RS&lt;1</td><td>1829</td><td>12.74</td><td>29.37</td><td>-8.25</td><td>-22.93</td><td>52.6</td></tr><tr><td class='k'>RS 1-1.3</td><td>6781</td><td>7.62</td><td>20.21</td><td>-6.38</td><td>-17.04</td><td>49.2</td></tr><tr><td class='k'>RS&gt;1.3</td><td>10153</td><td>5.25</td><td>14.12</td><td>-12.81</td><td>-25.19</td><td>45.3</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>RS&gt;1.3</th><th>RS≤1</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 10153, &#x27;fwd_ret_20&#x27;: 5.25, &#x27;fwd_ret_60&#x27;: 14.12, &#x27;fwd_mae_60&#x27;: -12.81, &#x27;reach_2r_rate&#x27;: 45.3}</td><td>{&#x27;n&#x27;: 1829, &#x27;fwd_ret_20&#x27;: 12.74, &#x27;fwd_ret_60&#x27;: 29.37, &#x27;fwd_mae_60&#x27;: -8.25, &#x27;reach_2r_rate&#x27;: 52.6}</td><td>0.0</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 2303, &#x27;fwd_ret_20&#x27;: 8.08, &#x27;fwd_ret_60&#x27;: 25.55, &#x27;fwd_mae_60&#x27;: -9.75, &#x27;reach_2r_rate&#x27;: 48.0}</td><td>{&#x27;n&#x27;: 1081, &#x27;fwd_ret_20&#x27;: 13.77, &#x27;fwd_ret_60&#x27;: 35.94, &#x27;fwd_mae_60&#x27;: -7.38, &#x27;reach_2r_rate&#x27;: 52.4}</td><td>0.0</td></tr></table></details>
+</section>
+<section class="card" id="S1">
+  <div class="card-head">
+    <span class="rule-id mono">S1</span>
+    <span class="badge" style="color:#9a6b00;background:#fdf3dd">PARTIAL</span>
+    <span class="klass">within-winner predictive</span>
+  </div>
+  <h3>Tighter pre-breakout price action → better breakout</h3>
+  <div class="source">VCP doctrine (Minervini/Qullamaggie)</div>
+  <p class="finding">Tightness is a RISK rule, not a return rule: the tight third suffers roughly half the adverse excursion (MAE -6.09% vs -15.31%, max DD -15.94% vs -31.7%) for similar raw returns — tight entries let you hold the same move with far less pain. Signals: early-of-move fwd20 edge -4.25pp (p=0.0); 2R-before-stop -2.2pp all events, -1.5pp early; MAE +9.22pp all events, +7.01pp early (positive = shallower).</p>
+  <details><summary>Underlying numbers</summary><div class='subhead'>tightness_terciles</div><table class='kv'><tr><td class='k'>t1</td><td>3.45</td></tr><tr><td class='k'>t2</td><td>6.32</td></tr></table><table class='grid'><tr><th>by_tightness</th><th>n</th><th>fwd_ret_20</th><th>fwd_ret_60</th><th>fwd_mae_60</th><th>fwd_max_dd_60</th><th>reach_2r_rate</th></tr><tr><td class='k'>tight</td><td>6305</td><td>6.39</td><td>18.34</td><td>-6.09</td><td>-15.94</td><td>46.6</td></tr><tr><td class='k'>medium</td><td>6405</td><td>7.09</td><td>19.1</td><td>-9.41</td><td>-20.93</td><td>47.2</td></tr><tr><td class='k'>loose</td><td>6260</td><td>7.99</td><td>16.36</td><td>-15.31</td><td>-31.7</td><td>48.8</td></tr></table><table class='grid'><tr><th>lateness_controlled</th><th>tight third</th><th>loose third</th><th>p_fwd20</th></tr><tr><td class='k'>all_events</td><td>{&#x27;n&#x27;: 6305, &#x27;fwd_ret_20&#x27;: 6.39, &#x27;fwd_ret_60&#x27;: 18.34, &#x27;fwd_mae_60&#x27;: -6.09, &#x27;reach_2r_rate&#x27;: 46.6}</td><td>{&#x27;n&#x27;: 6260, &#x27;fwd_ret_20&#x27;: 7.99, &#x27;fwd_ret_60&#x27;: 16.36, &#x27;fwd_mae_60&#x27;: -15.31, &#x27;reach_2r_rate&#x27;: 48.8}</td><td>0.0</td></tr><tr><td class='k'>early_third</td><td>{&#x27;n&#x27;: 1797, &#x27;fwd_ret_20&#x27;: 8.07, &#x27;fwd_ret_60&#x27;: 25.25, &#x27;fwd_mae_60&#x27;: -4.68, &#x27;reach_2r_rate&#x27;: 50.4}</td><td>{&#x27;n&#x27;: 1996, &#x27;fwd_ret_20&#x27;: 12.32, &#x27;fwd_ret_60&#x27;: 33.66, &#x27;fwd_mae_60&#x27;: -11.69, &#x27;reach_2r_rate&#x27;: 51.9}</td><td>0.0</td></tr></table></details>
+</section>
+<section class="card" id="X1">
+  <div class="card-head">
+    <span class="rule-id mono">X1</span>
+    <span class="badge" style="color:#5b5f6b;background:#eef0f3">UNTESTABLE</span>
+    <span class="klass">predictive (no control group)</span>
+  </div>
+  <h3>&#x27;These criteria find the next big winner&#x27;</h3>
+  <div class="source">All schools</div>
+  <p class="finding">Any claim of the form &#x27;criteria X finds the next big winner&#x27; cannot be tested here: every stock in the bank already won. What CAN be tested (and is, above): what winners look like, and which entry conditions produced better follow-through within winners. To test true predictiveness, build a control sample (random ticker-dates, or same-ticker breakouts outside move windows) — recommended phase 2.</p>
+  <details><summary>Underlying numbers</summary><table class='kv'><tr><td class='k'>note</td><td>databank contains winners only — no control group of failed breakouts / non-movers</td></tr></table></details>
+</section>
+
+<h2>What to do with this</h2>
+<ul>
+  <li><strong>In the study tool:</strong> when reviewing a chart, score it against the holdability gates
+      (10EMA adherence, 50SMA touches, ADR band) — the labeled-subset medians above are your calibration anchors.</li>
+  <li><strong>In the simulator:</strong> before entering, check the within-winner entry filters that survived
+      testing (close-in-range on gaps, EMA stack, distance from 52wk high, prior 3m trend). The busted rules are
+      permission to stop worrying about those criteria.</li>
+  <li><strong>Phase 2 — control group:</strong> sample breakout events from random non-mover ticker-dates (or failed
+      breakouts in these same tickers outside move windows) to upgrade the within-winner findings to true
+      predictive tests. This is the single biggest upgrade available.</li>
+  <li><strong>Phase 3 — live evaluator:</strong> wire <span class="mono">calibrated_rules.json</span> into the app so any
+      ticker+date gets a point-in-time gate score at sim entry, then compare scores to your sim outcomes.</li>
+</ul>
+
+<div class="sub">Files: <span class="mono">evaluation/output/moves.csv</span> (per-move metrics + labels),
+<span class="mono">events.csv</span> (per-event features + outcomes),
+<span class="mono">calibrated_rules.json</span> (machine-readable thresholds).
+Reproduce: <span class="mono">python3 -m evaluation.run_study && python3 -m evaluation.report</span></div>
+
+</div></body></html>

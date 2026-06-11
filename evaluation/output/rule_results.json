@@ -1,0 +1,881 @@
+[
+  {
+    "id": "U1",
+    "source": "Your framework (ANNOTATION_TRACKER)",
+    "class": "holdability",
+    "claim": "10EMA adherence <65% \u2192 skip; >75% \u2192 promising",
+    "stats": {
+      "by_label": {
+        "not": {
+          "n": 20,
+          "median": 64.1
+        },
+        "partial": {
+          "n": 14,
+          "median": 76.94
+        },
+        "tradable": {
+          "n": 11,
+          "median": 81.61
+        },
+        "p_tradable_vs_not": 0.0
+      },
+      "share_movers_adh_ge75": 37.4,
+      "share_movers_adh_lt65": 26.6
+    },
+    "verdict": "CONFIRMED",
+    "finding": "Median 10EMA adherence: tradable 81.61% vs not-my-style 64.1% (p=0.0). Across ALL movers, 37.4% spend \u226575% of the move above the 10EMA while 26.6% sit below the 65% skip line \u2014 clean trenders are the minority of big winners."
+  },
+  {
+    "id": "U2",
+    "source": "Your framework (ANNOTATION_TRACKER)",
+    "class": "holdability",
+    "claim": ">10 SMA50 touches \u2192 skip; \u22642 \u2192 ideal",
+    "stats": {
+      "by_label": {
+        "not": {
+          "n": 20,
+          "median": 15.0
+        },
+        "partial": {
+          "n": 14,
+          "median": 10.5
+        },
+        "tradable": {
+          "n": 11,
+          "median": 3.0
+        },
+        "p_tradable_vs_not": 0.0015
+      },
+      "share_movers_touches_gt10": 48.1
+    },
+    "verdict": "CONFIRMED",
+    "finding": "Median 50SMA touches: tradable 3.0 vs not-my-style 15.0 (p=0.0015). 48.1% of all movers exceed the >10-touch skip line."
+  },
+  {
+    "id": "U3",
+    "source": "Your framework (ANNOTATION_TRACKER)",
+    "class": "holdability",
+    "claim": "ADR >7% \u2192 hard to hold; <5.5% \u2192 comfortable",
+    "stats": {
+      "by_label": {
+        "not": {
+          "n": 20,
+          "median": 7.39
+        },
+        "partial": {
+          "n": 14,
+          "median": 6.06
+        },
+        "tradable": {
+          "n": 11,
+          "median": 5.52
+        },
+        "p_tradable_vs_not": 0.08875
+      },
+      "spearman_adr_vs_worst_dd": -0.6,
+      "spearman_adr_vs_pct_days_underwater10": 0.75
+    },
+    "verdict": "PARTIAL",
+    "finding": "Median ADR: tradable 5.52% vs not-my-style 7.39% (p=0.08875). Across all movers, higher ADR correlates with deeper drawdowns (\u03c1=-0.6 vs worst DD) and more time >10% underwater (\u03c1=0.75)."
+  },
+  {
+    "id": "Q3",
+    "source": "Qullamaggie vs your framework",
+    "class": "holdability",
+    "claim": "Tension test: Qullamaggie wants high-ADR names ('they move'), you flag high ADR as unholdable",
+    "stats": {
+      "spearman_adr_vs_move_gain": 0.53,
+      "median_gain_adr_ge7": 419.05,
+      "n_ge7": 570,
+      "median_gain_adr_lt55": 159.35,
+      "n_lt55": 653,
+      "median_worst_dd_adr_ge7": -35.24,
+      "median_worst_dd_adr_lt55": -19.58
+    },
+    "verdict": "CONFIRMED",
+    "finding": "Both schools are right about different things: ADR vs move size \u03c1=0.53 (higher ADR \u2192 bigger gains: median 419.05% vs 159.35%), but the cost is drawdown (median worst DD -35.24% vs -19.58%). High ADR buys move size with pain; pick your seat on that curve deliberately."
+  },
+  {
+    "id": "U4",
+    "source": "Your framework (close-in-range rule)",
+    "class": "within-winner predictive",
+    "claim": "Gap close >75% in range = clean EP; <50% = trap (overrides gap %)",
+    "stats": {
+      "by_close_in_range": {
+        "<50 trap": {
+          "n": 1831,
+          "fwd_ret_20": 9.26,
+          "fwd_ret_60": 22.5,
+          "fwd_mae_60": -14.66,
+          "fwd_max_dd_60": -33.8,
+          "reach_2r_rate": 40.0
+        },
+        "50-75 mid": {
+          "n": 980,
+          "fwd_ret_20": 7.45,
+          "fwd_ret_60": 18.71,
+          "fwd_mae_60": -13.93,
+          "fwd_max_dd_60": -30.88,
+          "reach_2r_rate": 50.4
+        },
+        ">75 clean": {
+          "n": 1325,
+          "fwd_ret_20": 8.42,
+          "fwd_ret_60": 19.72,
+          "fwd_mae_60": -14.64,
+          "fwd_max_dd_60": -31.48,
+          "reach_2r_rate": 54.6
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "clean >75": {
+            "n": 1325,
+            "fwd_ret_20": 8.42,
+            "fwd_ret_60": 19.72,
+            "fwd_mae_60": -14.64,
+            "reach_2r_rate": 54.6
+          },
+          "trap <50": {
+            "n": 1804,
+            "fwd_ret_20": 9.29,
+            "fwd_ret_60": 22.59,
+            "fwd_mae_60": -14.62,
+            "reach_2r_rate": 39.7
+          },
+          "p_fwd20": 0.38425
+        },
+        "early_third": {
+          "clean >75": {
+            "n": 480,
+            "fwd_ret_20": 10.97,
+            "fwd_ret_60": 31.75,
+            "fwd_mae_60": -11.98,
+            "reach_2r_rate": 61.9
+          },
+          "trap <50": {
+            "n": 668,
+            "fwd_ret_20": 13.54,
+            "fwd_ret_60": 39.23,
+            "fwd_mae_60": -10.76,
+            "reach_2r_rate": 39.5
+          },
+          "p_fwd20": 0.14325
+        }
+      }
+    },
+    "verdict": "CONFIRMED",
+    "finding": "The rule is about stop survival, not raw return: clean closes reach 2R before a LOD stop 54.6% of the time vs 39.7% for trap closes \u2014 a monotonic ladder across the three buckets \u2014 while 20-bar returns are similar. Signals: early-of-move fwd20 edge -2.57pp (p=0.14325); 2R-before-stop +14.9pp all events, +22.4pp early; MAE -0.02pp all events, -1.22pp early (positive = shallower)."
+  },
+  {
+    "id": "U5",
+    "source": "Your framework (watchlist-vs-tradable gate)",
+    "class": "within-winner predictive",
+    "claim": "Tradable requires full bullish EMA stack (10>20>50) and price above the 50",
+    "stats": {
+      "prevalence_at_breakouts_pct": 90.6,
+      "by_stack": {
+        "stack bullish": {
+          "n": 17180,
+          "fwd_ret_20": 6.52,
+          "fwd_ret_60": 17.13,
+          "fwd_mae_60": -9.57,
+          "fwd_max_dd_60": -21.39,
+          "reach_2r_rate": 46.9
+        },
+        "stack not bullish": {
+          "n": 1790,
+          "fwd_ret_20": 12.91,
+          "fwd_ret_60": 31.5,
+          "fwd_mae_60": -8.36,
+          "fwd_max_dd_60": -22.52,
+          "reach_2r_rate": 53.4
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "stack bullish": {
+            "n": 17180,
+            "fwd_ret_20": 6.52,
+            "fwd_ret_60": 17.13,
+            "fwd_mae_60": -9.57,
+            "reach_2r_rate": 46.9
+          },
+          "stack broken": {
+            "n": 1790,
+            "fwd_ret_20": 12.91,
+            "fwd_ret_60": 31.5,
+            "fwd_mae_60": -8.36,
+            "reach_2r_rate": 53.4
+          },
+          "p_fwd20": 0.0
+        },
+        "early_third": {
+          "stack bullish": {
+            "n": 4897,
+            "fwd_ret_20": 8.66,
+            "fwd_ret_60": 26.95,
+            "fwd_mae_60": -7.0,
+            "reach_2r_rate": 49.9
+          },
+          "stack broken": {
+            "n": 883,
+            "fwd_ret_20": 14.99,
+            "fwd_ret_60": 41.05,
+            "fwd_mae_60": -7.23,
+            "reach_2r_rate": 53.0
+          },
+          "p_fwd20": 0.0
+        }
+      }
+    },
+    "verdict": "BUSTED",
+    "finding": "90.6% of winners' breakout events already have the full bullish stack, so as a FILTER it costs little. But broken-stack breakouts (early, off the lows) show the bigger forward returns \u2014 the naive full-sample comparison is pure lateness bias. After controlling: early-of-move fwd20 edge -6.33pp (p=0.0); 2R-before-stop -6.5pp all events, -3.1pp early; MAE -1.21pp all events, +0.23pp early (positive = shallower). Treat the stack as a holdability/trend-quality gate (its real role in your framework), not a return edge."
+  },
+  {
+    "id": "U6",
+    "source": "Your framework (ANNOTATION_TRACKER insight)",
+    "class": "holdability",
+    "claim": "Gain size has zero correlation with tradability",
+    "stats": {
+      "by_label": {
+        "not": {
+          "n": 20,
+          "median": 496.85
+        },
+        "partial": {
+          "n": 14,
+          "median": 460.47
+        },
+        "tradable": {
+          "n": 11,
+          "median": 410.82
+        },
+        "p_tradable_vs_not": 0.37875
+      },
+      "spearman_gain_vs_label": -0.09
+    },
+    "verdict": "CONFIRMED",
+    "finding": "Move size barely relates to tradability (\u03c1=-0.09); median gains by label: not 496.85%, partial 460.47%, tradable 410.82%."
+  },
+  {
+    "id": "Q1",
+    "source": "Qullamaggie / Minervini",
+    "class": "prevalence + within-winner predictive",
+    "claim": "Real breakouts need a volume surge (\u22652x average)",
+    "stats": {
+      "share_breakouts_ge2x_pct": 25.9,
+      "by_relvol": {
+        "<1x": {
+          "n": 5071,
+          "fwd_ret_20": 5.72,
+          "fwd_ret_60": 17.92,
+          "fwd_mae_60": -8.58,
+          "fwd_max_dd_60": -19.43,
+          "reach_2r_rate": 42.7
+        },
+        "1-1.5x": {
+          "n": 5986,
+          "fwd_ret_20": 7.36,
+          "fwd_ret_60": 18.21,
+          "fwd_mae_60": -9.14,
+          "fwd_max_dd_60": -20.85,
+          "reach_2r_rate": 45.3
+        },
+        "1.5-2x": {
+          "n": 3030,
+          "fwd_ret_20": 7.53,
+          "fwd_ret_60": 18.05,
+          "fwd_mae_60": -10.21,
+          "fwd_max_dd_60": -23.83,
+          "reach_2r_rate": 48.5
+        },
+        "2-3x": {
+          "n": 2309,
+          "fwd_ret_20": 7.75,
+          "fwd_ret_60": 18.51,
+          "fwd_mae_60": -10.3,
+          "fwd_max_dd_60": -24.82,
+          "reach_2r_rate": 50.6
+        },
+        ">3x": {
+          "n": 2559,
+          "fwd_ret_20": 7.65,
+          "fwd_ret_60": 17.9,
+          "fwd_mae_60": -10.25,
+          "fwd_max_dd_60": -25.08,
+          "reach_2r_rate": 58.9
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "vol \u22652x": {
+            "n": 4911,
+            "fwd_ret_20": 7.71,
+            "fwd_ret_60": 18.28,
+            "fwd_mae_60": -10.29,
+            "reach_2r_rate": 54.8
+          },
+          "vol <1.5x": {
+            "n": 10963,
+            "fwd_ret_20": 6.63,
+            "fwd_ret_60": 18.13,
+            "fwd_mae_60": -8.9,
+            "reach_2r_rate": 44.0
+          },
+          "p_fwd20": 0.0005
+        },
+        "early_third": {
+          "vol \u22652x": {
+            "n": 1566,
+            "fwd_ret_20": 9.54,
+            "fwd_ret_60": 27.65,
+            "fwd_mae_60": -7.52,
+            "reach_2r_rate": 61.0
+          },
+          "vol <1.5x": {
+            "n": 3219,
+            "fwd_ret_20": 9.45,
+            "fwd_ret_60": 28.58,
+            "fwd_mae_60": -6.64,
+            "reach_2r_rate": 45.0
+          },
+          "p_fwd20": 0.8625
+        }
+      }
+    },
+    "verdict": "PARTIAL",
+    "finding": "Two halves to this myth. As a PREREQUISITE it fails: only 25.9% of winners' breakout days print \u22652x volume \u2014 winners break out quietly all the time. As a STOP-SURVIVAL signal it works: 2R-before-stop climbs monotonically with volume (<1x 42.7% \u2192 1-1.5x 45.3% \u2192 1.5-2x 48.5% \u2192 2-3x 50.6% \u2192 >3x 58.9%). Signals: early-of-move fwd20 edge +0.09pp (p=0.8625); 2R-before-stop +10.8pp all events, +16.0pp early; MAE -1.39pp all events, -0.88pp early (positive = shallower)."
+  },
+  {
+    "id": "Q2",
+    "source": "Qullamaggie",
+    "class": "prevalence + within-winner predictive",
+    "claim": "The best setups already ran 30-100% in the prior 1-3 months",
+    "stats": {
+      "share_breakouts_prior3m_ge30_pct": 60.7,
+      "by_prior_gain": {
+        "down 3m": {
+          "n": 1593,
+          "fwd_ret_20": 13.62,
+          "fwd_ret_60": 30.43,
+          "fwd_mae_60": -8.83,
+          "fwd_max_dd_60": -23.45,
+          "reach_2r_rate": 51.6
+        },
+        "0-30%": {
+          "n": 5663,
+          "fwd_ret_20": 7.8,
+          "fwd_ret_60": 21.64,
+          "fwd_mae_60": -6.12,
+          "fwd_max_dd_60": -16.87,
+          "reach_2r_rate": 50.0
+        },
+        "30-100%": {
+          "n": 8841,
+          "fwd_ret_20": 5.99,
+          "fwd_ret_60": 15.53,
+          "fwd_mae_60": -10.08,
+          "fwd_max_dd_60": -21.72,
+          "reach_2r_rate": 45.4
+        },
+        ">100%": {
+          "n": 2666,
+          "fwd_ret_20": 3.74,
+          "fwd_ret_60": 9.88,
+          "fwd_mae_60": -20.37,
+          "fwd_max_dd_60": -36.57,
+          "reach_2r_rate": 45.9
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "prior 3m \u226530%": {
+            "n": 11511,
+            "fwd_ret_20": 5.6,
+            "fwd_ret_60": 14.72,
+            "fwd_mae_60": -11.76,
+            "reach_2r_rate": 45.6
+          },
+          "prior 3m <30%": {
+            "n": 7252,
+            "fwd_ret_20": 8.55,
+            "fwd_ret_60": 23.21,
+            "fwd_mae_60": -6.64,
+            "reach_2r_rate": 50.4
+          },
+          "p_fwd20": 0.0
+        },
+        "early_third": {
+          "prior 3m \u226530%": {
+            "n": 2714,
+            "fwd_ret_20": 8.08,
+            "fwd_ret_60": 24.37,
+            "fwd_mae_60": -8.81,
+            "reach_2r_rate": 48.2
+          },
+          "prior 3m <30%": {
+            "n": 2946,
+            "fwd_ret_20": 10.68,
+            "fwd_ret_60": 32.43,
+            "fwd_mae_60": -5.87,
+            "reach_2r_rate": 52.4
+          },
+          "p_fwd20": 0.0
+        }
+      }
+    },
+    "verdict": "BUSTED",
+    "finding": "60.7% of breakout events already ran \u226530% in the prior 3 months, so momentum-begets-momentum is the normal state of a big mover. But the >100%-prior bucket pays for it in risk (median MAE -20.37% vs -6.12% for 0-30%) \u2014 matching your ADD-vs-cold-entry rule. After lateness control: early-of-move fwd20 edge -2.6pp (p=0.0); 2R-before-stop -4.8pp all events, -4.2pp early; MAE -5.12pp all events, -2.94pp early (positive = shallower)."
+  },
+  {
+    "id": "Q4",
+    "source": "Qullamaggie (market regime)",
+    "class": "within-winner predictive",
+    "claim": "Breakouts work when the index is above its 50SMA; fight the tape and lose",
+    "stats": {
+      "by_regime": {
+        "SPY<50SMA": {
+          "n": 4066,
+          "fwd_ret_20": 8.3,
+          "fwd_ret_60": 23.01,
+          "fwd_mae_60": -10.34,
+          "fwd_max_dd_60": -21.97,
+          "reach_2r_rate": 46.9
+        },
+        "SPY>50SMA": {
+          "n": 19008,
+          "fwd_ret_20": 7.01,
+          "fwd_ret_60": 17.66,
+          "fwd_mae_60": -10.08,
+          "fwd_max_dd_60": -23.27,
+          "reach_2r_rate": 47.5
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "SPY>50SMA": {
+            "n": 19008,
+            "fwd_ret_20": 7.01,
+            "fwd_ret_60": 17.66,
+            "fwd_mae_60": -10.08,
+            "reach_2r_rate": 47.5
+          },
+          "SPY<50SMA": {
+            "n": 4066,
+            "fwd_ret_20": 8.3,
+            "fwd_ret_60": 23.01,
+            "fwd_mae_60": -10.34,
+            "reach_2r_rate": 46.9
+          },
+          "p_fwd20": 0.0
+        },
+        "early_third": {
+          "SPY>50SMA": {
+            "n": 5834,
+            "fwd_ret_20": 9.38,
+            "fwd_ret_60": 27.34,
+            "fwd_mae_60": -7.53,
+            "reach_2r_rate": 50.3
+          },
+          "SPY<50SMA": {
+            "n": 1453,
+            "fwd_ret_20": 12.14,
+            "fwd_ret_60": 39.8,
+            "fwd_mae_60": -8.32,
+            "reach_2r_rate": 49.2
+          },
+          "p_fwd20": 0.0
+        }
+      },
+      "share_events_spy_below_50sma_pct": 17.6
+    },
+    "verdict": "BUSTED",
+    "finding": "17.6% of winners' entry events fired with SPY BELOW its 50SMA \u2014 and those events did NOT underperform (weak tape is when the next cycle's leaders bottom). After lateness control: early-of-move fwd20 edge -2.76pp (p=0.0); 2R-before-stop +0.6pp all events, +1.1pp early; MAE +0.26pp all events, +0.79pp early (positive = shallower). The folklore overstates the tape filter for THESE stocks; what a weak tape really changes is how many such setups exist at all, which a winners-only bank cannot measure (see X1)."
+  },
+  {
+    "id": "Q5",
+    "source": "Qullamaggie + your ADD-vs-cold rule",
+    "class": "within-winner predictive",
+    "claim": "The first breakout of a move works best; late breakouts are adds, not cold entries",
+    "stats": {
+      "by_ordinal": {
+        "1st": {
+          "n": 1421,
+          "fwd_ret_20": 16.66,
+          "fwd_ret_60": 38.82,
+          "fwd_mae_60": -7.07,
+          "fwd_max_dd_60": -22.85,
+          "reach_2r_rate": 59.8
+        },
+        "2nd-3rd": {
+          "n": 2527,
+          "fwd_ret_20": 8.99,
+          "fwd_ret_60": 25.45,
+          "fwd_mae_60": -8.96,
+          "fwd_max_dd_60": -22.45,
+          "reach_2r_rate": 49.4
+        },
+        "4th+": {
+          "n": 6514,
+          "fwd_ret_20": 5.56,
+          "fwd_ret_60": 14.99,
+          "fwd_mae_60": -9.99,
+          "fwd_max_dd_60": -21.08,
+          "reach_2r_rate": 44.9
+        }
+      },
+      "by_extension_from_move_start": {
+        "<50% up": {
+          "n": 2898,
+          "fwd_ret_20": 11.28,
+          "fwd_ret_60": 30.59,
+          "fwd_mae_60": -5.34,
+          "fwd_max_dd_60": -16.64,
+          "reach_2r_rate": 54.2
+        },
+        "50-100% up": {
+          "n": 2946,
+          "fwd_ret_20": 7.09,
+          "fwd_ret_60": 19.44,
+          "fwd_mae_60": -8.56,
+          "fwd_max_dd_60": -19.69,
+          "reach_2r_rate": 47.7
+        },
+        ">100% up": {
+          "n": 4618,
+          "fwd_ret_20": 4.64,
+          "fwd_ret_60": 9.88,
+          "fwd_mae_60": -14.87,
+          "fwd_max_dd_60": -27.23,
+          "reach_2r_rate": 44.3
+        }
+      },
+      "p_1st_vs_4thplus_fwd60": 0.0
+    },
+    "verdict": "CONFIRMED",
+    "finding": "Median fwd 60-bar return: 1st breakout 38.82% vs 4th+ 14.99% (p=0.0). By extension off the move low: <50% up: fwd60 30.59%, 50-100% up: fwd60 19.44%, >100% up: fwd60 9.88%."
+  },
+  {
+    "id": "Q6",
+    "source": "Qullamaggie ('magic line')",
+    "class": "prevalence",
+    "claim": "Big winners ride the 10/20EMA for the duration of the move",
+    "stats": {
+      "median_ema10_adh": 71.43,
+      "median_ema20_adh": 76.71,
+      "share_ema10_ge65_pct": 73.4,
+      "share_ema20_ge80_pct": 39.8
+    },
+    "verdict": "BUSTED",
+    "finding": "Median big mover holds the 10EMA 71.43% of days and the 20EMA 76.71%. 73.4% clear your 65% 10EMA line; 39.8% hold the 20EMA \u226580% of the time. The 20EMA, not the 10, is the real 'magic line' for the median winner."
+  },
+  {
+    "id": "M1",
+    "source": "Minervini (trend template)",
+    "class": "prevalence + within-winner predictive",
+    "claim": "Buy only stage-2 stocks: price>50SMA>150SMA>200SMA with 200 rising",
+    "stats": {
+      "prevalence_at_breakouts_pct": 59.1,
+      "prevalence_at_move_start_pct": 11.3,
+      "by_template": {
+        "template fail": {
+          "n": 7751,
+          "fwd_ret_20": 8.9,
+          "fwd_ret_60": 22.52,
+          "fwd_mae_60": -9.57,
+          "fwd_max_dd_60": -23.44,
+          "reach_2r_rate": 50.0
+        },
+        "template pass": {
+          "n": 11219,
+          "fwd_ret_20": 5.85,
+          "fwd_ret_60": 15.84,
+          "fwd_mae_60": -9.33,
+          "fwd_max_dd_60": -20.44,
+          "reach_2r_rate": 45.8
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "template pass": {
+            "n": 11219,
+            "fwd_ret_20": 5.85,
+            "fwd_ret_60": 15.84,
+            "fwd_mae_60": -9.33,
+            "reach_2r_rate": 45.8
+          },
+          "template fail": {
+            "n": 7751,
+            "fwd_ret_20": 8.9,
+            "fwd_ret_60": 22.52,
+            "fwd_mae_60": -9.57,
+            "reach_2r_rate": 50.0
+          },
+          "p_fwd20": 0.0
+        },
+        "early_third": {
+          "template pass": {
+            "n": 2403,
+            "fwd_ret_20": 8.32,
+            "fwd_ret_60": 25.41,
+            "fwd_mae_60": -5.99,
+            "reach_2r_rate": 51.1
+          },
+          "template fail": {
+            "n": 3377,
+            "fwd_ret_20": 10.59,
+            "fwd_ret_60": 31.65,
+            "fwd_mae_60": -7.93,
+            "reach_2r_rate": 49.9
+          },
+          "p_fwd20": 0.0
+        }
+      }
+    },
+    "verdict": "BUSTED",
+    "finding": "Only 11.3% of big moves BEGIN in full stage-2 (price>50>150>200, 200 rising) \u2014 the biggest moves start from broken charts, which the template excludes by design. By breakout time 59.1% pass. After lateness control: early-of-move fwd20 edge -2.27pp (p=0.0); 2R-before-stop -4.2pp all events, +1.2pp early; MAE +0.24pp all events, +1.94pp early (positive = shallower). The template buys cleaner risk, not bigger returns, and it makes you structurally late on the largest winners."
+  },
+  {
+    "id": "M2",
+    "source": "Minervini / O'Neil",
+    "class": "prevalence + within-winner predictive",
+    "claim": "Buy within 25% of the 52-week high; closer is better",
+    "stats": {
+      "share_within_25pct_of_high": 78.5,
+      "by_distance": {
+        ">50% off": {
+          "n": 1828,
+          "fwd_ret_20": 11.59,
+          "fwd_ret_60": 20.96,
+          "fwd_mae_60": -15.36,
+          "fwd_max_dd_60": -31.13,
+          "reach_2r_rate": 50.9
+        },
+        "25-50% off": {
+          "n": 2075,
+          "fwd_ret_20": 11.36,
+          "fwd_ret_60": 25.96,
+          "fwd_mae_60": -9.52,
+          "fwd_max_dd_60": -23.15,
+          "reach_2r_rate": 52.1
+        },
+        "10-25% off": {
+          "n": 2071,
+          "fwd_ret_20": 8.38,
+          "fwd_ret_60": 25.23,
+          "fwd_mae_60": -7.9,
+          "fwd_max_dd_60": -20.11,
+          "reach_2r_rate": 48.9
+        },
+        "<10% off": {
+          "n": 12813,
+          "fwd_ret_20": 5.89,
+          "fwd_ret_60": 16.01,
+          "fwd_mae_60": -9.07,
+          "fwd_max_dd_60": -20.18,
+          "reach_2r_rate": 45.9
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "<10% off high": {
+            "n": 12816,
+            "fwd_ret_20": 5.89,
+            "fwd_ret_60": 16.01,
+            "fwd_mae_60": -9.07,
+            "reach_2r_rate": 45.9
+          },
+          ">25% off high": {
+            "n": 3900,
+            "fwd_ret_20": 11.43,
+            "fwd_ret_60": 23.63,
+            "fwd_mae_60": -11.87,
+            "reach_2r_rate": 51.5
+          },
+          "p_fwd20": 0.0
+        },
+        "early_third": {
+          "<10% off high": {
+            "n": 2966,
+            "fwd_ret_20": 7.98,
+            "fwd_ret_60": 25.52,
+            "fwd_mae_60": -6.05,
+            "reach_2r_rate": 49.5
+          },
+          ">25% off high": {
+            "n": 1855,
+            "fwd_ret_20": 13.28,
+            "fwd_ret_60": 34.1,
+            "fwd_mae_60": -9.61,
+            "reach_2r_rate": 51.3
+          },
+          "p_fwd20": 0.0
+        }
+      }
+    },
+    "verdict": "BUSTED",
+    "finding": "78.5% of breakout events fire within 25% of the 52wk high, so the filter passes most of what matters. Risk profile: near-high entries have shallower MAE (-9.07%) than deep-recovery entries (-15.36%). After lateness control: early-of-move fwd20 edge -5.3pp (p=0.0); 2R-before-stop -5.6pp all events, -1.8pp early; MAE +2.8pp all events, +3.56pp early (positive = shallower)."
+  },
+  {
+    "id": "M3",
+    "source": "Minervini / IBD (RS line)",
+    "class": "prevalence + within-winner predictive",
+    "claim": "Demand positive relative strength vs the index before entry",
+    "stats": {
+      "share_rs_gt1_pct": 89.3,
+      "by_rs": {
+        "RS<1": {
+          "n": 1829,
+          "fwd_ret_20": 12.74,
+          "fwd_ret_60": 29.37,
+          "fwd_mae_60": -8.25,
+          "fwd_max_dd_60": -22.93,
+          "reach_2r_rate": 52.6
+        },
+        "RS 1-1.3": {
+          "n": 6781,
+          "fwd_ret_20": 7.62,
+          "fwd_ret_60": 20.21,
+          "fwd_mae_60": -6.38,
+          "fwd_max_dd_60": -17.04,
+          "reach_2r_rate": 49.2
+        },
+        "RS>1.3": {
+          "n": 10153,
+          "fwd_ret_20": 5.25,
+          "fwd_ret_60": 14.12,
+          "fwd_mae_60": -12.81,
+          "fwd_max_dd_60": -25.19,
+          "reach_2r_rate": 45.3
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "RS>1.3": {
+            "n": 10153,
+            "fwd_ret_20": 5.25,
+            "fwd_ret_60": 14.12,
+            "fwd_mae_60": -12.81,
+            "reach_2r_rate": 45.3
+          },
+          "RS\u22641": {
+            "n": 1829,
+            "fwd_ret_20": 12.74,
+            "fwd_ret_60": 29.37,
+            "fwd_mae_60": -8.25,
+            "reach_2r_rate": 52.6
+          },
+          "p_fwd20": 0.0
+        },
+        "early_third": {
+          "RS>1.3": {
+            "n": 2303,
+            "fwd_ret_20": 8.08,
+            "fwd_ret_60": 25.55,
+            "fwd_mae_60": -9.75,
+            "reach_2r_rate": 48.0
+          },
+          "RS\u22641": {
+            "n": 1081,
+            "fwd_ret_20": 13.77,
+            "fwd_ret_60": 35.94,
+            "fwd_mae_60": -7.38,
+            "reach_2r_rate": 52.4
+          },
+          "p_fwd20": 0.0
+        }
+      }
+    },
+    "verdict": "BUSTED",
+    "finding": "89.3% of winners' breakouts already outperform SPY over the trailing 63d \u2014 RS>1 is near-universal in big movers (prevalence holds). But demanding MORE RS (>1.3) at entry buys nothing further: early-of-move fwd20 edge -5.69pp (p=0.0); 2R-before-stop -7.3pp all events, -4.4pp early; MAE -4.56pp all events, -2.37pp early (positive = shallower). Extreme trailing RS at the event is extension, not extra edge."
+  },
+  {
+    "id": "S1",
+    "source": "VCP doctrine (Minervini/Qullamaggie)",
+    "class": "within-winner predictive",
+    "claim": "Tighter pre-breakout price action \u2192 better breakout",
+    "stats": {
+      "tightness_terciles": {
+        "t1": 3.45,
+        "t2": 6.32
+      },
+      "by_tightness": {
+        "tight": {
+          "n": 6305,
+          "fwd_ret_20": 6.39,
+          "fwd_ret_60": 18.34,
+          "fwd_mae_60": -6.09,
+          "fwd_max_dd_60": -15.94,
+          "reach_2r_rate": 46.6
+        },
+        "medium": {
+          "n": 6405,
+          "fwd_ret_20": 7.09,
+          "fwd_ret_60": 19.1,
+          "fwd_mae_60": -9.41,
+          "fwd_max_dd_60": -20.93,
+          "reach_2r_rate": 47.2
+        },
+        "loose": {
+          "n": 6260,
+          "fwd_ret_20": 7.99,
+          "fwd_ret_60": 16.36,
+          "fwd_mae_60": -15.31,
+          "fwd_max_dd_60": -31.7,
+          "reach_2r_rate": 48.8
+        }
+      },
+      "lateness_controlled": {
+        "all_events": {
+          "tight third": {
+            "n": 6305,
+            "fwd_ret_20": 6.39,
+            "fwd_ret_60": 18.34,
+            "fwd_mae_60": -6.09,
+            "reach_2r_rate": 46.6
+          },
+          "loose third": {
+            "n": 6260,
+            "fwd_ret_20": 7.99,
+            "fwd_ret_60": 16.36,
+            "fwd_mae_60": -15.31,
+            "reach_2r_rate": 48.8
+          },
+          "p_fwd20": 0.0
+        },
+        "early_third": {
+          "tight third": {
+            "n": 1797,
+            "fwd_ret_20": 8.07,
+            "fwd_ret_60": 25.25,
+            "fwd_mae_60": -4.68,
+            "reach_2r_rate": 50.4
+          },
+          "loose third": {
+            "n": 1996,
+            "fwd_ret_20": 12.32,
+            "fwd_ret_60": 33.66,
+            "fwd_mae_60": -11.69,
+            "reach_2r_rate": 51.9
+          },
+          "p_fwd20": 0.0
+        }
+      }
+    },
+    "verdict": "PARTIAL",
+    "finding": "Tightness is a RISK rule, not a return rule: the tight third suffers roughly half the adverse excursion (MAE -6.09% vs -15.31%, max DD -15.94% vs -31.7%) for similar raw returns \u2014 tight entries let you hold the same move with far less pain. Signals: early-of-move fwd20 edge -4.25pp (p=0.0); 2R-before-stop -2.2pp all events, -1.5pp early; MAE +9.22pp all events, +7.01pp early (positive = shallower)."
+  },
+  {
+    "id": "X1",
+    "source": "All schools",
+    "class": "predictive (no control group)",
+    "claim": "'These criteria find the next big winner'",
+    "stats": {
+      "note": "databank contains winners only \u2014 no control group of failed breakouts / non-movers"
+    },
+    "verdict": "UNTESTABLE",
+    "finding": "Any claim of the form 'criteria X finds the next big winner' cannot be tested here: every stock in the bank already won. What CAN be tested (and is, above): what winners look like, and which entry conditions produced better follow-through within winners. To test true predictiveness, build a control sample (random ticker-dates, or same-ticker breakouts outside move windows) \u2014 recommended phase 2."
+  }
+]

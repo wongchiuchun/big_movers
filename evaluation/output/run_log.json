@@ -1,0 +1,240 @@
+{
+  "generated": "2026-06-11 12:29",
+  "moves_total": 1530,
+  "moves_processed": 1474,
+  "events": 24580,
+  "events_by_type": {
+    "breakout20": 10462,
+    "breakout50": 8508,
+    "gap": 4136,
+    "move_start": 1474
+  },
+  "labeled_moves": 45,
+  "skips": [
+    {
+      "move": "NVDA_2000",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "RMBS_2000",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "VRTX_2000",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "NVDA_2001",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "AMZN_2002",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "AMZN_2003",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "RMBS_2003",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SIRI_2003",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SNDK_2003",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "ADSK_2004",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "CME_2004",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "NVDA_2004",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "RMBS_2004",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SIRI_2004",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "TZOO_2004",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "CME_2005",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "GOOGL_2005",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SNDK_2005",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "RMBS_2006",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "ACH_2007",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "CMI_2007",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "GME_2007",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SPWR_2007",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SLG_2008",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SLG_2009",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "CMI_2010",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "MELI_2011",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "OLED_2011",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "WW_2011",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "GAP_2012",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "VRTX_2012",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "GME_2013",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "INPX_2013",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SPWR_2013",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "YELP_2013",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "INPX_2014",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "THMO_2014",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "INPX_2015",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "ABX_2016",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "INPX_2016",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "INPX_2017",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "MELI_2017",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "OLED_2017",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "ROKU_2017",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "STM_2017",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "INPX_2018",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "ROKU_2018",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "VEEV_2018",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "WW_2018",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "MELI_2019",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SGI_2019",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "WW_2019",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "RIOT_2020",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "SPWR_2020",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "LCID_2021",
+      "reason": "move window not in bars"
+    },
+    {
+      "move": "CRCL_2026",
+      "reason": "move window not in bars"
+    }
+  ],
+  "elapsed_sec": 1202.2
+}
