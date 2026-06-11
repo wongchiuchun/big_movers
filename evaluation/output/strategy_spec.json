@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "generated": "2026-06-11",
+  "name": "Big-Mover Momentum Strategy v1 (data-derived)",
+  "caveat": "Derived on a winners-only databank: absolute expectancies are inflated by selection bias; relative policy/filter rankings are the robust output. Validate forward in sim before sizing up.",
+  "universe": {
+    "adr_pct_20": [
+      4.0,
+      8.0
+    ],
+    "min_dollar_vol_20d_musd": 5.0,
+    "note": "momentum names; ADR sweet spot per trader preference"
+  },
+  "entry": {
+    "signals": [
+      "close crosses above prior 20d high",
+      "close crosses above prior 50d high",
+      "gap \u22655% on \u22651.5x 20d volume"
+    ],
+    "entry_price": "close of signal day",
+    "filters": [
+      "extension_lt50",
+      "ordinal_le3",
+      "relvol_ge15",
+      "spy_above_50"
+    ],
+    "filter_descriptions": {
+      "extension_lt50": "stock is <50% above its move low (cold entry, not an add)",
+      "ordinal_le3": "1st\u20133rd entry signal of the move only (no late chasing)",
+      "relvol_ge15": "entry-day volume \u22651.5\u00d7 its 20-day average",
+      "spy_above_50": "SPY above its 50SMA on entry day"
+    }
+  },
+  "initial_stop": {
+    "type": "LOD",
+    "description": "low of the entry day (raw \u2014 EP style, can be very tight)"
+  },
+  "exit": {
+    "type": "E50",
+    "description": "exit next open after a close below the 50SMA"
+  },
+  "expected_stats_in_sample": {
+    "n": 511,
+    "win_pct": 44.0,
+    "avg_r": 5.596,
+    "avg_r_w99": 3.956,
+    "med_r": -0.66,
+    "p90_r": 12.91,
+    "pct_ge_5r": 21.3,
+    "worst_r": -2.83,
+    "avg_days": 31.2,
+    "r_per_30d": 5.37
+  },
+  "position_sizing": {
+    "risk_per_trade_pct_equity": [
+      0.5,
+      1.0
+    ],
+    "size_formula": "shares = (equity * risk_pct) / (entry - stop)",
+    "max_portfolio_heat_r": 6,
+    "note": "matches the 1R / 6R-heat caps in the Behavior Contract"
+  }
+}
