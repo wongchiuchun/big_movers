@@ -1,0 +1,156 @@
+// Big-Mover Momentum Strategy v1 — data-derived from the big_movers databank
+// (evaluation/output/strategy_playbook.html, commits 2722f5f / 530bda9).
+//
+// Entry: close of a signal day — close crossing the prior 20d/50d high, or a
+//        >=5% gap on >=1.5x volume — gated by the freshness filters that won
+//        the filter study (first 3 signals since the 63d low, <50% extension
+//        off that low, >=1.5x volume, optional SPY>50SMA regime).
+// Stop:  "Core"        = entry-day low (LOD)        — max R, lumpier years
+//        "Consistency" = 10-bar swing low capped at 1.5*ATR20 — 3.5x smoother
+// Exit:  close below the 50SMA (the data beat 10/20EMA trails and chandeliers).
+//
+// In-sample (winners-only databank, so treat absolutes as an upper bound):
+//   Core: 44% win, ~4R winsorized avg, ~31-day hold.  Consistency: 52% win,
+//   ~3.6R, no losing year with n>=3. See playbook for the honest caveats.
+
+//@version=6
+strategy("Big-Mover Momentum [databank v1]", "BigMover",
+     overlay = true,
+     initial_capital = 100000,
+     default_qty_type = strategy.fixed,
+     process_orders_on_close = true,
+     calc_on_every_tick = false,
+     pyramiding = 0,
+     max_labels_count = 500)
+
+// ---------------- inputs ----------------
+stopMode   = input.string("Consistency (swing low, 1.5*ATR cap)", "Stop mode",
+     options = ["Core (entry-day low)", "Consistency (swing low, 1.5*ATR cap)"],
+     group = "Strategy")
+riskPct    = input.float(0.5, "Risk per trade (% of equity)", minval = 0.1, maxval = 2.0, step = 0.1, group = "Strategy")
+useRegime  = input.bool(true, "Require SPY > 50SMA (half size when below if unchecked)", group = "Strategy")
+regimeSym  = input.symbol("AMEX:SPY", "Regime index", group = "Strategy")
+
+adrLo      = input.float(4.0, "ADR% min", group = "Universe (momentum sweet spot)")
+adrHi      = input.float(8.0, "ADR% max", group = "Universe (momentum sweet spot)")
+minDolVolM = input.float(5.0, "Min avg $ volume (millions, 20d)", group = "Universe (momentum sweet spot)")
+
+maxSignals = input.int(3, "Max signals since 63d low (freshness)", minval = 1, group = "Entry filters")
+maxExt     = input.float(50.0, "Max % above 63d low (no chasing)", group = "Entry filters")
+minRelVol  = input.float(1.5, "Min volume vs 20d average", group = "Entry filters")
+gapMinPct  = input.float(5.0, "Gap signal: min gap %", group = "Entry filters")
+
+showLabels = input.bool(true, "Show R-multiple labels on exit", group = "Appearance")
+
+// ---------------- universe ----------------
+adrPct    = ta.sma((high - low) / close * 100, 20)
+dolVol20  = ta.sma(close * volume, 20) / 1e6
+inUniverse = adrPct >= adrLo and adrPct <= adrHi and dolVol20 >= minDolVolM
+
+// ---------------- signals (deterministic events) ----------------
+hi20 = ta.highest(high, 20)
+hi50 = ta.highest(high, 50)
+above20 = close > hi20[1]
+above50 = close > hi50[1]
+sigBreak20 = above20 and not above20[1]
+sigBreak50 = above50 and not above50[1]
+
+avgVol20 = ta.sma(volume, 20)
+relVol   = avgVol20 > 0 ? volume / avgVol20 : 0.0
+gapPct   = (open - close[1]) / close[1] * 100
+sigGap   = gapPct >= gapMinPct and relVol >= 1.5
+
+rawSignal = sigBreak20 or sigBreak50 or sigGap
+
+// ---------------- freshness filters ----------------
+lo63    = ta.lowest(low, 63)
+extPct  = (close / lo63 - 1) * 100
+barsSinceLow = -ta.lowestbars(low, 63)            // bars back to the 63d low
+cumSig  = ta.cum(rawSignal ? 1 : 0)
+sigsSinceLow = cumSig - (barsSinceLow >= 1 ? cumSig[barsSinceLow] : 0)
+
+spyClose = request.security(regimeSym, "D", close)
+spySma50 = request.security(regimeSym, "D", ta.sma(close, 50))
+regimeUp = spyClose > spySma50
+
+freshOK  = sigsSinceLow <= maxSignals and extPct < maxExt
+volOK    = relVol >= minRelVol
+regimeOK = not useRegime or regimeUp
+
+entrySignal = rawSignal and inUniverse and freshOK and volOK and regimeOK and strategy.position_size == 0
+
+// ---------------- stops ----------------
+atr20 = ta.atr(20)
+swingLow = ta.lowest(low, 10)
+coreStop = low
+consStop = math.max(swingLow, close - 1.5 * atr20)
+stopLevel = stopMode == "Core (entry-day low)" ? coreStop : consStop
+
+// ---------------- sizing: risk % of equity over stop distance ----------------
+riskPerShare = close - stopLevel
+posRiskPct   = riskPct * (not useRegime and not regimeUp ? 0.5 : 1.0)
+qty = riskPerShare > 0 ? math.max(1, math.floor(strategy.equity * posRiskPct / 100 / riskPerShare)) : 0
+
+// ---------------- orders ----------------
+var float entryStop  = na
+var float entryPrice = na
+var float entryRisk  = na
+
+if entrySignal and riskPerShare > 0
+    strategy.entry("BM Long", strategy.long, qty = qty)
+    entryStop  := stopLevel
+    entryPrice := close
+    entryRisk  := riskPerShare
+
+inPos = strategy.position_size > 0
+if inPos
+    strategy.exit("BM Stop", "BM Long", stop = entryStop)
+
+sma50 = ta.sma(close, 50)
+exitSignal = inPos and close < sma50
+if exitSignal
+    strategy.close("BM Long", comment = "50SMA exit")
+
+// ---------------- visuals & alerts ----------------
+plot(sma50, "50SMA", color = color.new(color.orange, 0), linewidth = 2)
+plot(inPos ? entryStop : na, "Stop", color = color.new(color.red, 0), style = plot.style_linebr, linewidth = 2)
+
+plotshape(entrySignal, "BUY", shape.labelup, location.belowbar, color.new(color.teal, 0),
+     text = "BUY", textcolor = color.white, size = size.small)
+plotshape(exitSignal, "SELL", shape.labeldown, location.abovebar, color.new(color.red, 0),
+     text = "SELL", textcolor = color.white, size = size.small)
+
+// R-multiple label when a position closes
+if showLabels and strategy.position_size == 0 and strategy.position_size[1] > 0 and not na(entryRisk) and entryRisk > 0
+    exitPx = close
+    rMult = (exitPx - entryPrice) / entryRisk
+    label.new(bar_index, high, str.format("{0,number,#.#}R", rMult),
+         style = label.style_label_down,
+         color = rMult >= 0 ? color.new(color.teal, 20) : color.new(color.red, 20),
+         textcolor = color.white, size = size.small)
+
+// status table: universe + filter readout for the current bar
+var tbl = table.new(position.top_right, 2, 6, bgcolor = color.new(color.black, 80),
+     border_width = 1, border_color = color.new(color.gray, 50))
+if barstate.islast
+    table.cell(tbl, 0, 0, "ADR% (4-8)", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 0, str.format("{0,number,#.#}%", adrPct),
+         text_color = adrPct >= adrLo and adrPct <= adrHi ? color.teal : color.red, text_size = size.small)
+    table.cell(tbl, 0, 1, "$Vol 20d", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 1, str.format("${0,number,#.#}M", dolVol20),
+         text_color = dolVol20 >= minDolVolM ? color.teal : color.red, text_size = size.small)
+    table.cell(tbl, 0, 2, "Ext vs 63d low", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 2, str.format("{0,number,#.#}%", extPct),
+         text_color = extPct < maxExt ? color.teal : color.red, text_size = size.small)
+    table.cell(tbl, 0, 3, "Signals since low", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 3, str.tostring(sigsSinceLow),
+         text_color = sigsSinceLow <= maxSignals ? color.teal : color.red, text_size = size.small)
+    table.cell(tbl, 0, 4, "Rel vol", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 4, str.format("{0,number,#.#}x", relVol),
+         text_color = relVol >= minRelVol ? color.teal : color.red, text_size = size.small)
+    table.cell(tbl, 0, 5, "SPY regime", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 5, regimeUp ? "UP" : "DOWN",
+         text_color = regimeUp ? color.teal : color.red, text_size = size.small)
+
+alertcondition(entrySignal, "BigMover BUY", "BigMover v1: BUY signal on {{ticker}} at {{close}}")
+alertcondition(exitSignal, "BigMover SELL", "BigMover v1: SELL (50SMA exit) on {{ticker}} at {{close}}")
