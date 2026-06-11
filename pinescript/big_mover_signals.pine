@@ -1,0 +1,143 @@
+// Big-Mover Momentum SIGNALS — chart indicator (not a backtest strategy)
+// Data-derived from the big_movers databank (evaluation/output/strategy_playbook.html).
+//
+// What it draws, in plain terms:
+//   • a TREND line (EMA 50 by default) — this is the exit reference
+//   • a green "BUY" label under the bar when a fresh momentum trigger fires
+//     and passes the filters, with the suggested STOP printed on the label
+//   • a red dashed STOP line that stays on the chart while the idea is live
+//   • a red "EXIT" label when price closes back below the trend line (or the
+//     stop is hit) — that is the sell signal
+//   • a small table (top-right) showing, for the current bar, whether each
+//     condition is met — so you can see *why* a signal did or didn't fire
+//
+// One idea is tracked at a time: BUY -> hold -> EXIT, no overlapping signals.
+
+//@version=6
+indicator("Big-Mover Momentum Signals", "BM Signal", overlay = true, max_labels_count = 500)
+
+// ----------------------------- inputs -----------------------------
+maType  = input.string("EMA", "Trend / exit MA type", options = ["EMA", "SMA"], group = "Exit (trend line)")
+maLen   = input.int(50, "Trend / exit MA length", minval = 5, group = "Exit (trend line)",
+     tooltip = "Exit fires on a close back below this MA. Length 50 lets winners run (most total R); shorter (10-20) = more frequent, smaller wins.")
+
+stopMode = input.string("Consistency (swing low, 1.5*ATR)", "Stop placement",
+     options = ["Consistency (swing low, 1.5*ATR)", "Core (entry-day low)"], group = "Stop",
+     tooltip = "Consistency gives the trade more room (steadier results). Core is tighter (bigger R when right, more stop-outs).")
+
+useUniverse = input.bool(true, "Require momentum universe (ADR 4-8%, liquid)", group = "Filters")
+adrLo       = input.float(4.0, "ADR% min", group = "Filters")
+adrHi       = input.float(8.0, "ADR% max", group = "Filters")
+minDolVolM  = input.float(5.0, "Min avg $ volume (M, 20d)", group = "Filters")
+maxSignals  = input.int(3, "Max triggers since 63d low (stay early)", minval = 1, group = "Filters")
+maxExt      = input.float(50.0, "Max % extended above 63d low", group = "Filters")
+minRelVol   = input.float(1.5, "Min volume vs 20d average", group = "Filters")
+gapMinPct   = input.float(5.0, "Gap trigger: min gap %", group = "Filters")
+useRegime   = input.bool(true, "Require SPY > 50SMA (market filter)", group = "Filters")
+regimeSym   = input.symbol("AMEX:SPY", "Market index", group = "Filters")
+
+showTable = input.bool(true, "Show filter table", group = "Display")
+showStop  = input.bool(true, "Show stop line while in a trade", group = "Display")
+
+// ----------------------------- core series -----------------------------
+trendMA = maType == "EMA" ? ta.ema(close, maLen) : ta.sma(close, maLen)
+atr20   = ta.atr(20)
+
+adrPct   = ta.sma((high - low) / close * 100, 20)
+dolVol20 = ta.sma(close * volume, 20) / 1e6
+avgVol20 = ta.sma(volume, 20)
+relVol   = avgVol20 > 0 ? volume / avgVol20 : 0.0
+
+// triggers (any one = "fresh push to new highs with force")
+above20 = close > ta.highest(high, 20)[1]
+above50 = close > ta.highest(high, 50)[1]
+sigBreak20 = above20 and not above20[1]
+sigBreak50 = above50 and not above50[1]
+gapPct = (open - close[1]) / close[1] * 100
+sigGap = gapPct >= gapMinPct and relVol >= 1.5
+rawSignal = sigBreak20 or sigBreak50 or sigGap
+
+// freshness: stay early in the move, don't chase
+lo63   = ta.lowest(low, 63)
+extPct = (close / lo63 - 1) * 100
+barsSinceLow = -ta.lowestbars(low, 63)
+cumSig = ta.cum(rawSignal ? 1 : 0)
+sigsSinceLow = cumSig - (barsSinceLow >= 1 ? cumSig[barsSinceLow] : 0)
+
+spyClose = request.security(regimeSym, "D", close)
+spySma50 = request.security(regimeSym, "D", ta.sma(close, 50))
+regimeUp = spyClose > spySma50
+
+uniOK    = not useUniverse or (adrPct >= adrLo and adrPct <= adrHi and dolVol20 >= minDolVolM)
+freshOK  = sigsSinceLow <= maxSignals and extPct < maxExt
+volOK    = relVol >= minRelVol
+regimeOK = not useRegime or regimeUp
+filtersOK = uniOK and freshOK and volOK and regimeOK
+
+// suggested stop level for a new entry
+swingLow  = ta.lowest(low, 10)
+consStop  = math.max(swingLow, close - 1.5 * atr20)
+stopCand  = stopMode == "Core (entry-day low)" ? low : consStop
+
+// ----------------------------- state machine: one idea at a time -----------------------------
+var bool  inTrade  = false
+var float curStop  = na
+var float entryPx  = na
+
+stopHit = inTrade and low < curStop
+maExit  = inTrade and close < trendMA
+exitNow = inTrade and (stopHit or maExit)
+if exitNow
+    inTrade := false
+
+entryNow = (not inTrade) and (not exitNow) and rawSignal and filtersOK and (close - stopCand) > 0
+if entryNow
+    inTrade := true
+    curStop := stopCand
+    entryPx := close
+
+// ----------------------------- plots -----------------------------
+plot(trendMA, "Trend / exit MA", color = color.new(color.orange, 0), linewidth = 2)
+plot(showStop and inTrade ? curStop : na, "Stop", color = color.new(color.red, 0),
+     style = plot.style_linebr, linewidth = 2)
+
+if entryNow
+    riskPct = (close - curStop) / close * 100
+    label.new(bar_index, low, "BUY\nstop " + str.tostring(curStop, format.mintick) +
+         "  (" + str.tostring(riskPct, "#.#") + "% risk)",
+         yloc = yloc.belowbar, style = label.style_label_up,
+         color = color.new(color.teal, 0), textcolor = color.white, size = size.normal)
+
+if exitNow
+    label.new(bar_index, high, stopHit and not maExit ? "STOP" : "EXIT",
+         yloc = yloc.abovebar, style = label.style_label_down,
+         color = color.new(color.red, 0), textcolor = color.white, size = size.normal)
+
+// ----------------------------- filter table -----------------------------
+f(b) => b ? color.teal : color.red
+yn(b) => b ? "yes" : "no"
+var table tbl = table.new(position.top_right, 2, 7, bgcolor = color.new(color.black, 75),
+     border_width = 1, border_color = color.new(color.gray, 60))
+if showTable and barstate.islast
+    table.cell(tbl, 0, 0, "Trigger today", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 0, rawSignal ? (sigGap ? "GAP" : above50 ? "50d hi" : "20d hi") : "—",
+         text_color = f(rawSignal), text_size = size.small)
+    table.cell(tbl, 0, 1, "ADR% (" + str.tostring(adrLo, "#") + "-" + str.tostring(adrHi, "#") + ")",
+         text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 1, str.tostring(adrPct, "#.#"),
+         text_color = f(adrPct >= adrLo and adrPct <= adrHi), text_size = size.small)
+    table.cell(tbl, 0, 2, "$Vol 20d", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 2, str.tostring(dolVol20, "#.#") + "M",
+         text_color = f(dolVol20 >= minDolVolM), text_size = size.small)
+    table.cell(tbl, 0, 3, "Triggers since low", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 3, str.tostring(sigsSinceLow), text_color = f(sigsSinceLow <= maxSignals), text_size = size.small)
+    table.cell(tbl, 0, 4, "Extended", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 4, str.tostring(extPct, "#.#") + "%", text_color = f(extPct < maxExt), text_size = size.small)
+    table.cell(tbl, 0, 5, "Rel vol", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 5, str.tostring(relVol, "#.#") + "x", text_color = f(relVol >= minRelVol), text_size = size.small)
+    table.cell(tbl, 0, 6, "SPY > 50SMA", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 6, yn(regimeUp), text_color = f(regimeUp), text_size = size.small)
+
+// ----------------------------- alerts -----------------------------
+alertcondition(entryNow, "BigMover BUY", "BigMover BUY on {{ticker}} at {{close}} — set stop per chart label")
+alertcondition(exitNow, "BigMover EXIT", "BigMover EXIT on {{ticker}} at {{close}}")

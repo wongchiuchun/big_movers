@@ -1,54 +1,93 @@
-# Big-Mover Momentum — Pine Script strategy
+# Big-Mover Momentum — TradingView Pine
 
-`big_mover_momentum.pine` is the data-derived strategy from
-`../evaluation/output/strategy_playbook.html` translated into a TradingView
-Pine v6 `strategy()` that plots **BUY** / **SELL** signals and backtests.
+Two files, both Pine v6, both verified to compile cleanly (0 errors) in the
+TradingView editor:
 
-**Compile status:** verified clean (`//@version=6`, 0 errors) in the TradingView
-Pine editor on 2026-06-11.
+| File | Type | Use it for |
+|------|------|-----------|
+| **`big_mover_signals.pine`** | `indicator()` | **Put on a chart. Marks BUY / stop / EXIT so you can trade the ideas live.** ← start here |
+| `big_mover_momentum.pine` | `strategy()` | Backtesting in the Strategy Tester (net profit, win %, drawdown). Optional. |
 
-## What it does
+Both came from the data study in `../evaluation/output/strategy_playbook.html`.
 
-| Piece | Rule |
-|-------|------|
-| Universe | 20-day ADR 4–8%, ≥ $5M avg daily $-volume (momentum sweet spot) |
-| Entry signal | close crosses prior 20d **or** 50d high, **or** ≥5% gap on ≥1.5× volume |
-| Freshness filters | ≤3 signals since the 63-day low · <50% extended off that low · ≥1.5× rel vol · SPY > 50SMA |
-| Initial stop | **Consistency** (default): 10-bar swing low capped at 1.5×ATR20 · or **Core**: entry-day low |
-| Exit | close below the 50SMA (next bar) — also the SELL signal |
-| Sizing | risk % of equity ÷ stop distance; half size when SPY < 50SMA (if regime gate off) |
+---
 
-Inputs let you flip stop mode, risk %, the regime gate, universe bands, and each
-filter threshold from the strategy settings dialog.
+## The indicator — `big_mover_signals.pine`
 
-## How to load and test it (≈1 minute)
+This is the simple, on-chart tool you asked for. It tracks **one idea at a
+time** (BUY → hold → EXIT, never overlapping) and draws:
 
-1. Open **TradingView** (desktop app or tradingview.com) and **sign in**
-   — a free account is enough; the Strategy Tester is gated behind login.
-2. Open the **Pine Editor** (bottom panel).
-3. **Open** menu → paste the full contents of `big_mover_momentum.pine`
-   (or copy from this repo). Click **Save**.
-4. Click **Add to chart**. BUY/SELL labels appear and the **Strategy Tester**
-   tab fills with the backtest (net profit, win %, profit factor, max drawdown,
-   trade list).
-5. Put it on a **daily** chart of a liquid momentum name (e.g. NASDAQ:APP,
-   NVDA, HOOD). The top-right table shows whether the current bar passes each
-   filter, so you can see why a signal did or didn't fire.
+- a **trend line** — EMA 50 by default — which is the exit reference;
+- a green **BUY** label under the bar when a trigger fires and all filters pass,
+  with the **suggested stop price and % risk printed right on the label**;
+- a red dashed **stop line** that stays on the chart while the idea is live;
+- a red **EXIT** label (or **STOP**) when the idea is closed out;
+- a top-right **table** that shows, for the latest bar, whether each condition
+  is met — so when no signal fires you can see exactly which filter blocked it.
 
-## Reading the results honestly
+### The rules it encodes
 
-The strategy was derived on a **winners-only databank**, so its in-sample
-expectancy is an upper bound — TradingView's backtest on an arbitrary symbol is
-the *unbiased* check the databank can't give you. Expect a lower win rate and
-flatter equity than the playbook's in-sample numbers; what should survive is the
-*shape*: a minority of trades carrying the result, controlled drawdowns on the
-Consistency stop, and better behaviour in uptrending tape.
+**Entry (any one trigger = a fresh push to new highs with force):**
+- close above the prior 20-day high, **or**
+- close above the prior 50-day high, **or**
+- a gap up ≥5% on ≥1.5× average volume.
 
-Differences vs the Python study to keep in mind:
-- TradingView applies its own slippage/commission settings (set them in the
-  Strategy Tester → Properties to match your costs).
-- The Python sim deduped multiple same-day signals and used a 250-bar horizon;
-  here the position simply runs until the 50SMA exit or stop, one position at a
-  time (`pyramiding = 0`).
-- "Signals since the 63-day low" is the live-tradable proxy for the study's
-  "entry ordinal within the move" — same idea, computable without hindsight.
+**…but only if all filters pass:** in the momentum universe (ADR 4–8%, ≥$5M
+daily $-volume), early in the move (≤3 triggers since the 63-day low, <50%
+extended above it), volume ≥1.5×, and SPY above its 50-day MA.
+
+**Stop (suggested on the BUY label):**
+- *Consistency* (default): the 10-bar swing low, but no wider than 1.5×ATR.
+- *Core*: the entry-day low (tighter, choose in settings).
+
+**Exit — this is the whole sell rule, made explicit:**
+> Sell when price **closes below the trend line** (EMA 50 by default).
+> The stop also exits you if it's hit first. Whichever comes first ends the idea
+> and prints the EXIT/STOP label.
+
+There is nothing else to the exit — no targets, no scaling. You hold from the
+BUY label until that close-below-the-line, and that is the SELL.
+
+### SMA vs EMA (you asked — here's the data)
+
+Tested on the strategy's filtered entries, exit on a close below each MA:
+
+| Exit MA | win % | avg R (capped) | R / 30 days |
+|---|---|---|---|
+| SMA 50 (old default) | 52.0% | 3.65 | 3.25 |
+| **EMA 50 (new default)** | 52.8% | 3.40 | 3.20 |
+| EMA 20 | 54.5% | 2.40 | 3.93 |
+| EMA 10 | 56.9% | 1.71 | 4.71 |
+
+**SMA 50 vs EMA 50 is a statistical wash** — so the indicator now defaults to
+**EMA 50** since you prefer reading EMAs; it costs essentially nothing. The real
+trade-off is *length*, not type: a shorter EMA (10/20) gives a higher win rate
+and faster turnover but **roughly halves the R per trade** because it cuts the
+big runners short. Since this strategy lives off its few huge winners, keep the
+length at 50 unless you specifically want more, smaller wins. Both **type and
+length are settings** — flip them freely.
+
+### Load it (≈1 minute)
+
+1. Sign in to **TradingView** (free is fine — required to add scripts to a chart).
+2. Open the **Pine Editor**, paste `big_mover_signals.pine`, click **Save**, then
+   **Add to chart**.
+3. Use a **daily** chart of a momentum name (e.g. NASDAQ:APP, NVDA, HOOD). The
+   BUY/EXIT labels appear on history so you can eyeball how it would have traded.
+4. To get pinged live: right-click the chart → **Add alert** → condition
+   *BigMover BUY* (and another for *BigMover EXIT*).
+
+---
+
+## The strategy — `big_mover_momentum.pine` (optional, for backtesting)
+
+Same rules wired into a `strategy()` with risk-% position sizing, so the
+**Strategy Tester** gives you net profit, win %, profit factor and max drawdown.
+Add it to a chart the same way; the metrics appear in the Strategy Tester tab.
+
+> **Honest caveat for both files.** The rules were derived on a *winners-only*
+> database, so the playbook's in-sample numbers are an optimistic ceiling. The
+> TradingView backtest on ordinary symbols is the unbiased reality check the
+> database couldn't give. Expect a lower win rate and flatter equity; what should
+> survive is the *shape* — a minority of trades carrying the result, smaller
+> drawdowns on the Consistency stop, better behaviour in uptrending tape.
