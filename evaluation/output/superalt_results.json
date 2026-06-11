@@ -1,0 +1,349 @@
+{
+  "1_systems_unfiltered": {
+    "ours_LOD_E50": {
+      "n": 6113,
+      "win_pct": 31.4,
+      "avg_r": 2.854,
+      "avg_r_w99": 1.799,
+      "med_r": -1.0,
+      "p90_r": 7.65,
+      "pct_ge_5r": 14.3,
+      "worst_r": -87.21,
+      "avg_days": 23.6,
+      "r_per_30d": 3.62
+    },
+    "superalt": {
+      "n": 1438,
+      "win_pct": 67.7,
+      "avg_r": 1.704,
+      "avg_r_w99": 1.614,
+      "med_r": 0.76,
+      "p90_r": 4.94,
+      "pct_ge_5r": 9.8,
+      "worst_r": -5.14,
+      "avg_days": 46.8,
+      "r_per_30d": 1.09
+    }
+  },
+  "2_systems_freshness_filtered": {
+    "ours_LOD_E50": {
+      "n": 511,
+      "win_pct": 44.0,
+      "avg_r": 5.596,
+      "avg_r_w99": 3.956,
+      "med_r": -0.66,
+      "p90_r": 12.91,
+      "pct_ge_5r": 21.3,
+      "worst_r": -2.83,
+      "avg_days": 31.2,
+      "r_per_30d": 5.37
+    },
+    "superalt": {
+      "n": 167,
+      "win_pct": 75.4,
+      "avg_r": 2.247,
+      "avg_r_w99": 2.089,
+      "med_r": 1.12,
+      "p90_r": 5.51,
+      "pct_ge_5r": 13.2,
+      "worst_r": -1.01,
+      "avg_days": 46.6,
+      "r_per_30d": 1.45
+    },
+    "superalt_no_vol_filter": {
+      "n": 362,
+      "win_pct": 78.5,
+      "avg_r": 2.387,
+      "avg_r_w99": 2.263,
+      "med_r": 1.33,
+      "p90_r": 5.74,
+      "pct_ge_5r": 13.5,
+      "worst_r": -1.42,
+      "avg_days": 50.9,
+      "r_per_30d": 1.41
+    }
+  },
+  "3_exit_duel_same_entries_same_stop": {
+    "n_common_entries": 503,
+    "E50_exit": {
+      "n": 503,
+      "win_pct": 43.9,
+      "avg_r": 5.668,
+      "avg_r_w99": 4.003,
+      "med_r": -0.66,
+      "p90_r": 13.14,
+      "pct_ge_5r": 21.5,
+      "worst_r": -2.83,
+      "avg_days": 31.4,
+      "r_per_30d": 5.42
+    },
+    "superalt_flip_exit": {
+      "n": 503,
+      "win_pct": 45.1,
+      "avg_r": 4.287,
+      "avg_r_w99": 3.918,
+      "med_r": -0.62,
+      "p90_r": 11.84,
+      "pct_ge_5r": 22.1,
+      "worst_r": -3.48,
+      "avg_days": 29.3,
+      "r_per_30d": 4.39
+    }
+  },
+  "per_year": {
+    "ours_filtered": {
+      "2003": {
+        "n": 7,
+        "win_pct": 28.6,
+        "avg_r": 1.01
+      },
+      "2004": {
+        "n": 11,
+        "win_pct": 63.6,
+        "avg_r": 5.47
+      },
+      "2005": {
+        "n": 1,
+        "win_pct": 0.0,
+        "avg_r": -1.0
+      },
+      "2006": {
+        "n": 9,
+        "win_pct": 44.4,
+        "avg_r": 0.33
+      },
+      "2007": {
+        "n": 5,
+        "win_pct": 60.0,
+        "avg_r": 0.57
+      },
+      "2008": {
+        "n": 2,
+        "win_pct": 50.0,
+        "avg_r": 2.05
+      },
+      "2009": {
+        "n": 1,
+        "win_pct": 0.0,
+        "avg_r": -1.0
+      },
+      "2010": {
+        "n": 10,
+        "win_pct": 30.0,
+        "avg_r": 0.04
+      },
+      "2011": {
+        "n": 16,
+        "win_pct": 43.8,
+        "avg_r": 36.05
+      },
+      "2012": {
+        "n": 33,
+        "win_pct": 39.4,
+        "avg_r": 0.36
+      },
+      "2013": {
+        "n": 15,
+        "win_pct": 73.3,
+        "avg_r": 4.0
+      },
+      "2014": {
+        "n": 32,
+        "win_pct": 37.5,
+        "avg_r": 1.76
+      },
+      "2015": {
+        "n": 24,
+        "win_pct": 37.5,
+        "avg_r": 1.01
+      },
+      "2016": {
+        "n": 9,
+        "win_pct": 33.3,
+        "avg_r": 3.36
+      },
+      "2017": {
+        "n": 31,
+        "win_pct": 54.8,
+        "avg_r": 3.5
+      },
+      "2018": {
+        "n": 20,
+        "win_pct": 35.0,
+        "avg_r": 1.13
+      },
+      "2019": {
+        "n": 30,
+        "win_pct": 43.3,
+        "avg_r": 3.37
+      },
+      "2020": {
+        "n": 18,
+        "win_pct": 38.9,
+        "avg_r": 4.13
+      },
+      "2021": {
+        "n": 27,
+        "win_pct": 63.0,
+        "avg_r": 12.51
+      },
+      "2022": {
+        "n": 7,
+        "win_pct": 71.4,
+        "avg_r": 7.56
+      },
+      "2023": {
+        "n": 37,
+        "win_pct": 43.2,
+        "avg_r": 4.94
+      },
+      "2024": {
+        "n": 42,
+        "win_pct": 54.8,
+        "avg_r": 6.39
+      },
+      "2025": {
+        "n": 49,
+        "win_pct": 36.7,
+        "avg_r": 15.42
+      },
+      "2026": {
+        "n": 75,
+        "win_pct": 36.0,
+        "avg_r": 1.61
+      }
+    },
+    "superalt_filtered": {
+      "2002": {
+        "n": 1,
+        "win_pct": 100.0,
+        "avg_r": 2.11
+      },
+      "2003": {
+        "n": 6,
+        "win_pct": 83.3,
+        "avg_r": 2.36
+      },
+      "2004": {
+        "n": 4,
+        "win_pct": 50.0,
+        "avg_r": 1.66
+      },
+      "2005": {
+        "n": 2,
+        "win_pct": 100.0,
+        "avg_r": 2.23
+      },
+      "2006": {
+        "n": 12,
+        "win_pct": 75.0,
+        "avg_r": 1.94
+      },
+      "2007": {
+        "n": 4,
+        "win_pct": 75.0,
+        "avg_r": 4.36
+      },
+      "2008": {
+        "n": 1,
+        "win_pct": 100.0,
+        "avg_r": 2.75
+      },
+      "2009": {
+        "n": 1,
+        "win_pct": 100.0,
+        "avg_r": 2.28
+      },
+      "2010": {
+        "n": 8,
+        "win_pct": 62.5,
+        "avg_r": 3.3
+      },
+      "2011": {
+        "n": 11,
+        "win_pct": 81.8,
+        "avg_r": 2.05
+      },
+      "2012": {
+        "n": 17,
+        "win_pct": 76.5,
+        "avg_r": 1.68
+      },
+      "2013": {
+        "n": 15,
+        "win_pct": 66.7,
+        "avg_r": 1.71
+      },
+      "2014": {
+        "n": 29,
+        "win_pct": 69.0,
+        "avg_r": 0.67
+      },
+      "2015": {
+        "n": 19,
+        "win_pct": 84.2,
+        "avg_r": 1.59
+      },
+      "2016": {
+        "n": 10,
+        "win_pct": 80.0,
+        "avg_r": 3.89
+      },
+      "2017": {
+        "n": 26,
+        "win_pct": 84.6,
+        "avg_r": 1.7
+      },
+      "2018": {
+        "n": 19,
+        "win_pct": 84.2,
+        "avg_r": 3.41
+      },
+      "2019": {
+        "n": 15,
+        "win_pct": 80.0,
+        "avg_r": 2.0
+      },
+      "2020": {
+        "n": 7,
+        "win_pct": 71.4,
+        "avg_r": 4.89
+      },
+      "2021": {
+        "n": 15,
+        "win_pct": 80.0,
+        "avg_r": 5.63
+      },
+      "2022": {
+        "n": 7,
+        "win_pct": 100.0,
+        "avg_r": 2.29
+      },
+      "2023": {
+        "n": 45,
+        "win_pct": 82.2,
+        "avg_r": 1.71
+      },
+      "2024": {
+        "n": 26,
+        "win_pct": 80.8,
+        "avg_r": 3.45
+      },
+      "2025": {
+        "n": 35,
+        "win_pct": 77.1,
+        "avg_r": 3.44
+      },
+      "2026": {
+        "n": 27,
+        "win_pct": 74.1,
+        "avg_r": 1.43
+      }
+    }
+  },
+  "notes": [
+    "R-normalized: each trade's R uses its own system's natural stop (ours: entry-day low; SuperAlt: the ST line ~3 adaptive-ATR below price).",
+    "SuperAlt's wide stop means a much smaller position for the same $ risk; R comparison fully accounts for that.",
+    "Winners-only bank: both systems' absolute numbers are inflated equally; the comparison is the meaningful part."
+  ]
+}

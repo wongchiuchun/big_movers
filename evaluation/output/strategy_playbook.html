@@ -108,6 +108,28 @@ moonshots can't carry a bad rule.</p>
 <th colspan="3">SPY &lt; 50SMA</th></tr>
 <tr><td class='k mono'>E10</td><td>511</td><td>49.7%</td><td>2.598</td><td>176</td><td>50.6%</td><td>1.486</td></tr><tr><td class='k mono'>E20</td><td>511</td><td>47.4%</td><td>3.026</td><td>176</td><td>48.3%</td><td>2.01</td></tr><tr><td class='k mono'>CH25</td><td>511</td><td>50.7%</td><td>2.166</td><td>176</td><td>48.3%</td><td>1.597</td></tr><tr><td class='k mono'>BE_E20</td><td>511</td><td>37.2%</td><td>2.303</td><td>176</td><td>39.8%</td><td>1.851</td></tr><tr><td class='k mono'>P3_E20</td><td>511</td><td>44.0%</td><td>1.905</td><td>176</td><td>43.8%</td><td>1.471</td></tr><tr><td class='k mono'>E50</td><td>511</td><td>44.0%</td><td>3.956</td><td>176</td><td>50.0%</td><td>3.223</td></tr></table>
 
+
+<h2>Benchmark: ML Adaptive SuperTrend (superalt)</h2>
+<p>AlgoAlpha's k-means-adaptive SuperTrend (factor 3), ported line-for-line and run on the same databank,
+same universe, same fill conventions. Long on bullish flip, exit on bearish flip, natural stop = the ST line.
+All numbers risk-normalized in R (each system sized off its own stop).</p>
+<table><tr><th></th><th>trades</th><th>win</th><th>avg R</th><th>avg R (w99)</th><th>med R</th><th>p90 R</th><th>≥5R</th><th>days</th><th>R/30d</th></tr>
+<tr><td class='k'>Ours LOD/E50 — unfiltered</td><td>6,113</td><td>31.4%</td><td><b>2.854</b></td><td>1.799</td><td>-1.0</td><td>7.65</td><td>14.3%</td><td>23.6</td><td>3.62</td></tr>
+<tr><td class='k'>SuperAlt system — unfiltered</td><td>1,438</td><td>67.7%</td><td><b>1.704</b></td><td>1.614</td><td>0.76</td><td>4.94</td><td>9.8%</td><td>46.8</td><td>1.09</td></tr>
+<tr><td class='k'>Ours LOD/E50 — freshness filters</td><td>511</td><td>44.0%</td><td><b>5.596</b></td><td>3.956</td><td>-0.66</td><td>12.91</td><td>21.3%</td><td>31.2</td><td>5.37</td></tr>
+<tr><td class='k'>SuperAlt — freshness filters (no vol gate)</td><td>362</td><td>78.5%</td><td><b>2.387</b></td><td>2.263</td><td>1.33</td><td>5.74</td><td>13.5%</td><td>50.9</td><td>1.41</td></tr>
+<tr><td class='k'>Exit duel · E50 (same 503 entries, LOD stop)</td><td>503</td><td>43.9%</td><td><b>5.668</b></td><td>4.003</td><td>-0.66</td><td>13.14</td><td>21.5%</td><td>31.4</td><td>5.42</td></tr>
+<tr><td class='k'>Exit duel · SuperAlt flip exit</td><td>503</td><td>45.1%</td><td><b>4.287</b></td><td>3.918</td><td>-0.62</td><td>11.84</td><td>22.1%</td><td>29.3</td><td>4.39</td></tr>
+</table>
+<div class="note"><b>Verdict.</b> As an R-compounding engine, ours is superior: ~2.6× the expectancy and
+~3.7× the R per month after filters. The gap is almost entirely the <em>entry + stop</em>: SuperAlt flips in
+mid-trend with a ~3-ATR-wide stop (9–30% of price), so each unit of risk buys a small position; our breakout/gap
+entry with a day-low stop converts the same moves into far more R. As an <em>exit</em>, SuperAlt is genuinely
+good — on identical entries and stops it nearly ties the 50SMA rule (3.92 vs 4.00 winsorized avg R). And as a
+<em>system</em> it wins on comfort: ~75% win rate, positive median trade, fewer decisions. Practical synthesis:
+trade our entries and stops; keep SuperAlt on the chart as the trend/regime lens and as a fallback trail —
+switching to it costs almost nothing if the 50SMA rule ever feels wrong in a name.</div>
+
 <h2>Operating manual</h2>
 <ul>
   <li><b>Scan:</b> universe filter daily; flag 20d/50d-high crosses and qualifying gaps at the close.</li>

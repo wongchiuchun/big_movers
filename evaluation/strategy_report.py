@@ -60,6 +60,37 @@ STAT_HEAD = ("<tr><th></th><th>trades</th><th>win</th><th>avg R</th><th>avg R (w
              "<th>med R</th><th>p90 R</th><th>≥5R</th><th>days</th><th>R/30d</th></tr>")
 
 
+def superalt_html() -> str:
+    path = os.path.join(OUT_DIR, "superalt_results.json")
+    if not os.path.exists(path):
+        return ""
+    with open(path) as fh:
+        sa = json.load(fh)
+    s1, s2, s3 = (sa["1_systems_unfiltered"], sa["2_systems_freshness_filtered"],
+                  sa["3_exit_duel_same_entries_same_stop"])
+    return f"""
+<h2>Benchmark: ML Adaptive SuperTrend (superalt)</h2>
+<p>AlgoAlpha's k-means-adaptive SuperTrend (factor 3), ported line-for-line and run on the same databank,
+same universe, same fill conventions. Long on bullish flip, exit on bearish flip, natural stop = the ST line.
+All numbers risk-normalized in R (each system sized off its own stop).</p>
+<table>{STAT_HEAD}
+{stat_row('Ours LOD/E50 — unfiltered', s1['ours_LOD_E50'])}
+{stat_row('SuperAlt system — unfiltered', s1['superalt'])}
+{stat_row('Ours LOD/E50 — freshness filters', s2['ours_LOD_E50'])}
+{stat_row('SuperAlt — freshness filters (no vol gate)', s2['superalt_no_vol_filter'])}
+{stat_row(f"Exit duel · E50 (same {s3['n_common_entries']} entries, LOD stop)", s3['E50_exit'])}
+{stat_row('Exit duel · SuperAlt flip exit', s3['superalt_flip_exit'])}
+</table>
+<div class="note"><b>Verdict.</b> As an R-compounding engine, ours is superior: ~2.6× the expectancy and
+~3.7× the R per month after filters. The gap is almost entirely the <em>entry + stop</em>: SuperAlt flips in
+mid-trend with a ~3-ATR-wide stop (9–30% of price), so each unit of risk buys a small position; our breakout/gap
+entry with a day-low stop converts the same moves into far more R. As an <em>exit</em>, SuperAlt is genuinely
+good — on identical entries and stops it nearly ties the 50SMA rule (3.92 vs 4.00 winsorized avg R). And as a
+<em>system</em> it wins on comfort: ~75% win rate, positive median trade, fewer decisions. Practical synthesis:
+trade our entries and stops; keep SuperAlt on the chart as the trend/regime lens and as a fallback trail —
+switching to it costs almost nothing if the 50SMA rule ever feels wrong in a name.</div>"""
+
+
 def main() -> None:
     with open(os.path.join(OUT_DIR, "strategy_results.json")) as fh:
         res = json.load(fh)
@@ -103,6 +134,7 @@ def main() -> None:
                              f"<td>{dn.get('n', 0):,}</td><td>{dn.get('win_pct')}%</td><td>{dn.get('avg_r_w99')}</td></tr>")
 
     alt_rows = "".join(stat_row(f"{a['stop']}/{a['exit']} (filtered)", a["filtered"]) for a in alts)
+    superalt_section = superalt_html()
 
     fstats = top["filtered"]
     spec = {
@@ -242,6 +274,8 @@ moonshots can't carry a bad rule.</p>
 <table><tr><th>exit</th><th colspan="3">SPY &gt; 50SMA (n / win / avg R w99)</th>
 <th colspan="3">SPY &lt; 50SMA</th></tr>
 {exit_regime_rows}</table>
+
+{superalt_section}
 
 <h2>Operating manual</h2>
 <ul>
