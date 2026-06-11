@@ -36,17 +36,41 @@ time** (BUY → hold → EXIT, never overlapping) and draws:
 daily $-volume), early in the move (≤3 triggers since the 63-day low, <50%
 extended above it), volume ≥1.5×, and SPY above its 50-day MA.
 
+> **The two filters that actually matter** (the only ones that held their edge on
+> held-out tickers) are *early* and *not extended*. Both are about **entry timing
+> within the move**, not the trigger — see `../evaluation/STRATEGY_FINAL.md`.
+
 **Stop (suggested on the BUY label):**
-- *Consistency* (default): the 10-bar swing low, but no wider than 1.5×ATR.
+- *Structural* (default): the 10-bar swing low, but no wider than 1.5×ATR. This
+  is the stop your contract calls "structural" — it beat the entry-day-wick stop
+  on both win rate and the control group.
 - *Core*: the entry-day low (tighter, choose in settings).
 
-**Exit — this is the whole sell rule, made explicit:**
-> Sell when price **closes below the trend line** (EMA 50 by default).
-> The stop also exits you if it's hit first. Whichever comes first ends the idea
-> and prints the EXIT/STOP label.
+**Mode — pick by conviction / tape (this is the new sell logic):**
+- **B Consistent (default, free roll):** at **+2R, sell half and move the stop to
+  breakeven** (orange TRIM label), trail the rest on the MA. ~60% win and roughly
+  **half the year-to-year variance** out-of-sample. Use when the tape is choppy or
+  conviction is moderate.
+- **A Runner (let it run):** no partial — hold the whole position to the MA break.
+  Highest total R, but more give-back and more fragile when the move isn't real.
+  Use for A+ setups in strong tape when you want the monster.
 
-There is nothing else to the exit — no targets, no scaling. You hold from the
-BUY label until that close-below-the-line, and that is the SELL.
+**3-bar hold (shakeout guard):** the MA exit cannot fire in the first 3 closes —
+a test of the breakout that closes back above is a shakeout to hold, not a sell.
+
+**Exit — the whole sell rule, made explicit:**
+> Sell when price **closes below the trend line** (EMA 50 by default), but never
+> in the first 3 bars. In Mode B you also sell **half at +2R** and ratchet the
+> stop to breakeven. The stop exits you if hit first. Whichever comes first ends
+> the idea and prints the TRIM / EXIT / STOP label.
+
+> **Read this before trusting any win rate.** The rules were validated on a
+> 50/50 train/test split of the tickers AND against a 6,553-signal control group
+> (the same triggers firing on charts that did *not* become big movers). The
+> honest verdict: **the entry signal has no standalone edge** — in the wild the
+> average trade is ≈0R. The strategy makes money only by capping every loser at
+> ~1R and letting the rare monster run. Expect a live win rate near **30%**, not
+> the 50–60% the winners-database shows. Size accordingly (1R ≈ 0.5–1% of equity).
 
 ### SMA vs EMA (you asked — here's the data)
 

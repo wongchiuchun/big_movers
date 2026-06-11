@@ -1,0 +1,365 @@
+{
+  "configs": [
+    "BO_E10_h0_SW",
+    "BO_E10_h3_SW",
+    "BO_E20_h3_SW",
+    "BO_E50_h0_SW",
+    "BO_E50_h3_SW",
+    "BO_E50_h0_LOD",
+    "BO_E10_h3_SW_FR",
+    "BO_E50_h3_SW_FR",
+    "PB_E10_h3_SW",
+    "PB_E20_h3_SW",
+    "PB_E50_h3_SW",
+    "BO_E50_h3_ATR"
+  ],
+  "n_signals": {
+    "winner_train": 346,
+    "winner_test": 284,
+    "control": 6571
+  },
+  "table": {
+    "BO_E10_h0_SW": {
+      "winner_train": {
+        "n": 346,
+        "win": 53.5,
+        "avgR": 1.41,
+        "avgRw99": 1.39,
+        "medR": 0.15,
+        "R30d": 3.48
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 52.5,
+        "avgR": 1.81,
+        "avgRw99": 1.43,
+        "medR": 0.13,
+        "R30d": 4.42
+      },
+      "control": {
+        "n": 6553,
+        "win": 33.9,
+        "avgR": -0.06,
+        "avgRw99": -0.1,
+        "medR": -0.45,
+        "R30d": -0.21
+      }
+    },
+    "BO_E10_h3_SW": {
+      "winner_train": {
+        "n": 346,
+        "win": 56.4,
+        "avgR": 1.58,
+        "avgRw99": 1.56,
+        "medR": 0.33,
+        "R30d": 3.57
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 54.9,
+        "avgR": 1.85,
+        "avgRw99": 1.47,
+        "medR": 0.25,
+        "R30d": 4.36
+      },
+      "control": {
+        "n": 6553,
+        "win": 33.9,
+        "avgR": -0.07,
+        "avgRw99": -0.11,
+        "medR": -0.54,
+        "R30d": -0.26
+      }
+    },
+    "BO_E20_h3_SW": {
+      "winner_train": {
+        "n": 346,
+        "win": 54.3,
+        "avgR": 1.86,
+        "avgRw99": 1.81,
+        "medR": 0.14,
+        "R30d": 2.98
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 53.2,
+        "avgR": 2.64,
+        "avgRw99": 2.28,
+        "medR": 0.25,
+        "R30d": 3.78
+      },
+      "control": {
+        "n": 6553,
+        "win": 30.4,
+        "avgR": -0.08,
+        "avgRw99": -0.12,
+        "medR": -0.77,
+        "R30d": -0.23
+      }
+    },
+    "BO_E50_h0_SW": {
+      "winner_train": {
+        "n": 346,
+        "win": 50.6,
+        "avgR": 2.55,
+        "avgRw99": 2.21,
+        "medR": 0.01,
+        "R30d": 2.47
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 47.9,
+        "avgR": 3.07,
+        "avgRw99": 2.7,
+        "medR": -0.13,
+        "R30d": 2.87
+      },
+      "control": {
+        "n": 6553,
+        "win": 28.4,
+        "avgR": 0.01,
+        "avgRw99": -0.09,
+        "medR": -0.72,
+        "R30d": 0.02
+      }
+    },
+    "BO_E50_h3_SW": {
+      "winner_train": {
+        "n": 346,
+        "win": 51.7,
+        "avgR": 2.78,
+        "avgRw99": 2.45,
+        "medR": 0.1,
+        "R30d": 2.5
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 51.4,
+        "avgR": 3.48,
+        "avgRw99": 3.12,
+        "medR": 0.17,
+        "R30d": 2.93
+      },
+      "control": {
+        "n": 6553,
+        "win": 26.5,
+        "avgR": -0.02,
+        "avgRw99": -0.12,
+        "medR": -1.0,
+        "R30d": -0.03
+      }
+    },
+    "BO_E50_h0_LOD": {
+      "winner_train": {
+        "n": 344,
+        "win": 40.4,
+        "avgR": 2.46,
+        "avgRw99": 2.03,
+        "medR": -1.0,
+        "R30d": 2.98
+      },
+      "winner_test": {
+        "n": 283,
+        "win": 42.4,
+        "avgR": 4.08,
+        "avgRw99": 3.34,
+        "medR": -0.52,
+        "R30d": 4.31
+      },
+      "control": {
+        "n": 6520,
+        "win": 23.6,
+        "avgR": 0.15,
+        "avgRw99": -0.15,
+        "medR": -1.0,
+        "R30d": 0.36
+      }
+    },
+    "BO_E10_h3_SW_FR": {
+      "winner_train": {
+        "n": 346,
+        "win": 59.0,
+        "avgR": 1.08,
+        "avgRw99": 1.07,
+        "medR": 0.58,
+        "R30d": 2.47
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 59.2,
+        "avgR": 1.28,
+        "avgRw99": 1.09,
+        "medR": 0.63,
+        "R30d": 3.05
+      },
+      "control": {
+        "n": 6553,
+        "win": 37.0,
+        "avgR": -0.04,
+        "avgRw99": -0.06,
+        "medR": -0.46,
+        "R30d": -0.14
+      }
+    },
+    "BO_E50_h3_SW_FR": {
+      "winner_train": {
+        "n": 346,
+        "win": 58.7,
+        "avgR": 1.58,
+        "avgRw99": 1.41,
+        "medR": 1.0,
+        "R30d": 1.56
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 59.9,
+        "avgR": 1.99,
+        "avgRw99": 1.81,
+        "medR": 1.0,
+        "R30d": 1.82
+      },
+      "control": {
+        "n": 6553,
+        "win": 35.5,
+        "avgR": -0.02,
+        "avgRw99": -0.07,
+        "medR": -0.93,
+        "R30d": -0.04
+      }
+    },
+    "PB_E10_h3_SW": {
+      "winner_train": {
+        "n": 224,
+        "win": 50.9,
+        "avgR": 1.25,
+        "avgRw99": 1.19,
+        "medR": 0.03,
+        "R30d": 3.44
+      },
+      "winner_test": {
+        "n": 184,
+        "win": 49.5,
+        "avgR": 1.46,
+        "avgRw99": 1.12,
+        "medR": -0.0,
+        "R30d": 4.38
+      },
+      "control": {
+        "n": 4744,
+        "win": 34.7,
+        "avgR": -0.05,
+        "avgRw99": -0.07,
+        "medR": -0.29,
+        "R30d": -0.21
+      }
+    },
+    "PB_E20_h3_SW": {
+      "winner_train": {
+        "n": 224,
+        "win": 52.7,
+        "avgR": 1.89,
+        "avgRw99": 1.73,
+        "medR": 0.12,
+        "R30d": 3.24
+      },
+      "winner_test": {
+        "n": 184,
+        "win": 48.4,
+        "avgR": 2.43,
+        "avgRw99": 2.21,
+        "medR": -0.02,
+        "R30d": 3.95
+      },
+      "control": {
+        "n": 4744,
+        "win": 32.0,
+        "avgR": -0.04,
+        "avgRw99": -0.07,
+        "medR": -0.42,
+        "R30d": -0.13
+      }
+    },
+    "PB_E50_h3_SW": {
+      "winner_train": {
+        "n": 224,
+        "win": 52.7,
+        "avgR": 2.79,
+        "avgRw99": 2.08,
+        "medR": 0.1,
+        "R30d": 2.74
+      },
+      "winner_test": {
+        "n": 184,
+        "win": 49.5,
+        "avgR": 3.29,
+        "avgRw99": 3.16,
+        "medR": -0.02,
+        "R30d": 2.83
+      },
+      "control": {
+        "n": 4744,
+        "win": 29.7,
+        "avgR": -0.03,
+        "avgRw99": -0.1,
+        "medR": -0.65,
+        "R30d": -0.06
+      }
+    },
+    "BO_E50_h3_ATR": {
+      "winner_train": {
+        "n": 346,
+        "win": 41.0,
+        "avgR": 3.1,
+        "avgRw99": 2.57,
+        "medR": -1.0,
+        "R30d": 3.52
+      },
+      "winner_test": {
+        "n": 284,
+        "win": 39.1,
+        "avgR": 3.53,
+        "avgRw99": 3.02,
+        "medR": -1.0,
+        "R30d": 3.95
+      },
+      "control": {
+        "n": 6561,
+        "win": 22.8,
+        "avgR": -0.0,
+        "avgRw99": -0.13,
+        "medR": -1.0,
+        "R30d": -0.01
+      }
+    }
+  },
+  "consistency_finalists": {
+    "BO_E50_h3_SW": {
+      "years": 27,
+      "neg_years": 9,
+      "yr_std": 0.49,
+      "median_year": 0.11,
+      "worst_year": -0.41
+    },
+    "BO_E50_h3_SW_FR": {
+      "years": 27,
+      "neg_years": 9,
+      "yr_std": 0.29,
+      "median_year": 0.1,
+      "worst_year": -0.28
+    },
+    "BO_E10_h3_SW_FR": {
+      "years": 27,
+      "neg_years": 10,
+      "yr_std": 0.18,
+      "median_year": 0.04,
+      "worst_year": -0.21
+    },
+    "PB_E50_h3_SW": {
+      "years": 27,
+      "neg_years": 10,
+      "yr_std": 0.51,
+      "median_year": 0.1,
+      "worst_year": -0.43
+    }
+  }
+}

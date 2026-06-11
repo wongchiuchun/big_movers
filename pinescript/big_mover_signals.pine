@@ -21,9 +21,15 @@ maType  = input.string("EMA", "Trend / exit MA type", options = ["EMA", "SMA"], 
 maLen   = input.int(50, "Trend / exit MA length", minval = 5, group = "Exit (trend line)",
      tooltip = "Exit fires on a close back below this MA. Length 50 lets winners run (most total R); shorter (10-20) = more frequent, smaller wins.")
 
-stopMode = input.string("Consistency (swing low, 1.5*ATR)", "Stop placement",
-     options = ["Consistency (swing low, 1.5*ATR)", "Core (entry-day low)"], group = "Stop",
-     tooltip = "Consistency gives the trade more room (steadier results). Core is tighter (bigger R when right, more stop-outs).")
+stopMode = input.string("Structural (swing low, 1.5*ATR)", "Stop placement",
+     options = ["Structural (swing low, 1.5*ATR)", "Core (entry-day low)"], group = "Stop",
+     tooltip = "Structural = lowest low of last 10 bars, capped at 1.5*ATR. Beat the entry-day-wick (Core) stop on win rate AND on the control group out-of-sample. Core is tighter (bigger R when right, more stop-outs).")
+
+mode = input.string("B Consistent (free roll)", "Trade mode",
+     options = ["B Consistent (free roll)", "A Runner (let it run)"], group = "Mode",
+     tooltip = "B (default): at +2R sell half and move stop to breakeven, trail the rest -> ~60% win, ~half the yearly variance. A: hold the whole position to the MA break -> highest total R but more give-back. Both validated on held-out tickers.")
+minHold = input.int(3, "Min hold bars before MA exit", minval = 0, group = "Mode",
+     tooltip = "The trailing-MA exit cannot fire in the first N closes (3 = Thursday-squat / shakeout guard). A pullback that tests the pivot and closes back above is a shakeout to hold, not an exit.")
 
 useUniverse = input.bool(true, "Require momentum universe (ADR 4-8%, liquid)", group = "Filters")
 adrLo       = input.float(4.0, "ADR% min", group = "Filters")
@@ -79,22 +85,40 @@ swingLow  = ta.lowest(low, 10)
 consStop  = math.max(swingLow, close - 1.5 * atr20)
 stopCand  = stopMode == "Core (entry-day low)" ? low : consStop
 
+modeRunner = mode == "A Runner (let it run)"
+
 // ----------------------------- state machine: one idea at a time -----------------------------
 var bool  inTrade  = false
 var float curStop  = na
 var float entryPx  = na
+var float r0       = na   // initial risk (entry - stop)
+var int   barsIn   = 0    // closes since entry (shakeout guard)
+var bool  trimmed  = false
+
+if inTrade
+    barsIn := barsIn + 1
+
+// FREE ROLL (Mode B): at +2R sell half and lift the stop to breakeven
+trimNow = inTrade and (not modeRunner) and (not trimmed) and (high >= entryPx + 2.0 * r0)
+if trimNow
+    curStop := entryPx
+    trimmed := true
 
 stopHit = inTrade and low < curStop
-maExit  = inTrade and close < trendMA
+maExit  = inTrade and close < trendMA and barsIn >= minHold   // 3-bar hold guard
 exitNow = inTrade and (stopHit or maExit)
 if exitNow
     inTrade := false
+    trimmed := false
 
 entryNow = (not inTrade) and (not exitNow) and rawSignal and filtersOK and (close - stopCand) > 0
 if entryNow
     inTrade := true
     curStop := stopCand
     entryPx := close
+    r0      := close - stopCand
+    barsIn  := 0
+    trimmed := false
 
 // ----------------------------- plots -----------------------------
 plot(trendMA, "Trend / exit MA", color = color.new(color.orange, 0), linewidth = 2)
@@ -107,6 +131,11 @@ if entryNow
          "  (" + str.tostring(riskPct, "#.#") + "% risk)",
          yloc = yloc.belowbar, style = label.style_label_up,
          color = color.new(color.teal, 0), textcolor = color.white, size = size.normal)
+
+if trimNow
+    label.new(bar_index, high, "TRIM ½\nstop → BE",
+         yloc = yloc.abovebar, style = label.style_label_down,
+         color = color.new(color.orange, 0), textcolor = color.white, size = size.small)
 
 if exitNow
     label.new(bar_index, high, stopHit and not maExit ? "STOP" : "EXIT",
@@ -140,4 +169,5 @@ if showTable and barstate.islast
 
 // ----------------------------- alerts -----------------------------
 alertcondition(entryNow, "BigMover BUY", "BigMover BUY on {{ticker}} at {{close}} — set stop per chart label")
+alertcondition(trimNow, "BigMover TRIM", "BigMover +2R on {{ticker}} — sell half, stop to breakeven")
 alertcondition(exitNow, "BigMover EXIT", "BigMover EXIT on {{ticker}} at {{close}}")
