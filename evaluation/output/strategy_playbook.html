@@ -130,6 +130,25 @@ good — on identical entries and stops it nearly ties the 50SMA rule (3.92 vs 4
 trade our entries and stops; keep SuperAlt on the chart as the trend/regime lens and as a fallback trail —
 switching to it costs almost nothing if the 50SMA rule ever feels wrong in a name.</div>
 
+<h2>Consistency: which configuration is steadiest?</h2>
+<p>All configs sequenced chronologically at 1R per trade. Yearly stats use years with ≥3 trades
+(the playbook's negative years, 2005 and 2009, were single-trade years — sampling noise, not strategy
+failure). "Underwater" = longest stretch below the cumulative-R high-water mark.</p>
+<table><tr><th>config</th><th>n</th><th>win</th><th>avg R w99</th><th>R/30d</th>
+<th>yearly std</th><th>worst year</th><th>neg years</th><th>max DD (R)</th><th>underwater (d)</th><th>total R</th></tr>
+<tr><td class='k'>A  LOD/E50 (headline)</td><td>511</td><td>44.0%</td><td>3.956</td><td>5.37</td><td>8.06</td><td>0.04</td><td>0.0%</td><td>-11.4</td><td>1016</td><td>2859.7</td></tr><tr><td class='k'>B  SW10C/E50</td><td>514</td><td>51.9%</td><td>3.598</td><td>3.23</td><td>2.34</td><td>0.01</td><td>0.0%</td><td>-8.7</td><td>501</td><td>2001.6</td></tr><tr><td class='k'>C  ATR10/E50</td><td>515</td><td>40.6%</td><td>3.771</td><td>4.79</td><td>3.4</td><td>-0.27</td><td>4.8%</td><td>-13.0</td><td>744</td><td>2250.0</td></tr><tr><td class='k'>F  LOD/P3_E20 (bank 1/3 at 3R)</td><td>511</td><td>44.0%</td><td>1.905</td><td>6.29</td><td>6.35</td><td>-0.18</td><td>9.5%</td><td>-11.5</td><td>629</td><td>1654.4</td></tr><tr><td class='k'>H  SW10C/P3_E20</td><td>514</td><td>43.6%</td><td>1.509</td><td>3.4</td><td>1.5</td><td>-0.09</td><td>4.8%</td><td>-10.9</td><td>501</td><td>934.4</td></tr><tr><td class='k'>D  ours entries + SA flip exit</td><td>503</td><td>45.1%</td><td>3.918</td><td>4.39</td><td>4.39</td><td>0.22</td><td>0.0%</td><td>-11.3</td><td>501</td><td>2156.2</td></tr><tr><td class='k'>E  SuperAlt full system</td><td>362</td><td>78.5%</td><td>2.263</td><td>1.41</td><td>1.29</td><td>0.67</td><td>0.0%</td><td>-2.1</td><td>246</td><td>863.9</td></tr><tr><td class='k'>G1 LOD/E50 + SA-uptrend gate</td><td>407</td><td>43.7%</td><td>3.53</td><td>3.75</td><td>3.74</td><td>0.05</td><td>0.0%</td><td>-10.8</td><td>1015</td><td>1644.3</td></tr><tr><td class='k'>G2 SW10C/E50 + SA-uptrend gate</td><td>407</td><td>51.1%</td><td>3.384</td><td>3.04</td><td>2.1</td><td>0.13</td><td>0.0%</td><td>-8.4</td><td>501</td><td>1551.3</td></tr><tr><td class='k'>G3 SW10C/P3_E20 + SA-uptrend gate</td><td>407</td><td>41.3%</td><td>1.365</td><td>2.81</td><td>1.0</td><td>-0.4</td><td>9.5%</td><td>-8.3</td><td>707</td><td>607.5</td></tr></table>
+<div class="note"><b>What to take from SuperAlt — and what not to.</b> Its consistency comes from the
+<em>wide, volatility-scaled stop</em>, not from its entries or its k-means machinery: give a trade ~1.5 ATR of
+room and far more entries resolve positive, which smooths the years. That ingredient is already in our grid as
+<span class="mono">SW10C/E50</span> — swing-low stop capped at 1.5×ATR, same 50SMA exit: yearly variance drops
+~3.5× vs the headline (std 2.34 vs 8.06), no losing year with n≥3, max drawdown −8.7R vs −11.4R, half the time
+underwater — while still earning 2.3× SuperAlt's R per month. The two ideas we tested and rejected: gating
+entries on SuperAlt's trend state (cuts trades, no variance benefit) and its flip exit (no consistency edge over
+the 50SMA). <b>Recommendation:</b> run <span class="mono">SW10C/E50</span> as the core book if steadiness matters
+most; keep <span class="mono">LOD/E50</span> as a half-size satellite for A+ entries where the day low is a true
+pivot — or simply split the risk budget 50/50 between the two, which blends the smooth years of one with the
+tail capture of the other.</div>
+
 <h2>Operating manual</h2>
 <ul>
   <li><b>Scan:</b> universe filter daily; flag 20d/50d-high crosses and qualifying gaps at the close.</li>

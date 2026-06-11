@@ -91,6 +91,41 @@ trade our entries and stops; keep SuperAlt on the chart as the trend/regime lens
 switching to it costs almost nothing if the 50SMA rule ever feels wrong in a name.</div>"""
 
 
+def consistency_html() -> str:
+    path = os.path.join(OUT_DIR, "consistency_results.json")
+    if not os.path.exists(path):
+        return ""
+    with open(path) as fh:
+        cons = json.load(fh)
+    rows = ""
+    for name, d in cons.items():
+        s, c = d["stats"], d["consistency"]
+        rows += (f"<tr><td class='k'>{esc(name)}</td><td>{s['n']}</td><td>{s['win_pct']}%</td>"
+                 f"<td>{s['avg_r_w99']}</td><td>{s['r_per_30d']}</td>"
+                 f"<td>{c['yearly_std']}</td><td>{c['yearly_worst']}</td>"
+                 f"<td>{c['yearly_neg_share_pct']}%</td><td>{c['max_dd_r']}</td>"
+                 f"<td>{c['longest_underwater_days']}</td><td>{c['total_r']}</td></tr>")
+    return f"""
+<h2>Consistency: which configuration is steadiest?</h2>
+<p>All configs sequenced chronologically at 1R per trade. Yearly stats use years with ≥3 trades
+(the playbook's negative years, 2005 and 2009, were single-trade years — sampling noise, not strategy
+failure). "Underwater" = longest stretch below the cumulative-R high-water mark.</p>
+<table><tr><th>config</th><th>n</th><th>win</th><th>avg R w99</th><th>R/30d</th>
+<th>yearly std</th><th>worst year</th><th>neg years</th><th>max DD (R)</th><th>underwater (d)</th><th>total R</th></tr>
+{rows}</table>
+<div class="note"><b>What to take from SuperAlt — and what not to.</b> Its consistency comes from the
+<em>wide, volatility-scaled stop</em>, not from its entries or its k-means machinery: give a trade ~1.5 ATR of
+room and far more entries resolve positive, which smooths the years. That ingredient is already in our grid as
+<span class="mono">SW10C/E50</span> — swing-low stop capped at 1.5×ATR, same 50SMA exit: yearly variance drops
+~3.5× vs the headline (std 2.34 vs 8.06), no losing year with n≥3, max drawdown −8.7R vs −11.4R, half the time
+underwater — while still earning 2.3× SuperAlt's R per month. The two ideas we tested and rejected: gating
+entries on SuperAlt's trend state (cuts trades, no variance benefit) and its flip exit (no consistency edge over
+the 50SMA). <b>Recommendation:</b> run <span class="mono">SW10C/E50</span> as the core book if steadiness matters
+most; keep <span class="mono">LOD/E50</span> as a half-size satellite for A+ entries where the day low is a true
+pivot — or simply split the risk budget 50/50 between the two, which blends the smooth years of one with the
+tail capture of the other.</div>"""
+
+
 def main() -> None:
     with open(os.path.join(OUT_DIR, "strategy_results.json")) as fh:
         res = json.load(fh)
@@ -135,6 +170,7 @@ def main() -> None:
 
     alt_rows = "".join(stat_row(f"{a['stop']}/{a['exit']} (filtered)", a["filtered"]) for a in alts)
     superalt_section = superalt_html()
+    consistency_section = consistency_html()
 
     fstats = top["filtered"]
     spec = {
@@ -276,6 +312,7 @@ moonshots can't carry a bad rule.</p>
 {exit_regime_rows}</table>
 
 {superalt_section}
+{consistency_section}
 
 <h2>Operating manual</h2>
 <ul>

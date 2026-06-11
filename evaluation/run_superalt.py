@@ -117,6 +117,7 @@ def main() -> None:
                 "kind": "ours_sa_exit", "move_key": move_key, "symbol": symbol, "year": year,
                 "date": str(ind.index[i].date()), "entry_ordinal": ordinal,
                 "pct_through_move": round((i - lo) / span * 100, 1),
+                "sa_uptrend": bool(sa["dir"][i] == -1),
             } | features_at(ind, arr, i, lo, spy_up_by_date) | {
                 "entry": round(entry, 4), "s0": round(s0, 4),
                 "risk_pct": round(r0 / entry * 100, 2),
