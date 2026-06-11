@@ -47,6 +47,52 @@ def esc(s):
     return html.escape(str(s))
 
 
+def tldr(tested, found, using):
+    return (f'<div class="tldr">'
+            f'<div><span class="lbl">Tested</span>{tested}</div>'
+            f'<div><span class="lbl">Found</span>{found}</div>'
+            f'<div><span class="lbl using">Using</span>{using}</div></div>')
+
+
+METRIC_GLOSSARY = [
+    ("R", "The core unit. R = your risk on the trade (entry price − stop price). A +2R trade made twice what you risked; "
+          "a −1R trade lost the full amount you planned to risk. Everything is measured in R so a $5 stock and a $500 "
+          "stock are comparable."),
+    ("trades (n)", "How many simulated trades are in that row."),
+    ("win", "Share of trades that ended positive. Deliberately low here (~30–50%) — this is a let-winners-run style, "
+            "not a high-hit-rate one."),
+    ("avg R", "Plain average result per trade, in R."),
+    ("avg R (w99)", "Same average but with the largest 1% of winners capped, so a couple of freak trades can't make a "
+                    "mediocre rule look great. THIS is the column we rank by."),
+    ("med R", "The middle trade. Often negative — normal: you lose small often and win big occasionally."),
+    ("p90 R", "The 90th-percentile trade — a strong but not freak winner."),
+    ("≥5R", "Share of trades returning 5R or more — the tail that pays for all the small losses."),
+    ("days", "Average calendar days the trade was held."),
+    ("R/30d", "R earned per 30 days held — capital efficiency. A 4R trade in 30 days beats a 4R trade in 120 days."),
+    ("max DD (R)", "Worst peak-to-trough drop of the running R total — the deepest drawdown you'd have sat through."),
+    ("underwater (d)", "Longest stretch (days) spent below a previous high-water mark before recovering."),
+    ("edge", "In the filter table: (avg R of trades that PASS the filter) − (avg R of trades that FAIL it). Positive = "
+             "the filter helps; negative = it hurts."),
+]
+
+CODE_GLOSSARY = [
+    ("Stop codes", "where the initial stop sits", [
+        ("LOD", "entry-day Low Of Day — tightest stop, biggest R when right, most stop-outs"),
+        ("LOD_ATR", "the lower of (day low) or (0.5×ATR below entry) — a little more room"),
+        ("ATR10", "a flat 1.0×ATR below the entry"),
+        ("SW10C", "10-bar Swing-low, Capped so risk never exceeds 1.5×ATR — widest, steadiest"),
+    ]),
+    ("Exit codes", "how you get out / trail the winner", [
+        ("FIX", "no trailing — only the fixed stop, otherwise hold to the time limit"),
+        ("E10 / E20", "exit when price closes below the 10- / 20-period EMA"),
+        ("E50", "exit when price closes below the 50-period MA"),
+        ("CH25", "a 2.5×ATR 'chandelier' trailing stop hung from the highest high so far"),
+        ("BE_E20", "move stop to breakeven after +1R, then trail by the 20-EMA"),
+        ("P3_E20", "sell 1/3 at +3R, trail the rest by the 20-EMA"),
+    ]),
+]
+
+
 def stat_row(label, s):
     if not s or s.get("n", 0) == 0:
         return f"<tr><td class='k'>{esc(label)}</td><td colspan='9'>—</td></tr>"
@@ -88,7 +134,11 @@ entry with a day-low stop converts the same moves into far more R. As an <em>exi
 good — on identical entries and stops it nearly ties the 50SMA rule (3.92 vs 4.00 winsorized avg R). And as a
 <em>system</em> it wins on comfort: ~75% win rate, positive median trade, fewer decisions. Practical synthesis:
 trade our entries and stops; keep SuperAlt on the chart as the trend/regime lens and as a fallback trail —
-switching to it costs almost nothing if the 50SMA rule ever feels wrong in a name.</div>"""
+switching to it costs almost nothing if the 50SMA rule ever feels wrong in a name.</div>
+{tldr(
+  "Your SuperTrend indicator (ported exactly) head-to-head against our strategy on the same data — as a full system, and isolating just its exit.",
+  "Our system makes ~2.6× the R. The whole gap is the entry+stop (SuperTrend enters mid-trend with a very wide stop). Its EXIT, on identical entries, nearly ties our 50-MA rule. It does win on comfort (~75% win rate).",
+  "Our entries and stop. The 50-MA exit (SuperTrend's flip exit is a fine fallback). SuperTrend stays useful as a trend/regime visual, not as the entry.")}"""
 
 
 def consistency_html() -> str:
@@ -123,7 +173,11 @@ entries on SuperAlt's trend state (cuts trades, no variance benefit) and its fli
 the 50SMA). <b>Recommendation:</b> run <span class="mono">SW10C/E50</span> as the core book if steadiness matters
 most; keep <span class="mono">LOD/E50</span> as a half-size satellite for A+ entries where the day low is a true
 pivot — or simply split the risk budget 50/50 between the two, which blends the smooth years of one with the
-tail capture of the other.</div>"""
+tail capture of the other.</div>
+{tldr(
+  "10 configurations ranked by steadiness (year-to-year swing, worst year, max drawdown, time underwater) — and what could be borrowed from SuperTrend to smooth the headline.",
+  "<span class='mono'>SW10C/E50</span> (wide swing-low stop, 50-MA exit) is the steadiest by a wide margin — ~3.5× lower year-to-year swing than the headline and no losing year — while still out-earning SuperTrend per month. The smoothing came from the WIDE STOP, not from any SuperTrend machinery.",
+  "If steadiness is the priority: <b>SW10C/E50</b> as the core book, with <b>LOD/E50</b> as a half-size satellite for the very best setups — or a 50/50 split of the two.")}"""
 
 
 def main() -> None:
@@ -171,6 +225,21 @@ def main() -> None:
     alt_rows = "".join(stat_row(f"{a['stop']}/{a['exit']} (filtered)", a["filtered"]) for a in alts)
     superalt_section = superalt_html()
     consistency_section = consistency_html()
+
+    metric_rows = "".join(f"<tr><td class='term'>{esc(t)}</td><td>{esc(d)}</td></tr>" for t, d in METRIC_GLOSSARY)
+    code_blocks = ""
+    for title, sub, items in CODE_GLOSSARY:
+        rows = "".join(f"<tr><td class='term'>{esc(c)}</td><td>{esc(d)}</td></tr>" for c, d in items)
+        code_blocks += f"<h3>{esc(title)} <span style='color:var(--muted);font-weight:400'>— {esc(sub)}</span></h3><table class='gloss'>{rows}</table>"
+    glossary = f"""
+<details class="glosswrap" open>
+<summary>How to read this report — codes &amp; metrics (click to collapse)</summary>
+<p style="font-size:14px;margin:8px 0">Throughout, a strategy is written as <span class="mono">STOP / EXIT</span> — e.g.
+<span class="mono">SW10C / E50</span> means "swing-low capped stop, exit on a 50-MA close". Here is every code and column spelled out.</p>
+<h3>Metrics (the table columns)</h3>
+<table class="gloss">{metric_rows}</table>
+{code_blocks}
+</details>"""
 
     fstats = top["filtered"]
     spec = {
@@ -227,8 +296,19 @@ def main() -> None:
   .rule {{ font-size:16px; padding:14px 18px; border-left:4px solid var(--accent); background:#fdf9ee; margin:12px 0; }}
   .note {{ background:#fdf6e8; border:1px solid #ecdcb8; border-radius:10px; padding:14px 18px; margin:16px 0; font-size:14px; }}
   .warn {{ background:#fceeed; border:1px solid #e8c7c5; border-radius:10px; padding:14px 18px; margin:16px 0; font-size:14px; }}
+  .tldr {{ background:#eef6ee; border:1px solid #cfe3cf; border-radius:10px; padding:12px 16px; margin:10px 0 22px; font-size:14px; }}
+  .tldr > div {{ margin:5px 0; }}
+  .tldr .lbl {{ display:inline-block; min-width:62px; font-weight:700; color:#6a6e78; text-transform:uppercase;
+                font-size:10.5px; letter-spacing:.05em; margin-right:10px; vertical-align:top; }}
+  .tldr .lbl.using {{ color:var(--green); }}
+  .gloss {{ width:100%; font-size:13.5px; margin:8px 0 18px; }}
+  .gloss td {{ padding:6px 10px; vertical-align:top; border-bottom:1px solid var(--line); }}
+  .gloss td.term {{ font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:600; white-space:nowrap;
+                    color:var(--accent); width:130px; }}
+  details.glosswrap {{ margin:12px 0 8px; }}
+  details.glosswrap > summary {{ cursor:pointer; font-weight:600; color:var(--accent); font-size:15px; padding:6px 0; }}
   ul {{ padding-left:22px; }} li {{ margin:5px 0; }}
-  @media print {{ .card {{ break-inside:avoid; }} }}
+  @media print {{ .card {{ break-inside:avoid; }} details.glosswrap {{ }} details.glosswrap[open] > summary {{ }} }}
 </style></head><body><div class="wrap">
 
 <h1>Big-Mover Momentum Strategy — Playbook v1</h1>
@@ -240,6 +320,8 @@ so the absolute numbers below are optimistic — in live trading some entries wi
 What IS robust: the <em>relative</em> ranking of stops, trails and filters, the shape of the R distribution, and the
 win-rate / payoff structure. Treat the absolute expectancy as an upper bound; validate forward in the simulator.</div>
 
+{glossary}
+
 <h2>The strategy in one box</h2>
 <div class="card">
   <div class="rule"><b>Universe.</b> Momentum names: 20-day ADR between {uni['adr'][0]}% and {uni['adr'][1]}%,
@@ -248,12 +330,19 @@ win-rate / payoff structure. Treat the absolute expectancy as an upper bound; va
   on ≥1.5× volume — subject to the filters below.</div>
   <div class="rule"><b>Filters.</b><ul>{''.join(f'<li>{esc(FILTER_DESC[k])}</li>' for k in top['kept_filters'])}</ul></div>
   <div class="rule"><b>Initial stop.</b> {esc(STOP_DESC[top['stop']])} (<span class="mono">{top['stop']}</span>).</div>
-  <div class="rule"><b>Exit / trail.</b> {esc(EXIT_DESC[top['exit']])} (<span class="mono">{top['exit']}</span>).</div>
+  <div class="rule"><b>Exit / trail.</b> {esc(EXIT_DESC[top['exit']])} (<span class="mono">{top['exit']}</span>).
+  <span style="color:var(--muted)">The live TradingView indicator uses the 50-period EMA here — the SMA-vs-EMA test
+  found them equivalent, so EMA is used because you read EMAs.</span></div>
   <div class="rule"><b>Sizing.</b> Risk 0.5–1.0% of equity per trade: shares = (equity × risk%) ÷ (entry − stop).
   Max total open risk 6R (Behavior Contract heat cap). When SPY is below its 50SMA, valid signals still get taken —
   the data says they perform — but at half size: a weak tape produces fewer real signals and the winners-only bank
   cannot price that scarcity.</div>
 </div>
+
+{tldr(
+  "All 28 stop×exit combinations on " + format(top['base']['n'], ',') + " entries, then layered the entry filters on top.",
+  "One configuration family wins: a 50-MA-close exit with an early-in-the-move entry. Stop choice is a dial between aggression and steadiness (see the three flavors below).",
+  "<b>" + esc(top['stop']) + " / " + esc(top['exit']) + "</b> as the headline, plus two stop variants. The four filters that earned their place. Everything else below is the evidence for these choices.")}
 
 <div class="note"><b>Live translation of the two "freshness" filters.</b> In this study, "<i>&lt;50% above the move low</i>"
 and "<i>1st–3rd signal of the move</i>" are measured from the move's actual low — hindsight a live trader doesn't have.
@@ -279,21 +368,30 @@ never cold entries — exactly your ADD-vs-cold-entry rule.</div>
 </table>
 
 <h2>How the policy grid ranked</h2>
-<p>Every entry event was simulated under 4 initial stops × 7 exit rules. Highlighted rows fall inside your
-25–45% win-rate band; ranking is by winsorized expectancy (avg R with the top 1% of outliers capped) so a few
-moonshots can't carry a bad rule.</p>
+<p>Every entry was simulated under all 4 stops × 7 exits (28 ways to manage the same trades). Highlighted rows fall
+inside your 25–45% win-rate target; ranking is by <span class="mono">avg R (w99)</span> so a few moonshots can't
+carry a weak rule. Read a row as <span class="mono">STOP / EXIT</span> (see the glossary up top).</p>
 <table><tr><th>stop</th><th>exit</th><th>trades</th><th>win</th><th>avg R</th><th>avg R (w99)</th>
 <th>med R</th><th>p90 R</th><th>≥5R</th><th>days</th><th>R/30d</th><th>band</th></tr>
 {league_rows}</table>
+{tldr(
+  "Holding the same entries with 28 different stop/exit combinations.",
+  "Exit choice matters most: the <span class='mono'>E50</span> (50-MA close) exit tops the table — it beats every shorter EMA trail and the chandelier, because it gives winners room to run. Among stops, the tight <span class='mono'>LOD</span> maximises R while the wide <span class='mono'>SW10C</span> is steadier.",
+  "The <span class='mono'>E50</span> exit for all variants. Stop is your dial: <span class='mono'>LOD</span> for max R, <span class='mono'>SW10C</span> for steadiness.")}
 
 <h2>What each filter is worth</h2>
-<p>Marginal effect of each pre-registered filter on the chosen policy
-(<span class="mono">{top['stop']}/{top['exit']}</span>). Edge = winsorized avg R (pass) − (fail).</p>
+<p>Eight candidate filters, each scored by <span class="mono">edge</span> = avg R of trades that pass minus avg R of
+trades that fail (on the headline <span class="mono">{top['stop']}/{top['exit']}</span> trades). A big positive edge =
+keep it; a negative edge = it actively hurts.</p>
 <table><tr><th>filter</th><th>n pass</th><th>win</th><th>avg R w99</th><th>n fail</th><th>avg R w99 (fail)</th>
 <th>edge</th><th></th></tr>
 {marg_rows}</table>
+{tldr(
+  "8 filters: how much each one improves (or worsens) the average trade.",
+  "The two 'freshness' filters dominate — buying early in the move and before it's over-extended adds several R. Volume and the SPY-above-50SMA market filter add a little. Two textbook filters — 'near 52-week high' and 'full bullish EMA stack' — actually had NEGATIVE edge inside real movers (they just make you late).",
+  "The four positive filters (marked '✓ kept'). The two negative ones are deliberately NOT used.")}
 
-<h2>Robustness</h2>
+<h2>Robustness — is it a fluke of one era or market?</h2>
 <table>{STAT_HEAD}
 {stat_row('Odd years', split['odd_years'])}
 {stat_row('Even years', split['even_years'])}
@@ -304,12 +402,20 @@ moonshots can't carry a bad rule.</p>
 </table>
 <h3>Per-year (filtered strategy)</h3>
 <table><tr><th>year</th><th>trades</th><th>win</th><th>avg R</th></tr>{yr_rows}</table>
+{tldr(
+  "The chosen strategy sliced by odd/even years, the 2000–2012 vs 2013–2026 eras, and by market regime.",
+  "Positive average R in every single slice — no era, no alternating-year split, and neither market regime turns it negative. (The only down years in the per-year table had 1 trade each — noise, not failure.)",
+  "No change — this is the confidence check. It survives, so the rules aren't curve-fit to one period.")}
 
-<h2>Exit rule by market regime</h2>
-<p>Same filtered entries, different exits, split by tape:</p>
+<h2>Exit rule by market regime — do we need to switch exits in a bear market?</h2>
+<p>The same filtered entries, run through each exit rule, split by whether SPY was above or below its 50-MA.</p>
 <table><tr><th>exit</th><th colspan="3">SPY &gt; 50SMA (n / win / avg R w99)</th>
 <th colspan="3">SPY &lt; 50SMA</th></tr>
 {exit_regime_rows}</table>
+{tldr(
+  "Whether a different exit rule is better when the broad market is weak.",
+  "The 50-MA exit holds up in both tapes; no exit rule meaningfully beats it when SPY is below its 50-MA.",
+  "ONE exit rule for all conditions — the 50-MA close. No regime-switching of exits needed; the market filter is handled at entry (half size below the 50-MA) instead.")}
 
 {superalt_section}
 {consistency_section}
