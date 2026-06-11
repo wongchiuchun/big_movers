@@ -1,5 +1,11 @@
 # Shorts + Stop Strategy Presets — Execution Plan
 
+> **STATUS: ✅ SHIPPED (May 2026).** All phases P0–P8 implemented and merged to
+> `main` via `feature/shorts-and-stop-presets`. Verified 2026-06-11:
+> `node tests/sim_shorts.test.cjs` → 29/29 pass. See
+> `SHORTS_IMPLEMENTATION_REPORT.md` for the per-phase commit map.
+> This document is retained as the design record only.
+
 > Living spec for adding short-selling support to single-ticker Sim and PortSim,
 > bundled with FEATURE_PLAN.md item #2 (Stop Strategy Presets) since both depend
 > on the same direction-aware primitives.

@@ -59,7 +59,7 @@ _(fill in: do you want the toggle ON by default for the first sim of a session a
 
 ## 2. Stop placement strategy presets ★★
 
-**Status:** queued · **Priority:** high · **Estimated effort:** 2 days
+**Status:** ✅ SHIPPED (May 2026) — implemented direction-aware as part of `SHORTS_PLAN.md` phase P2 (`feature/shorts-and-stop-presets`, merged to main). Presets live: manual, % offset, ATR offset, swing low/high (`Sim.StopRules`). Verified via `tests/sim_shorts.test.cjs`. · **Original estimate:** 2 days
 
 ### What
 
@@ -115,7 +115,7 @@ _(fill in: any specific strategies you want first? Default k for ATR? Buffer bel
 
 ## 3. Trail strategy presets ★★
 
-**Status:** queued · **Priority:** high · **Estimated effort:** 2 days
+**Status:** partially shipped — EMA trail (`stopTrail`, direction-aware ratchet) landed with the shorts branch; % trail / ATR trail / swing-low trail / HHV-N still queued · **Priority:** high · **Estimated effort:** 1–1.5 days remaining
 
 ### What
 
