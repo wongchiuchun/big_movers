@@ -91,6 +91,33 @@ B's negative years are shallow (worst −0.28R). Translation: trade it sized so 
 work. Do **not** expect the winners-database win rates (50–60%) live; those are
 survivorship. The control group says the wild win rate is ~30%.
 
+## Continuation (leg 2+) entries — answered 2026-06-12
+
+The locked rules above only take the FIRST leg (extension <50% off the 63-day
+low). User observed live that this misses the bulk of strong trends and locks you
+out after a first-entry shakeout (VSH, RKLB, NOK). Tested a continuation entry —
+a pullback that reclaims the 20-EMA inside an uptrend (above a rising 50-SMA), at
+any extension — across train/test/control (`run_continuation.py`):
+
+| Entry | extension | held-out test R | control R (w99) |
+|---|---|---|---|
+| base breakout | 0–50% | 2.14 (61% win) | −0.06 |
+| continuation | 50–100% (leg 2) | 0.99 (50%) | **+0.01** |
+| continuation | 100–200% (leg 3) | 1.25 (53%) | **+0.02** |
+| continuation | 200%+ | 0.69 (46%) | +0.24 (n=39) |
+
+Verdict: **continuation entries are worth it.** Lower R per trade than the first
+leg, but positive out-of-sample at every extension AND *better-behaved on control*
+than the base breakout (the pullback-into-uptrend gate is a higher-quality filter
+than a raw breakout — less chasing, not more). 90.5% of winning moves offered a
+continuation entry; allowing them roughly **tripled R captured per move** (base
+~2.46R → +5.73R extra). It also re-enters after a shakeout, fixing the lockout.
+
+Shipped as an OPTIONAL, off-by-default toggle in `big_mover_signals.pine`
+("Continuation (leg 2+) entries"): blue **BUY leg2** when flat, faded **ADD** when
+already in a trade. Off by default because it changes the tool's character (more
+signals, lower R each, more heat). User's call whether to run it.
+
 ## What I would build next (not done yet)
 - A true out-of-universe control (random S&P names, not ex-monsters) to pin the
   real false-positive rate — current control is trendier than reality.

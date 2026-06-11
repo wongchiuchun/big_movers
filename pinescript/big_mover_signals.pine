@@ -31,6 +31,9 @@ mode = input.string("B Consistent (free roll)", "Trade mode",
 minHold = input.int(3, "Min hold bars before MA exit", minval = 0, group = "Mode",
      tooltip = "The trailing-MA exit cannot fire in the first N closes (3 = Thursday-squat / shakeout guard). A pullback that tests the pivot and closes back above is a shakeout to hold, not an exit.")
 
+showCont = input.bool(false, "Continuation (leg 2+) entries", group = "Continuation",
+     tooltip = "OFF (default) = base-only: one early entry near the base, nothing once a move is extended. ON = also signal when price pulls back to the 20-EMA and reclaims it inside an uptrend (above a RISING 50-SMA), at ANY extension. This catches later legs (leg 2, leg 3) and RE-ENTERS after a shakeout stop-out — the case where a failed first entry otherwise locks you out of the whole run. Backtest (held-out tickers): continuation trades earn ~1.0-1.3R and, on the control group, behave slightly BETTER than base breakouts. Lower R per trade than the first leg, but ~3x more total R captured per move. A green 'BUY leg2' fires a re-entry when flat; an orange 'ADD' marks a pyramid point while already in a trade.")
+
 useUniverse = input.bool(true, "Require momentum universe (ADR 4-8%, liquid)", group = "Filters")
 adrLo       = input.float(4.0, "ADR% min", group = "Filters")
 adrHi       = input.float(8.0, "ADR% max", group = "Filters")
@@ -80,6 +83,15 @@ volOK    = relVol >= minRelVol
 regimeOK = not useRegime or regimeUp
 filtersOK = uniOK and freshOK and volOK and regimeOK
 
+// CONTINUATION trigger (leg 2+): pullback that reclaims the 20-EMA in an
+// established uptrend (price above a RISING 50-SMA). No freshness / extension cap
+// — that is the point. Lower volume than a base breakout, so volume is not required.
+sma50val    = ta.sma(close, 50)
+sma50rising = sma50val > sma50val[21]
+ema20v      = ta.ema(close, 20)
+pulledBack  = low <= ema20v * 1.01 and close >= ema20v and close > close[1]
+contTrigger = showCont and close > sma50val and sma50rising and pulledBack and uniOK and regimeOK
+
 // suggested stop level for a new entry
 swingLow  = ta.lowest(low, 10)
 consStop  = math.max(swingLow, close - 1.5 * atr20)
@@ -111,7 +123,14 @@ if exitNow
     inTrade := false
     trimmed := false
 
-entryNow = (not inTrade) and (not exitNow) and rawSignal and filtersOK and (close - stopCand) > 0
+// ADD marker: a continuation pullback while already in a trade (pyramid point)
+addNow = inTrade and contTrigger and barsIn >= minHold
+
+// entry: a base trigger, OR (when flat) a continuation trigger = re-entry / leg 2
+baseFire = rawSignal and filtersOK
+contFire = contTrigger and (not inTrade)
+entryNow = (not inTrade) and (not exitNow) and (baseFire or contFire) and (close - stopCand) > 0
+isContEntry = entryNow and (not baseFire)
 if entryNow
     inTrade := true
     curStop := stopCand
@@ -127,10 +146,15 @@ plot(showStop and inTrade ? curStop : na, "Stop", color = color.new(color.red, 0
 
 if entryNow
     riskPct = (close - curStop) / close * 100
-    label.new(bar_index, low, "BUY\nstop " + str.tostring(curStop, format.mintick) +
-         "  (" + str.tostring(riskPct, "#.#") + "% risk)",
+    label.new(bar_index, low, (isContEntry ? "BUY leg2" : "BUY") + "\nstop " +
+         str.tostring(curStop, format.mintick) + "  (" + str.tostring(riskPct, "#.#") + "% risk)",
          yloc = yloc.belowbar, style = label.style_label_up,
-         color = color.new(color.teal, 0), textcolor = color.white, size = size.normal)
+         color = isContEntry ? color.new(color.blue, 0) : color.new(color.teal, 0),
+         textcolor = color.white, size = size.normal)
+
+if addNow
+    label.new(bar_index, low, "ADD\n(leg)", yloc = yloc.belowbar, style = label.style_label_up,
+         color = color.new(color.blue, 35), textcolor = color.white, size = size.small)
 
 if trimNow
     label.new(bar_index, high, "TRIM ½\nstop → BE",
@@ -169,5 +193,6 @@ if showTable and barstate.islast
 
 // ----------------------------- alerts -----------------------------
 alertcondition(entryNow, "BigMover BUY", "BigMover BUY on {{ticker}} at {{close}} — set stop per chart label")
+alertcondition(addNow, "BigMover ADD", "BigMover continuation/leg on {{ticker}} at {{close}} — pyramid point")
 alertcondition(trimNow, "BigMover TRIM", "BigMover +2R on {{ticker}} — sell half, stop to breakeven")
 alertcondition(exitNow, "BigMover EXIT", "BigMover EXIT on {{ticker}} at {{close}}")

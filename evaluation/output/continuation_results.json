@@ -1,0 +1,164 @@
+{
+  "by_band": {
+    "base": {
+      "0-50% (base)": {
+        "winner_test": {
+          "n": 262,
+          "win": 61.1,
+          "avgR": 2.14,
+          "avgRw99": 1.98,
+          "medR": 1.0
+        },
+        "control": {
+          "n": 6210,
+          "win": 35.5,
+          "avgR": -0.01,
+          "avgRw99": -0.06,
+          "medR": -0.88
+        },
+        "winner_train": {
+          "n": 306,
+          "win": 59.2,
+          "avgR": 1.61,
+          "avgRw99": 1.41,
+          "medR": 1.0
+        }
+      },
+      "50-100%": {
+        "winner_test": {
+          "n": 0
+        },
+        "control": {
+          "n": 0
+        },
+        "winner_train": {
+          "n": 0
+        }
+      },
+      "100-200%": {
+        "winner_test": {
+          "n": 0
+        },
+        "control": {
+          "n": 0
+        },
+        "winner_train": {
+          "n": 0
+        }
+      },
+      "200%+": {
+        "winner_test": {
+          "n": 0
+        },
+        "control": {
+          "n": 0
+        },
+        "winner_train": {
+          "n": 0
+        }
+      }
+    },
+    "cont": {
+      "0-50% (base)": {
+        "winner_test": {
+          "n": 698,
+          "win": 54.2,
+          "avgR": 1.42,
+          "avgRw99": 1.32,
+          "medR": 0.95
+        },
+        "control": {
+          "n": 12769,
+          "win": 31.4,
+          "avgR": -0.01,
+          "avgRw99": -0.05,
+          "medR": -0.7
+        },
+        "winner_train": {
+          "n": 840,
+          "win": 54.3,
+          "avgR": 1.6,
+          "avgRw99": 1.38,
+          "medR": 0.94
+        }
+      },
+      "50-100%": {
+        "winner_test": {
+          "n": 745,
+          "win": 49.7,
+          "avgR": 0.99,
+          "avgRw99": 0.89,
+          "medR": -0.02
+        },
+        "control": {
+          "n": 6446,
+          "win": 33.8,
+          "avgR": 0.06,
+          "avgRw99": 0.01,
+          "medR": -1.0
+        },
+        "winner_train": {
+          "n": 901,
+          "win": 51.2,
+          "avgR": 1.26,
+          "avgRw99": 1.1,
+          "medR": 0.38
+        }
+      },
+      "100-200%": {
+        "winner_test": {
+          "n": 192,
+          "win": 53.1,
+          "avgR": 1.25,
+          "avgRw99": 1.16,
+          "medR": 1.0
+        },
+        "control": {
+          "n": 1147,
+          "win": 33.0,
+          "avgR": 0.05,
+          "avgRw99": 0.02,
+          "medR": -1.0
+        },
+        "winner_train": {
+          "n": 264,
+          "win": 53.8,
+          "avgR": 1.3,
+          "avgRw99": 1.29,
+          "medR": 1.0
+        }
+      },
+      "200%+": {
+        "winner_test": {
+          "n": 39,
+          "win": 46.2,
+          "avgR": 0.69,
+          "avgRw99": 0.66,
+          "medR": -0.09
+        },
+        "control": {
+          "n": 119,
+          "win": 31.9,
+          "avgR": 0.28,
+          "avgRw99": 0.24,
+          "medR": -1.0
+        },
+        "winner_train": {
+          "n": 43,
+          "win": 60.5,
+          "avgR": 1.23,
+          "avgRw99": 1.22,
+          "medR": 1.0
+        }
+      }
+    }
+  },
+  "per_move": {
+    "winning_moves_seen": 939,
+    "moves_with_a_continuation_entry": 850,
+    "pct_moves_with_continuation": 90.5,
+    "avg_extra_R_from_continuation_when_present": 5.73,
+    "median_extra_R": 2.52,
+    "avg_base_R_per_move": 2.46
+  }
+}
