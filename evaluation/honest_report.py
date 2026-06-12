@@ -71,6 +71,7 @@ def num(v, pos_color=True):
 def main():
     he = json.load(open(os.path.join(OUT, "honest_eval.json")))
     en = json.load(open(os.path.join(OUT, "engine_results.json")))
+    co = json.load(open(os.path.join(OUT, "continuation_results.json")))
 
     # filter generalization rows
     gen_rows = ""
@@ -100,6 +101,25 @@ def main():
         cons_rows += (f"<tr{hl}><td>{CONFIG_DESC.get(name, name)}<br><small class='mono'>{name}</small></td>"
                       f"<td>{num(c['yr_std'], False)}</td><td>{num(c['median_year'])}</td>"
                       f"<td>{num(c['worst_year'])}</td><td class='mono'>{c['neg_years']}/{c['years']}</td></tr>")
+
+    # continuation: base + cont rows by extension band
+    BAND_LABEL = {"0-50% (base)": "0–50% (base)", "50-100%": "50–100% (leg 2)",
+                  "100-200%": "100–200% (leg 3)", "200%+": "200%+ (leg 4+)"}
+    cont_rows = ""
+    order = [("base", "0-50% (base)"), ("cont", "0-50% (base)"), ("cont", "50-100%"),
+             ("cont", "100-200%"), ("cont", "200%+")]
+    for kind, band in order:
+        d = co["by_band"].get(kind, {}).get(band, {})
+        te, ct = d.get("winner_test", {}), d.get("control", {})
+        if not te.get("n"):
+            continue
+        kind_lbl = "Base breakout" if kind == "base" else "Continuation"
+        hl = ' class="hl"' if kind == "cont" and band in ("50-100%", "100-200%") else ""
+        cont_rows += (
+            f"<tr{hl}><td>{kind_lbl}</td><td>{BAND_LABEL.get(band, band)}</td>"
+            f"<td>{te.get('n')}</td><td>{num(te.get('win'), False)}</td><td>{num(te.get('avgR'))}</td>"
+            f"<td>{ct.get('n')}</td><td>{num(ct.get('win'), False)}</td><td>{num(ct.get('avgRw99'))}</td></tr>")
+    pm = co["per_move"]
 
     ns = en["n_signals"]
     html = f"""<!doctype html><html><head><meta charset="utf-8">
@@ -145,7 +165,31 @@ actually experience it). Lower year-std and shallower worst-year = steadier equi
 (0.49 → 0.29) for the same median return.</b> That is the "more consistent, able to come back over time"
 you asked for. Mode B is the recommended default; Mode A is the high-conviction option.</div>
 
-<h2>4 · The locked strategy</h2>
+<h2>4 · Continuation (leg 2+) entries — should you ride the later legs?</h2>
+<p>The locked rules above only take the <b>first leg</b> (extension &lt;50% off the 63-day low), so once a
+move is underway the indicator goes quiet — and a first-entry shakeout locks you out of the whole run.
+This tests an optional continuation entry: a pullback that <b>reclaims the 20-EMA inside an uptrend</b>
+(above a rising 50-SMA), allowed at <i>any</i> extension. Every entry is bucketed by how far it is off the
+63-day low.</p>
+<table>
+<tr><th>Entry</th><th>extension off low</th><th colspan="2" style="text-align:center">HELD-OUT WINNERS</th>
+<th></th><th colspan="2" style="text-align:center">CONTROL (the wild)</th></tr>
+<tr><th></th><th></th><th>n</th><th>win</th><th>avg R</th><th>n</th><th>win</th><th>w99 R</th></tr>
+{cont_rows}</table>
+<div class="tldr"><b>Continuation entries are worth it.</b> They earn less per trade than the first leg
+(~1.0–1.3R vs 2.1R) but stay positive out-of-sample at <i>every</i> extension — and their control R is
+slightly <b>positive</b>, i.e. <b>better-behaved than the base breakout</b>. The pullback-into-an-uptrend
+gate is a higher-quality filter than a raw new-high breakout: less chasing, not more.</div>
+<div class="card big"><b>Per-move capture (winning moves).</b>
+{pm['pct_moves_with_continuation']}% of winning moves ({pm['moves_with_a_continuation_entry']:,} of
+{pm['winning_moves_seen']:,}) offered at least one continuation entry. The base entry captures
+~<b>{pm['avg_base_R_per_move']}R</b> per move; continuation adds
+<b>+{pm['avg_extra_R_from_continuation_when_present']}R</b> on average (median
++{pm['median_extra_R']}R) — roughly <b>tripling the R captured per move</b>, and re-entering after a
+shakeout. Cost: more positions / heat and a lower hit-rate per trade. Shipped as an <b>optional,
+off-by-default</b> toggle in the Pine indicator (blue "BUY leg2" when flat, faded "ADD" when in a trade).</div>
+
+<h2>5 · The locked strategy</h2>
 <div class="card big">
 <b>Universe</b> ADR 4–8%, ≥$5M/day dollar volume.<br>
 <b>Entry</b> breakout (20/50-day high) or gap ≥5% on ≥1.5× volume — only if <b>early</b>

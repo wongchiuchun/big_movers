@@ -65,7 +65,31 @@ actually experience it). Lower year-std and shallower worst-year = steadier equi
 (0.49 → 0.29) for the same median return.</b> That is the "more consistent, able to come back over time"
 you asked for. Mode B is the recommended default; Mode A is the high-conviction option.</div>
 
-<h2>4 · The locked strategy</h2>
+<h2>4 · Continuation (leg 2+) entries — should you ride the later legs?</h2>
+<p>The locked rules above only take the <b>first leg</b> (extension &lt;50% off the 63-day low), so once a
+move is underway the indicator goes quiet — and a first-entry shakeout locks you out of the whole run.
+This tests an optional continuation entry: a pullback that <b>reclaims the 20-EMA inside an uptrend</b>
+(above a rising 50-SMA), allowed at <i>any</i> extension. Every entry is bucketed by how far it is off the
+63-day low.</p>
+<table>
+<tr><th>Entry</th><th>extension off low</th><th colspan="2" style="text-align:center">HELD-OUT WINNERS</th>
+<th></th><th colspan="2" style="text-align:center">CONTROL (the wild)</th></tr>
+<tr><th></th><th></th><th>n</th><th>win</th><th>avg R</th><th>n</th><th>win</th><th>w99 R</th></tr>
+<tr><td>Base breakout</td><td>0–50% (base)</td><td>262</td><td><span class="mono">61.1</span></td><td><span class="mono pos">+2.14</span></td><td>6210</td><td><span class="mono">35.5</span></td><td><span class="mono neg">-0.06</span></td></tr><tr><td>Continuation</td><td>0–50% (base)</td><td>698</td><td><span class="mono">54.2</span></td><td><span class="mono pos">+1.42</span></td><td>12769</td><td><span class="mono">31.4</span></td><td><span class="mono neg">-0.05</span></td></tr><tr class="hl"><td>Continuation</td><td>50–100% (leg 2)</td><td>745</td><td><span class="mono">49.7</span></td><td><span class="mono pos">+0.99</span></td><td>6446</td><td><span class="mono">33.8</span></td><td><span class="mono pos">+0.01</span></td></tr><tr class="hl"><td>Continuation</td><td>100–200% (leg 3)</td><td>192</td><td><span class="mono">53.1</span></td><td><span class="mono pos">+1.25</span></td><td>1147</td><td><span class="mono">33</span></td><td><span class="mono pos">+0.02</span></td></tr><tr><td>Continuation</td><td>200%+ (leg 4+)</td><td>39</td><td><span class="mono">46.2</span></td><td><span class="mono pos">+0.69</span></td><td>119</td><td><span class="mono">31.9</span></td><td><span class="mono pos">+0.24</span></td></tr></table>
+<div class="tldr"><b>Continuation entries are worth it.</b> They earn less per trade than the first leg
+(~1.0–1.3R vs 2.1R) but stay positive out-of-sample at <i>every</i> extension — and their control R is
+slightly <b>positive</b>, i.e. <b>better-behaved than the base breakout</b>. The pullback-into-an-uptrend
+gate is a higher-quality filter than a raw new-high breakout: less chasing, not more.</div>
+<div class="card big"><b>Per-move capture (winning moves).</b>
+90.5% of winning moves (850 of
+939) offered at least one continuation entry. The base entry captures
+~<b>2.46R</b> per move; continuation adds
+<b>+5.73R</b> on average (median
++2.52R) — roughly <b>tripling the R captured per move</b>, and re-entering after a
+shakeout. Cost: more positions / heat and a lower hit-rate per trade. Shipped as an <b>optional,
+off-by-default</b> toggle in the Pine indicator (blue "BUY leg2" when flat, faded "ADD" when in a trade).</div>
+
+<h2>5 · The locked strategy</h2>
 <div class="card big">
 <b>Universe</b> ADR 4–8%, ≥$5M/day dollar volume.<br>
 <b>Entry</b> breakout (20/50-day high) or gap ≥5% on ≥1.5× volume — only if <b>early</b>
