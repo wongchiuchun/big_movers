@@ -2,11 +2,12 @@
 <title>Big-Mover Momentum — Honest Findings</title><style>
 * { box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background: #f7f6f3; color: #1c1c1e; margin: 0; padding: 40px 24px; line-height: 1.5; }
-.wrap { max-width: 980px; margin: 0 auto; }
+  background: #f7f6f3; color: #1c1c1e; margin: 0; padding: 32px 24px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 34px; align-items: start; }
 h1 { font-size: 26px; margin: 0 0 4px; }
-.sub { color: #6b6b70; margin: 0 0 28px; font-size: 14px; }
-h2 { font-size: 18px; margin: 34px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e2e0da; }
+.sub { color: #6b6b70; margin: 0 0 22px; font-size: 14px; }
+h2 { font-size: 18px; margin: 32px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e2e0da; }
 .card { background: #fff; border: 1px solid #e6e4de; border-radius: 10px; padding: 18px 20px; margin: 14px 0;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
 .big { font-size: 15px; }
@@ -19,16 +20,36 @@ th { background: #f0efea; font-weight: 600; }
 tr.hl { background: #fff7e8; }
 tr.hl td { font-weight: 600; }
 .mono { font-family: 'SF Mono', Menlo, Consolas, monospace; }
+.code { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; background:#eef0f3; color:#566; padding:1px 5px; border-radius:4px; margin-left:4px; }
 .pos { color: #1b7a35; } .neg { color: #b3261e; }
 .tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; }
 .tg-hold { background: #e3f3e6; color: #1b7a35; } .tg-flip { background: #fbe3e1; color: #b3261e; }
 small { color: #6b6b70; }
+.hint { border-bottom: 1px dotted #b9a06a; cursor: help; }
+/* sticky scroll-along glossary */
+.glossary { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto;
+  background:#fff; border:1px solid #e6e4de; border-radius:10px; padding: 14px 16px 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+.glossary .gtitle { font-size: 16px; font-weight: 700; margin: 0 0 2px; }
+.glossary .gintro { font-size: 12px; color:#6b6b70; margin: 0 0 8px; }
+.glossary h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color:#8a6d3b;
+  margin: 16px 0 4px; border-bottom: 1px solid #efece4; padding-bottom: 3px; }
+.glossary dl { margin: 0; }
+.glossary dt { font-weight: 600; font-size: 13px; margin-top: 9px; color:#222; }
+.glossary dd { margin: 1px 0 0; font-size: 12.5px; color:#4a4a4f; }
+@media (max-width: 920px) {
+  .layout { grid-template-columns: 1fr; }
+  .glossary { position: static; max-height: none; margin-top: 24px; }
+}
 </style></head>
 <body><div class="wrap">
 <h1>Big-Mover Momentum — the honest, out-of-sample picture</h1>
 <p class="sub">Selected on a 50/50 train/test split of the tickers · validated on held-out test ·
 stress-tested against a control group of 6,571 signals that fired outside any winning window.
-Generated from <span class="mono">engine_results.json</span> + <span class="mono">honest_eval.json</span>.</p>
+<b>New to the jargon?</b> The glossary on the right defines every term and stays in view as you scroll.</p>
+
+<div class="layout">
+<div class="main">
 
 <div class="tldr big"><b>The one thing to know.</b> The entry signal has <b>no standalone edge</b>.
 When the same trigger fires on a chart that did not become a recorded big mover, the average trade is
@@ -38,16 +59,21 @@ non-monster at ~1R and letting the rare monster run. Profit comes from asymmetry
 
 <h2>1 · What generalises — only entry timing</h2>
 <p>Re-running the old filter selection on train and reading the held-out test: only two filters keep their
-edge, and both are about <b>when</b> you enter, not the trigger. Edge = winsorized-R difference (pass − fail).</p>
-<table><tr><th>Filter</th><th>edge · train</th><th>edge · test</th><th></th></tr><tr><td>ordinal_le3</td><td><span class="mono pos">+2.32</span></td><td><span class="mono pos">+1.82</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td>extension_lt50</td><td><span class="mono pos">+2.11</span></td><td><span class="mono pos">+2.19</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td>relvol_ge15</td><td><span class="mono pos">+0.38</span></td><td><span class="mono pos">+0.43</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td>cir_gt75_gaps</td><td><span class="mono pos">+0.34</span></td><td><span class="mono neg">-0.11</span></td><td><span class="tag tg-flip">flips</span></td></tr><tr><td>tight_lt5</td><td><span class="mono pos">+0.01</span></td><td><span class="mono pos">+0.07</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td>spy_above_50</td><td><span class="mono neg">-0.09</span></td><td><span class="mono pos">+0.35</span></td><td><span class="tag tg-flip">flips</span></td></tr><tr><td>stack_bull</td><td><span class="mono neg">-0.72</span></td><td><span class="mono neg">-1.17</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td>near_high_25</td><td><span class="mono neg">-0.99</span></td><td><span class="mono neg">-1.56</span></td><td><span class="tag tg-hold">holds</span></td></tr></table>
+<span class="hint" title="w99-R of trades that pass the filter minus those that fail it">edge</span>,
+and both are about <b>when</b> you enter, not the trigger. (Hover any filter name for a one-line definition;
+full definitions are in the glossary.)</p>
+<table><tr><th>Filter — what it requires</th><th>edge · train</th><th>edge · test</th><th>verdict</th></tr><tr><td><span class="hint" title="One of the first three breakouts since the 63-day low — early in the move.">Enter early (≤3rd push off the low)</span><br><small class="mono">ordinal_le3</small></td><td><span class="mono pos">+2.32</span></td><td><span class="mono pos">+1.82</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td><span class="hint" title="Price is less than 50% above its 63-day low — still near the base.">Not extended (&lt;50% above the low)</span><br><small class="mono">extension_lt50</small></td><td><span class="mono pos">+2.11</span></td><td><span class="mono pos">+2.19</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td><span class="hint" title="Today's volume at least 50% above the 20-day average.">Volume ≥ 1.5× average</span><br><small class="mono">relvol_ge15</small></td><td><span class="mono pos">+0.38</span></td><td><span class="mono pos">+0.43</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td><span class="hint" title="On gap days, the close lands in the top quarter of the day's range.">Gap closes strong (top 25%)</span><br><small class="mono">cir_gt75_gaps</small></td><td><span class="mono pos">+0.34</span></td><td><span class="mono neg">-0.11</span></td><td><span class="tag tg-flip">flips</span></td></tr><tr><td><span class="hint" title="Last 10 closes vary by under 5% — a calm, coiled base.">Tight base (&lt;5% wiggle)</span><br><small class="mono">tight_lt5</small></td><td><span class="mono pos">+0.01</span></td><td><span class="mono pos">+0.07</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td><span class="hint" title="The S&amp;P 500 ETF is above its 50-day average at entry.">Market uptrend (SPY &gt; 50-day)</span><br><small class="mono">spy_above_50</small></td><td><span class="mono neg">-0.09</span></td><td><span class="mono pos">+0.35</span></td><td><span class="tag tg-flip">flips</span></td></tr><tr><td><span class="hint" title="10-EMA &gt; 20-EMA &gt; 50-SMA with price on top.">Bullish EMA stack</span><br><small class="mono">stack_bull</small></td><td><span class="mono neg">-0.72</span></td><td><span class="mono neg">-1.17</span></td><td><span class="tag tg-hold">holds</span></td></tr><tr><td><span class="hint" title="Price is no more than 25% below its one-year high.">Within 25% of 52-wk high</span><br><small class="mono">near_high_25</small></td><td><span class="mono neg">-0.99</span></td><td><span class="mono neg">-1.56</span></td><td><span class="tag tg-hold">holds</span></td></tr></table>
 <div class="warn">The old published 4-filter stack carried a <b>−36% overfit tax</b> because two of its four
-filters were noise (<span class="mono">cir_gt75_gaps</span>, <span class="mono">tight_lt5</span>).
-<span class="mono">spy&gt;50</span>, EMA-stack and near-52wk-high look useless here <i>only because the
-sample is all winners</i> — they are about avoiding losers, which is why the control group exists.</div>
+filters were noise (<span class="mono">cir_gt75_gaps</span>, <span class="mono">tight_lt5</span> — they
+<b>flip</b> sign out-of-sample). <span class="mono">spy_above_50</span>, the EMA stack and near-52wk-high
+look useless here <i>only because the sample is all winners</i> — they are about avoiding losers, which is
+why the control group exists.</div>
 
 <h2>2 · Every strategy, on held-out tickers vs the control group</h2>
-<p><small>Win % · avg R · capped avg R. Left block = held-out winner tickers (284 signals).
-Right block = control (6,571 signals). Highlighted rows are the two recommended modes.</small></p>
+<p><small>Win % · <span class="hint" title="average R per trade">avg R</span> ·
+<span class="hint" title="average R with the top 1% of winners capped — what we rank by">capped avg R (w99)</span>.
+Left block = held-out winner tickers (284 signals). Right block = control
+(6,571 signals — the wild). Highlighted rows are the two recommended modes.</small></p>
 <table>
 <tr><th>Strategy</th><th colspan="3" style="text-align:center">HELD-OUT WINNERS</th>
 <th colspan="3" style="text-align:center">CONTROL (the wild)</th></tr>
@@ -59,7 +85,8 @@ which is exactly why you only use it when conviction is high.</div>
 
 <h2>3 · Consistency — why free roll is the default</h2>
 <p><small>Per-year average R on the realistic blended stream (all winners + control together, as you'd
-actually experience it). Lower year-std and shallower worst-year = steadier equity.</small></p>
+actually experience it). Lower <span class="hint" title="spread of yearly average-R; lower = steadier">year std</span>
+and shallower worst-year = steadier equity.</small></p>
 <table><tr><th>Strategy</th><th>year std</th><th>median year</th><th>worst year</th><th>neg years</th></tr><tr class="hl"><td>Mode A RUNNER — Breakout · 50-MA trail · 3-bar hold · structural stop<br><small class='mono'>BO_E50_h3_SW</small></td><td><span class="mono">0.49</span></td><td><span class="mono pos">+0.11</span></td><td><span class="mono neg">-0.41</span></td><td class='mono'>9/27</td></tr><tr class="hl"><td>Mode B CONSISTENT — Breakout · 50-MA trail · 3-bar hold · structural · FREE ROLL<br><small class='mono'>BO_E50_h3_SW_FR</small></td><td><span class="mono">0.29</span></td><td><span class="mono pos">+0.10</span></td><td><span class="mono neg">-0.28</span></td><td class='mono'>9/27</td></tr><tr><td>Breakout · 10-EMA trail · 3-bar hold · structural stop · FREE ROLL<br><small class='mono'>BO_E10_h3_SW_FR</small></td><td><span class="mono">0.18</span></td><td><span class="mono pos">+0.04</span></td><td><span class="mono neg">-0.21</span></td><td class='mono'>10/27</td></tr><tr><td>Pullback · 50-MA trail · 3-bar hold · structural<br><small class='mono'>PB_E50_h3_SW</small></td><td><span class="mono">0.51</span></td><td><span class="mono pos">+0.10</span></td><td><span class="mono neg">-0.43</span></td><td class='mono'>10/27</td></tr></table>
 <div class="tldr"><b>Free roll (trim ½ at +2R → breakeven) nearly halves year-to-year variance
 (0.49 → 0.29) for the same median return.</b> That is the "more consistent, able to come back over time"
@@ -68,9 +95,9 @@ you asked for. Mode B is the recommended default; Mode A is the high-conviction 
 <h2>4 · Continuation (leg 2+) entries — should you ride the later legs?</h2>
 <p>The locked rules above only take the <b>first leg</b> (extension &lt;50% off the 63-day low), so once a
 move is underway the indicator goes quiet — and a first-entry shakeout locks you out of the whole run.
-This tests an optional continuation entry: a pullback that <b>reclaims the 20-EMA inside an uptrend</b>
-(above a rising 50-SMA), allowed at <i>any</i> extension. Every entry is bucketed by how far it is off the
-63-day low.</p>
+This tests an optional <span class="hint" title="a pullback that reclaims the 20-EMA inside an uptrend, taken after the move is underway">continuation</span>
+entry: a pullback that <b>reclaims the 20-EMA inside an uptrend</b> (above a rising 50-SMA), allowed at
+<i>any</i> extension. Every entry is bucketed by how far it is off the 63-day low.</p>
 <table>
 <tr><th>Entry</th><th>extension off low</th><th colspan="2" style="text-align:center">HELD-OUT WINNERS</th>
 <th></th><th colspan="2" style="text-align:center">CONTROL (the wild)</th></tr>
@@ -104,4 +131,8 @@ expectancy carried by the right tail. Size so −1R ≈ 0.5–1% of equity.
 <p class="sub">Full method: <span class="mono">evaluation/REFLECTION.md</span> ·
 locked spec: <span class="mono">evaluation/STRATEGY_FINAL.md</span> ·
 chart tool: <span class="mono">pinescript/big_mover_signals.pine</span></p>
+
+</div>
+<aside class="glossary"><div class="gtitle">Glossary</div><p class="gintro">Plain-English definitions — stays in view as you scroll.</p><h3>How the test works</h3><dl><dt>R — the risk unit</dt><dd>Everything is measured in R. <b>R = entry price − stop price</b> — what you lose if stopped out. A +3R trade made 3× what you risked; −1R is a full stop-out. R makes a $5 stock and a $500 stock directly comparable.</dd><dt>Train / test split</dt><dd>The 949 tickers are split 50/50 by symbol. The strategy is <b>chosen on the train half</b>, then measured untouched on the <b>held-out test half</b>. Survives test → it generalises. Collapses → it was overfit (fitted to noise).</dd><dt>Control group</dt><dd>Signals that fired on charts that did <b>not</b> become recorded big movers (any date outside a winning window, across 984 tickers). This is the false-positive population — what the same trigger does in the wild. Winners-only data can't show it.</dd><dt>Survivorship</dt><dd>The trap of studying only winners. A 60% win rate on winners-only data does NOT mean 60% live — the losers were never in the dataset. The control group is the antidote.</dd></dl><h3>The numbers in the tables</h3><dl><dt>avg R</dt><dd>Average R per trade in that bucket — the raw expectancy.</dd><dt>w99 R (capped)</dt><dd>Average R after capping the top 1% of winners (99th percentile). One 80R freak can flatter an average; this shows the edge without leaning on a single trade. <b>We rank by this.</b></dd><dt>win</dt><dd>Win rate — % of trades that closed positive.</dd><dt>med R</dt><dd>The middle trade. Often negative here — the strategy wins through a minority of big trades, not by being right often.</dd><dt>R/30d</dt><dd>R earned per 30 days held — return per unit of time, so fast and slow strategies compare fairly.</dd><dt>edge</dt><dd>For a filter: w99-R of trades that PASS it minus those that FAIL it. Positive = the filter helps; the number is how much. <b>Holds</b> = same sign on train and test; <b>flips</b> = noise.</dd><dt>year std / worst year</dt><dd>Spread of yearly average-R (lower = steadier) and the single worst year. Consistency measures.</dd></dl><h3>Entry filters (the codes)</h3><dl><dt>Enter early <span class='code'>ordinal_le3</span></dt><dd>The 'ordinal' is which numbered breakout this is, counting from the most recent 63-day low. ≤3 = one of the first three pushes off the base — early, not chasing a stock that already ran.</dd><dt>Not extended <span class='code'>extension_lt50</span></dt><dd>How far price has stretched above its 63-day low, in %. &lt;50% = still within 50% of the recent floor.</dd><dt>Volume ≥1.5× <span class='code'>relvol_ge15</span></dt><dd>Today's volume vs the 20-day average. ≥1.5× = at least 50% heavier than normal (institutional participation).</dd><dt>Strong gap close <span class='code'>cir_gt75_gaps</span></dt><dd>'Close-in-range' = where the close sits in the day's high–low bar. &gt;75% = top quarter. Applied only to gap-up entries.</dd><dt>Tight base <span class='code'>tight_lt5</span></dt><dd>Std-dev of the last 10 closes as a % of price. &lt;5% = calm, coiled base.</dd><dt>Market uptrend <span class='code'>spy_above_50</span></dt><dd>Is SPY above its 50-day average at the entry bar — a market-regime gauge.</dd><dt>EMA stack <span class='code'>stack_bull</span></dt><dd>10-EMA &gt; 20-EMA &gt; 50-SMA with price on top — an aligned uptrend.</dd><dt>Near highs <span class='code'>near_high_25</span></dt><dd>Price within 25% of its 52-week high.</dd></dl><h3>Stop, exit & strategy terms</h3><dl><dt>ATR</dt><dd>Average True Range — average daily price travel over 20 days. A volatility unit.</dd><dt>Structural / swing-low stop</dt><dd>Stop under the lowest low of the last 10 bars (capped at 1.5×ATR) — under the chart structure, not under today's candle wick.</dd><dt>3-bar hold</dt><dd>The trailing exit can't fire in the first 3 days after entry, so a normal shakeout doesn't knock you out early.</dd><dt>50-MA trail (E50)</dt><dd>Exit when price closes below its 50-period moving average — the default 'let it run' exit.</dd><dt>Free roll</dt><dd>At +2R, sell half and move the stop to breakeven. The remaining half is now 'free' (can't lose). Raises win rate and cuts variance.</dd><dt>Mode A / Mode B</dt><dd><b>A Runner</b> = hold the whole position to the 50-MA break (max R). <b>B Consistent</b> = free roll (steadier). Same entry and stop.</dd><dt>Continuation / leg 2</dt><dd>A later entry: a pullback that reclaims the 20-EMA inside an established uptrend, taken after the move is already underway.</dd><dt>Extension band</dt><dd>Grouping entries by how far above the 63-day low they fired: 0–50%, 50–100%, etc.</dd></dl></aside>
+</div>
 </div></body></html>
