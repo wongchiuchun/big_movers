@@ -143,6 +143,7 @@ th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid #ececec; v
 th { background: #f0efea; font-weight: 600; }
 .mono, .code { font-family: 'SF Mono', Menlo, Consolas, monospace; }
 .code { font-size: 11px; background:#eef0f3; color:#566; padding:1px 5px; border-radius:4px; }
+.hint { border-bottom: 1px dotted #b9a06a; cursor: help; }
 small { color:#6b6b70; }
 a { color:#1c4f8a; }
 /* sticky sidebar: contents + glossary */
@@ -167,24 +168,48 @@ def main():
     ns = en.get("n_signals", {})
     pm = co.get("per_move", {})
 
-    # setup field guide tables
+    # setup field guide — friendly names + hover tooltips with the exact definition
+    METRIC = {
+        "depth_20": ("Base depth", "depth_20",
+            "How DEEP the base is: (highest high − lowest low) over the last 20 bars, divided by the highest high, as a %. 28% means the consolidation spanned about 28% from top to bottom over the prior ~month. Bigger = a deeper pullback / wider base."),
+        "tightness_10": ("Tightness", "tightness_10",
+            "How CALM the recent action is: the standard deviation of the last 10 closing prices divided by their average, as a %. 5.6% means closes wobbled about 5.6% around their mean over the last 10 days. Lower = tighter / quieter."),
+        "contraction_5v15": ("Contraction", "contraction_5v15",
+            "Is the range SHRINKING or EXPANDING into the breakout: the price range of the last 5 bars divided by the range of the prior 15 bars. Below 1 = recent range contracting (coiling); above 1 = expanding (energy building). 0.8 = recent range is 80% of the older range."),
+    }
+    SHAPE_KEY_COL = {
+        "depth_20_pct (consolidation range)": "depth_20",
+        "tightness_10_pct (10-bar dispersion)": "tightness_10",
+        "contraction_5v15 (recent/older range)": "contraction_5v15",
+    }
+    LEN_TIP = ("How LONG the consolidation lasted: the number of bars between the prior new high and the "
+               "breakout (the length of the pause). ~14–17 bars ≈ about 3 weeks.")
+    HIT_TIP = "Share of these breakouts that reached +2R (twice the initial risk) before the stop was hit."
+    FWD_TIP = "Median price change 20 trading days after the breakout."
+
+    def chip(col):
+        fr, code, tip = METRIC[col]
+        return f'<span class="hint" title="{tip}">{fr}</span> <span class="code">{code}</span>'
+
     shape = sp.get("typical_shape", {})
     shape_rows = "".join(
-        f"<tr><td>{k}</td><td class='mono'>{v.get('median')}</td>"
+        f"<tr><td>{chip(SHAPE_KEY_COL[k])}</td><td class='mono'>{v.get('median')}</td>"
         f"<td class='mono'>{v.get('p25')} – {v.get('p75')}</td></tr>"
-        for k, v in shape.items())
+        for k, v in shape.items() if k in SHAPE_KEY_COL)
 
-    def predict_table(col, title):
+    def predict_table(col):
         rows = sp.get("predicts", {}).get(col, [])
         body = "".join(
             f"<tr><td>{r['bucket']}</td><td class='mono'>{r['n']}</td>"
             f"<td class='mono'>{r['hit_2R_pct']}%</td><td class='mono'>{r['med_fwd20']}%</td></tr>"
             for r in rows)
-        return (f"<p style='margin:10px 0 2px'><b>{title}</b></p>"
-                f"<table><tr><th>bucket</th><th>n</th><th>hit +2R</th><th>med 20d fwd</th></tr>{body}</table>")
-    pred_depth = predict_table("depth_20", "Base depth (consolidation range %)")
-    pred_tight = predict_table("tightness_10", "Tightness (10-bar dispersion %)")
-    pred_contr = predict_table("contraction_5v15", "Contraction (recent range ÷ older range)")
+        return (f"<p style='margin:10px 0 2px'><b>{chip(col)}</b></p>"
+                f'<table><tr><th>bucket</th><th>n</th>'
+                f'<th><span class="hint" title="{HIT_TIP}">hit +2R</span></th>'
+                f'<th><span class="hint" title="{FWD_TIP}">med 20d fwd</span></th></tr>{body}</table>')
+    pred_depth = predict_table("depth_20")
+    pred_tight = predict_table("tightness_10")
+    pred_contr = predict_table("contraction_5v15")
 
     # base-number deep-dive table (era x base)
     base_rows = ""
@@ -302,10 +327,13 @@ not a shorter tightness window.</div>
 <p>This is the second layer: not a signal, but a general understanding so that when a live setup deviates
 from the playbook you can judge whether to stay in. Built from {sp.get('n', 9974):,} momentum-universe
 breakouts (point-in-time base shape vs whether the breakout reached +2R before the stop).</p>
-<div class="card"><b>The typical base</b> — median [middle-50% range]:
-<table><tr><th>What</th><th>median</th><th>typical range</th></tr>{shape_rows}
-<tr><td>Base length (pause before breakout)</td><td class="mono">~3 wks</td><td class="mono">14 – 17 bars</td></tr></table>
-<small>So a "normal" base is ~3 weeks long, ranges ~28% high-to-low over the prior month, and sits ~5–6% tight.</small></div>
+<div class="card"><b>The typical base</b> — median [middle-50% range]. <small>Hover any metric name for its exact
+definition.</small>
+<table><tr><th>What it measures</th><th>median</th><th>typical range</th></tr>{shape_rows}
+<tr><td><span class="hint" title="{LEN_TIP}">Base length</span> <span class="code">pause before breakout</span></td>
+<td class="mono">~3 wks</td><td class="mono">14 – 17 bars</td></tr></table>
+<small>So a "normal" base is ~3 weeks long, ranges ~28% high-to-low over the prior month (depth), and its
+closes sit within ~5–6% of each other (tightness).</small></div>
 <div class="cols">
 <div class="card">{pred_depth}{pred_tight}</div>
 <div class="card">{pred_contr}</div>
