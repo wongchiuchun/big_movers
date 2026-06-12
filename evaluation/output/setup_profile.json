@@ -1,0 +1,183 @@
+{
+  "n": 9974,
+  "typical_shape": {
+    "depth_20_pct (consolidation range)": {
+      "n": 9974,
+      "p25": 22.4,
+      "median": 28.0,
+      "p75": 34.8
+    },
+    "tightness_10_pct (10-bar dispersion)": {
+      "n": 9974,
+      "p25": 4.0,
+      "median": 5.6,
+      "p75": 7.9
+    },
+    "contraction_5v15 (recent/older range)": {
+      "n": 9974,
+      "p25": 0.5,
+      "median": 0.8,
+      "p75": 1.1
+    }
+  },
+  "predicts": {
+    "depth_20": [
+      {
+        "bucket": "<15% tight",
+        "n": 158,
+        "hit_2R_pct": 50.0,
+        "med_fwd20": 10.8
+      },
+      {
+        "bucket": "15-25%",
+        "n": 3483,
+        "hit_2R_pct": 48.4,
+        "med_fwd20": 9.3
+      },
+      {
+        "bucket": "25-40%",
+        "n": 5080,
+        "hit_2R_pct": 46.3,
+        "med_fwd20": 7.5
+      },
+      {
+        "bucket": "40%+ deep",
+        "n": 1253,
+        "hit_2R_pct": 49.1,
+        "med_fwd20": 5.6
+      }
+    ],
+    "tightness_10": [
+      {
+        "bucket": "<3% v.tight",
+        "n": 836,
+        "hit_2R_pct": 45.3,
+        "med_fwd20": 9.3
+      },
+      {
+        "bucket": "3-5%",
+        "n": 3245,
+        "hit_2R_pct": 45.5,
+        "med_fwd20": 6.9
+      },
+      {
+        "bucket": "5-8%",
+        "n": 3441,
+        "hit_2R_pct": 48.1,
+        "med_fwd20": 8.5
+      },
+      {
+        "bucket": "8%+ loose",
+        "n": 2452,
+        "hit_2R_pct": 50.0,
+        "med_fwd20": 8.7
+      }
+    ],
+    "contraction_5v15": [
+      {
+        "bucket": "<0.5 tight",
+        "n": 2053,
+        "hit_2R_pct": 42.0,
+        "med_fwd20": 6.1
+      },
+      {
+        "bucket": "0.5-0.8",
+        "n": 3067,
+        "hit_2R_pct": 45.9,
+        "med_fwd20": 7.8
+      },
+      {
+        "bucket": "0.8-1.2",
+        "n": 2603,
+        "hit_2R_pct": 47.7,
+        "med_fwd20": 8.8
+      },
+      {
+        "bucket": "1.2+ expand",
+        "n": 2251,
+        "hit_2R_pct": 54.4,
+        "med_fwd20": 9.3
+      }
+    ]
+  },
+  "early_only": {
+    "depth_20": [
+      {
+        "bucket": "<15% tight",
+        "n": 47,
+        "hit_2R_pct": 57.4,
+        "med_fwd20": 15.3
+      },
+      {
+        "bucket": "15-25%",
+        "n": 960,
+        "hit_2R_pct": 53.4,
+        "med_fwd20": 13.8
+      },
+      {
+        "bucket": "25-40%",
+        "n": 1571,
+        "hit_2R_pct": 47.3,
+        "med_fwd20": 9.9
+      },
+      {
+        "bucket": "40%+ deep",
+        "n": 434,
+        "hit_2R_pct": 49.7,
+        "med_fwd20": 9.6
+      }
+    ],
+    "tightness_10": [
+      {
+        "bucket": "<3% v.tight",
+        "n": 244,
+        "hit_2R_pct": 50.8,
+        "med_fwd20": 13.3
+      },
+      {
+        "bucket": "3-5%",
+        "n": 947,
+        "hit_2R_pct": 47.9,
+        "med_fwd20": 11.0
+      },
+      {
+        "bucket": "5-8%",
+        "n": 1033,
+        "hit_2R_pct": 47.3,
+        "med_fwd20": 11.2
+      },
+      {
+        "bucket": "8%+ loose",
+        "n": 788,
+        "hit_2R_pct": 54.8,
+        "med_fwd20": 11.1
+      }
+    ],
+    "contraction_5v15": [
+      {
+        "bucket": "<0.5 tight",
+        "n": 618,
+        "hit_2R_pct": 39.3,
+        "med_fwd20": 9.4
+      },
+      {
+        "bucket": "0.5-0.8",
+        "n": 923,
+        "hit_2R_pct": 49.0,
+        "med_fwd20": 11.2
+      },
+      {
+        "bucket": "0.8-1.2",
+        "n": 768,
+        "hit_2R_pct": 51.1,
+        "med_fwd20": 12.1
+      },
+      {
+        "bucket": "1.2+ expand",
+        "n": 703,
+        "hit_2R_pct": 58.7,
+        "med_fwd20": 13.2
+      }
+    ]
+  }
+}

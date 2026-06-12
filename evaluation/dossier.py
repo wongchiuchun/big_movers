@@ -101,7 +101,7 @@ FILE_MAP = [
     ("Pine guide", "pinescript/README.md", "How to load and use the indicator; SMA vs EMA; the honest caveat."),
     ("Earlier: myth study", "myth_report.html", "Phase 1 — which textbook rules are real vs descriptive."),
     ("Earlier: strategy v1", "strategy_playbook.html", "Phase 2 — the in-sample policy grid (superseded by the honest findings)."),
-    ("Engines", "engine.py · run_engine.py · run_continuation.py · run_bases.py · honest_eval.py · split.py", "The reproducible code: point-in-time engine, train/test split, control group, continuation + base-number tests."),
+    ("Engines", "engine.py · run_engine.py · run_continuation.py · run_bases.py · run_setup_profile.py · honest_eval.py · split.py", "The reproducible code: point-in-time engine, train/test split, control group, continuation + base-number + setup-shape tests."),
 ]
 
 STATUS_BADGE = {
@@ -163,8 +163,28 @@ def main():
     en = load("engine_results.json")
     co = load("continuation_results.json")
     bs = load("bases_results.json")
+    sp = load("setup_profile.json")
     ns = en.get("n_signals", {})
     pm = co.get("per_move", {})
+
+    # setup field guide tables
+    shape = sp.get("typical_shape", {})
+    shape_rows = "".join(
+        f"<tr><td>{k}</td><td class='mono'>{v.get('median')}</td>"
+        f"<td class='mono'>{v.get('p25')} – {v.get('p75')}</td></tr>"
+        for k, v in shape.items())
+
+    def predict_table(col, title):
+        rows = sp.get("predicts", {}).get(col, [])
+        body = "".join(
+            f"<tr><td>{r['bucket']}</td><td class='mono'>{r['n']}</td>"
+            f"<td class='mono'>{r['hit_2R_pct']}%</td><td class='mono'>{r['med_fwd20']}%</td></tr>"
+            for r in rows)
+        return (f"<p style='margin:10px 0 2px'><b>{title}</b></p>"
+                f"<table><tr><th>bucket</th><th>n</th><th>hit +2R</th><th>med 20d fwd</th></tr>{body}</table>")
+    pred_depth = predict_table("depth_20", "Base depth (consolidation range %)")
+    pred_tight = predict_table("tightness_10", "Tightness (10-bar dispersion %)")
+    pred_contr = predict_table("contraction_5v15", "Contraction (recent range ÷ older range)")
 
     # base-number deep-dive table (era x base)
     base_rows = ""
@@ -211,6 +231,7 @@ def main():
         '<li style="margin-top:6px;color:#8a6d3b;font-size:11px;text-transform:uppercase;letter-spacing:.05em">The journey</li>'
         f'{toc}'
         '<li style="margin-top:6px"><a href="#bases">Deep-dive: base number (2023+)</a></li>'
+        '<li><a href="#fieldguide">★ Setup field guide (layer 2)</a></li>'
         '<li><a href="#works">What works / what doesn\'t</a></li>'
         '<li><a href="#strategy">The locked strategy</a></li>'
         '<li><a href="#limits">Honest limits</a></li>'
@@ -224,8 +245,10 @@ def main():
 <body><div class="wrap">
 <h1>Big-Mover Momentum — Project Dossier</h1>
 <p class="sub">Everything we've done, tried, kept and dropped — in one read. Built from the winners
-databank ({1529:,} moves, 949 tickers). The sidebar holds the contents and a glossary that stays in view
-as you scroll. Last updated this session.</p>
+databank ({1529:,} moves, 949 tickers). Two layers: <b>(1) a signal</b> — the rules + the TradingView
+indicator; <b>(2) a field guide</b> — how setups actually behave, so when a live chart deviates from the
+playbook you can judge it yourself. The sidebar holds the contents and a glossary that stays in view as you
+scroll. Last updated this session.</p>
 
 <div class="layout">
 <div class="main">
@@ -274,6 +297,33 @@ recent opportunity.</div>
 runs ~14–17 bars (≈3 weeks) at every base number, and ADR stays in the 4–8 band — so it's the
 <i>extension</i> filter, not tightness or ADR, that excludes later bases. The fix is a base-count rule,
 not a shorter tightness window.</div>
+
+<h2 id="fieldguide">Setup field guide — what a base looks like &amp; what actually matters</h2>
+<p>This is the second layer: not a signal, but a general understanding so that when a live setup deviates
+from the playbook you can judge whether to stay in. Built from {sp.get('n', 9974):,} momentum-universe
+breakouts (point-in-time base shape vs whether the breakout reached +2R before the stop).</p>
+<div class="card"><b>The typical base</b> — median [middle-50% range]:
+<table><tr><th>What</th><th>median</th><th>typical range</th></tr>{shape_rows}
+<tr><td>Base length (pause before breakout)</td><td class="mono">~3 wks</td><td class="mono">14 – 17 bars</td></tr></table>
+<small>So a "normal" base is ~3 weeks long, ranges ~28% high-to-low over the prior month, and sits ~5–6% tight.</small></div>
+<div class="cols">
+<div class="card">{pred_depth}{pred_tight}</div>
+<div class="card">{pred_contr}</div>
+</div>
+<div class="tldr"><b>What actually moves the odds (and what doesn't):</b><br>
+• <b>Depth — weak.</b> Hit-rate is ~flat 46–50% across depths; shallower bases give somewhat higher forward
+returns. <i>Don't skip a 30–40% base.</i><br>
+• <b>Tightness — not a success edge.</b> Looser bases hit +2R as often as very tight ones. Tightness matters
+for your <i>stop size and R</i>, not for whether the breakout works. The "must be tight" rule is overrated
+as a <i>predictor</i>.<br>
+• <b>Contraction — the one that matters, and it's counterintuitive.</b> Bases with <i>expanding</i> recent
+range (energy building, 1.2+) hit +2R <b>54%</b> vs dead-quiet contracted bases (&lt;0.5) at <b>42%</b> —
+the opposite of "wait for it to go silent." Constructive action into the breakout beats a dead base
+(sharper still early in a move: 59% vs 39%).</div>
+<div class="warn"><b>How to use it.</b> When a setup deviates from the textbook, these tell you whether to
+worry: a slightly <i>deep</i> or <i>loose</i> base is <b>not</b> a reason to pass; a base that's gone
+<i>completely dead</i> (heavy contraction, no energy) is the genuine yellow flag. Winners-only data, so trust
+the <i>direction</i> of each effect, not the absolute hit rates.</div>
 
 <h2 id="works">What works · what doesn't</h2>
 <div class="cols">

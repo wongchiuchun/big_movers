@@ -31,8 +31,11 @@ mode = input.string("B Consistent (free roll)", "Trade mode",
 minHold = input.int(3, "Min hold bars before MA exit", minval = 0, group = "Mode",
      tooltip = "The trailing-MA exit cannot fire in the first N closes (3 = Thursday-squat / shakeout guard). A pullback that tests the pivot and closes back above is a shakeout to hold, not an exit.")
 
-showCont = input.bool(false, "Continuation (leg 2+) entries", group = "Continuation",
-     tooltip = "OFF (default) = base-only: one early entry near the base, nothing once a move is extended. ON = also signal when price pulls back to the 20-EMA and reclaims it inside an uptrend (above a RISING 50-SMA), at ANY extension. This catches later legs (leg 2, leg 3) and RE-ENTERS after a shakeout stop-out — the case where a failed first entry otherwise locks you out of the whole run. Backtest (held-out tickers): continuation trades earn ~1.0-1.3R and, on the control group, behave slightly BETTER than base breakouts. Lower R per trade than the first leg, but ~3x more total R captured per move. A green 'BUY leg2' fires a re-entry when flat; an orange 'ADD' marks a pyramid point while already in a trade.")
+laterMode = input.string("Base breakout (2nd / 3rd base)", "Later-leg entry style", group = "Later-leg entries",
+     options = ["Base breakout (2nd / 3rd base)", "Pullback (reclaim 20-EMA)", "Off"],
+     tooltip = "The base-only entry (extension cap) sits out the later bases of long multi-base runners. Data: the signal decays after base 1 but stays strongly tradeable through BASE 3 (~2.2-3.1R held-out), and later bases pay MORE in 2023+. In recent moves ~80% had a later base holding ~62% of the capturable R. 'Base breakout' = enter the 2nd/3rd breakout to new highs (after a pause) inside an uptrend. 'Pullback' = enter when price reclaims the 20-EMA in an uptrend. 'Off' = base-1 only.")
+maxBases = input.int(3, "Max base number to enter", minval = 1, maxval = 6, group = "Later-leg entries",
+     tooltip = "Take base breakouts up to this number. Bases 1-3 stay tradeable in the data (especially 2023+); base 4+ thins out and turns slightly negative on the control group.")
 
 useUniverse = input.bool(true, "Require momentum universe (ADR 4-8%, liquid)", group = "Filters")
 adrLo       = input.float(4.0, "ADR% min", group = "Filters")
@@ -83,14 +86,35 @@ volOK    = relVol >= minRelVol
 regimeOK = not useRegime or regimeUp
 filtersOK = uniOK and freshOK and volOK and regimeOK
 
-// CONTINUATION trigger (leg 2+): pullback that reclaims the 20-EMA in an
-// established uptrend (price above a RISING 50-SMA). No freshness / extension cap
-// — that is the point. Lower volume than a base breakout, so volume is not required.
+// LATER-LEG triggers (bases 2-3): all gated by an established uptrend
+// (price above a RISING 50-SMA). No freshness / extension cap — that is the point.
 sma50val    = ta.sma(close, 50)
-sma50rising = sma50val > sma50val[21]
+sma50rising  = sma50val > sma50val[21]
 ema20v      = ta.ema(close, 20)
+inUptrend   = close > sma50val and sma50rising
+
+// base-breakout detection: a new 20-day high AFTER a pause of >=8 bars with no new
+// high (i.e. it broke out of a consolidation). barsSinceNH = length of that pause.
+isNewHigh = close > ta.highest(high, 20)[1]
+var int barsSinceNH = 9999
+isBaseBO  = isNewHigh and barsSinceNH >= 8
+barsSinceNH := isNewHigh ? 0 : barsSinceNH + 1
+
+// base counter: reset when the trend breaks (close below the 50-SMA), +1 on each
+// base breakout inside the uptrend. base 1 = first breakout off the bottom.
+var int baseNo = 0
+if close < sma50val
+    baseNo := 0
+baseEntry = isBaseBO and inUptrend
+if baseEntry
+    baseNo := baseNo + 1
+
 pulledBack  = low <= ema20v * 1.01 and close >= ema20v and close > close[1]
-contTrigger = showCont and close > sma50val and sma50rising and pulledBack and uniOK and regimeOK
+showCont    = laterMode != "Off"
+useBaseBO   = laterMode == "Base breakout (2nd / 3rd base)"
+contTrigger = showCont and inUptrend and uniOK and regimeOK and (
+     (useBaseBO and baseEntry and baseNo >= 2 and baseNo <= maxBases) or
+     (not useBaseBO and pulledBack))
 
 // suggested stop level for a new entry
 swingLow  = ta.lowest(low, 10)
@@ -146,14 +170,16 @@ plot(showStop and inTrade ? curStop : na, "Stop", color = color.new(color.red, 0
 
 if entryNow
     riskPct = (close - curStop) / close * 100
-    label.new(bar_index, low, (isContEntry ? "BUY leg2" : "BUY") + "\nstop " +
+    buyTxt = isContEntry ? (useBaseBO ? "BUY base " + str.tostring(baseNo) : "BUY leg2") : "BUY base 1"
+    label.new(bar_index, low, buyTxt + "\nstop " +
          str.tostring(curStop, format.mintick) + "  (" + str.tostring(riskPct, "#.#") + "% risk)",
          yloc = yloc.belowbar, style = label.style_label_up,
          color = isContEntry ? color.new(color.blue, 0) : color.new(color.teal, 0),
          textcolor = color.white, size = size.normal)
 
 if addNow
-    label.new(bar_index, low, "ADD\n(leg)", yloc = yloc.belowbar, style = label.style_label_up,
+    label.new(bar_index, low, "ADD\nbase " + str.tostring(baseNo), yloc = yloc.belowbar,
+         style = label.style_label_up,
          color = color.new(color.blue, 35), textcolor = color.white, size = size.small)
 
 if trimNow
@@ -173,8 +199,8 @@ var table tbl = table.new(position.top_right, 2, 7, bgcolor = color.new(color.bl
      border_width = 1, border_color = color.new(color.gray, 60))
 if showTable and barstate.islast
     table.cell(tbl, 0, 0, "Trigger today", text_color = color.white, text_size = size.small)
-    table.cell(tbl, 1, 0, rawSignal ? (sigGap ? "GAP" : above50 ? "50d hi" : "20d hi") : "—",
-         text_color = f(rawSignal), text_size = size.small)
+    table.cell(tbl, 1, 0, rawSignal ? (sigGap ? "GAP" : above50 ? "50d hi" : "20d hi") : (contTrigger ? (useBaseBO ? "base " + str.tostring(baseNo) : "pullbk") : "—"),
+         text_color = f(rawSignal or contTrigger), text_size = size.small)
     table.cell(tbl, 0, 1, "ADR% (" + str.tostring(adrLo, "#") + "-" + str.tostring(adrHi, "#") + ")",
          text_color = color.white, text_size = size.small)
     table.cell(tbl, 1, 1, str.tostring(adrPct, "#.#"),
@@ -182,14 +208,14 @@ if showTable and barstate.islast
     table.cell(tbl, 0, 2, "$Vol 20d", text_color = color.white, text_size = size.small)
     table.cell(tbl, 1, 2, str.tostring(dolVol20, "#.#") + "M",
          text_color = f(dolVol20 >= minDolVolM), text_size = size.small)
-    table.cell(tbl, 0, 3, "Triggers since low", text_color = color.white, text_size = size.small)
-    table.cell(tbl, 1, 3, str.tostring(sigsSinceLow), text_color = f(sigsSinceLow <= maxSignals), text_size = size.small)
+    table.cell(tbl, 0, 3, "Base # / triggers", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 3, str.tostring(baseNo) + " / " + str.tostring(sigsSinceLow), text_color = f(baseNo <= maxBases), text_size = size.small)
     table.cell(tbl, 0, 4, "Extended", text_color = color.white, text_size = size.small)
     table.cell(tbl, 1, 4, str.tostring(extPct, "#.#") + "%", text_color = f(extPct < maxExt), text_size = size.small)
     table.cell(tbl, 0, 5, "Rel vol", text_color = color.white, text_size = size.small)
     table.cell(tbl, 1, 5, str.tostring(relVol, "#.#") + "x", text_color = f(relVol >= minRelVol), text_size = size.small)
-    table.cell(tbl, 0, 6, "SPY > 50SMA", text_color = color.white, text_size = size.small)
-    table.cell(tbl, 1, 6, yn(regimeUp), text_color = f(regimeUp), text_size = size.small)
+    table.cell(tbl, 0, 6, "Uptrend (>rising 50)", text_color = color.white, text_size = size.small)
+    table.cell(tbl, 1, 6, yn(inUptrend), text_color = f(inUptrend), text_size = size.small)
 
 // ----------------------------- alerts -----------------------------
 alertcondition(entryNow, "BigMover BUY", "BigMover BUY on {{ticker}} at {{close}} — set stop per chart label")

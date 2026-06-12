@@ -58,30 +58,36 @@ extended above it), volume ≥1.5×, and SPY above its 50-day MA.
 **3-bar hold (shakeout guard):** the MA exit cannot fire in the first 3 closes —
 a test of the breakout that closes back above is a shakeout to hold, not a sell.
 
-**Continuation (leg 2+) entries — OPTIONAL, off by default.** The base entry only
-fires near the base (<50% extended off the 63-day low), so once a move is underway
-it goes quiet — and if your first entry shook out, you're locked out of the whole
-run (the VSH / RKLB / NOK problem). Toggle **Continuation** on and the indicator
-also signals when price **pulls back to the 20-EMA and reclaims it inside an
-uptrend** (above a *rising* 50-SMA), at any extension:
-- a blue **BUY leg2** when you're flat — a re-entry / later-leg entry;
-- a faded **ADD** when you're already in a trade — a pyramid point.
+**Later-leg entries (bases 2–3) — ON by default now.** The base-1 entry only fires
+near the base (<50% extended off the 63-day low), so once a move is underway it
+goes quiet — and if your first entry shook out, you're locked out of the whole run
+(the VSH / RKLB / NOK problem). The **"Later-leg entry style"** setting controls
+this:
 
-It's off by default because it changes the indicator's character (more signals,
-lower R each). The data backing it (held-out tickers + control group):
+- **Base breakout (2nd / 3rd base)** — default. Signals the Nth breakout to new
+  highs *after a pause* inside an uptrend (price above a rising 50-SMA). A blue
+  **BUY base 2 / BUY base 3** fires when you're flat; a faded **ADD base N** marks
+  a pyramid point while in a trade. **"Max base number"** caps it (default 3).
+- **Pullback (reclaim 20-EMA)** — instead enters when price pulls back to the
+  20-EMA and reclaims it in an uptrend (a lower, tighter entry).
+- **Off** — base-1 only (the original behaviour).
 
-| Entry | extension off 63-day low | held-out avg R | control avg R |
+The "Base #" cell in the table shows which base you're on. Why bases 1–3 — the
+data (held-out tickers vs control), Mode A runner:
+
+| Base | held-out avg R (w99) — pre-2023 | 2023+ | control w99 |
 |---|---|---|---|
-| Base breakout | 0–50% | 2.14 | −0.06 (w99) |
-| Continuation | 50–100% (leg 2) | 0.99 | **+0.01** |
-| Continuation | 100–200% (leg 3) | 1.25 | **+0.02** |
+| 1 | 4.12 (4.03) | 4.78 (4.64) | ~0 |
+| 2 | 2.52 (2.17) | **3.17 (3.13)** | ~0 |
+| 3 | 2.58 (2.29) | **3.08 (2.95)** | ~0 |
+| 4+ | 1.41 (1.33) | 2.34 (2.22) | slightly negative |
 
-Continuation trades earn less per trade than the first leg **but stay positive
-out-of-sample at every extension and behave *better* on the control group** (the
-pullback-into-an-uptrend filter is higher quality than a raw breakout). Across the
-databank, 90% of winning moves offered a continuation entry, and allowing them
-roughly **tripled the R captured per move** (base ~2.5R → ~8R). Trade-off: more
-positions / heat (apply your add + heat caps) and lower hit-rate per trade.
+The signal decays after base 1 but stays strongly tradeable through **base 3**,
+and later bases pay *more* in the 2023+ regime of long multi-base runners. In
+recent moves, ~80% had a later base holding ~62% of the capturable R — so base-1
+only leaves the majority on the table. Base 4+ thins out and turns slightly
+negative on the control group, hence the default cap at 3. Trade-off: more
+positions / heat — apply your add and heat caps, and size later bases down.
 
 **Exit — the whole sell rule, made explicit:**
 > Sell when price **closes below the trend line** (EMA 50 by default), but never
