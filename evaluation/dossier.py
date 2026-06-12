@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import os
 
-from evaluation.honest_report import GLOSSARY, build_glossary
+from evaluation.honest_report import GLOSSARY, build_glossary, num
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "evaluation", "output")
@@ -59,10 +59,15 @@ PHASES = [
      "tried": "You flagged that the base-only entry misses the bulk of strong trends. Tested a continuation entry — a pullback that reclaims the 20-EMA inside an uptrend — at every extension band, on train / test / control.",
      "found": "Continuation entries stay positive out-of-sample at <i>every</i> extension (~1.0–1.3R), and their control behaviour is slightly <b>positive</b> — better than the base breakout. 90.5% of winning moves offered one; allowing them roughly <b>triples the R captured per move</b> and re-enters after a shakeout.",
      "verdict": "Worth it. Shipped as an OPTIONAL, off-by-default toggle in the indicator — your call whether to run it. <span class='code'>continuation_results.json</span>"},
+    {"n": 8, "title": "Base-number decay & the 2023+ regime", "status": "done",
+     "tried": "You pointed out that 2023→now produced long, multi-base 10-baggers where the 2nd/3rd base is very tradeable, and that an early-only rule sits them out. Detected bases deterministically (a new-high breakout after an ≥8-bar pause), numbered them within each move, and measured forward R per base — split pre-2023 vs 2023+ — on held-out winners and control (see the table below).",
+     "found": "The signal decays after base 1 but stays strongly tradeable through <b>base 3</b> (~2.2–3.1R held-out). Later bases pay <b>more</b> in 2023+ than in the old data (base 2: 3.13 vs 2.17 w99; base 3: 2.95 vs 2.29). In 2023+, <b>80% of moves had a later base and later bases held 62% of the capturable R</b> — the early-only rule captures only ~⅜ of recent opportunity. Honest correction: later-base pauses are NOT much shorter (~3 weeks at every base), and ADR stays in-band — so it's the extension filter, not tightness or ADR, that excludes them.",
+     "verdict": "Confirms your thesis: take bases 1–3, not just base 1 — especially now. Validates the continuation toggle and points to a base-count entry rule. Control stays ~0, so the survivorship caveat still holds. <span class='code'>bases_results.json</span>"},
 ]
 
 WORKS = [
-    ("Enter early + not extended", "The only two filters that survive out-of-sample. Both about entry timing. Edge +1.8 to +2.2R, holds train→test."),
+    ("Enter early + not extended (for base 1)", "The two filters that survive out-of-sample — for the FIRST base. Edge +1.8 to +2.2R, holds train→test."),
+    ("Bases 1–3, not just base 1", "Signal decays after base 1 but stays strongly tradeable through base 3 (~2.2–3.1R held-out), and pays MORE in 2023+. Later bases hold 62% of the capturable R in recent moves."),
     ("Structural swing-low stop", "Beats the entry-day-wick stop on win rate AND control behaviour. The consistency lever (Phase 3) and your contract's 'structural stop'."),
     ("3-bar shakeout hold", "Free improvement everywhere — stops a normal pullback knocking you out in the first 3 days."),
     ("Free roll (trim ½ at +2R → BE)", "Nearly halves yearly variance (0.49→0.29) for the same median return. The 'more consistent' you asked for."),
@@ -81,7 +86,7 @@ FAILS = [
 # Concrete decisions the user needs to make to advance — the review checklist.
 CHECKLIST = [
     ("Pick your default mode", "Mode B (free roll, consistent, ~60% win, half the variance) vs Mode A (runner, max R, more give-back). Recommendation: B as default, A for A+ setups in strong tape. <b>Your call.</b>"),
-    ("Decide on continuation entries", "Eyeball the optional 'Continuation (leg 2+)' toggle on VSH / RKLB / your own charts. If the leg-2/leg-3 signals look tradeable to you, we make them first-class (sizing, alerts, app integration). If they add too much noise/heat, we leave them off."),
+    ("Decide on continuation / multi-base entries", "The base-number deep-dive (§ below) shows bases 1–3 are all worth taking, especially in 2023+. Eyeball the optional 'Continuation (leg 2+)' toggle on VSH / RKLB / your own charts. If it looks right, the cleaner next step is a <b>base-count entry rule</b> (take the first 3 base breakouts in a confirmed uptrend) — say the word and I'll build it."),
     ("Sanity-check against your live trading", "Does the ~30% wild win-rate and 'right tail pays' framing match your actual results? If your real win rate is much higher, your discretion is adding edge the backtest can't see — worth quantifying."),
     ("Approve the control-group method", "The control is built from ex-monster tickers (trendier than reality), so it understates the true false-positive rate. Decide if that's good enough, or if we should build a random-S&P control for a stricter read."),
     ("Choose the next build", "Options: (a) random-universe control; (b) wire the two modes + continuation into the portfolio sim for real equity curves & drawdowns under position sizing; (c) a SPY-regime auto-switch between Mode A and B. Pick one and I'll do it."),
@@ -96,7 +101,7 @@ FILE_MAP = [
     ("Pine guide", "pinescript/README.md", "How to load and use the indicator; SMA vs EMA; the honest caveat."),
     ("Earlier: myth study", "myth_report.html", "Phase 1 — which textbook rules are real vs descriptive."),
     ("Earlier: strategy v1", "strategy_playbook.html", "Phase 2 — the in-sample policy grid (superseded by the honest findings)."),
-    ("Engines", "engine.py · run_engine.py · run_continuation.py · honest_eval.py · split.py", "The reproducible code: point-in-time engine, train/test split, control group, continuation test."),
+    ("Engines", "engine.py · run_engine.py · run_continuation.py · run_bases.py · honest_eval.py · split.py", "The reproducible code: point-in-time engine, train/test split, control group, continuation + base-number tests."),
 ]
 
 STATUS_BADGE = {
@@ -157,8 +162,29 @@ def main():
     he = load("honest_eval.json")
     en = load("engine_results.json")
     co = load("continuation_results.json")
+    bs = load("bases_results.json")
     ns = en.get("n_signals", {})
     pm = co.get("per_move", {})
+
+    # base-number deep-dive table (era x base)
+    base_rows = ""
+    for era in ("pre-2023", "2023+"):
+        eb = bs.get("by_era_base", {}).get(era, {})
+        first = True
+        for ob in ("base 1", "base 2", "base 3", "base 4+"):
+            d = eb.get(ob, {})
+            w, c = d.get("winner_test", {}), d.get("control", {})
+            hl = ' class="hl"' if era == "2023+" and ob in ("base 2", "base 3") else ""
+            era_cell = (f'<td rowspan="4" style="font-weight:700;vertical-align:middle;'
+                        f'background:#faf8f3">{era}</td>') if first else ""
+            base_rows += (
+                f"<tr{hl}>{era_cell}<td>{ob}</td>"
+                f"<td>{w.get('n','–')}</td><td>{num(w.get('win'), False)}</td>"
+                f"<td>{num(w.get('avgR'))}</td><td>{num(w.get('avgRw99'))}</td>"
+                f"<td>{num(c.get('avgRw99'))}</td>"
+                f"<td>{d.get('pause_median') or '—'}</td><td>{d.get('adr_median') or '—'}</td></tr>")
+            first = False
+    p23 = bs.get("per_move_2023", {})
 
     # phase cards
     phase_html = ""
@@ -184,7 +210,8 @@ def main():
         '<li><a href="#goal">The goal</a></li>'
         '<li style="margin-top:6px;color:#8a6d3b;font-size:11px;text-transform:uppercase;letter-spacing:.05em">The journey</li>'
         f'{toc}'
-        '<li style="margin-top:6px"><a href="#works">What works / what doesn\'t</a></li>'
+        '<li style="margin-top:6px"><a href="#bases">Deep-dive: base number (2023+)</a></li>'
+        '<li><a href="#works">What works / what doesn\'t</a></li>'
         '<li><a href="#strategy">The locked strategy</a></li>'
         '<li><a href="#limits">Honest limits</a></li>'
         '<li><a href="#review">★ Your review checklist</a></li>'
@@ -226,6 +253,27 @@ trail is a different strategy.</p>
 <h2>The journey — what we tried, found, and decided</h2>
 <p><small>Seven phases, in order. Each: what we <b>tried</b>, what we <b>found</b>, the <b>verdict</b>.</small></p>
 {phase_html}
+
+<h2 id="bases">Deep-dive: signal decay by base number (and the 2023+ regime)</h2>
+<p>You asked whether the 2nd/3rd base is still worth playing — especially for the long multi-base
+10-baggers since 2023. Forward R by base number (Mode A runner: 50-MA trail, structural stop), on
+held-out winner tickers vs the control group. Highlighted = the recent later bases.</p>
+<table>
+<tr><th>Era</th><th>Base</th><th>win n</th><th>win%</th><th>avg R</th><th>w99 R</th>
+<th>control w99</th><th>pause (bars)</th><th>ADR</th></tr>
+{base_rows}</table>
+<div class="tldr"><b>The signal decays after base 1 but stays strongly tradeable through base 3</b>
+(~2.2–3.1R held-out) — and later bases pay <b>more in 2023+</b> than in the old data. In 2023+,
+<b>{p23.get('pct_with_later_base','~80')}% of moves had a later base, and later bases held
+{p23.get('later_share_of_total','~62')}% of the capturable R</b> (base-1 ~{p23.get('avg_base1_R','5.2')}R
+per move vs later bases ~{p23.get('avg_later_base_R','8.7')}R). The early-only rule captures only ~⅜ of
+recent opportunity.</div>
+<div class="warn"><b>Honest caveats.</b> (1) Control R stays ≈0 across all bases — slightly negative at base
+3/4+ in 2023+ — so later bases clear the bar on held-out winners but are not a free lunch in the wild.
+(2) Your "later bases consolidate shorter" hypothesis is <b>not</b> confirmed by this measure: the pause
+runs ~14–17 bars (≈3 weeks) at every base number, and ADR stays in the 4–8 band — so it's the
+<i>extension</i> filter, not tightness or ADR, that excludes later bases. The fix is a base-count rule,
+not a shorter tightness window.</div>
 
 <h2 id="works">What works · what doesn't</h2>
 <div class="cols">

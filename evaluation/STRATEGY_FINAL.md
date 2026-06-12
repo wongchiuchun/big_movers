@@ -118,6 +118,29 @@ Shipped as an OPTIONAL, off-by-default toggle in `big_mover_signals.pine`
 already in a trade. Off by default because it changes the tool's character (more
 signals, lower R each, more heat). User's call whether to run it.
 
+## Base-number decay & the 2023+ regime — answered 2026-06-12
+
+User: the early-only rule sits out the 2nd/3rd bases of the long multi-base
+10-baggers since 2023. Tested forward R by base number (bases = new-high breakout
+after an ≥8-bar pause, numbered within each move), pre-2023 vs 2023+, Mode A
+runner, on held-out winners + control (`run_bases.py`):
+
+| Era | Base | held-out avg R (w99) | control w99 |
+|---|---|---|---|
+| pre-2023 | 1 / 2 / 3 / 4+ | 4.12 / 2.52 / 2.58 / 1.41 | ~0 |
+| 2023+ | 1 / 2 / 3 / 4+ | 4.78 / **3.17** / **3.08** / 2.34 | +0.13 / +0.05 / −0.08 / −0.10 |
+
+Verdict: signal decays after base 1 but stays strongly tradeable through **base
+3** (~2.2–3.1R), and later bases pay **more in 2023+** than historically. In
+2023+, **80% of moves had a later base and later bases held 62% of the capturable
+R** (base-1 ~5.2R/move vs later ~8.7R). The early-only rule captures ~⅜ of recent
+opportunity. Caveats: control stays ≈0 (slightly negative at base 3/4+ in 2023+),
+so not a free lunch; and later-base consolidations are NOT shorter (~3 weeks at
+every base) and ADR stays in-band — it's the extension filter, not tightness/ADR,
+that excludes them. Implication: prefer a **base-count rule (take bases 1–3 in a
+confirmed uptrend)** over the hard extension cap. Covered today by the optional
+continuation toggle; a first-class base-count entry is the clean next build.
+
 ## What I would build next (not done yet)
 - A true out-of-universe control (random S&P names, not ex-monsters) to pin the
   real false-positive rate — current control is trendier than reality.
