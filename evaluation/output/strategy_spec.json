@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-06-11",
+  "generated": "2026-06-12",
   "name": "Big-Mover Momentum Strategy v1 (data-derived)",
   "caveat": "Derived on a winners-only databank: absolute expectancies are inflated by selection bias; relative policy/filter rankings are the robust output. Validate forward in sim before sizing up.",
   "universe": {

@@ -77,7 +77,7 @@ Tunable constants (single config object):
 - `LOOKBACK_L = 63`
 - `RUN_THRESHOLD = 0.35`
 - `MIN_CONTEXT_BARS = 120`
-- `MIN_PRICE = 1.0` (liquidity floor; exact rule TBD-free — see plan)
+- `MIN_PRICE = 1.0` (liquidity floor: skip decision bars where `decisionClose < MIN_PRICE`)
 
 ## 5. The Question (5-way, direction told)
 
