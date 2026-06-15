@@ -447,16 +447,20 @@ def api_stock_list():
     """Return the list of available ticker symbols in collected_stocks/.
     Used by the Top-or-Bottom Quiz to sample the full universe (unbiased),
     not just the big-mover catalogue."""
-    d = STOCKS_DIRS[0]
-    out = []
-    try:
-        for fname in os.listdir(d):
+    symbols = set()
+    found_any_dir = False
+    for d in STOCKS_DIRS:
+        try:
+            entries = os.listdir(d)
+        except FileNotFoundError:
+            continue
+        found_any_dir = True
+        for fname in entries:
             if fname.endswith(".csv"):
-                out.append(fname[:-4].upper())
-    except FileNotFoundError:
+                symbols.add(fname[:-4].upper())
+    if not found_any_dir:
         return jsonify({"error": "collected_stocks directory not found"}), 404
-    out.sort()
-    return jsonify(out)
+    return jsonify(sorted(symbols))
 
 
 DRAWINGS_FILE = os.path.join(SCRIPT_DIR, "drawings.json")
