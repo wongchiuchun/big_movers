@@ -65,5 +65,13 @@ ok('flat series yields no candidates', Quiz.Pool.scan(flat, cfg).length === 0);
 const penny = makeBars().map(b => ({...b, open:b.open*0.05, high:b.high*0.05, low:b.low*0.05, close:b.close*0.05}));
 ok('sub-$1 series filtered by MIN_PRICE', Quiz.Pool.scan(penny, cfg).length === 0);
 
+// pick() with rng=0 returns the first candidate; rng->~1 returns the last.
+const allCands = Quiz.Pool.scan(bars, cfg);
+const firstPick = Quiz.Pool.pick(bars, cfg, () => 0);
+const lastPick  = Quiz.Pool.pick(bars, cfg, () => 0.999999);
+ok('pick(rng=0) == first candidate', firstPick && firstPick.decisionIdx === allCands[0].decisionIdx);
+ok('pick(rng~1) == last candidate', lastPick && lastPick.decisionIdx === allCands[allCands.length-1].decisionIdx);
+ok('pick on flat series returns null', Quiz.Pool.pick(flat, cfg, () => 0) === null);
+
 console.log(`\nQuiz.Pool: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
