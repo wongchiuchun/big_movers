@@ -14052,8 +14052,16 @@ window.Sim = Sim;
     if (S) S=null;
     var p=$('quiz-panel'); if (p) p.style.display='none';
     try {
-      if (typeof selectRow === 'function' && typeof activeIdx === 'number' && activeIdx >= 0) { selectRow(activeIdx); }
-      else if (typeof candleSeries !== 'undefined' && candleSeries) { candleSeries.setData([]); }
+      if (typeof selectRow === 'function' && typeof activeIdx === 'number' && activeIdx >= 0) {
+        selectRow(activeIdx);
+      } else {
+        if (typeof candleSeries !== 'undefined' && candleSeries) { candleSeries.setData([]); }
+        var sym=$('ct-sym'), cond=$('ct-cond'), gain=$('ct-gain'), range=$('ct-range');
+        if (sym) sym.textContent = '—';
+        if (cond) cond.textContent = '';
+        if (gain) gain.textContent = '';
+        if (range) range.textContent = '';
+      }
     } catch(e){ console.warn('quiz restore', e); }
   }
 
