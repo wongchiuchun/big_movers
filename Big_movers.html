@@ -13954,10 +13954,10 @@ window.Sim = Sim;
   function _renderMasked(bars, cand){
     var startIdx = Math.max(0, cand.decisionIdx - 160);
     var visible = bars.slice(startIdx, cand.decisionIdx + 1); // up to & incl decision bar
-    try { candleSeries.setData(visible.map(function(b){ return { time:b.time, open:+b.open, high:+b.high, low:+b.low, close:+b.close }; })); } catch(e){}
+    try { candleSeries.setData(visible.map(function(b){ return { time:b.time, open:+b.open, high:+b.high, low:+b.low, close:+b.close }; })); } catch(e){ console.warn('quiz chart', e); }
     try {
       if (chart && chart.timeScale) chart.timeScale().fitContent();
-    } catch(e){}
+    } catch(e){ console.warn('quiz chart', e); }
     // Mask identity in topbar (mirror SimBlind).
     var sym=$('ct-sym'), cond=$('ct-cond'), gain=$('ct-gain'), range=$('ct-range');
     if (sym) sym.textContent = '🕶 BLIND TICKER';
@@ -13971,8 +13971,8 @@ window.Sim = Sim;
     var bars = S.round.bars, cand = S.round.cand;
     var end = Math.min(bars.length - 1, cand.decisionIdx + window.Quiz.CONFIG.LOOKFORWARD_H);
     var visible = bars.slice(S._startIdx, end + 1);
-    try { candleSeries.setData(visible.map(function(b){ return { time:b.time, open:+b.open, high:+b.high, low:+b.low, close:+b.close }; })); } catch(e){}
-    try { if (chart && chart.timeScale) chart.timeScale().fitContent(); } catch(e){}
+    try { candleSeries.setData(visible.map(function(b){ return { time:b.time, open:+b.open, high:+b.high, low:+b.low, close:+b.close }; })); } catch(e){ console.warn('quiz chart', e); }
+    try { if (chart && chart.timeScale) chart.timeScale().fitContent(); } catch(e){ console.warn('quiz chart', e); }
   }
 
   function _revealTicker(){
@@ -13989,6 +13989,7 @@ window.Sim = Sim;
     $('quiz-direction').textContent = 'Loading…';
 
     var r = await _drawRound();
+    if (!S) return;
     if (!r){ $('quiz-direction').textContent = 'Could not find a qualifying chart — try again.'; return; }
     S.round = r;
     S.currentSymbol = r.symbol;
@@ -13997,6 +13998,7 @@ window.Sim = Sim;
   }
 
   function _answer(predictedBucket){
+    if (!S || !S.round) return;
     var cand = S.round.cand, bars = S.round.bars;
     var truth = window.Quiz.Grade.trueBucket(bars, cand, window.Quiz.CONFIG);
     var credit = window.Quiz.Grade.score(predictedBucket, truth.bucket);
@@ -14046,7 +14048,14 @@ window.Sim = Sim;
     $('quiz-summary').style.display = 'none';
     _startRound();
   }
-  function exit(){ if (S) S=null; var p=$('quiz-panel'); if (p) p.style.display='none'; }
+  function exit(){
+    if (S) S=null;
+    var p=$('quiz-panel'); if (p) p.style.display='none';
+    try {
+      if (typeof selectRow === 'function' && typeof activeIdx === 'number' && activeIdx >= 0) { selectRow(activeIdx); }
+      else if (typeof candleSeries !== 'undefined' && candleSeries) { candleSeries.setData([]); }
+    } catch(e){ console.warn('quiz restore', e); }
+  }
 
   window.Quiz.Ctrl = { start: start, exit: exit, _answer: _answer, _next: _next, _revealTicker: _revealTicker };
 })();
