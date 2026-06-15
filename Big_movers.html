@@ -13914,6 +13914,197 @@ window.Sim = Sim;
 /* ===== end Quiz.Stats ===== */
 </script>
 <script>
+/* ===== Quiz.Ctrl ===== */
+(function(){
+  'use strict';
+  window.Quiz = window.Quiz || {};
+  var TOTAL_ROUNDS_DEFAULT = 10;
+  var MAX_TICKER_TRIES = 40;
+
+  var S = null; // session state
+
+  function $(id){ return document.getElementById(id); }
+
+  async function _fetchList(){
+    var resp = await fetch('/api/stock-list');
+    var data = await resp.json();
+    if (data && data.error) throw new Error(data.error);
+    return Array.isArray(data) ? data : [];
+  }
+  async function _fetchBars(sym){
+    var resp = await fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym));
+    var data = await resp.json();
+    if (data && data.error) return null;
+    return Array.isArray(data) ? data : null;
+  }
+
+  // Pick a ticker whose history yields at least one qualifying candidate.
+  async function _drawRound(){
+    var list = S.list;
+    for (var tries = 0; tries < MAX_TICKER_TRIES; tries++){
+      var sym = list[Math.floor(Math.random() * list.length)];
+      var bars = await _fetchBars(sym);
+      if (!bars) continue;
+      var cand = window.Quiz.Pool.pick(bars, window.Quiz.CONFIG, Math.random);
+      if (cand) return { symbol: sym, bars: bars, cand: cand };
+    }
+    return null;
+  }
+
+  function _renderMasked(bars, cand){
+    var startIdx = Math.max(0, cand.decisionIdx - 160);
+    var visible = bars.slice(startIdx, cand.decisionIdx + 1); // up to & incl decision bar
+    try { candleSeries.setData(visible.map(function(b){ return { time:b.time, open:+b.open, high:+b.high, low:+b.low, close:+b.close }; })); } catch(e){}
+    try {
+      if (chart && chart.timeScale) chart.timeScale().fitContent();
+    } catch(e){}
+    // Mask identity in topbar (mirror SimBlind).
+    var sym=$('ct-sym'), cond=$('ct-cond'), gain=$('ct-gain'), range=$('ct-range');
+    if (sym) sym.textContent = '🕶 BLIND TICKER';
+    if (cond) cond.textContent = '????';
+    if (gain) gain.textContent = '';
+    if (range) range.textContent = '';
+    S._startIdx = startIdx;
+  }
+
+  function _renderReveal(){
+    var bars = S.round.bars, cand = S.round.cand;
+    var end = Math.min(bars.length - 1, cand.decisionIdx + window.Quiz.CONFIG.LOOKFORWARD_H);
+    var visible = bars.slice(S._startIdx, end + 1);
+    try { candleSeries.setData(visible.map(function(b){ return { time:b.time, open:+b.open, high:+b.high, low:+b.low, close:+b.close }; })); } catch(e){}
+    try { if (chart && chart.timeScale) chart.timeScale().fitContent(); } catch(e){}
+  }
+
+  function _revealTicker(){
+    var sym=$('ct-sym'), cond=$('ct-cond');
+    if (sym) sym.textContent = S.round.symbol;
+    if (cond) cond.textContent = (S.round.bars[S.round.cand.decisionIdx].time || '').slice(0,4);
+  }
+
+  async function _startRound(){
+    $('quiz-question').style.display = '';
+    $('quiz-reveal').style.display = 'none';
+    Array.prototype.forEach.call(document.querySelectorAll('.quiz-ans'), function(b){ b.disabled=false; b.classList.remove('is-correct','is-chosen-wrong'); });
+    $('quiz-progress').textContent = 'Round ' + (S.roundIdx+1) + ' / ' + S.totalRounds;
+    $('quiz-direction').textContent = 'Loading…';
+
+    var r = await _drawRound();
+    if (!r){ $('quiz-direction').textContent = 'Could not find a qualifying chart — try again.'; return; }
+    S.round = r;
+    S.currentSymbol = r.symbol;
+    $('quiz-direction').textContent = r.cand.direction === 'up' ? 'This stock has been RISING.' : 'This stock has been FALLING.';
+    _renderMasked(r.bars, r.cand);
+  }
+
+  function _answer(predictedBucket){
+    var cand = S.round.cand, bars = S.round.bars;
+    var truth = window.Quiz.Grade.trueBucket(bars, cand, window.Quiz.CONFIG);
+    var credit = window.Quiz.Grade.score(predictedBucket, truth.bucket);
+    S.rounds.push({
+      symbol: S.round.symbol,
+      decisionDate: bars[cand.decisionIdx].time,
+      direction: cand.direction,
+      predictedBucket: predictedBucket, trueBucket: truth.bucket, credit: credit
+    });
+    // Lock buttons + mark correctness.
+    Array.prototype.forEach.call(document.querySelectorAll('.quiz-ans'), function(b){
+      b.disabled = true;
+      var bk = +b.getAttribute('data-bucket');
+      if (bk === truth.bucket) b.classList.add('is-correct');
+      else if (bk === predictedBucket) b.classList.add('is-chosen-wrong');
+    });
+    _renderReveal();
+    var labels = window.Quiz.Stats.BUCKET_LABELS;
+    $('quiz-reveal-text').innerHTML =
+      'You said <b>' + labels[predictedBucket] + '</b>. Actual: <b>' + labels[truth.bucket] + '</b>. ' +
+      'Credit: <b>' + credit.toFixed(1) + '</b>';
+    $('quiz-question').style.display = '';
+    $('quiz-reveal').style.display = '';
+  }
+
+  function _next(){
+    S.roundIdx++;
+    if (S.roundIdx >= S.totalRounds){ _finish(); return; }
+    _startRound();
+  }
+
+  function _finish(){
+    var summary = window.Quiz.Stats.summarize(S.rounds);
+    window.Quiz.Stats.saveSession({ ts: Date.now(), rounds: S.rounds, summary: summary });
+    $('quiz-question').style.display = 'none';
+    $('quiz-reveal').style.display = 'none';
+    var el = $('quiz-summary'); el.style.display = '';
+    el.innerHTML = window.Quiz.UI.renderSummary(summary);
+  }
+
+  async function start(totalRounds){
+    var list;
+    try { list = await _fetchList(); } catch(e){ alert('Could not load ticker list: ' + (e && e.message || e)); return; }
+    if (!list.length){ alert('No tickers available.'); return; }
+    S = { list: list, totalRounds: totalRounds || TOTAL_ROUNDS_DEFAULT, roundIdx: 0, rounds: [], round: null };
+    $('quiz-panel').style.display = '';
+    $('quiz-summary').style.display = 'none';
+    _startRound();
+  }
+  function exit(){ if (S) S=null; var p=$('quiz-panel'); if (p) p.style.display='none'; }
+
+  window.Quiz.Ctrl = { start: start, exit: exit, _answer: _answer, _next: _next, _revealTicker: _revealTicker };
+})();
+/* ===== end Quiz.Ctrl ===== */
+</script>
+<script>
+/* ===== Quiz.UI ===== */
+(function(){
+  'use strict';
+  window.Quiz = window.Quiz || {};
+
+  function pct(x){ return (x*100).toFixed(0) + '%'; }
+
+  function renderSummary(s){
+    var rows = [
+      ['You (exact)', pct(s.exactRate)],
+      ['You (within 1)', pct(s.within1Rate)],
+      ['"It always keeps going" (exact)', pct(s.baselineAlwaysContinueExact)],
+      ['"It always keeps going" (within 1)', pct(s.baselineAlwaysContinueWithin1)],
+      ['Random guessing (exact)', pct(s.baselineRandomExact)]
+    ];
+    var html = '<h3>Session complete — ' + s.roundCount + ' rounds</h3><table class="quiz-score">';
+    rows.forEach(function(r){ html += '<tr><td>' + r[0] + '</td><td><b>' + r[1] + '</b></td></tr>'; });
+    html += '</table>';
+    html += '<p class="quiz-bias">' + s.biasLine + '</p>';
+    var beat = s.exactRate <= s.baselineAlwaysContinueExact;
+    html += '<p class="quiz-verdict">' + (beat
+      ? 'You did <b>no better</b> than always assuming the move keeps going — which is exactly why the EMA stop, not your gut, should decide when you exit.'
+      : 'You edged out the naive baseline this session — run more rounds to see if it holds.') + '</p>';
+    html += '<button type="button" id="quiz-restart" class="sim-pill sim-pill-active">Play again</button>';
+    return html;
+  }
+
+  function _wire(){
+    var btn = document.getElementById('quiz-btn');
+    if (btn && !btn._quizBound){ btn._quizBound = true; btn.addEventListener('click', function(){ window.Quiz.Ctrl.start(10); }); }
+
+    var panel = document.getElementById('quiz-panel');
+    if (panel && !panel._quizBound){
+      panel._quizBound = true;
+      panel.addEventListener('click', function(e){
+        var t = e.target;
+        if (t.classList && t.classList.contains('quiz-ans') && !t.disabled){ window.Quiz.Ctrl._answer(+t.getAttribute('data-bucket')); return; }
+        if (t.id === 'quiz-next'){ window.Quiz.Ctrl._next(); return; }
+        if (t.id === 'quiz-reveal-ticker'){ window.Quiz.Ctrl._revealTicker(); return; }
+        if (t.id === 'quiz-exit'){ window.Quiz.Ctrl.exit(); return; }
+        if (t.id === 'quiz-restart'){ window.Quiz.Ctrl.start(10); return; }
+      });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _wire);
+  else _wire();
+
+  window.Quiz.UI = { renderSummary: renderSummary };
+})();
+/* ===== end Quiz.UI ===== */
+</script>
+<script>
 /* ---------- SimSaved: localStorage save/load of sim scenarios ---------- */
 (function(){
   const KEY = 'bm_saved_sims_v1';
