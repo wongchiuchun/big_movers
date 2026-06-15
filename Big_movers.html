@@ -13812,6 +13812,65 @@ window.Sim = Sim;
 /* ===== end Quiz.Grade ===== */
 </script>
 <script>
+/* ===== Quiz.Stats ===== */
+(function(){
+  'use strict';
+  window.Quiz = window.Quiz || {};
+  var LS_KEY = 'quizSessions';
+  var BUCKET_LABELS = ["It's over","Almost over","Roughly halfway","Early","Just getting started"];
+
+  function rate(arr, pred){ if (!arr.length) return 0; var n=0; for (var i=0;i<arr.length;i++){ if (pred(arr[i])) n++; } return n/arr.length; }
+
+  function summarize(rounds){
+    var rs = rounds || [];
+    var exactRate   = rate(rs, function(r){ return r.predictedBucket === r.trueBucket; });
+    var within1Rate = rate(rs, function(r){ return Math.abs(r.predictedBucket - r.trueBucket) <= 1; });
+    var avgCredit   = rs.length ? rs.reduce(function(s,r){ return s + (r.credit||0); }, 0) / rs.length : 0;
+
+    // Baseline 1: always predict bucket 4 ("just getting started" / it keeps going).
+    var bAlwaysExact   = rate(rs, function(r){ return r.trueBucket === 4; });
+    var bAlwaysWithin1 = rate(rs, function(r){ return Math.abs(4 - r.trueBucket) <= 1; });
+
+    // Baseline 2: uniform random over 5 buckets. exact = 1/5; within1 = mean over rounds of (#buckets within 1)/5.
+    var bRandExact = rs.length ? 0.2 : 0;
+    var bRandWithin1 = rs.length ? rs.reduce(function(s,r){
+      var t=r.trueBucket, n=0; for (var b=0;b<5;b++){ if (Math.abs(b-t)<=1) n++; } return s + n/5;
+    },0)/rs.length : 0;
+
+    // Bias readout: which bucket does the user over-predict most vs how often it was true?
+    var predCounts=[0,0,0,0,0], trueCounts=[0,0,0,0,0];
+    rs.forEach(function(r){ predCounts[r.predictedBucket]++; trueCounts[r.trueBucket]++; });
+    var worstB=0, worstGap=-Infinity;
+    for (var b=0;b<5;b++){ var gap=predCounts[b]-trueCounts[b]; if (gap>worstGap){ worstGap=gap; worstB=b; } }
+    var biasLine = worstGap > 0
+      ? 'You called "' + BUCKET_LABELS[worstB] + '" ' + predCounts[worstB] + '×; it was actually that ' + trueCounts[worstB] + '×.'
+      : 'No strong directional bias detected.';
+
+    return {
+      roundCount: rs.length,
+      exactRate: exactRate, within1Rate: within1Rate, avgCredit: avgCredit,
+      baselineAlwaysContinueExact: bAlwaysExact, baselineAlwaysContinueWithin1: bAlwaysWithin1,
+      baselineRandomExact: bRandExact, baselineRandomWithin1: bRandWithin1,
+      biasLine: biasLine,
+      predCounts: predCounts, trueCounts: trueCounts, bucketLabels: BUCKET_LABELS
+    };
+  }
+
+  function loadSessions(){
+    try { var raw = window.localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : []; }
+    catch(e){ return []; }
+  }
+  function saveSession(session){
+    var all = loadSessions(); all.push(session);
+    try { window.localStorage.setItem(LS_KEY, JSON.stringify(all)); } catch(e){}
+    return all;
+  }
+
+  window.Quiz.Stats = { summarize: summarize, loadSessions: loadSessions, saveSession: saveSession, BUCKET_LABELS: BUCKET_LABELS };
+})();
+/* ===== end Quiz.Stats ===== */
+</script>
+<script>
 /* ---------- SimSaved: localStorage save/load of sim scenarios ---------- */
 (function(){
   const KEY = 'bm_saved_sims_v1';
