@@ -1708,6 +1708,11 @@
   .quiz-reveal{ margin-top:12px; }
   .quiz-reveal-text{ margin-bottom:8px; color:#000; }
   .quiz-summary{ margin-top:12px; color:#000; }
+  .quiz-score{ border-collapse:collapse; margin:8px 0; width:100%; max-width:420px; }
+  .quiz-score td{ padding:5px 10px; border-bottom:1px solid #e2e2e2; color:#000; }
+  .quiz-score tr td:last-child{ text-align:right; }
+  .quiz-bias{ margin:10px 0 4px; color:#333; font-style:italic; }
+  .quiz-verdict{ margin:8px 0 12px; color:#000; font-weight:600; line-height:1.4; }
   .fetch-modal.sim-modal-wide { width: 520px; }
   /* Stop-strategy picker (sim-setup + sim-newleg modals) */
   .sim-stop-strategy-row {
@@ -5095,7 +5100,7 @@
     <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
     <button id="sim-random-btn" class="tb-btn" title="Pick a random big-mover from a chosen year and load a year-long sim window">🎲 Random</button>
     <button id="sim-blind-btn" class="tb-btn" title="Blind replay — random historical big mover with hidden symbol/year/dates. 4mo of context + open setup form to set size, stop, equity. Shift+Click to include current-year tickers (capped to ≥2mo forward data).">🕶 Blind</button>
-    <button type="button" id="quiz-btn" class="tb-btn" title="Top-or-Bottom Quiz: can you call the top/bottom?">🎯 Top/Bottom Quiz</button>
+    <button type="button" id="quiz-btn" class="tb-btn" style="width:auto;" title="Top-or-Bottom Quiz: can you call the top/bottom?">🎯 Top/Bottom Quiz</button>
     <button id="sim-saved-btn" class="tb-btn" title="Browse saved Sim scenarios">📂 Saved Sim</button>
     <button id="sim-stats-btn" class="tb-btn" title="View lifetime sim statistics">📊 Sim Stats</button>
     <button id="portsim-start-btn" class="tb-btn" title="Open Portfolio Simulator">▶ Port Sim</button>
@@ -13992,7 +13997,6 @@ window.Sim = Sim;
     if (!S) return;
     if (!r){ $('quiz-direction').textContent = 'Could not find a qualifying chart — try again.'; return; }
     S.round = r;
-    S.currentSymbol = r.symbol;
     $('quiz-direction').textContent = r.cand.direction === 'up' ? 'This stock has been RISING.' : 'This stock has been FALLING.';
     _renderMasked(r.bars, r.cand);
   }
