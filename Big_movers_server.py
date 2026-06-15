@@ -442,6 +442,23 @@ def api_ohlcv():
     return jsonify(bars)
 
 
+@app.route("/api/stock-list")
+def api_stock_list():
+    """Return the list of available ticker symbols in collected_stocks/.
+    Used by the Top-or-Bottom Quiz to sample the full universe (unbiased),
+    not just the big-mover catalogue."""
+    d = STOCKS_DIRS[0]
+    out = []
+    try:
+        for fname in os.listdir(d):
+            if fname.endswith(".csv"):
+                out.append(fname[:-4].upper())
+    except FileNotFoundError:
+        return jsonify({"error": "collected_stocks directory not found"}), 404
+    out.sort()
+    return jsonify(out)
+
+
 DRAWINGS_FILE = os.path.join(SCRIPT_DIR, "drawings.json")
 METADATA_FILE = os.path.join(SCRIPT_DIR, "metadata.json")
 
