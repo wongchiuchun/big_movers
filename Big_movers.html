@@ -13762,6 +13762,56 @@ window.Sim = Sim;
 /* ===== end Quiz.Pool ===== */
 </script>
 <script>
+/* ===== Quiz.Grade ===== */
+(function(){
+  'use strict';
+  window.Quiz = window.Quiz || {};
+
+  function bucketFromRemaining(remaining, thresholds){
+    const t = thresholds || window.Quiz.CONFIG.REMAINING_THRESHOLDS;
+    for (let b = 0; b < t.length; b++){ if (remaining < t[b]) return b; }
+    return t.length; // == 4 when 4 thresholds
+  }
+
+  // Measure forward extreme over window H and bucket the fraction of move remaining.
+  function trueBucket(bars, cand, config){
+    const cfg = config || window.Quiz.CONFIG;
+    const H = cfg.LOOKFORWARD_H;
+    const i = cand.decisionIdx;
+    const end = Math.min(bars.length - 1, i + H);
+    const close = cand.decisionClose;
+
+    let extreme, extremeIdx = i;
+    if (cand.direction === 'up'){
+      extreme = -Infinity;
+      for (let j = i+1; j <= end; j++){ const h = +bars[j].high; if (isFinite(h) && h > extreme){ extreme = h; extremeIdx = j; } }
+      if (!isFinite(extreme)) extreme = close;
+    } else {
+      extreme = Infinity;
+      for (let j = i+1; j <= end; j++){ const l = +bars[j].low; if (isFinite(l) && l < extreme){ extreme = l; extremeIdx = j; } }
+      if (!isFinite(extreme)) extreme = close;
+    }
+
+    const priorRun = Math.abs(close - cand.swingPrice);
+    const futureExt = Math.abs(extreme - close);
+    const denom = priorRun + futureExt;
+    const remaining = denom > 0 ? (futureExt / denom) : 0;
+    return { remaining: remaining, bucket: bucketFromRemaining(remaining, cfg.REMAINING_THRESHOLDS), forwardExtremeIdx: extremeIdx, forwardExtreme: extreme };
+  }
+
+  // 1.0 exact, 0.5 adjacent, 0 otherwise.
+  function score(predictedBucket, actualBucket){
+    const d = Math.abs(predictedBucket - actualBucket);
+    if (d === 0) return 1.0;
+    if (d === 1) return 0.5;
+    return 0;
+  }
+
+  window.Quiz.Grade = { trueBucket: trueBucket, score: score, bucketFromRemaining: bucketFromRemaining };
+})();
+/* ===== end Quiz.Grade ===== */
+</script>
+<script>
 /* ---------- SimSaved: localStorage save/load of sim scenarios ---------- */
 (function(){
   const KEY = 'bm_saved_sims_v1';
