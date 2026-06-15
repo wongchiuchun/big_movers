@@ -13693,7 +13693,75 @@ window.Sim = Sim;
     }
   };
 })();
+</script>
+<script>
+/* ===== Quiz.CONFIG + Quiz.Pool ===== */
+(function(){
+  'use strict';
+  window.Quiz = window.Quiz || {};
 
+  window.Quiz.CONFIG = {
+    LOOKFORWARD_H: 21,
+    LOOKBACK_L: 63,
+    RUN_THRESHOLD: 0.35,
+    MIN_CONTEXT_BARS: 120,
+    MIN_PRICE: 1.0,
+    REMAINING_THRESHOLDS: [0.05, 0.20, 0.45, 0.65]
+  };
+
+  // Scan a bar series for every qualifying decision bar.
+  // Returns Candidate[]: { decisionIdx, direction, swingIdx, swingPrice, decisionClose, priorRunPct }
+  function scan(bars, config){
+    const cfg = config || window.Quiz.CONFIG;
+    const out = [];
+    if (!Array.isArray(bars) || bars.length < cfg.MIN_CONTEXT_BARS + cfg.LOOKFORWARD_H + 1) return out;
+
+    const firstIdx = cfg.MIN_CONTEXT_BARS;
+    const lastIdx  = bars.length - 1 - cfg.LOOKFORWARD_H;
+
+    for (let i = firstIdx; i <= lastIdx; i++){
+      const close = +bars[i].close;
+      if (!isFinite(close) || close < cfg.MIN_PRICE) continue;
+
+      // Trailing lookback window [i-L .. i].
+      const from = Math.max(0, i - cfg.LOOKBACK_L);
+      let lo = Infinity, loIdx = from, hi = -Infinity, hiIdx = from;
+      for (let j = from; j <= i; j++){
+        const l = +bars[j].low, h = +bars[j].high;
+        if (isFinite(l) && l < lo){ lo = l; loIdx = j; }
+        if (isFinite(h) && h > hi){ hi = h; hiIdx = j; }
+      }
+      if (!isFinite(lo) || !isFinite(hi) || lo <= 0) continue;
+
+      // UP: rose from swing low to here, and 'here' is near the window high.
+      const upRun = (close - lo) / lo;
+      const nearHigh = close >= hi - (hi - lo) * 0.10;
+      // DOWN: fell from swing high to here, and 'here' is near the window low.
+      const downRun = (hi - close) / hi;
+      const nearLow = close <= lo + (hi - lo) * 0.10;
+
+      if (upRun >= cfg.RUN_THRESHOLD && nearHigh && loIdx < i){
+        out.push({ decisionIdx: i, direction: 'up', swingIdx: loIdx, swingPrice: lo, decisionClose: close, priorRunPct: upRun });
+      } else if (downRun >= cfg.RUN_THRESHOLD && nearLow && hiIdx < i){
+        out.push({ decisionIdx: i, direction: 'down', swingIdx: hiIdx, swingPrice: hi, decisionClose: close, priorRunPct: downRun });
+      }
+    }
+    return out;
+  }
+
+  // Pick one random qualifying candidate (rngFloat injected for testability).
+  function pick(bars, config, rngFloat){
+    const rnd = (typeof rngFloat === 'function') ? rngFloat : Math.random;
+    const cands = scan(bars, config);
+    if (!cands.length) return null;
+    return cands[Math.floor(rnd() * cands.length)];
+  }
+
+  window.Quiz.Pool = { scan: scan, pick: pick };
+})();
+/* ===== end Quiz.Pool ===== */
+</script>
+<script>
 /* ---------- SimSaved: localStorage save/load of sim scenarios ---------- */
 (function(){
   const KEY = 'bm_saved_sims_v1';
