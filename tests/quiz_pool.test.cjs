@@ -73,5 +73,10 @@ ok('pick(rng=0) == first candidate', firstPick && firstPick.decisionIdx === allC
 ok('pick(rng~1) == last candidate', lastPick && lastPick.decisionIdx === allCands[allCands.length-1].decisionIdx);
 ok('pick on flat series returns null', Quiz.Pool.pick(flat, cfg, () => 0) === null);
 
+// Directed pick: the synthetic series has only UP candidates.
+const upPick = Quiz.Pool.pick(bars, cfg, () => 0, 'up');
+ok('directed pick "up" returns an up candidate', upPick && upPick.direction === 'up');
+ok('directed pick "down" on up-only series returns null', Quiz.Pool.pick(bars, cfg, () => 0, 'down') === null);
+
 console.log(`\nQuiz.Pool: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

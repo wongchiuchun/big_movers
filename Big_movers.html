@@ -13800,9 +13800,14 @@ window.Sim = Sim;
   }
 
   // Pick one random qualifying candidate (rngFloat injected for testability).
-  function pick(bars, config, rngFloat){
+  // Optional `direction` ('up'|'down') restricts the pick to that move direction
+  // — used by the quiz to keep top/bottom rounds balanced 50:50.
+  function pick(bars, config, rngFloat, direction){
     const rnd = (typeof rngFloat === 'function') ? rngFloat : Math.random;
-    const cands = scan(bars, config);
+    let cands = scan(bars, config);
+    if (direction === 'up' || direction === 'down'){
+      cands = cands.filter(function(c){ return c.direction === direction; });
+    }
     if (!cands.length) return null;
     return cands[Math.floor(rnd() * cands.length)];
   }
@@ -13946,14 +13951,39 @@ window.Sim = Sim;
   }
 
   // Pick a ticker whose history yields at least one qualifying candidate.
+  // Balanced shuffled direction sequence so each session is exactly 50:50
+  // up/down (e.g. 10 rounds -> 5 rising, 5 falling, in random order).
+  function _buildDirQueue(n){
+    var q = [], half = Math.floor(n / 2);
+    for (var i = 0; i < half; i++) q.push('up');
+    for (var j = half; j < n; j++) q.push('down');
+    for (var k = q.length - 1; k > 0; k--){
+      var m = Math.floor(Math.random() * (k + 1));
+      var tmp = q[k]; q[k] = q[m]; q[m] = tmp;
+    }
+    return q;
+  }
+
+  // Find a qualifying candidate, preferring `wantDir`. Falls back to ANY
+  // direction only if no chart of the wanted direction turns up in the budget,
+  // so a session stays balanced without ever failing to load a round.
   async function _drawRound(){
     var list = S.list;
+    var wantDir = (S.dirQueue && S.dirQueue[S.roundIdx]) || null;
     for (var tries = 0; tries < MAX_TICKER_TRIES; tries++){
       var sym = list[Math.floor(Math.random() * list.length)];
       var bars = await _fetchBars(sym);
       if (!bars) continue;
-      var cand = window.Quiz.Pool.pick(bars, window.Quiz.CONFIG, Math.random);
+      var cand = window.Quiz.Pool.pick(bars, window.Quiz.CONFIG, Math.random, wantDir);
       if (cand) return { symbol: sym, bars: bars, cand: cand };
+    }
+    // Fallback: accept any direction so the round still loads.
+    for (var t2 = 0; t2 < MAX_TICKER_TRIES; t2++){
+      var sym2 = list[Math.floor(Math.random() * list.length)];
+      var bars2 = await _fetchBars(sym2);
+      if (!bars2) continue;
+      var cand2 = window.Quiz.Pool.pick(bars2, window.Quiz.CONFIG, Math.random);
+      if (cand2) return { symbol: sym2, bars: bars2, cand: cand2 };
     }
     return null;
   }
@@ -14049,7 +14079,8 @@ window.Sim = Sim;
     var list;
     try { list = await _fetchList(); } catch(e){ alert('Could not load ticker list: ' + (e && e.message || e)); return; }
     if (!list.length){ alert('No tickers available.'); return; }
-    S = { list: list, totalRounds: totalRounds || TOTAL_ROUNDS_DEFAULT, roundIdx: 0, rounds: [], round: null };
+    var n = totalRounds || TOTAL_ROUNDS_DEFAULT;
+    S = { list: list, totalRounds: n, roundIdx: 0, rounds: [], round: null, dirQueue: _buildDirQueue(n) };
     $('quiz-panel').style.display = '';
     $('quiz-summary').style.display = 'none';
     _startRound();
