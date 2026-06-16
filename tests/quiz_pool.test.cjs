@@ -39,8 +39,8 @@ function makeBars(){
     d.setUTCDate(d.getUTCDate()+1);
   };
   for (let i=0;i<130;i++) push(10);            // flat context at $10
-  for (let i=1;i<=40;i++) push(10 * (1 + 0.5*(i/40))); // ramp 10 -> 15 (+50%)
-  for (let i=0;i<30;i++) push(15);             // flat forward room
+  for (let i=1;i<=60;i++) push(10 * (1 + 0.5*(i/60))); // ramp 10 -> 15 (+50%) over 60 bars
+  for (let i=0;i<70;i++) push(15);             // flat forward room (>= LOOKFORWARD_H)
   return bars;
 }
 
