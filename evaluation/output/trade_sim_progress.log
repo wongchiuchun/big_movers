@@ -1,0 +1,13 @@
+  200/1530 moves … 50813 trades … 15s
+  400/1530 moves … 98518 trades … 30s
+  800/1530 moves … 205044 trades … 52s
+  1000/1530 moves … 267603 trades … 61s
+  1200/1530 moves … 315483 trades … 69s
+  1400/1530 moves … 381388 trades … 77s
+{
+  "generated": "2026-06-11 13:02",
+  "trades": 396732,
+  "unique_entries": 14185,
+  "skipped_moves": 56,
+  "elapsed_sec": 81.3
+}
