@@ -65,6 +65,7 @@ cleanup() {
   if [[ -n "$SERVER_PID" && "$SERVER_PID" == <-> ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
     kill -CONT "$SERVER_PID" 2>/dev/null || true
     /bin/zsh "$CONTROL" stop "$PROJECT_DIR" "$PYTHON" "$PORT" "$PID_FILE" "$SERVER_PID" >/dev/null 2>&1 || true
+    kill -0 "$SERVER_PID" 2>/dev/null && kill -KILL "$SERVER_PID" 2>/dev/null || true
   fi
   if app_running; then
     osascript -e 'tell application "Big Movers" to quit' >/dev/null 2>&1 || true
@@ -105,13 +106,14 @@ wait_until "PID-file cleanup" pid_file_is_gone
 wait_until "app exit" app_is_closed
 pass "normal Quit stops the server and exits the app"
 
-# A stopped server cannot process SIGTERM. Quit must time out and be canceled.
+# An ownership-valid server with SIGTERM ignored must make Quit time out.
 SERVER_PID=""
-open "$APP_PATH" || fail "second-cycle open app"
-wait_until "second-cycle listener" has_listener
-SERVER_PID=$(listener_pid)
+(cd "$PROJECT_DIR" && trap '' TERM && PORTNUM="$PORT" exec "$PYTHON" Big_movers_server.py </dev/null >"$LOG_FILE" 2>&1) &
+SERVER_PID=$!
+print -- "$SERVER_PID" > "$PID_FILE"
+wait_until "stubborn second-cycle listener" has_listener
+open "$APP_PATH" || fail "second-cycle adopt app"
 wait_until "second-cycle app" app_running
-kill -STOP "$SERVER_PID" || fail "stop owned server for timeout scenario"
 
 osascript -e 'tell application "Big Movers" to quit' >/dev/null || true
 app_running || fail "Quit timeout closed the controller app"
@@ -119,9 +121,9 @@ kill -0 "$SERVER_PID" 2>/dev/null || fail "Quit timeout lost the server PID"
 [[ -f "$PID_FILE" && "$(<"$PID_FILE")" == "$SERVER_PID" ]] || fail "Quit timeout lost PID ownership"
 pass "Quit timeout is canceled and retains ownership"
 
-# SIGTERM is pending while the process is stopped; continuing lets it finish.
-kill -CONT "$SERVER_PID" || fail "continue stopped server"
-wait_until "pending SIGTERM server exit" server_is_dead
+# Test cleanup may force-kill only this exact stubborn PID created above.
+kill -KILL "$SERVER_PID" || fail "terminate stubborn test server"
+wait_until "stubborn test server exit" server_is_dead
 wait_until "idle-handler PID cleanup" pid_file_is_gone
 wait_until "idle-handler app exit" app_is_closed
 pass "controller exits after it confirms the server is gone"

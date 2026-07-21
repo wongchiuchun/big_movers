@@ -188,6 +188,9 @@
   /* Make topbar controls consistent size (match schwab_chart) */
   .chart-topbar{--ctrl:28px;}
   .chart-topbar .tb-btn{width:var(--ctrl);height:var(--ctrl);border-radius:10px;font-size:11px;}
+  #quit-app-btn{margin-left:auto;color:var(--red);border-color:var(--red);}
+  #quit-app-btn:hover{background:var(--red);border-color:var(--red);color:var(--bg);}
+  #quit-app-btn:focus-visible{outline:2px solid var(--red);outline-offset:2px;}
   .chart-topbar .ma-toggle-btn{width:var(--ctrl);height:var(--ctrl);border-radius:10px;}
   .chart-topbar .ma-toggle-btn.text{width:auto;min-width:var(--ctrl);padding:0 12px;font-size:12px;font-weight:900;letter-spacing:0.02em;font-family:var(--mono);}
   .chart-topbar .ma-toggle-btn.active{border-color:var(--accent);color:var(--accent);}
@@ -1941,6 +1944,70 @@
     color: var(--muted);
     margin-top: 2px;
     font-variant-numeric: tabular-nums;
+  }
+  .sim-stats-run-summary { margin: 0 0 14px; }
+  .sim-stats-run-summary .sim-stats-section-title { margin-bottom: 8px; }
+  .sim-stats-run-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
+    gap: 8px;
+  }
+  .sim-stats-run-metrics .sim-stats-metric {
+    min-width: 0;
+    padding: 8px 10px;
+  }
+  .sim-stats-run-metrics .sim-stats-metric-val { font-size: 15px; }
+  @media (max-width: 700px) {
+    .sim-stats-run-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  #sim-calendar-runs-modal { z-index: 710; }
+  .sim-calendar-runs-modal {
+    width: min(860px, 92vw) !important;
+    max-width: 860px !important;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .sim-calendar-runs-body {
+    overflow-y: auto;
+    display: grid;
+    gap: 10px;
+    padding-right: 4px;
+  }
+  .sim-calendar-run-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .sim-calendar-run-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .sim-calendar-run-name {
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .sim-calendar-run-meta {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    text-align: right;
+  }
+  .sim-calendar-run-card .sim-stats-run-summary { margin-bottom: 0; }
+  .sim-calendar-run-card .sim-stats-run-summary .sim-stats-section-title { display: none; }
+  .sim-calendar-run-card .sim-stats-run-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (max-width: 700px) {
+    .sim-calendar-run-head { display: block; }
+    .sim-calendar-run-meta { text-align: left; margin-top: 3px; }
+    .sim-calendar-run-card .sim-stats-run-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   .sim-stats-table {
     width: 100%;
@@ -5054,17 +5121,7 @@
   .portsim-review-srform-field input:focus,
   .portsim-review-srform-field textarea:focus{border-color:var(--accent);}
   .portsim-review-srform-wide{grid-column:1/-1;}
-  .portsim-review-srform-rating{display:inline-flex;gap:4px;}
-  .portsim-review-srform-rating button{
-    background:var(--bg2);border:1px solid var(--border);
-    color:var(--muted);
-    width:30px;height:28px;cursor:pointer;border-radius:3px;
-    font-family:var(--mono);font-size:12px;font-weight:600;
-    padding:0;
-  }
-  .portsim-review-srform-rating button.is-active{
-    background:var(--accent);color:var(--bg);border-color:var(--accent);
-  }
+  .portsim-review-srform-setup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;}
   /* Loaded snapshots stay editable — _onSave preserves _data.meta in
      view-only mode, so the reflection notes are intentionally writable.
      The [VIEW-ONLY] badge + accent header signal "you're editing a saved
@@ -5215,6 +5272,7 @@
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
         <button id="screenshot-btn" class="ma-toggle-btn text" title="Screenshot chart (Ctrl+Shift+S)" style="font-size:14px;margin-left:2px">📷</button>
         <button id="popout-btn" class="ma-toggle-btn text" title="Pop out: chart left + sim right (Esc to exit)" style="font-size:14px;margin-left:2px">⤢</button>
+        <button id="quit-app-btn" class="tb-btn" type="button" aria-label="Quit Big Movers" title="Stop Big Movers and close the macOS app">⏻</button>
         <div class="tb-sep"></div>
         <div class="tb-sep"></div>
       </div>
@@ -5573,6 +5631,17 @@
             <button class="fetch-btn-cancel" id="sim-stats-close">Close</button>
           </div>
           <div class="fetch-status" id="sim-stats-status"></div>
+        </div>
+      </div>
+
+      <!-- Calendar day → individual run statistics -->
+      <div class="fetch-modal-overlay" id="sim-calendar-runs-modal">
+        <div class="fetch-modal sim-calendar-runs-modal">
+          <h3 id="sim-calendar-runs-title" style="margin:0 0 12px 0">Run Statistics</h3>
+          <div id="sim-calendar-runs-body" class="sim-calendar-runs-body"></div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="sim-calendar-runs-close" type="button">Close</button>
+          </div>
         </div>
       </div>
 
@@ -10384,6 +10453,25 @@ document.addEventListener('click', e => {
 // ==============================================
 // BOOT
 // ==============================================
+document.getElementById('quit-app-btn').addEventListener('click', async () => {
+  if (!window.confirm('Quit Big Movers and stop the local server?')) return;
+  const button = document.getElementById('quit-app-btn');
+  button.disabled = true;
+  button.textContent = '…';
+  try {
+    const response = await fetch('/api/shutdown', {
+      method: 'POST',
+      headers: { 'X-Big-Movers-UI': '1' }
+    });
+    if (!response.ok) throw new Error(`Shutdown failed (${response.status})`);
+    document.body.innerHTML = '<main style="min-height:100vh;display:grid;place-items:center;background:#0c0d10;color:#f1eadf;font-family:system-ui;text-align:center;padding:32px;"><div><h1 style="font-size:28px;margin:0 0 12px;">Big Movers has closed</h1><p style="opacity:.7;margin:0;">You can close this browser tab.</p></div></main>';
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = '⏻';
+    window.alert(error.message || 'Big Movers could not close.');
+  }
+});
+
 window.addEventListener('load',async()=>{
   // Load theme first so initChart uses correct colors
   if (localStorage.getItem('bm_theme') === 'light') {
@@ -14689,7 +14777,7 @@ window.Sim = Sim;
       // (Phase 3). reviewSkipped defaults to true; flips to false when the
       // user completes the structured review. legs is keyed by tradeId.
       review: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         reviewSkipped: true,
         retroactive: false,
         completedAt: null,
@@ -14773,7 +14861,7 @@ window.Sim = Sim;
       // (Phase 3). reviewSkipped defaults to true; flips to false when the
       // user completes the structured review. legs is keyed by tradeId.
       review: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         reviewSkipped: true,
         retroactive: false,
         completedAt: null,
@@ -14992,9 +15080,10 @@ window.Sim = Sim;
     sessions.forEach(function(s){
       const d = new Date(s.ts);
       const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      const e = byDate[date] || (byDate[date] = { date: date, dollarChange: 0, positions: {}, events: [], count: 0 });
+      const e = byDate[date] || (byDate[date] = { date: date, dollarChange: 0, positions: {}, events: [], sessionIds: [], count: 0 });
       const pnl = s.sessionPnL || 0;
       e.dollarChange += pnl;
+      if (s.id) e.sessionIds.push(s.id);
       const sym = s.symbol || '?';
       e.positions[sym] = (e.positions[sym] || 0) + pnl;
       const tag = (s.simType || 'individual') === 'portfolio' ? '[PORT] ' : '';
@@ -15015,7 +15104,8 @@ window.Sim = Sim;
         pctChange: null,
         equityClose: null,
         positions: e.positions,
-        events: e.events
+        events: e.events,
+        sessionIds: e.sessionIds
       };
     });
     return {
@@ -15205,6 +15295,56 @@ window.Sim = Sim;
     }
   }
 
+  function _sessionRunMetricItems(session){
+    session = session || {};
+    const pnl = session.sessionPnL;
+    const ret = session.totalReturnPct;
+    const winRate = session.winRate;
+    const pf = session.profitFactor;
+    const avgDeployed = session.avgPctDeployed;
+    const peakDeployed = session.peakPctDeployed;
+    const idleTime = session.idlePctOfTime;
+    const trades = session.tradeCount;
+    const winCount = session.winCount || 0;
+    const lossCount = session.lossCount || 0;
+    const usesIndex = session.simType === 'portfolio' || session.indexReturnPct != null;
+    const benchmark = usesIndex ? session.indexReturnPct : session.tickerBhPct;
+    const benchmarkName = usesIndex ? (session.indexName || 'Index') : 'B&H';
+    const alpha = ret != null && benchmark != null ? ret - benchmark : null;
+
+    return [
+      { label: 'Return', value: _fmtPct(ret, 1), cls: ret > 0 ? 'is-pos' : (ret < 0 ? 'is-neg' : '') },
+      { label: 'Net P&L', value: _fmt$Signed(pnl), cls: pnl > 0 ? 'is-pos' : (pnl < 0 ? 'is-neg' : '') },
+      { label: 'Win Rate', value: winRate != null && isFinite(winRate) ? Number(winRate).toFixed(1) + '%' : '—',
+        sub: trades ? winCount + 'W · ' + lossCount + 'L' : null,
+        cls: winRate != null ? (winRate >= 50 ? 'is-pos' : 'is-neg') : '' },
+      { label: 'Profit Factor', value: pf === Infinity ? '∞' : (pf != null && isFinite(pf) ? Number(pf).toFixed(2) : '—'),
+        cls: pf != null && isFinite(pf) ? (pf >= 1 ? 'is-pos' : 'is-neg') : '' },
+      { label: 'Avg Deployed', value: avgDeployed != null && isFinite(avgDeployed) ? Number(avgDeployed).toFixed(1) + '%' : '—' },
+      { label: 'Peak Deployed', value: peakDeployed != null && isFinite(peakDeployed) ? Number(peakDeployed).toFixed(1) + '%' : '—' },
+      { label: 'Idle Time', value: idleTime != null && isFinite(idleTime) ? Number(idleTime).toFixed(1) + '%' : '—' },
+      { label: 'Trades', value: trades != null && isFinite(trades) ? String(trades) : '—',
+        sub: trades ? winCount + 'W · ' + lossCount + 'L' : null },
+      { label: 'Alpha vs ' + benchmarkName, value: _fmtPct(alpha, 1),
+        cls: alpha > 0 ? 'is-pos' : (alpha < 0 ? 'is-neg' : '') }
+    ];
+  }
+
+  function _renderSessionRunMetrics(host, session){
+    const section = _mk('div', 'sim-stats-run-summary');
+    section.appendChild(_mk('h4', 'sim-stats-section-title', 'Run performance'));
+    const grid = _mk('div', 'sim-stats-run-metrics');
+    _sessionRunMetricItems(session).forEach(function(item){
+      const card = _mk('div', 'sim-stats-metric');
+      card.appendChild(_mk('div', 'sim-stats-metric-label', item.label));
+      card.appendChild(_mk('div', 'sim-stats-metric-val' + (item.cls ? ' ' + item.cls : ''), item.value));
+      if (item.sub) card.appendChild(_mk('div', 'sim-stats-metric-sub', item.sub));
+      grid.appendChild(card);
+    });
+    section.appendChild(grid);
+    host.appendChild(section);
+  }
+
   // Phase 4: drill-down detail for a session row. Rendered lazily on first
   // expand. Shows per-leg list with review tags + session review summary +
   // Re-review button. Built via DOM construction (no innerHTML).
@@ -15228,6 +15368,8 @@ window.Sim = Sim;
     inner.style.padding = '12px 16px';
     inner.style.borderTop = '1px solid var(--border)';
     td.appendChild(inner);
+
+    _renderSessionRunMetrics(inner, session);
 
     // Header line: review status + Re-review button
     const headRow = _mk('div', 'sim-stats-detail-head');
@@ -15275,7 +15417,7 @@ window.Sim = Sim;
       legsTable.style.fontSize = '11px';
       const thead = _mk('thead');
       const thr = _mk('tr');
-      ['#','Symbol','Entry → Exit','Hold','Exit','R','MFE / MAE','Setup','Intent','Conv','Plan'].forEach(function(h){
+      ['#','Symbol','Entry → Exit','Hold','Exit','R','MFE / MAE','Setup','Discipline','Technical lesson'].forEach(function(h){
         thr.appendChild(_mk('th', null, h));
       });
       thead.appendChild(thr); legsTable.appendChild(thead);
@@ -15292,13 +15434,16 @@ window.Sim = Sim;
         const mfeMae = (t.mfe != null ? '+' + Number(t.mfe).toFixed(0) : '—') + ' / ' + (t.mae != null ? Number(t.mae).toFixed(0) : '—');
         r.appendChild(_mk('td', null, mfeMae));
         const tag = rl[t.id] || {};
-        r.appendChild(_mk('td', null, tag.setupType || '—'));
-        r.appendChild(_mk('td', null, tag.intendedHold || '—'));
-        r.appendChild(_mk('td', null, tag.conviction != null ? String(tag.conviction) : '—'));
-        const planTd = _mk('td', null, tag.planFidelity || '—');
-        if (tag.planFidelity && tag.planFidelity !== 'as_planned') planTd.style.color = 'var(--red)';
-        else if (tag.planFidelity === 'as_planned') planTd.style.color = 'var(--green)';
-        r.appendChild(planTd);
+        const setupText = tag.setupType === 'custom'
+          ? (tag.setupCustom || 'Custom')
+          : (tag.setupType || '—').replace(/_/g, ' ');
+        r.appendChild(_mk('td', null, setupText));
+        const discipline = tag.disciplineResult || tag.planFidelity || '—';
+        const disciplineTd = _mk('td', null, discipline.replace(/_/g, ' '));
+        if (discipline !== '—' && discipline !== 'as_planned') disciplineTd.style.color = 'var(--red)';
+        else if (discipline === 'as_planned') disciplineTd.style.color = 'var(--green)';
+        r.appendChild(disciplineTd);
+        r.appendChild(_mk('td', null, tag.technicalLesson || tag.legNote || tag.thesis || '—'));
         tbody.appendChild(r);
       });
       legsTable.appendChild(tbody);
@@ -15335,14 +15480,22 @@ window.Sim = Sim;
         return row;
       }
       const rows = [];
-      rows.push(_row('Emotional score', rs.emotionalScore != null ? rs.emotionalScore + '/5' : null));
-      rows.push(_row('Regime felt', rs.regimeFelt));
+      rows.push(_row('Dominant pattern', rs.dominantPattern));
+      rows.push(_row('Outcome carryover', rs.outcomeCarryover));
+      rows.push(_row('Executed well', rs.executedWell));
+      rows.push(_row('Discipline challenge', rs.disciplineChallenge));
+      rows.push(_row('Next-run rule', rs.nextRunRule));
       rows.push(_row('Streak before', rs.streakBefore != null && rs.streakBefore > 0 ? rs.streakBefore + ' losing session(s)' : null));
-      const pc = rs.painCalibration || null;
-      if (pc){
-        rows.push(_row('Pain · next 24h', pc.next24h));
-        rows.push(_row('Pain · next day', pc.nextDayAction));
-        rows.push(_row('Pain · out of how many', pc.outOfHowMany));
+      const hasV2 = rs.dominantPattern || rs.outcomeCarryover || rs.executedWell || rs.disciplineChallenge || rs.nextRunRule;
+      if (!hasV2){
+        rows.push(_row('Emotional score', rs.emotionalScore != null ? rs.emotionalScore + '/5' : null));
+        rows.push(_row('Regime felt', rs.regimeFelt));
+        const pc = rs.painCalibration || null;
+        if (pc){
+          rows.push(_row('Pain · next 24h', pc.next24h));
+          rows.push(_row('Pain · next day', pc.nextDayAction));
+          rows.push(_row('Pain · out of how many', pc.outOfHowMany));
+        }
       }
       rows.push(_row('Portfolio note', rs.portfolioNote));
       const filtered = rows.filter(function(x){ return x; });
@@ -15477,6 +15630,47 @@ window.Sim = Sim;
     host.appendChild(table);
   }
 
+  function _openCalendarRunStats(day){
+    if (!day) return;
+    const modal = document.getElementById('sim-calendar-runs-modal');
+    const title = document.getElementById('sim-calendar-runs-title');
+    const body = document.getElementById('sim-calendar-runs-body');
+    const closeBtn = document.getElementById('sim-calendar-runs-close');
+    if (!modal || !title || !body) return;
+
+    const ids = Array.isArray(day.sessionIds) ? day.sessionIds : [];
+    const byId = {};
+    _loadSessions().forEach(function(s){ if (s && s.id) byId[s.id] = s; });
+    const sessions = ids.map(function(id){ return byId[id]; }).filter(Boolean);
+    const labelDate = day.date
+      ? new Date(day.date + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+      : 'Selected day';
+    title.textContent = sessions.length + ' Run' + (sessions.length === 1 ? '' : 's') + ' · ' + labelDate;
+    while (body.firstChild) body.removeChild(body.firstChild);
+
+    if (!sessions.length){
+      body.appendChild(_mk('div', 'sim-stats-empty', 'No linked run details are available for this calendar entry.'));
+    }
+    sessions.forEach(function(session){
+      const card = _mk('section', 'sim-calendar-run-card');
+      const head = _mk('div', 'sim-calendar-run-head');
+      const type = session.simType === 'portfolio' ? '📦 Portfolio' : '👤 Individual';
+      head.appendChild(_mk('div', 'sim-calendar-run-name', type + ' · ' + (session.symbol || '—')));
+      const windowText = session.simStartDate && session.simEndDate
+        ? session.simStartDate + ' → ' + session.simEndDate
+        : 'Simulation window unavailable';
+      head.appendChild(_mk('div', 'sim-calendar-run-meta', windowText));
+      card.appendChild(head);
+      _renderSessionRunMetrics(card, session);
+      body.appendChild(card);
+    });
+
+    function close(){ modal.classList.remove('open'); }
+    if (closeBtn) closeBtn.onclick = close;
+    modal.onclick = function(ev){ if (ev.target === modal) close(); };
+    modal.classList.add('open');
+  }
+
   function _renderCalendar(host, sessions){
     if (!window.Sim || !Sim.UI || !Sim.UI.PnLCalendar) {
       host.textContent = 'Calendar component not loaded.';
@@ -15484,7 +15678,8 @@ window.Sim = Sim;
     }
     const model = _calcCalendarModel(sessions);
     Sim.UI.PnLCalendar.render(host, model, {
-      emptyMessage: 'No sessions in this range.'
+      emptyMessage: 'No sessions in this range.',
+      onDayClick: _openCalendarRunStats
     });
   }
 
@@ -15669,9 +15864,12 @@ window.Sim = Sim;
       'reviewSchemaVersion','reviewSkipped','reviewRetroactive','reviewCompletedAt',
       'sessionEmotionalScore','sessionRegimeFelt','sessionStreakBefore','sessionGateOverridden',
       'sessionPainNext24h','sessionPainNextDayAction','sessionPainOutOfHowMany','sessionPortfolioNote',
+      'sessionDominantPattern','sessionOutcomeCarryover','sessionExecutedWell',
+      'sessionDisciplineChallenge','sessionNextRunRule',
       // Per-leg review (joined by tradeId)
       'legSetupType','legIntendedHold','legConviction','legEntryState',
-      'legPlanFidelity','legWouldHoldReal','legAtHeatResponse','legThesis','legNote'
+      'legPlanFidelity','legWouldHoldReal','legAtHeatResponse','legThesis','legNote',
+      'legSetupCustom','legDisciplineResult','legTechnicalLesson'
     ];
     const cols = baseCols.concat(reviewCols);
 
@@ -15757,6 +15955,11 @@ window.Sim = Sim;
           case 'sessionPainNextDayAction': v = pc(rsObj, 'nextDayAction'); break;
           case 'sessionPainOutOfHowMany': v = pc(rsObj, 'outOfHowMany'); break;
           case 'sessionPortfolioNote': v = rsObj ? rsObj.portfolioNote : null; break;
+          case 'sessionDominantPattern': v = rsObj ? rsObj.dominantPattern : null; break;
+          case 'sessionOutcomeCarryover': v = rsObj ? rsObj.outcomeCarryover : null; break;
+          case 'sessionExecutedWell': v = rsObj ? rsObj.executedWell : null; break;
+          case 'sessionDisciplineChallenge': v = rsObj ? rsObj.disciplineChallenge : null; break;
+          case 'sessionNextRunRule': v = rsObj ? rsObj.nextRunRule : null; break;
           // Review per-leg (joined by tradeId)
           case 'legSetupType': v = rlObj ? rlObj.setupType : null; break;
           case 'legIntendedHold': v = rlObj ? rlObj.intendedHold : null; break;
@@ -15767,6 +15970,9 @@ window.Sim = Sim;
           case 'legAtHeatResponse': v = rlObj ? rlObj.atHeatResponse : null; break;
           case 'legThesis': v = rlObj ? rlObj.thesis : null; break;
           case 'legNote': v = rlObj ? rlObj.legNote : null; break;
+          case 'legSetupCustom': v = rlObj ? rlObj.setupCustom : null; break;
+          case 'legDisciplineResult': v = rlObj ? rlObj.disciplineResult : null; break;
+          case 'legTechnicalLesson': v = rlObj ? rlObj.technicalLesson : null; break;
           default: v = '';
         }
         return csvCell(v);
@@ -26929,56 +27135,45 @@ Sim.Ctrl = (function(){
     ['pullback_20EMA', 'Pullback to 20EMA'],
     ['continuation', 'Continuation'],
     ['parabolic', 'Parabolic'],
-    ['other', 'Other']
+    ['other', 'Other'],
+    ['custom', 'Custom setup…']
   ];
-  var SR_INTENT_OPTS = [
-    ['', '— pick —'],
-    ['scalp_intraday', 'Scalp (intraday)'],
-    ['short_swing_3_10d', 'Short swing (3–10d)'],
-    ['core_swing_10_30d', 'Core swing (10–30d)'],
-    ['runner_30d_plus', 'Runner (30d+)']
-  ];
-  var SR_STATE_OPTS = [
-    ['', '— pick —'],
-    ['calm', 'Calm'],
-    ['itchy', 'Itchy'],
-    ['fomo', 'FOMO'],
-    ['revenge', 'Revenge']
-  ];
-  var SR_FIDELITY_OPTS = [
+  var SR_DISCIPLINE_OPTS = [
     ['', '— pick —'],
     ['as_planned', 'As planned'],
-    ['cut_early_nervous', 'Cut early (nervous)'],
-    ['held_past_plan', 'Held past plan'],
-    ['added_unplanned', 'Added unplanned'],
-    ['moved_stop_wider', 'Moved stop wider']
+    ['fomo_chased_entry', 'FOMO / chased entry'],
+    ['anticipated_entry', 'Entered too early / anticipated'],
+    ['loss_avoidance_exit', 'Loss avoidance — sold early'],
+    ['profit_protection_exit', 'Protected profit too early'],
+    ['panic_sellout', 'Panic sellout on normal weakness'],
+    ['held_past_technical_exit', 'Held past the technical exit'],
+    ['moved_stop_wider', 'Moved stop wider'],
+    ['ignored_stop', 'Ignored the stop'],
+    ['unplanned_add', 'Added without a plan'],
+    ['emotional_reentry', 'Emotional re-entry'],
+    ['overtraded', 'Overtraded / too many actions'],
+    ['other_deviation', 'Other deviation']
   ];
-  var SR_HEAT_OPTS = [
+  var SR_PATTERN_OPTS = [
     ['', '— pick —'],
-    ['none_needed', 'No heat (MAE < 0.5R)'],
-    ['held', 'Held through'],
-    ['widened_stop', 'Widened stop'],
-    ['panic_cut', 'Panic cut']
+    ['none', 'None — rules stayed in control'],
+    ['fomo_chasing', 'FOMO / chasing'],
+    ['loss_avoidance', 'Loss avoidance'],
+    ['profit_giveback_fear', 'Fear of giving back profit'],
+    ['stop_avoidance', 'Stop avoidance'],
+    ['revenge_reentry', 'Revenge / emotional re-entry'],
+    ['overtrading', 'Overtrading'],
+    ['freezing', 'Freezing / indecision'],
+    ['inconsistent_sizing', 'Inconsistent sizing'],
+    ['other', 'Other']
   ];
-  var SR_REGIME_OPTS = [
+  var SR_CARRYOVER_OPTS = [
     ['', '— pick —'],
-    ['trending', 'Trending'],
-    ['choppy', 'Choppy'],
-    ['declining', 'Declining'],
-    ['mixed', 'Mixed'],
-    ['recovery', 'Recovery']
-  ];
-  var SR_NEXT_DAY_OPTS = [
-    ['', '— pick —'],
-    ['enter_more', 'Enter more positions'],
-    ['hold_steady', 'Hold steady, no new entries'],
-    ['step_away', 'Step away from market'],
-    ['unsure', 'Unsure']
-  ];
-  var SR_HOLDREAL_OPTS = [
-    ['', '— pick —'],
-    ['true', 'Yes'],
-    ['false', 'No']
+    ['no', 'No — each decision stayed independent'],
+    ['slightly', 'Slightly'],
+    ['yes_chased', 'Yes — I chased / forced the next trade'],
+    ['yes_froze', 'Yes — I hesitated / froze'],
+    ['unclear', 'Not sure']
   ];
 
   function _srEl(tag, attrs, children){
@@ -27015,30 +27210,19 @@ Sim.Ctrl = (function(){
     w.appendChild(control);
     return w;
   }
-  function _srRating(field, val){
-    var wrap = _srEl('span', { class: 'portsim-review-srform-rating', 'data-srrating': field });
-    if (val != null && val !== '') wrap.dataset.value = String(val);
-    [1,2,3,4,5].forEach(function(n){
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.dataset.val = String(n);
-      b.textContent = String(n);
-      if (val != null && +val === n) b.classList.add('is-active');
-      wrap.appendChild(b);
-    });
+  function _srSetupControl(tag){
+    tag = tag || {};
+    var wrap = _srEl('div', { class: 'portsim-review-srform-setup' });
+    var sel = _srSelect('setupType', SR_SETUP_OPTS, tag.setupType);
+    var custom = _srEl('input', { type: 'text', 'data-srfield': 'setupCustom',
+      placeholder: 'Name this setup', maxlength: '80' });
+    if (tag.setupCustom) custom.value = tag.setupCustom;
+    function sync(){ custom.style.display = sel.value === 'custom' ? '' : 'none'; }
+    sel.addEventListener('change', sync);
+    wrap.appendChild(sel);
+    wrap.appendChild(custom);
+    sync();
     return wrap;
-  }
-  function _srWireRating(scope){
-    Array.prototype.forEach.call(scope.querySelectorAll('.portsim-review-srform-rating'), function(r){
-      r.addEventListener('click', function(ev){
-        var btn = ev.target.closest('button');
-        if (!btn || !r.contains(btn)) return;
-        Array.prototype.forEach.call(r.querySelectorAll('button'), function(b){ b.classList.remove('is-active'); });
-        btn.classList.add('is-active');
-        r.dataset.value = btn.dataset.val;
-        r.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-    });
   }
   // Read field values from a leg form block.
   function _srReadLeg(host){
@@ -27047,11 +27231,9 @@ Sim.Ctrl = (function(){
       var k = el.getAttribute('data-srfield');
       var v = el.value;
       if (v === '' || v == null) return;
-      if (k === 'wouldHoldReal') v = (v === 'true');
       out[k] = v;
     });
-    var rating = host.querySelector('[data-srrating="conviction"]');
-    if (rating && rating.dataset.value) out.conviction = +rating.dataset.value;
+    if (out.setupType !== 'custom') delete out.setupCustom;
     return out;
   }
   // Read field values from the session form block.
@@ -27063,15 +27245,6 @@ Sim.Ctrl = (function(){
       if (v === '' || v == null) return;
       out[k] = v;
     });
-    var rating = host.querySelector('[data-srrating="emotionalScore"]');
-    if (rating && rating.dataset.value) out.emotionalScore = +rating.dataset.value;
-    // Roll up pain* fields into nested painCalibration to match the SimStats
-    // detail reader at line ~14805 (rs.painCalibration.{next24h,...}).
-    var pain = {};
-    if (out.painNext24h){ pain.next24h = out.painNext24h; delete out.painNext24h; }
-    if (out.painNextDayAction){ pain.nextDayAction = out.painNextDayAction; delete out.painNextDayAction; }
-    if (out.painOutOfHowMany){ pain.outOfHowMany = out.painOutOfHowMany; delete out.painOutOfHowMany; }
-    if (Object.keys(pain).length) out.painCalibration = pain;
     return out;
   }
   // Build the per-leg structured form. `tag` is the existing
@@ -27090,24 +27263,17 @@ Sim.Ctrl = (function(){
       _srEl('span', { class: rCls, text: rTxt })
     ]);
 
-    var thesis = _srEl('input', { type: 'text', 'data-srfield': 'thesis',
-      placeholder: 'What had to be true for this to work?', maxlength: '200' });
-    if (tag.thesis) thesis.value = tag.thesis;
-    var legNote = _srEl('textarea', { 'data-srfield': 'legNote',
-      placeholder: 'Anything specific about this leg…', maxlength: '500' });
-    if (tag.legNote) legNote.value = tag.legNote;
+    var lesson = _srEl('textarea', { 'data-srfield': 'technicalLesson',
+      placeholder: 'What technical cue or discipline mistake mattered here?', maxlength: '600' });
+    if (tag.technicalLesson) lesson.value = tag.technicalLesson;
+    else if (tag.legNote) lesson.value = tag.legNote;
+    else if (tag.thesis) lesson.value = tag.thesis;
 
     var grid = _srEl('div', { class: 'portsim-review-srform-grid' }, [
-      _srField('Setup', _srSelect('setupType', SR_SETUP_OPTS, tag.setupType)),
-      _srField('Intended hold', _srSelect('intendedHold', SR_INTENT_OPTS, tag.intendedHold)),
-      _srField('Conviction (1–5) · at entry', _srRating('conviction', tag.conviction)),
-      _srField('Entry state', _srSelect('entryState', SR_STATE_OPTS, tag.entryState)),
-      _srField('Plan fidelity', _srSelect('planFidelity', SR_FIDELITY_OPTS, tag.planFidelity)),
-      _srField('Would hold if real $?', _srSelect('wouldHoldReal', SR_HOLDREAL_OPTS,
-        tag.wouldHoldReal === true ? 'true' : (tag.wouldHoldReal === false ? 'false' : ''))),
-      _srField('At-heat response (if MAE ≤ -0.5R)', _srSelect('atHeatResponse', SR_HEAT_OPTS, tag.atHeatResponse)),
-      _srField('Thesis (one line, optional)', thesis, true),
-      _srField('Note (optional)', legNote, true)
+      _srField('Setup type', _srSetupControl(tag)),
+      _srField('Primary discipline result', _srSelect('disciplineResult', SR_DISCIPLINE_OPTS,
+        tag.disciplineResult || tag.planFidelity)),
+      _srField('Technical lesson', lesson, true)
     ]);
 
     var host = _srEl('div', {
@@ -27118,7 +27284,6 @@ Sim.Ctrl = (function(){
   }
   function _renderSessionSRForm(rs, viewOnly){
     rs = rs || {};
-    var pc = rs.painCalibration || {};
     var head = _srEl('div', { class: 'portsim-review-srform-head' }, [
       _srEl('span', { class: 'portsim-review-srform-leg', text: 'SESSION REFLECTION' }),
       _srEl('span', { class: 'portsim-review-srform-meta',
@@ -27126,20 +27291,22 @@ Sim.Ctrl = (function(){
           ? (rs.streakBefore + ' losing session(s) before this one') : '' })
     ]);
 
-    var pain24 = _srEl('textarea', { 'data-srfield': 'painNext24h',
-      placeholder: 'One short paragraph — if real $, what would I be doing?',
-      maxlength: '400' });
-    if (pc.next24h) pain24.value = pc.next24h;
-    var painOut = _srEl('input', { type: 'text', 'data-srfield': 'painOutOfHowMany',
-      placeholder: 'e.g., 1 in 5' });
-    if (pc.outOfHowMany) painOut.value = pc.outOfHowMany;
+    function reflection(field, placeholder, val){
+      var el = _srEl('textarea', { 'data-srfield': field, placeholder: placeholder, maxlength: '800' });
+      if (val) el.value = val;
+      return el;
+    }
 
     var grid = _srEl('div', { class: 'portsim-review-srform-grid' }, [
-      _srField('Emotional score (1–5) · would I have stuck with this for real $?', _srRating('emotionalScore', rs.emotionalScore)),
-      _srField('Regime felt (post-hoc)', _srSelect('regimeFelt', SR_REGIME_OPTS, rs.regimeFelt)),
-      _srField('If real $, what for the next 24h?', pain24, true),
-      _srField('Next day action', _srSelect('painNextDayAction', SR_NEXT_DAY_OPTS, pc.nextDayAction)),
-      _srField('Out of how many sessions like this would you expect this?', painOut)
+      _srField('Dominant pattern', _srSelect('dominantPattern', SR_PATTERN_OPTS, rs.dominantPattern)),
+      _srField('Did the previous result affect the next decision?',
+        _srSelect('outcomeCarryover', SR_CARRYOVER_OPTS, rs.outcomeCarryover)),
+      _srField('What did I execute well?', reflection('executedWell',
+        'Name the specific technical or discipline behavior worth repeating.', rs.executedWell), true),
+      _srField('Where did discipline weaken?', reflection('disciplineChallenge',
+        'Describe the urge, shortcut, or repeated mistake that appeared.', rs.disciplineChallenge), true),
+      _srField('One rule for the next simulation', reflection('nextRunRule',
+        'Write one concrete behavior to carry into the next run.', rs.nextRunRule), true)
     ]);
 
     var host = _srEl('div', {
@@ -27305,11 +27472,10 @@ Sim.Ctrl = (function(){
       +     '<div class="portsim-review-title">📝 Trade Review</div>'
       +     '<div class="portsim-review-meta" id="portsim-review-meta">—</div>'
       +     '<div class="portsim-review-actions">'
-      +       '<button type="button" id="portsim-review-save"  class="portsim-review-btn">💾 Save</button>'
+      +       '<button type="button" id="portsim-review-save"  class="portsim-review-btn">💾 Save Review</button>'
       +       '<button type="button" id="portsim-review-load"  class="portsim-review-btn">📂 Load</button>'
       +       '<button type="button" id="portsim-review-rerun" class="portsim-review-btn" style="display:none">🔄 Rerun</button>'
-      +       '<button type="button" id="portsim-review-md"    class="portsim-review-btn">↓ Markdown</button>'
-      +       '<button type="button" id="portsim-review-pdf"   class="portsim-review-btn">🖨 Print/PDF</button>'
+      +       '<button type="button" id="portsim-review-pdf"   class="portsim-review-btn">🖨 Export PDF</button>'
       +       '<button type="button" id="portsim-review-close" class="portsim-review-btn portsim-review-close">✕</button>'
       +     '</div>'
       +   '</div>'
@@ -27323,7 +27489,6 @@ Sim.Ctrl = (function(){
     document.getElementById('portsim-review-save').addEventListener('click', _onSave);
     document.getElementById('portsim-review-load').addEventListener('click', _onLoad);
     document.getElementById('portsim-review-rerun').addEventListener('click', _onRerun);
-    document.getElementById('portsim-review-md').addEventListener('click', _onExportMD);
     document.getElementById('portsim-review-pdf').addEventListener('click', _onPrint);
     _modal.addEventListener('click', function(ev){ if (ev.target === _modal) close(); });
     document.addEventListener('keydown', function(ev){
@@ -27477,7 +27642,6 @@ Sim.Ctrl = (function(){
         _data.review.session = _srReadSession(sessForm);
         _markDirty();
       });
-      _srWireRating(sessForm);
       if (notesBlock) body.insertBefore(sessForm, notesBlock);
       else body.appendChild(sessForm);
     }
@@ -27639,7 +27803,6 @@ Sim.Ctrl = (function(){
           _data.review.legs[tradeId] = _srReadLeg(formEl);
           _markDirty();
         });
-        _srWireRating(formEl);
         if (notesBlock) body.insertBefore(formEl, notesBlock);
         else body.appendChild(formEl);
       });
@@ -27960,8 +28123,8 @@ Sim.Ctrl = (function(){
       if (streak) sessFields.streakBefore = streak;
       var hasAny = Object.keys(legs).length || Object.keys(sessFields).length;
       sessionPatched = _writeSessionPatch(_sessionId, function(s){
-        if (!s.review) s.review = { schemaVersion: 1, reviewSkipped: true, retroactive: false, completedAt: null, session: null, legs: null };
-        s.review.schemaVersion = 1;
+        if (!s.review) s.review = { schemaVersion: 2, reviewSkipped: true, retroactive: false, completedAt: null, session: null, legs: null };
+        s.review.schemaVersion = 2;
         s.review.reviewSkipped = !hasAny;
         s.review.completedAt = new Date().toISOString();
         s.review.session = Object.keys(sessFields).length ? sessFields : null;
@@ -28567,9 +28730,17 @@ Sim.Ctrl = (function(){
     });
   }
 
+  function _printDocumentTitle(ctx){
+    var simulationDate = (ctx && ctx.startDate) || new Date().toISOString().slice(0, 10);
+    return simulationDate + ' Portfolio Simulation Review';
+  }
+
   function _onPrint(){
     var body = document.getElementById('portsim-review-body');
     if (!body) return;
+    var ctx = _resolveCtx() || {};
+    var previousDocumentTitle = document.title;
+    document.title = _printDocumentTitle(ctx);
     // Snapshot the currently visible tab so we can restore the normal single-
     // tab view after the print dialog is dismissed.
     var prevTab = _activeTab;
@@ -28583,6 +28754,7 @@ Sim.Ctrl = (function(){
     var afterPrint = function(){
       try { _setTab(prevTab || 'overview'); } catch(e){}
       document.body.classList.remove('portsim-printing');
+      document.title = previousDocumentTitle;
       window.removeEventListener('afterprint', afterPrint);
     };
     window.addEventListener('afterprint', afterPrint);

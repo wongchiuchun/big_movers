@@ -111,7 +111,7 @@ Every session written under v3 carries a `review` object. The object always exis
   v: 3,
   runInstanceId: 'inst_<base36ts>_<rand>',  // per-attempt id, joins to standalone review note
   review: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     reviewSkipped: true,
     retroactive: false,
     completedAt: null,
@@ -125,25 +125,24 @@ Every session written under v3 carries a `review` object. The object always exis
 
 | Field | Type | Range / values | Populated when | Source |
 |---|---|---|---|---|
-| `schemaVersion` | int | `1` | Always | Auto on session write |
+| `schemaVersion` | int | `1` \| `2` | Always | `2` is the current simulation-focused form; `1` is retained for legacy reviews. |
 | `reviewSkipped` | bool | `true` \| `false` | Always | Auto. Starts `true`; set to `false` when guided modal completes. |
 | `retroactive` | bool | `true` \| `false` | Always | Auto. `true` if `completedAt - session.ts > 24h`. |
 | `completedAt` | int (ms) \| null | UNIX epoch ms | When modal finalizes | Auto on modal save |
-| `session` | object \| null | see below | When modal finalizes | Guided modal |
-| `legs` | object \| null | `{ [tradeId]: legReview }` | When modal finalizes | Guided modal |
+| `session` | object \| null | see below | When Save Review is clicked | Trade Review modal |
+| `legs` | object \| null | `{ [tradeId]: legReview }` | When Save Review is clicked | Trade Review modal |
 
 #### `review.session` fields
 
 | Field | Type | Range / enum | Populated when | Source |
 |---|---|---|---|---|
-| `emotionalScore` | int | `1` `2` `3` `4` `5` | Modal complete | Guided modal — *"if real money, would I have stuck with this?"* |
-| `regimeFelt` | enum | `trending` \| `choppy` \| `declining` \| `mixed` \| `recovery` | Modal complete | Guided modal (POST-HOC observation, never used as signal) |
+| `dominantPattern` | enum | `none` \| `fomo_chasing` \| `loss_avoidance` \| `profit_giveback_fear` \| `stop_avoidance` \| `revenge_reentry` \| `overtrading` \| `freezing` \| `inconsistent_sizing` \| `other` | Save Review | Main discipline pattern observed during the simulation. |
+| `outcomeCarryover` | enum | `no` \| `slightly` \| `yes_chased` \| `yes_froze` \| `unclear` | Save Review | Whether the previous result affected the next decision. |
+| `executedWell` | string | free text | Save Review | Specific technical or discipline behavior worth repeating. |
+| `disciplineChallenge` | string | free text | Save Review | Where discipline weakened or an urge/shortcut appeared. |
+| `nextRunRule` | string | free text | Save Review | One concrete rule for the next simulation. |
 | `streakBefore` | int | `0..N` | Modal open | Auto — count of immediately preceding losing sessions |
-| `gateOverridden` | bool | `true` \| `false` | Modal open | Auto — `true` if user bypassed the frequency gate |
-| `painCalibration.next24h` | string | free text | Modal complete | Guided modal — *"if real $, what would I be doing for the next 24h?"* |
-| `painCalibration.nextDayAction` | enum | `enter_more` \| `hold_steady` \| `step_away` \| `unsure` | Modal complete | Guided modal |
-| `painCalibration.outOfHowMany` | string | free text | Modal complete | Guided modal — *"out of how many sessions like this would I expect this?"* |
-| `portfolioNote` | string | free text | Modal complete | Guided modal (also ported from legacy `bm_portsim_review_*` text on migration) |
+| `portfolioNote` | string | free text | Save Review | General portfolio-level note from the Overview tab. |
 
 #### `review.legs[tradeId]` fields
 
@@ -151,58 +150,39 @@ Every session written under v3 carries a `review` object. The object always exis
 
 | Field | Type | Range / enum | Populated when | Source |
 |---|---|---|---|---|
-| `setupType` | enum | `EP` \| `breakout_VCP` \| `pullback_10EMA` \| `pullback_20EMA` \| `continuation` \| `parabolic` \| `other` | Modal complete | Guided modal — what setup the user *thought* they were entering |
-| `intendedHold` | enum | `scalp_intraday` \| `short_swing_3_10d` \| `core_swing_10_30d` \| `runner_30d_plus` | Modal complete | Guided modal |
-| `conviction` | int | `1` `2` `3` `4` `5` | Modal complete | Guided modal — phrased as *"at the moment of entry, how confident were you?"* (entry-time intent, captured post-hoc) |
-| `entryState` | enum | `calm` \| `itchy` \| `fomo` \| `revenge` | Modal complete | Guided modal |
-| `planFidelity` | enum | `as_planned` \| `cut_early_nervous` \| `held_past_plan` \| `added_unplanned` \| `moved_stop_wider` | Modal complete | Guided modal |
-| `wouldHoldReal` | bool | `true` \| `false` | Modal complete | Guided modal — *"if real money, would I have held to this exit?"* |
-| `atHeatResponse` | enum | `held` \| `widened_stop` \| `panic_cut` \| `none_needed` | Modal complete | Guided modal (only meaningful when MAE ≤ -0.5R) |
-| `thesis` | string | free text | Modal complete | Guided modal — optional one-liner |
-| `legNote` | string | free text | Modal complete | Guided modal — optional free-form |
+| `setupType` | enum | `EP` \| `breakout_VCP` \| `pullback_10EMA` \| `pullback_20EMA` \| `continuation` \| `parabolic` \| `other` \| `custom` | Save Review | Technical setup selected from the chart-only information. |
+| `setupCustom` | string | free text | Save Review | User-defined setup name when `setupType=custom`. |
+| `disciplineResult` | enum | `as_planned` \| `fomo_chased_entry` \| `anticipated_entry` \| `loss_avoidance_exit` \| `profit_protection_exit` \| `panic_sellout` \| `held_past_technical_exit` \| `moved_stop_wider` \| `ignored_stop` \| `unplanned_add` \| `emotional_reentry` \| `overtraded` \| `other_deviation` | Save Review | Primary observable execution or discipline result for the leg. |
+| `technicalLesson` | string | free text | Save Review | Technical cue or discipline mistake that mattered. |
 
 #### Example `review` — fully populated
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "reviewSkipped": false,
   "retroactive": false,
   "completedAt": 1714752000000,
   "session": {
-    "emotionalScore": 4,
-    "regimeFelt": "choppy",
+    "dominantPattern": "loss_avoidance",
+    "outcomeCarryover": "slightly",
+    "executedWell": "Entries stayed close to chart structure and stops were defined before advancing.",
+    "disciplineChallenge": "After the first loss I wanted to protect every small gain too quickly.",
+    "nextRunRule": "Do not exit unless the chart invalidates the position or the planned stop fires.",
     "streakBefore": 2,
-    "gateOverridden": false,
-    "painCalibration": {
-      "next24h": "Would sit on hands. Index is choppy and I just took two paper cuts.",
-      "nextDayAction": "step_away",
-      "outOfHowMany": "Maybe 1 in 5 chop sessions ends like this."
-    },
     "portfolioNote": "Two of three legs went well. The PLTR add was unplanned and cost me half the day's gain."
   },
   "legs": {
     "trade_sess_1714750000_ab12_1": {
       "setupType": "breakout_VCP",
-      "intendedHold": "core_swing_10_30d",
-      "conviction": 4,
-      "entryState": "calm",
-      "planFidelity": "as_planned",
-      "wouldHoldReal": true,
-      "atHeatResponse": "held",
-      "thesis": "Tight base under prior high, group RS strong.",
-      "legNote": ""
+      "disciplineResult": "as_planned",
+      "technicalLesson": "Entry stayed close to the breakout pivot and the stop remained structural."
     },
     "trade_sess_1714750000_ab12_2": {
-      "setupType": "pullback_10EMA",
-      "intendedHold": "short_swing_3_10d",
-      "conviction": 3,
-      "entryState": "itchy",
-      "planFidelity": "added_unplanned",
-      "wouldHoldReal": false,
-      "atHeatResponse": "panic_cut",
-      "thesis": "Bounce off 10EMA after orderly pullback.",
-      "legNote": "Added unplanned size when it gapped up; cut on first red bar."
+      "setupType": "custom",
+      "setupCustom": "Undercut and reclaim",
+      "disciplineResult": "profit_protection_exit",
+      "technicalLesson": "Sold on a normal red bar even though the technical exit had not triggered."
     }
   }
 }
@@ -231,7 +211,7 @@ For sessions that pre-date v3 or have `reviewSkipped: true`, the appended column
 
 | Column | Type | Source | Notes |
 |---|---|---|---|
-| `reviewSchemaVersion` | int | `session.review.schemaVersion` | `1` for v3 sessions, empty for v2 |
+| `reviewSchemaVersion` | int | `session.review.schemaVersion` | `2` for the current form; `1` for legacy reviews; empty for pre-review sessions. |
 | `reviewSkipped` | bool | `session.review.reviewSkipped` | `true` until guided modal completes |
 | `reviewRetroactive` | bool | `session.review.retroactive` | `true` if review completed >24h after session save |
 | `reviewCompletedAt` | ISO datetime | `session.review.completedAt` | Empty until modal finalizes |
@@ -243,6 +223,11 @@ For sessions that pre-date v3 or have `reviewSkipped: true`, the appended column
 | `sessionPainNextDayAction` | enum | `session.review.session.painCalibration.nextDayAction` | `enter_more` \| `hold_steady` \| `step_away` \| `unsure` |
 | `sessionPainOutOfHowMany` | string | `session.review.session.painCalibration.outOfHowMany` | Free text |
 | `sessionPortfolioNote` | string | `session.review.session.portfolioNote` | Free text |
+| `sessionDominantPattern` | enum | `session.review.session.dominantPattern` | Main discipline weakness (or `none`). |
+| `sessionOutcomeCarryover` | enum | `session.review.session.outcomeCarryover` | Whether one result affected the next decision. |
+| `sessionExecutedWell` | string | `session.review.session.executedWell` | Free text; behavior worth repeating. |
+| `sessionDisciplineChallenge` | string | `session.review.session.disciplineChallenge` | Free text; where discipline weakened. |
+| `sessionNextRunRule` | string | `session.review.session.nextRunRule` | Free text; one rule for the next run. |
 
 #### Per-leg review columns (joined by `tradeId`)
 
@@ -257,19 +242,24 @@ For sessions that pre-date v3 or have `reviewSkipped: true`, the appended column
 | `legAtHeatResponse` | enum | `session.review.legs[tradeId].atHeatResponse` | `held` \| `widened_stop` \| `panic_cut` \| `none_needed` |
 | `legThesis` | string | `session.review.legs[tradeId].thesis` | Free text |
 | `legNote` | string | `session.review.legs[tradeId].legNote` | Free text |
+| `legSetupCustom` | string | `session.review.legs[tradeId].setupCustom` | Custom setup name when `legSetupType=custom`. |
+| `legDisciplineResult` | enum | `session.review.legs[tradeId].disciplineResult` | Primary structured execution/discipline result. |
+| `legTechnicalLesson` | string | `session.review.legs[tradeId].technicalLesson` | Free-text technical or discipline lesson. |
+
+The older schema-v1 review columns remain in the CSV so historical reviews are not lost. New schema-v2 reviews leave those legacy columns empty and populate the new columns above.
 
 ### Common analyses (deep CSV)
 
 When handing the deep CSV to an AI, these are reasonable prompts that exploit the review fields:
 
 - "For deep CSV, compute average R-multiple grouped by `legSetupType`. Rank by mean R and report n, mean, median, std for each."
-- "Filter on `reviewSkipped == false`. Of those legs, what's the win rate when `legPlanFidelity == 'as_planned'` vs everything else? Out of how many?"
-- "Group legs where `legAtHeatResponse == 'held'`. What share became winners (`realizedPnL > 0`)? Compare to `legAtHeatResponse == 'panic_cut'`."
+- "Filter on `reviewSkipped == false`. Compare R-multiple and MFE for `legDisciplineResult == 'as_planned'` versus each deviation."
+- "How often do `loss_avoidance_exit` and `profit_protection_exit` appear, and how much MFE remained after those exits?"
 - "Across sessions where `sessionStreakBefore >= 3`, what was the median R of the next session's first leg? Did the user trade better or worse after losing streaks?"
-- "Plot `legConviction` vs realized R-multiple. Is conviction calibrated — i.e., does conviction 5 actually win more than conviction 3?"
-- "What % of sessions have `sessionPainNextDayAction == 'step_away'`? Among those, what's the avg `sessionPnL`?"
-- "Cross-tab `legSetupType` × `legEntryState`. Which combinations have positive expected value? Which are leaks?"
-- "For legs with `legWouldHoldReal == false`, compare `realizedPnL` vs the hypothetical hold-to-plan exit. How much money does the discipline gap cost per session?"
+- "Group `sessionDominantPattern` by month. Which weakness is becoming more or less frequent?"
+- "Find sessions where `sessionOutcomeCarryover` is `yes_chased` or `yes_froze`; compare the next leg's R-multiple with independent decisions."
+- "Summarize recurring themes in `sessionDisciplineChallenge`, `sessionNextRunRule`, and `legTechnicalLesson`, citing the relevant session IDs."
+- "Cross-tab `legSetupType` (using `legSetupCustom` for custom setups) × `legDisciplineResult`. Which setup/weakness combinations recur?"
 
 ---
 

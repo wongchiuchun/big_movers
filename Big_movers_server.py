@@ -12,6 +12,8 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import ssl
+import signal
+import threading
 from datetime import date
 from flask import Flask, jsonify, send_from_directory, request, Response
 
@@ -1039,6 +1041,28 @@ def api_review_save(move_key):
         _atomic_json_write(REVIEWS_FILE, data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    return jsonify({"ok": True})
+
+
+@app.route("/api/shutdown", methods=["POST"])
+def api_shutdown():
+    """Stop this local server after the UI receives a successful response."""
+    if request.remote_addr not in {"127.0.0.1", "::1"}:
+        return jsonify({"error": "local requests only"}), 403
+    if request.headers.get("X-Big-Movers-UI") != "1":
+        return jsonify({"error": "invalid shutdown request"}), 403
+
+    scheduler = app.config.get("SHUTDOWN_SCHEDULER")
+    if scheduler is not None:
+        scheduler()
+    else:
+        timer = threading.Timer(
+            0.35,
+            os.kill,
+            args=(os.getpid(), signal.SIGTERM),
+        )
+        timer.daemon = True
+        timer.start()
     return jsonify({"ok": True})
 
 
