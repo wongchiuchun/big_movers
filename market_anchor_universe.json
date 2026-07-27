@@ -1,0 +1,657 @@
+{
+  "version": 1,
+  "data_start": "2015-01-01",
+  "data_end": "2025-12-31",
+  "symbols": [
+    {
+      "symbol": "AAPL",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "ADBE",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "AMAT",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "AMD",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2018-12-24",
+          "to": null,
+          "basis": "Nasdaq-100 — official 2018 annual re-ranking release added Advanced Micro Devices effective before market open on 2018-12-24; no later removal announced through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "AMZN",
+      "group": "growth",
+      "sector": "Consumer Discretionary",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "AVGO",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start as Avago Technologies under the continuing AVGO ticker; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "BKNG",
+      "group": "growth",
+      "sector": "Consumer Discretionary",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start as Priceline under ticker PCLN, renamed BKNG in 2018; official Nasdaq reconstitution and index-change releases show no removal through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "COST",
+      "group": "growth",
+      "sector": "Consumer Staples",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "CSCO",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "GOOG",
+      "group": "growth",
+      "sector": "Communication Services",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — Alphabet Class C was present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "GOOGL",
+      "group": "growth",
+      "sector": "Communication Services",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — Alphabet Class A was present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "INTC",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "INTU",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "ISRG",
+      "group": "growth",
+      "sector": "Health Care",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "META",
+      "group": "growth",
+      "sector": "Communication Services",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start as Facebook under ticker FB, renamed META in 2022; official Nasdaq reconstitution and index-change releases show no removal through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "MSFT",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "MU",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "NFLX",
+      "group": "growth",
+      "sector": "Communication Services",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "NVDA",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "PANW",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2021-12-20",
+          "to": null,
+          "basis": "Nasdaq-100 — official 2021 annual reconstitution release added Palo Alto Networks effective before market open on 2021-12-20; no later removal announced through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "PEP",
+      "group": "growth",
+      "sector": "Consumer Staples",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2018-07-23",
+          "to": null,
+          "basis": "Nasdaq-100 — official Nasdaq index-change release added PepsiCo effective before market open on 2018-07-23; no later removal announced through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "PLTR",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2020-09-30",
+      "eligibility": [
+        {
+          "from": "2024-12-23",
+          "to": null,
+          "basis": "Nasdaq-100 — official 2024 annual reconstitution release added Palantir Technologies effective before market open on 2024-12-23; no later removal announced through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "QCOM",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "TSLA",
+      "group": "growth",
+      "sector": "Consumer Discretionary",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "TXN",
+      "group": "growth",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "Nasdaq-100 — present at the global data start; verified against official Nasdaq annual reconstitution and index-change releases through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "ABBV",
+      "group": "broad",
+      "sector": "Health Care",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start following S&P DJI's 2012 spin-off addition announcement; official S&P 100 change announcements show no removal through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "BA",
+      "group": "broad",
+      "sector": "Industrials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "BAC",
+      "group": "broad",
+      "sector": "Financials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "CAT",
+      "group": "broad",
+      "sector": "Industrials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "CRM",
+      "group": "broad",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2020-05-12",
+          "to": null,
+          "basis": "S&P 100 — official S&P DJI change announcement added Salesforce.com effective before market open on 2020-05-12; no later removal announced through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "CVX",
+      "group": "broad",
+      "sector": "Energy",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "DIS",
+      "group": "broad",
+      "sector": "Communication Services",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "GE",
+      "group": "broad",
+      "sector": "Industrials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; S&P DJI's 2024 GE Vernova announcement explicitly retained GE Aerospace, and official change announcements show no removal through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "GS",
+      "group": "broad",
+      "sector": "Financials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "HD",
+      "group": "broad",
+      "sector": "Consumer Discretionary",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "IBM",
+      "group": "broad",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "JNJ",
+      "group": "broad",
+      "sector": "Health Care",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "JPM",
+      "group": "broad",
+      "sector": "Financials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "KO",
+      "group": "broad",
+      "sector": "Consumer Staples",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "LLY",
+      "group": "broad",
+      "sector": "Health Care",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start following S&P's 2012 addition announcement; official S&P 100 change announcements show no removal through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "MA",
+      "group": "broad",
+      "sector": "Financials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "MCD",
+      "group": "broad",
+      "sector": "Consumer Discretionary",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "MRK",
+      "group": "broad",
+      "sector": "Health Care",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "NKE",
+      "group": "broad",
+      "sector": "Consumer Discretionary",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "ORCL",
+      "group": "broad",
+      "sector": "Information Technology",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "PG",
+      "group": "broad",
+      "sector": "Consumer Staples",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "UNH",
+      "group": "broad",
+      "sector": "Health Care",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "V",
+      "group": "broad",
+      "sector": "Financials",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "WMT",
+      "group": "broad",
+      "sector": "Consumer Staples",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    },
+    {
+      "symbol": "XOM",
+      "group": "broad",
+      "sector": "Energy",
+      "history_start": "2015-01-01",
+      "eligibility": [
+        {
+          "from": "2015-01-01",
+          "to": null,
+          "basis": "S&P 100 — present at the global data start; verified against official S&P Dow Jones Indices S&P 100 change announcements through 2025-12-31."
+        }
+      ]
+    }
+  ]
+}

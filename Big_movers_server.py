@@ -25,6 +25,7 @@ app = Flask(__name__, static_folder=SCRIPT_DIR, static_url_path="")
 AI_CLASSIFICATIONS_FILE = os.path.join(SCRIPT_DIR, "ai_classifications.json")
 SETUP_DEFINITIONS_FILE = os.path.join(SCRIPT_DIR, "setup_definitions.json")
 REVIEWS_FILE = os.path.join(SCRIPT_DIR, "reviews.json")
+MARKET_ANCHORS_FILE = os.path.join(SCRIPT_DIR, "market_anchor_universe.json")
 
 # Path configuration
 RESULTS_CSV = os.path.join(SCRIPT_DIR, "big_movers_result.csv")
@@ -463,6 +464,19 @@ def api_stock_list():
     if not found_any_dir:
         return jsonify({"error": "collected_stocks directory not found"}), 404
     return jsonify(sorted(symbols))
+
+
+@app.route("/api/market-anchors")
+def api_market_anchors():
+    """Return the reviewed point-in-time market anchor manifest."""
+    try:
+        with open(MARKET_ANCHORS_FILE, "r", encoding="utf-8") as manifest_file:
+            payload = json.load(manifest_file)
+    except FileNotFoundError:
+        return jsonify({"error": "market anchor manifest not found"}), 404
+    except (OSError, ValueError) as exc:
+        return jsonify({"error": f"market anchor manifest invalid: {exc}"}), 500
+    return jsonify(payload)
 
 
 DRAWINGS_FILE = os.path.join(SCRIPT_DIR, "drawings.json")
