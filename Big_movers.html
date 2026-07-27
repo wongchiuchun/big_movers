@@ -6027,13 +6027,35 @@
               </svg>
             </button>
             <div class="tb-sep"></div>
-            <button class="tb-btn active" id="tool-pan" title="Arrow [Alt+V]" aria-label="Arrow">
+            <button class="tb-btn active" id="tool-pan" title="Pan / Select [Alt+V]" aria-label="Pan / Select">
               <span class="tb-ico" aria-hidden="true">
                 <svg viewBox="0 0 20 20">
                   <path d="M4 3.5L15.5 9.5L11 11L9.5 15.5Z" />
                 </svg>
               </span>
             </button>
+            <span class="tool-group">
+              <button class="tb-btn" id="tool-arrow" title="Arrow annotation [Alt+W]" aria-label="Arrow annotation">
+                <span class="tb-ico" aria-hidden="true" style="color:#2196f3">
+                  <svg viewBox="0 0 20 20">
+                    <path d="M10 2L16 9H12.5V18H7.5V9H4Z" style="fill:currentColor;stroke:none" />
+                  </svg>
+                </span>
+              </button>
+              <button class="tool-cfg-btn" id="cfg-arrow" title="Arrow style" aria-label="Arrow settings">
+                <svg viewBox="0 0 20 20"><path d="M10 2l1.4 2.5 2.9.6-2 2.2.3 3-2.6-1.2-2.6 1.2.3-3-2-2.2 2.9-.6L10 2z"/></svg>
+              </button>
+              <div class="tool-popup hidden" id="popup-arrow">
+                <label for="arrow-color">Color</label><input id="arrow-color" type="color" class="cfg-color" value="#2196f3">
+                <label for="arrow-direction">Direction</label>
+                <select id="arrow-direction" class="cfg-direction">
+                  <option value="up" selected>Up</option>
+                  <option value="down">Down</option>
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+            </span>
             <span class="tool-group">
               <button class="tb-btn" id="tool-hline" title="Horizontal Line [Alt+H]" aria-label="H-Line">
                 <span class="tb-ico" aria-hidden="true">
@@ -6446,6 +6468,7 @@ function syncPersistedRightOffset(){
 
 // per-tool style settings
 const toolSettings={
+  arrow:{color:'#2196f3',direction:'up'},
   hline:{color:'#ffffff',width:2,style:'solid'},
   ray:  {color:'#ffffff',width:2,style:'solid'},
   seg:  {color:'#ffffff',width:2,style:'solid'},
@@ -7397,7 +7420,7 @@ function setLog(v){
 document.getElementById('log-toggle').addEventListener('click',()=>{setLog(!isLogScale);saveSettings();});
 
 // per-tool popup setup
-['hline','line','ray','seg','text','note'].forEach(tool=>{
+['arrow','hline','line','ray','seg','text','note'].forEach(tool=>{
   const cfgBtn=document.getElementById('cfg-'+tool);
   const popup=document.getElementById('popup-'+tool);
   if(!cfgBtn||!popup)return;
@@ -7421,6 +7444,9 @@ document.getElementById('log-toggle').addEventListener('click',()=>{setLog(!isLo
   });
   popup.querySelector('.cfg-fontsize')?.addEventListener('change',e=>{
     toolSettings[tool].fontSize=parseInt(e.target.value); syncDrawVars(); saveSettings();
+  });
+  popup.querySelector('.cfg-direction')?.addEventListener('change',e=>{
+    toolSettings[tool].direction=e.target.value; syncDrawVars(); saveSettings();
   });
 });
 document.addEventListener('click',e=>{ if(!e.target.closest('.tool-group')) document.querySelectorAll('.tool-popup').forEach(p=>p.classList.add('hidden')); });
@@ -7704,7 +7730,7 @@ function redrawAll(){
     // round-trip to $7.50") leak the move's outcome.
     const cutoff = (window.Sim && Sim.Ctrl && typeof Sim.Ctrl.getCutoffBarTime === 'function') ? Sim.Ctrl.getCutoffBarTime() : null;
     for(const d of drawings[dk]){
-      if (cutoff && _drawingExceedsCutoff(d, cutoff)) continue;
+      if (cutoff != null && _drawingExceedsCutoff(d, cutoff)) continue;
       drawOne(d,d.id===selectedId);
     }
   }
@@ -7714,14 +7740,59 @@ function redrawAll(){
 
 // True when ANY anchor point of the drawing is past the cutoff. hline /
 // untimed drawings always render (they have no time component).
+function _drawingTimeKey(time){
+  if(time==null)return null;
+  const toKey=(year,month,day)=>{
+    year=Number(year);month=Number(month);day=Number(day);
+    if(!Number.isInteger(year)||!Number.isInteger(month)||!Number.isInteger(day))return null;
+    const probe=new Date(0);
+    probe.setUTCHours(0,0,0,0);
+    probe.setUTCFullYear(year,month-1,day);
+    if(
+      probe.getUTCFullYear()!==year||
+      probe.getUTCMonth()!==month-1||
+      probe.getUTCDate()!==day
+    )return null;
+    return year*10000+month*100+day;
+  };
+  const dateToKey=date=>{
+    if(!(date instanceof Date)||!Number.isFinite(date.getTime()))return null;
+    return toKey(date.getUTCFullYear(),date.getUTCMonth()+1,date.getUTCDate());
+  };
+  if(typeof time==='object'){
+    if(time instanceof Date)return dateToKey(time);
+    if(time.year!=null&&time.month!=null&&time.day!=null){
+      return toKey(time.year,time.month,time.day);
+    }
+    return null;
+  }
+  if(typeof time==='number'){
+    if(!Number.isFinite(time))return null;
+    return dateToKey(new Date(Math.abs(time)>=1e12?time:time*1000));
+  }
+  if(typeof time==='string'){
+    const value=time.trim();
+    if(!value)return null;
+    const ymd=value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:$|[T\s])/);
+    if(ymd)return toKey(ymd[1],ymd[2],ymd[3]);
+    const unix=Number(value);
+    if(Number.isFinite(unix)){
+      return dateToKey(new Date(Math.abs(unix)>=1e12?unix:unix*1000));
+    }
+    return dateToKey(new Date(value));
+  }
+  return null;
+}
+
 function _drawingExceedsCutoff(d, cutoffTime){
-  if (!d || !cutoffTime) return false;
+  if (!d || cutoffTime==null) return false;
   if (d.type === 'hline') return false;
-  const t1 = d.p1 && d.p1.time;
-  const t2 = d.p2 && d.p2.time;
-  if (t1 && t1 > cutoffTime) return true;
-  if (t2 && t2 > cutoffTime) return true;
-  return false;
+  const cutoffKey=_drawingTimeKey(cutoffTime);
+  if(cutoffKey==null)return false;
+  return [d.time,d.p1&&d.p1.time,d.p2&&d.p2.time].some(time=>{
+    const key=_drawingTimeKey(time);
+    return key!=null&&key>cutoffKey;
+  });
 }
 
 function drawPreview(){
@@ -7796,6 +7867,37 @@ function wrapCanvasText(ctx, text, maxWidth){
   return out;
 }
 
+const ARROW_LENGTH=18;
+const ARROW_HEAD_LENGTH=9;
+const ARROW_HEAD_HALF_WIDTH=7;
+const ARROW_SHAFT_HALF_WIDTH=2.5;
+
+function getArrowGeometry(x,y,direction='up'){
+  const vectors={
+    up:{x:0,y:-1},
+    down:{x:0,y:1},
+    left:{x:-1,y:0},
+    right:{x:1,y:0},
+  };
+  const forward=vectors[direction]||vectors.up;
+  const back={x:-forward.x,y:-forward.y};
+  const side={x:-forward.y,y:forward.x};
+  const point=(backDist,sideDist)=>({
+    x:x+back.x*backDist+side.x*sideDist,
+    y:y+back.y*backDist+side.y*sideDist,
+  });
+  const points=[
+    {x,y},
+    point(ARROW_HEAD_LENGTH,ARROW_HEAD_HALF_WIDTH),
+    point(ARROW_HEAD_LENGTH,ARROW_SHAFT_HALF_WIDTH),
+    point(ARROW_LENGTH,ARROW_SHAFT_HALF_WIDTH),
+    point(ARROW_LENGTH,-ARROW_SHAFT_HALF_WIDTH),
+    point(ARROW_HEAD_LENGTH,-ARROW_SHAFT_HALF_WIDTH),
+    point(ARROW_HEAD_LENGTH,-ARROW_HEAD_HALF_WIDTH),
+  ];
+  return {points};
+}
+
 function drawOne(d,sel=false){
   if(!textNotesVisible && (d.type==='text'||d.type==='note')) return;
   const rawCol=d.color||'#ffffff';
@@ -7819,6 +7921,17 @@ function drawOne(d,sel=false){
     ctx2.fillStyle=c;ctx2.font='10px IBM Plex Mono,monospace';
     ctx2.fillText(d.price.toFixed(2),canvas.width-62,y-3);
     ctx2.beginPath();ctx2.arc(20,y,sel?5:3,0,Math.PI*2);ctx2.fill();
+  }
+  else if(d.type==='arrow'){
+    const x=time2p(d.time),y=price2p(d.price);
+    if(x==null||y==null){ctx2.restore();return;}
+    const geometry=getArrowGeometry(x,y,d.direction);
+    ctx2.fillStyle=c;
+    ctx2.beginPath();
+    ctx2.moveTo(geometry.points[0].x,geometry.points[0].y);
+    for(let i=1;i<geometry.points.length;i++) ctx2.lineTo(geometry.points[i].x,geometry.points[i].y);
+    ctx2.closePath();
+    ctx2.fill();
   }
   else if(d.type==='ray'||d.type==='seg'||d.type==='line'){
     const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
@@ -7950,7 +8063,7 @@ function drawMeasure(){
 // ==============================================
 // TOOL SETUP
 // ==============================================
-const TOOLS=['pan','hline','line','ray','seg','text','note','measure'];
+const TOOLS=['pan','arrow','hline','line','ray','seg','text','note','measure'];
 function setTool(t){
   drawTool=t;pendingP1=null;
   document.getElementById('hint').classList.add('hidden');
@@ -8070,6 +8183,17 @@ function setupChartEvents(){
       addDrawing({type:'hline',price,color:drawColor,width:drawWidth,style:drawLineStyle});saveDrawings();
       setTool('pan');
     }
+    else if(drawTool==='arrow'){
+      addDrawing({
+        type:'arrow',
+        time,
+        price,
+        color:toolSettings.arrow.color,
+        direction:toolSettings.arrow.direction||'up'
+      });
+      saveDrawings();
+      setTool('pan');
+    }
     else if(drawTool==='ray'||drawTool==='seg'||drawTool==='line'||drawTool==='note'){
       if(!pendingP1){
         pendingP1={price,time};
@@ -8141,6 +8265,7 @@ function setupDrag(){
   const wrapEl=document.getElementById('chart-wrap');
 
   let dragPart='whole';
+  let dragUndoIndex=-1;
   wrapEl.addEventListener('mousedown',e=>{
     if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
     if(drawTool!=='pan'||e.button!==0||!drawKey()||drawingsLocked)return;
@@ -8160,6 +8285,7 @@ function setupDrag(){
     dragId=fullHit.id;
     dragPart=fullHit.part;
     dragStartX=x; dragStartY=y; wasDrag=false;
+    dragUndoIndex=-1;
     dragOrig=JSON.parse(JSON.stringify(getDrawing(dragId)));
     e.stopImmediatePropagation();
     e.preventDefault();
@@ -8169,15 +8295,26 @@ function setupDrag(){
     if(dragId===null)return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
-    wasDrag=true;
-    applyDrag(dragId,dragPart,x-dragStartX,y-dragStartY);
+    const dx=x-dragStartX,dy=y-dragStartY;
+    if(dx===0&&dy===0)return;
+    if(!wasDrag){
+      pushUndo();
+      dragUndoIndex=undoHistory.length-1;
+      wasDrag=true;
+    }
+    applyDrag(dragId,dragPart,dx,dy);
     redrawAll();
   });
 
   document.addEventListener('mouseup',e=>{
     if(dragId!==null){
-      if(wasDrag){ pushUndo(); saveDrawings(); }
+      if(wasDrag){
+        const changed=JSON.stringify(getDrawing(dragId))!==JSON.stringify(dragOrig);
+        if(changed)saveDrawings();
+        else if(dragUndoIndex>=0)undoHistory.splice(dragUndoIndex,1);
+      }
       dragId=null; dragOrig=null;
+      dragUndoIndex=-1;
       setTimeout(()=>{ wasDrag=false; },50);
     }
   });
@@ -8261,7 +8398,7 @@ function applyDrag(id,part,dx,dy){
       d.p2={...d.p2,price:toPrice(o.p2.price,dy),time:toTime(o.p2.time,dx)};
     }
   }
-  else if(d.type==='text'){
+  else if(d.type==='text'||d.type==='arrow'){
     d.price=toPrice(o.price,dy);
     d.time=toTime(o.time,dx);
   }
@@ -8289,11 +8426,38 @@ function hitTestFull(mx,my){
   return null;
 }
 
+function pointInPolygon(px,py,points){
+  let inside=false;
+  for(let i=0,j=points.length-1;i<points.length;j=i++){
+    const a=points[i],b=points[j];
+    const crosses=(a.y>py)!==(b.y>py);
+    if(crosses&&px<(b.x-a.x)*(py-a.y)/(b.y-a.y)+a.x)inside=!inside;
+  }
+  return inside;
+}
+
+function pointHitsPolygon(px,py,points,tolerance){
+  if(pointInPolygon(px,py,points))return true;
+  for(let i=0;i<points.length;i++){
+    const a=points[i],b=points[(i+1)%points.length];
+    if(distSeg(px,py,a.x,a.y,b.x,b.y)<=tolerance)return true;
+  }
+  return false;
+}
+
 function getHitPart(d,mx,my){
   if(d.type==='hline'){
     const y=price2p(d.price);
     if(y==null)return null;
     return Math.abs(my-y)<THRESH?'whole':null;
+  }
+  if(d.type==='arrow'){
+    const cutoff=(window.Sim&&Sim.Ctrl&&typeof Sim.Ctrl.getCutoffBarTime==='function')?Sim.Ctrl.getCutoffBarTime():null;
+    if(cutoff!=null&&_drawingExceedsCutoff(d,cutoff))return null;
+    const x=time2p(d.time),y=price2p(d.price);
+    if(x==null||y==null)return null;
+    const points=getArrowGeometry(x,y,d.direction).points;
+    return pointHitsPolygon(mx,my,points,4)?'whole':null;
   }
   if(d.type==='ray'||d.type==='seg'||d.type==='line'||d.type==='note'){
     const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
@@ -8486,7 +8650,7 @@ document.addEventListener('keydown',e=>{
     return;
   }
   if(!inInput && e.altKey && !e.ctrlKey && !e.metaKey){
-    const keyMap={'v':'pan','h':'hline','a':'line','r':'ray','s':'seg','t':'text','n':'note','m':'measure'};
+    const keyMap={'v':'pan','w':'arrow','h':'hline','a':'line','r':'ray','s':'seg','t':'text','n':'note','m':'measure'};
     if(keyMap[e.key.toLowerCase()]){
       e.preventDefault();
       setTool(keyMap[e.key.toLowerCase()]);
@@ -9014,7 +9178,7 @@ function initChart(){
 
   if(saved?.toolSettings){
     Object.assign(toolSettings, saved.toolSettings);
-    ['hline','line','ray','seg','text','note'].forEach(t=>{
+    ['arrow','hline','line','ray','seg','text','note'].forEach(t=>{
       const s=toolSettings[t];
       const popup=document.getElementById('popup-'+t);
       if(!popup)return;
@@ -9022,6 +9186,7 @@ function initChart(){
       if(popup.querySelector('.cfg-width')) popup.querySelector('.cfg-width').value=s.width||2;
       if(popup.querySelector('.cfg-style')) popup.querySelector('.cfg-style').value=s.style||'solid';
       if(popup.querySelector('.cfg-fontsize')&&s.fontSize) popup.querySelector('.cfg-fontsize').value=s.fontSize;
+      if(popup.querySelector('.cfg-direction')) popup.querySelector('.cfg-direction').value=s.direction||'up';
     });
   }
   syncDrawVars();
