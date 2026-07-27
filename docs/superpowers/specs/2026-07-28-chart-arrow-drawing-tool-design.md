@@ -8,6 +8,7 @@ Add a persistent arrow annotation to the existing chart drawing toolbar. The arr
 
 - Rename the existing cursor control's label from "Arrow" to "Pan / Select" (its internal `pan` identifier remains unchanged), then add an "Arrow annotation" tool and settings popup beside the existing line tools.
 - The popup controls color and direction. Defaults are blue (`#2196f3`) and up.
+- Offer one-click color presets from the app palette: blue (`#2196f3`), orange (`#ff6b35`), and yellow (`#f5c842`), plus a custom color picker. The toolbar arrow icon reflects the current color.
 - Store arrows in the existing drawings collection as:
   `{type: "arrow", time, price, color, direction}`.
 - Treat the stored time/price coordinate as the arrowhead tip. The tip points in the selected direction and the shaft extends from it in the opposite direction. Size the filled silhouette to match the chart's existing start/end markers visually.

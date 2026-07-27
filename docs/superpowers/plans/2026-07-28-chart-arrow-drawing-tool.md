@@ -57,3 +57,16 @@ Do not run the broader automated test suite, per user instruction.
 git add Big_movers.html docs/superpowers/plans/2026-07-28-chart-arrow-drawing-tool.md
 git commit -m "feat: add chart arrow drawing tool"
 ```
+
+### Task 2: Add consistent arrow color presets
+
+**Files:**
+- Modify: `Big_movers.html`
+- Modify: `docs/superpowers/specs/2026-07-28-chart-arrow-drawing-tool-design.md`
+
+- [x] Add blue (`#2196f3`), orange (`#ff6b35`), and yellow (`#f5c842`) swatches to the arrow popup.
+- [x] Keep the custom color input and synchronize it with preset selection.
+- [x] Show which preset is selected and update the toolbar arrow icon to the active color.
+- [x] Restore the swatch, custom input, and icon from saved arrow settings.
+- [x] Run the focused inline-script syntax check and `git diff --check`.
+- [x] Commit only the HTML and feature documentation; exclude `drawings.json` and `metadata.json`.

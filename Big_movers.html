@@ -932,6 +932,29 @@
     cursor: pointer;
     padding: 0;
   }
+  .arrow-color-presets {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .arrow-color-swatch {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: var(--swatch-color);
+    cursor: pointer;
+  }
+  .arrow-color-swatch:hover,
+  .arrow-color-swatch:focus-visible {
+    border-color: var(--text);
+    outline: none;
+  }
+  .arrow-color-swatch.selected {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
   .tb-btn {
     background: transparent;
     border: 1px solid transparent;
@@ -6046,7 +6069,13 @@
                 <svg viewBox="0 0 20 20"><path d="M10 2l1.4 2.5 2.9.6-2 2.2.3 3-2.6-1.2-2.6 1.2.3-3-2-2.2 2.9-.6L10 2z"/></svg>
               </button>
               <div class="tool-popup hidden" id="popup-arrow">
-                <label for="arrow-color">Color</label><input id="arrow-color" type="color" class="cfg-color" value="#2196f3">
+                <label>Presets</label>
+                <div class="arrow-color-presets" role="group" aria-label="Arrow preset colors">
+                  <button type="button" class="arrow-color-swatch selected" data-color="#2196f3" style="--swatch-color:#2196f3" title="Blue" aria-label="Blue"></button>
+                  <button type="button" class="arrow-color-swatch" data-color="#ff6b35" style="--swatch-color:#ff6b35" title="Orange" aria-label="Orange"></button>
+                  <button type="button" class="arrow-color-swatch" data-color="#f5c842" style="--swatch-color:#f5c842" title="Yellow" aria-label="Yellow"></button>
+                </div>
+                <label for="arrow-color">Custom</label><input id="arrow-color" type="color" class="cfg-color" value="#2196f3">
                 <label for="arrow-direction">Direction</label>
                 <select id="arrow-direction" class="cfg-direction">
                   <option value="up" selected>Up</option>
@@ -6476,6 +6505,19 @@ const toolSettings={
   text: {color:'#ffffff',fontSize:12,fontFamily:'Arial'},
   note: {color:'#ffffff',width:2,style:'solid',fontSize:12,fontFamily:'Arial'},
 };
+
+function syncArrowColorUI(color){
+  const normalized=/^#[0-9a-f]{6}$/i.test(color||'')?color.toLowerCase():'#2196f3';
+  toolSettings.arrow.color=normalized;
+  const popup=document.getElementById('popup-arrow');
+  const custom=popup?.querySelector('.cfg-color');
+  if(custom)custom.value=normalized;
+  popup?.querySelectorAll('.arrow-color-swatch').forEach(btn=>{
+    btn.classList.toggle('selected',(btn.dataset.color||'').toLowerCase()===normalized);
+  });
+  const icon=document.querySelector('#tool-arrow .tb-ico');
+  if(icon)icon.style.color=normalized;
+}
 
 // current active tool settings (shorthand)
 let drawColor='#ffffff', drawWidth=2, drawLineStyle='solid';
@@ -7434,8 +7476,16 @@ document.getElementById('log-toggle').addEventListener('click',()=>{setLog(!isLo
   popup.addEventListener('click',e=>e.stopPropagation());
   popup.addEventListener('mousedown',e=>e.stopPropagation());
   popup.querySelector('.cfg-color')?.addEventListener('input',e=>{
-    toolSettings[tool].color=e.target.value; syncDrawVars(); saveSettings();
+    toolSettings[tool].color=e.target.value;
+    if(tool==='arrow')syncArrowColorUI(e.target.value);
+    syncDrawVars(); saveSettings();
   });
+  popup.querySelectorAll('.arrow-color-swatch').forEach(btn=>btn.addEventListener('click',()=>{
+    if(tool!=='arrow')return;
+    syncArrowColorUI(btn.dataset.color);
+    syncDrawVars();
+    saveSettings();
+  }));
   popup.querySelector('.cfg-width')?.addEventListener('change',e=>{
     toolSettings[tool].width=parseInt(e.target.value); syncDrawVars(); saveSettings();
   });
@@ -9189,6 +9239,7 @@ function initChart(){
       if(popup.querySelector('.cfg-direction')) popup.querySelector('.cfg-direction').value=s.direction||'up';
     });
   }
+  syncArrowColorUI(toolSettings.arrow?.color);
   syncDrawVars();
   setupChartEvents();
   resizeCanvas();
