@@ -1,4 +1,214 @@
 {
+  "AAOI_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1306,
+      "p1": {
+        "price": 13.4263,
+        "time": {
+          "day": 18,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 0.0336,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is a reasonable entry. At 200 EMA, held 10 EMA, tight stop below 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1307,
+      "p1": {
+        "price": 13.4263,
+        "time": {
+          "day": 2,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 32.053,
+        "time": {
+          "day": 23,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "nasty candle that could stop you out easily",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1308,
+      "p1": {
+        "price": 13.8881,
+        "time": {
+          "day": 3,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 7.4996,
+        "time": {
+          "day": 23,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "should be a reasonable re-entry candle if stopped out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1309,
+      "p1": {
+        "price": 15.7354,
+        "time": {
+          "day": 29,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 11.0402,
+        "time": {
+          "day": 7,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Would get stopped out again",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1310,
+      "p1": {
+        "price": 17.4287,
+        "time": {
+          "day": 7,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 54.3742,
+        "time": {
+          "day": 31,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Once again the same visual cue. Not obvious, very difficult to catch:\n1) EMAs tangled up\n2) Recently tested 50 EMA and held\n3) Notable increase in volume",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1311,
+      "p1": {
+        "price": 43.2136,
+        "time": {
+          "day": 4,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 59.2233,
+        "time": {
+          "day": 19,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "A strong run up",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1312,
+      "p1": {
+        "price": 33.2075,
+        "time": {
+          "day": 10,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 23.8172,
+        "time": {
+          "day": 18,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Exit candle",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1313,
+      "p1": {
+        "price": 16.813,
+        "time": {
+          "day": 6,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 10.1936,
+        "time": {
+          "day": 5,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Zooming out this was also a handle position tightness",
+      "type": "note",
+      "width": 2
+    }
+  ],
   "AAOI_2025": [
     {
       "color": "#000000",
@@ -260,6 +470,379 @@
       "style": "solid",
       "text": "3 Dec - Test of faith as 20 EMA broke and did not reclaim the next day. \nThe top was near",
       "type": "note",
+      "width": 2
+    }
+  ],
+  "ACHR_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1299,
+      "p1": {
+        "price": 4.4128,
+        "time": {
+          "day": 11,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 7.3127,
+        "time": {
+          "day": 10,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "started getting interesting",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1300,
+      "p1": {
+        "price": 4.1367,
+        "time": {
+          "day": 15,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 2.3932,
+        "time": {
+          "day": 22,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Low risk entry here can set stop at 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1301,
+      "p1": {
+        "price": 9.4705,
+        "time": {
+          "day": 29,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 12.8883,
+        "time": {
+          "day": 30,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "too far away from the EMAs",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1302,
+      "p1": {
+        "price": 7.1057,
+        "time": {
+          "day": 12,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 5.1206,
+        "time": {
+          "day": 19,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Held the pullback",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1303,
+      "p1": {
+        "price": 6.5015,
+        "time": {
+          "day": 3,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 5.1033,
+        "time": {
+          "day": 19,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1304,
+      "p1": {
+        "price": 10.558,
+        "time": {
+          "day": 30,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 13.2508,
+        "time": {
+          "day": 28,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "It is a lot of retracement",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1305,
+      "p1": {
+        "price": 9.6604,
+        "time": {
+          "day": 10,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 12.0597,
+        "time": {
+          "day": 3,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Exit candle",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "AFRM_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1167,
+      "p1": {
+        "price": 39.3606,
+        "time": {
+          "day": 29,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 11.2177,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Gapped up above the EMAs but the PA prior was weak. Volume followed but fair to expect a lot of consolidation",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1168,
+      "p1": {
+        "price": 39.5588,
+        "time": {
+          "day": 4,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 17.5598,
+        "time": {
+          "day": 22,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Lots of sideway consolidations. Within a $10 range but quite damaging if not entered at the right spot",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1170,
+      "p1": {
+        "price": 43.1262,
+        "time": {
+          "day": 29,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 78.0077,
+        "time": {
+          "day": 8,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Things started getting interesting as the EMAs start to tangle up and the\n arrangement is bullish, already 3+month of consolidation",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1171,
+      "p1": {
+        "price": 49.2701,
+        "time": {
+          "day": 6,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 92.4756,
+        "time": {
+          "day": 7,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This and the prior candle seems to\n be a logical entry out of the consolidation zone",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1172,
+      "p1": {
+        "price": 46.6937,
+        "time": {
+          "day": 8,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 31.8294,
+        "time": {
+          "day": 2,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Very nasty candle would have stop us out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1173,
+      "p1": {
+        "price": 54.2249,
+        "time": {
+          "day": 11,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 97.8266,
+        "time": {
+          "day": 26,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This bar is arguably an undercut and reclaim, following 2 nasty sessions\nThe opening was way above the close and above EMA, very bullish but require good system to try again given prior PA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1174,
+      "p1": {
+        "price": 64.7289,
+        "time": {
+          "day": 18,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 35.3968,
+        "time": {
+          "day": 3,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Clear exit bar",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1175,
+      "price": 51.4502,
+      "style": "solid",
+      "type": "hline",
       "width": 2
     }
   ],
@@ -645,6 +1228,307 @@
       "width": 2
     }
   ],
+  "ALAB_2024": [
+    {
+      "color": "#ffffff",
+      "id": 1152,
+      "p1": {
+        "price": 41.3295,
+        "time": {
+          "day": 28,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 80.1415,
+        "time": {
+          "day": 30,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "boxWidth": 220,
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1153,
+      "price": 94.5882,
+      "text": "bottoming process whereby momentum towards the downside slowed and the volume was incresing. (Some accumulation?)",
+      "time": {
+        "day": 18,
+        "month": 6,
+        "year": 2024
+      },
+      "type": "text",
+      "wrapWidth": 199
+    },
+    {
+      "color": "#ffffff",
+      "id": 1154,
+      "p1": {
+        "price": 45.8575,
+        "time": {
+          "day": 17,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 35.8591,
+        "time": {
+          "day": 30,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "boxWidth": 220,
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1155,
+      "price": 33.277,
+      "text": "First break of EMA, expect consolidation at these levels",
+      "time": {
+        "day": 6,
+        "month": 9,
+        "year": 2024
+      },
+      "type": "text",
+      "wrapWidth": 199
+    },
+    {
+      "color": "#ffffff",
+      "id": 1156,
+      "p1": {
+        "price": 60.9511,
+        "time": {
+          "day": 9,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 106.4475,
+        "time": {
+          "day": 5,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "boxWidth": 220,
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1157,
+      "price": 125.2066,
+      "text": "Probably first tradable level. Up 50% from low, Gap with volume, breakout from the consolidation zone",
+      "time": {
+        "day": 12,
+        "month": 8,
+        "year": 2024
+      },
+      "type": "text",
+      "wrapWidth": 199
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1158,
+      "p1": {
+        "price": 60.5199,
+        "time": {
+          "day": 15,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 40.5794,
+        "time": {
+          "day": 21,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Held the low",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1159,
+      "p1": {
+        "price": 84.6696,
+        "time": {
+          "day": 5,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 154.3157,
+        "time": {
+          "day": 28,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Second Gap up, strong move. Strong volume.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1160,
+      "p1": {
+        "price": 85.9633,
+        "time": {
+          "day": 15,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 67.5952,
+        "time": {
+          "day": 2,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Pullback on low volume, held the low",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1161,
+      "p1": {
+        "price": 131.8406,
+        "time": {
+          "day": 8,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 176.3382,
+        "time": {
+          "day": 13,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Entire move strongly above EMA but held the ST levels.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1163,
+      "p1": {
+        "price": 128.6385,
+        "time": {
+          "day": 16,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 143.1579,
+        "time": {
+          "day": 17,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "2nd potential exit point",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1164,
+      "p1": {
+        "price": 71.7388,
+        "time": {
+          "day": 4,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 26.4238,
+        "time": {
+          "day": 30,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Tightness in the area, held ST",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1166,
+      "p1": {
+        "price": 49.3075,
+        "time": {
+          "day": 4,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 7.3232,
+        "time": {
+          "day": 16,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Pullback into the ST area, also 20 EMA",
+      "type": "note",
+      "width": 2
+    }
+  ],
   "ALAB_2025": [
     {
       "color": "#000000",
@@ -958,6 +1842,1099 @@
       "width": 2
     }
   ],
+  "APP_2024": [
+    {
+      "color": "#ffffff",
+      "id": 1177,
+      "p1": {
+        "price": 47.1712,
+        "time": {
+          "day": 7,
+          "month": 8,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 49.9109,
+        "time": {
+          "day": 6,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1178,
+      "p1": {
+        "price": 48.6656,
+        "time": {
+          "day": 22,
+          "month": 9,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 65.727,
+        "time": {
+          "day": 1,
+          "month": 6,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "This whole area is a HTF area after a power move off the base in 2023",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1179,
+      "p1": {
+        "price": 21.2939,
+        "time": {
+          "day": 11,
+          "month": 5,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": -0.3593,
+        "time": {
+          "day": 7,
+          "month": 6,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Clear EP gap up with strong volume, normally would expect pull back but minimal retrace",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1180,
+      "p1": {
+        "price": 21.9664,
+        "time": {
+          "day": 7,
+          "month": 6,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 12.9554,
+        "time": {
+          "day": 5,
+          "month": 7,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "First break of 20 EMA shakeout",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1181,
+      "p1": {
+        "price": 27.884,
+        "time": {
+          "day": 24,
+          "month": 7,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 45.0989,
+        "time": {
+          "day": 13,
+          "month": 3,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Slow orderly upward movement trailing 10 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1182,
+      "p1": {
+        "price": 37.8364,
+        "time": {
+          "day": 10,
+          "month": 8,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 17.5281,
+        "time": {
+          "day": 20,
+          "month": 9,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Gap up again ~30% with selloff but closed at near the high point. \nShows the bullishness. Subsequent moves did not give back much",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1184,
+      "p1": {
+        "price": 39.0468,
+        "time": {
+          "day": 10,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 26.5391,
+        "time": {
+          "day": 21,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Quarter long consolidation with EMAs realy tight, \nthe 100 EMA catching up nicely. Very interesting setup",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1185,
+      "p1": {
+        "price": 45.3679,
+        "time": {
+          "day": 29,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 31.5153,
+        "time": {
+          "day": 20,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Looks like a breakout bar followed by 3 days of shakeout below 20EMA, \nWould be shaken out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1186,
+      "p1": {
+        "price": 46.3093,
+        "time": {
+          "day": 6,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 39.1813,
+        "time": {
+          "day": 5,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "The sharp reclaim and hold 10 EMA with a mini flag really shows how \nmuch it wants to shake everyone out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1187,
+      "p1": {
+        "price": 46.4438,
+        "time": {
+          "day": 14,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 48.3749,
+        "time": {
+          "day": 17,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This could be a pullback into 10EMA entry with stop 3% below 20EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1188,
+      "p1": {
+        "price": 56.6534,
+        "time": {
+          "day": 15,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 90.2712,
+        "time": {
+          "day": 8,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Nice gap up with strong volume. As usual little pullback just trail 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1189,
+      "p1": {
+        "price": 72.1833,
+        "time": {
+          "day": 15,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 98.8584,
+        "time": {
+          "day": 18,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Area to get out as below 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1191,
+      "p1": {
+        "price": 83.1569,
+        "time": {
+          "day": 13,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 145.1059,
+        "time": {
+          "day": 20,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Here we have another 4 months of consolidation followed by selloff. Attempts in this range would have been shaken out easily",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1192,
+      "p1": {
+        "price": 64.8649,
+        "time": {
+          "day": 5,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 46.5729,
+        "time": {
+          "day": 17,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Strong Candle opening at 200EMA and close all the way up",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1193,
+      "p1": {
+        "price": 73.889,
+        "time": {
+          "day": 9,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 60.231,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "The next 3 days were very difficult until the candle reclaimed the entire 10 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1194,
+      "p1": {
+        "price": 85.352,
+        "time": {
+          "day": 19,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 66.3284,
+        "time": {
+          "day": 15,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Best setup here with rising 10 EMA closed to the flag, close to former top",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1195,
+      "p1": {
+        "price": 85.8398,
+        "time": {
+          "day": 6,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 118.7654,
+        "time": {
+          "day": 15,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Would again stop out below 20EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1196,
+      "p1": {
+        "price": 89.0104,
+        "time": {
+          "day": 11,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 82.9131,
+        "time": {
+          "day": 8,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Psychologically a difficult re-entry candle as it opened around 20EMA and closed at high.\nThe closing price was above the entire 6 month consolidation zone. \nThsi is the prabolic zone",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1198,
+      "p1": {
+        "price": 157.4472,
+        "time": {
+          "day": 28,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 125.3572,
+        "time": {
+          "day": 12,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Need guts to enter but once done the entire move \nwas holding the 10 EMA nicely. No action required",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1199,
+      "p1": {
+        "price": 331.0152,
+        "time": {
+          "day": 25,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 393.8704,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "2nd move up.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1200,
+      "p1": {
+        "price": 318.8728,
+        "time": {
+          "day": 18,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 240.3038,
+        "time": {
+          "day": 13,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "First break of structure.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1201,
+      "p1": {
+        "price": 472.4394,
+        "time": {
+          "day": 20,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 486.7246,
+        "time": {
+          "day": 21,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Here things are clearly not well. The gap up was sold, unlike the entire move prior",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1202,
+      "p1": {
+        "price": 360.3,
+        "time": {
+          "day": 5,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 175.3059,
+        "time": {
+          "day": 10,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Consolidation but not easy to reenter. Can be seen as HTF?",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1203,
+      "p1": {
+        "price": 296.7306,
+        "time": {
+          "day": 2,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 218.1617,
+        "time": {
+          "day": 19,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This is the first time after 3 months when things started setting up again",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1204,
+      "p1": {
+        "price": 323.8726,
+        "time": {
+          "day": 23,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 268.16,
+        "time": {
+          "day": 11,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This entire leg between Apr and Jul was very difficult to trade.\nCould have exited with a small gain but not easy to stick to the ticker",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1205,
+      "p1": {
+        "price": 360.0839,
+        "time": {
+          "day": 28,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 333.4348,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This tightness here is interesting. I think the first time in months after all the wide and losse actions.\n\nThis sideway movement setups the EMAs too",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1206,
+      "p1": {
+        "price": 387.8916,
+        "time": {
+          "day": 31,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 698.4108,
+        "time": {
+          "day": 15,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Subtle increase in volume, staying consistently above 10 EMA, This is very bullish",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1207,
+      "p1": {
+        "price": 389.0502,
+        "time": {
+          "day": 7,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 375.1464,
+        "time": {
+          "day": 11,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "possible entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1208,
+      "p1": {
+        "price": 408.7473,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 391.3675,
+        "time": {
+          "day": 28,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "stop out candle",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1209,
+      "p1": {
+        "price": 434.2377,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 581.3868,
+        "time": {
+          "day": 6,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Delayed U&C",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1210,
+      "p1": {
+        "price": 614.9878,
+        "time": {
+          "day": 6,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 494.4877,
+        "time": {
+          "day": 27,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Break ST and EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1211,
+      "p1": {
+        "price": 412.2233,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 833.9734,
+        "time": {
+          "day": 8,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Nov 24 - Jul 25 looks like a mega\nVCP structure with the last tightening in Aud 25",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "ARM_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1288,
+      "p1": {
+        "price": 51.7541,
+        "time": {
+          "day": 9,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 43.8127,
+        "time": {
+          "day": 1,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "IPO basing, the final chok was brutal",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1289,
+      "p1": {
+        "price": 54.5687,
+        "time": {
+          "day": 17,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 49.3415,
+        "time": {
+          "day": 12,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This was definitely not obvious at the time but the breakout condition was amassing. The price held 10 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1290,
+      "p1": {
+        "price": 62.6107,
+        "time": {
+          "day": 6,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 56.6798,
+        "time": {
+          "day": 21,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Second opp to add. A sideway flag",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1291,
+      "p1": {
+        "price": 73.4223,
+        "time": {
+          "day": 22,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 67.2348,
+        "time": {
+          "day": 5,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This area is wide an loose. Kept breaking 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1292,
+      "p1": {
+        "price": 75.3967,
+        "time": {
+          "day": 7,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 105.181,
+        "time": {
+          "day": 20,
+          "month": 9,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "This candle awas a bit of a hindsight bias which I am pretty sure at the time it was not easy to trade.\nEspecially given the prior month of chop. \n2 things were helpful\n1) recent test of 50EMA and held and EMAs started getting really close to one another\n2) the volume was strong on that day, signalling a potential stronger move",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1293,
+      "p1": {
+        "price": 111.4116,
+        "time": {
+          "day": 8,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 156.9351,
+        "time": {
+          "day": 20,
+          "month": 10,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Crazy ADR% expansion + gap up. Hard to chase",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1294,
+      "p1": {
+        "price": 122.8371,
+        "time": {
+          "day": 15,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 181.75,
+        "time": {
+          "day": 26,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Wide and loose + breakdown. Poor PA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1296,
+      "p1": {
+        "price": 113.1968,
+        "time": {
+          "day": 24,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 81.2411,
+        "time": {
+          "day": 8,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Here is a worthwhile attempt but probably 50:50 win rate. Price tightened. EMAs looking more bullish. \nIt could sometimes go up then break down again but stop could be set realtively tight",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1297,
+      "p1": {
+        "price": 136.4049,
+        "time": {
+          "day": 7,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 88.382,
+        "time": {
+          "day": 4,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Only here did 50EMA started turning up",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1298,
+      "p1": {
+        "price": 165.9855,
+        "time": {
+          "day": 17,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 236.0177,
+        "time": {
+          "day": 9,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "ocne again breakdown",
+      "type": "note",
+      "width": 2
+    }
+  ],
   "ARWR_2025": [
     {
       "color": "#000000",
@@ -1229,6 +3206,262 @@
       },
       "style": "solid",
       "text": "Zooming out this was a breakout downtrend retest that held - \nthe subsequent setup became much more believable",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "ASTS_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1278,
+      "p1": {
+        "price": 3.3265,
+        "time": {
+          "day": 16,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 0.4115,
+        "time": {
+          "day": 31,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "strong ADR expansion, strong volume, straight up across all EMAs. Definitely a spot to watch but also prepare for consolidation",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1279,
+      "p1": {
+        "price": 4.394,
+        "time": {
+          "day": 23,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 12.8107,
+        "time": {
+          "day": 20,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is when the price pullback in the EMA, a potential entry with the LoD of gap as stop",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1280,
+      "p1": {
+        "price": 18.5496,
+        "time": {
+          "day": 26,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 36.9372,
+        "time": {
+          "day": 20,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Entire move up trail 10 EMA very strong name",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1281,
+      "p1": {
+        "price": 11.0625,
+        "time": {
+          "day": 5,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 6.4745,
+        "time": {
+          "day": 8,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "These are steady upward movement with multiple small flag breakout add opp",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1282,
+      "p1": {
+        "price": 9.1214,
+        "time": {
+          "day": 7,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 6.4745,
+        "time": {
+          "day": 8,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1283,
+      "p1": {
+        "price": 13.2976,
+        "time": {
+          "day": 24,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 6.5921,
+        "time": {
+          "day": 8,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1284,
+      "p1": {
+        "price": 15.7417,
+        "time": {
+          "day": 25,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 14.5893,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is 2nd ADR% expansion",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1285,
+      "p1": {
+        "price": 27.3808,
+        "time": {
+          "day": 6,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 37.3488,
+        "time": {
+          "day": 13,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This candle is the final stop out candle, Prior to that the structure was largely intact",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1286,
+      "p1": {
+        "price": 37.8674,
+        "time": {
+          "day": 20,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 45.3579,
+        "time": {
+          "day": 20,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Once again when prce is too far away from 10 50 EMA  it is chance to sell into strength",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1287,
+      "p1": {
+        "price": 22.6703,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 9.1333,
+        "time": {
+          "day": 24,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This is the back side of the trade, going down relentlessly until touching 200 EMA",
       "type": "note",
       "width": 2
     }
@@ -3255,6 +5488,308 @@
       "width": 2
     }
   ],
+  "CAVA_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1226,
+      "p1": {
+        "price": 36.2748,
+        "time": {
+          "day": 12,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 26.8575,
+        "time": {
+          "day": 27,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Interesting entry with a combination of bullishness\n1. U&R with strong close\n2. High volume\n3. EMA in bullish alignments",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1227,
+      "p1": {
+        "price": 39.5986,
+        "time": {
+          "day": 4,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 29.9966,
+        "time": {
+          "day": 25,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Occasional moves below 20EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1228,
+      "p1": {
+        "price": 49.016,
+        "time": {
+          "day": 22,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 29.4426,
+        "time": {
+          "day": 28,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1229,
+      "p1": {
+        "price": 43.8457,
+        "time": {
+          "day": 16,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 71.1744,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "If stopped out this tightness is still tradable",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1230,
+      "p1": {
+        "price": 56.2175,
+        "time": {
+          "day": 27,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 87.7934,
+        "time": {
+          "day": 25,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "U&R in delay style",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1231,
+      "p1": {
+        "price": 62.3111,
+        "time": {
+          "day": 4,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 31.1045,
+        "time": {
+          "day": 3,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1232,
+      "p1": {
+        "price": 67.2967,
+        "time": {
+          "day": 26,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 86.3161,
+        "time": {
+          "day": 27,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1233,
+      "p1": {
+        "price": 90.0092,
+        "time": {
+          "day": 9,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 32.2124,
+        "time": {
+          "day": 9,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1234,
+      "p1": {
+        "price": 87.7934,
+        "time": {
+          "day": 9,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 71.9131,
+        "time": {
+          "day": 26,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This bar is marginally tradable. The bar after is an inside day also offering excellent R:R",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1235,
+      "p1": {
+        "price": 142.2664,
+        "time": {
+          "day": 6,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 160.3625,
+        "time": {
+          "day": 23,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "The entire move has been trailing the 20 EMA with a bit of buffer. There were 2 occasions with stop out.",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1236,
+      "p1": {
+        "price": 161.6551,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 167.01,
+        "time": {
+          "day": 24,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is a warning bar followed by much wider swings",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1237,
+      "p1": {
+        "price": 129.7099,
+        "time": {
+          "day": 11,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 116.2301,
+        "time": {
+          "day": 11,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Clear full exit candle",
+      "type": "note",
+      "width": 2
+    }
+  ],
   "CDE_2025": [
     {
       "color": "#000000",
@@ -3875,6 +6410,346 @@
       },
       "style": "solid",
       "text": "22 Oct: Here the chop became too much; range too wide, after the stop out should stay on the sideline but could get sucked right back into it.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "CLS_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1212,
+      "p1": {
+        "price": 29.5552,
+        "time": {
+          "day": 19,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 17.3661,
+        "time": {
+          "day": 7,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is a nice move after shakeout 2 days ago, open above EMA move to close at high.\nPrevious month in tight range of 5%",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1213,
+      "p1": {
+        "price": 43.0986,
+        "time": {
+          "day": 19,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 26.5079,
+        "time": {
+          "day": 3,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Easy lay up. Would stop out here but okay",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1214,
+      "p1": {
+        "price": 46.0965,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 35.9005,
+        "time": {
+          "day": 31,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "here looks like a new setup. Would either enter here (good chance getting stopped out) or during pullback into the EMAs",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1215,
+      "p1": {
+        "price": 52.0888,
+        "time": {
+          "day": 10,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 88.652,
+        "time": {
+          "day": 29,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Price action a bit loose here would stop out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1216,
+      "p1": {
+        "price": 57.9564,
+        "time": {
+          "day": 17,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 76.3926,
+        "time": {
+          "day": 24,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "structure collapsed",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1217,
+      "p1": {
+        "price": 54.703,
+        "time": {
+          "day": 16,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 100.0415,
+        "time": {
+          "day": 12,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "shows how a strong rebound sometimes just pave way for a deeper fall",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1218,
+      "p1": {
+        "price": 51.6045,
+        "time": {
+          "day": 27,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 43.8582,
+        "time": {
+          "day": 22,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is where things started getting interesting. EMAs are very close to one another\nThe price has reclaimed major EMA, tight range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1219,
+      "p1": {
+        "price": 51.2011,
+        "time": {
+          "day": 4,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 49.9837,
+        "time": {
+          "day": 29,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Good entry level with tight risk area",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1220,
+      "p1": {
+        "price": 55.8269,
+        "time": {
+          "day": 23,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 55.9486,
+        "time": {
+          "day": 7,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Very rough action. Could easily be stopped out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1221,
+      "p1": {
+        "price": 63.4961,
+        "time": {
+          "day": 24,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 63.4961,
+        "time": {
+          "day": 27,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "strong gap up with strong volume. \nHard to chase but was actually an excellent entry",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1222,
+      "p1": {
+        "price": 124.2408,
+        "time": {
+          "day": 22,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 133.2489,
+        "time": {
+          "day": 17,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Pretty much trail the 20 EMA the entire time until this point",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1223,
+      "p1": {
+        "price": 105.1287,
+        "time": {
+          "day": 27,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 150.9003,
+        "time": {
+          "day": 26,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Some reduction in the last 2/3 bars was probabaly justifiable else would stop out at open",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1225,
+      "p1": {
+        "price": 115.2325,
+        "time": {
+          "day": 30,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 138.8487,
+        "time": {
+          "day": 4,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Action here is already wide and loose. Probably not a tradable setup despite the delayed U&R",
       "type": "note",
       "width": 2
     }
@@ -13000,6 +15875,503 @@
       "width": 2
     }
   ],
+  "PLTR_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1314,
+      "p1": {
+        "price": 20.784,
+        "time": {
+          "day": 4,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 13.0965,
+        "time": {
+          "day": 24,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This looks like a long round base within a tight range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1315,
+      "p1": {
+        "price": 22.7506,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 43.4889,
+        "time": {
+          "day": 25,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "First breakout with bullish EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1316,
+      "p1": {
+        "price": 23.1975,
+        "time": {
+          "day": 6,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 18.3705,
+        "time": {
+          "day": 6,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Tough 2 days that would have shaken everyone out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1317,
+      "p1": {
+        "price": 26.8625,
+        "time": {
+          "day": 6,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 50.3719,
+        "time": {
+          "day": 24,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This is very very bullish given the previous candle and the U&R",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1318,
+      "p1": {
+        "price": 32.7622,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 26.1474,
+        "time": {
+          "day": 11,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Very bullish candle here but the previous one would have stopped us out again",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1319,
+      "p1": {
+        "price": 41.2542,
+        "time": {
+          "day": 5,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 34.1924,
+        "time": {
+          "day": 2,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Very tricky here. 3 days below EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1320,
+      "p1": {
+        "price": 65.224,
+        "time": {
+          "day": 14,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 54.251,
+        "time": {
+          "day": 30,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Once again 3 day below 20 EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1321,
+      "p1": {
+        "price": 79.6938,
+        "time": {
+          "day": 7,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 55.2157,
+        "time": {
+          "day": 26,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1322,
+      "p1": {
+        "price": 70.7707,
+        "time": {
+          "day": 3,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 58.3508,
+        "time": {
+          "day": 12,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1323,
+      "p1": {
+        "price": 72.0971,
+        "time": {
+          "day": 4,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 97.4192,
+        "time": {
+          "day": 18,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Hard to find entry but easy to hold",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1324,
+      "p1": {
+        "price": 72.9412,
+        "time": {
+          "day": 22,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 110.3215,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This could be viewed as a reclaim but not clean",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1325,
+      "p1": {
+        "price": 116.0943,
+        "time": {
+          "day": 19,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 142.045,
+        "time": {
+          "day": 13,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Wide and loose",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1326,
+      "p1": {
+        "price": 94.5897,
+        "time": {
+          "day": 22,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 64.6246,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Serup once again",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1327,
+      "p1": {
+        "price": 111.8773,
+        "time": {
+          "day": 6,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 90.2678,
+        "time": {
+          "day": 23,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "These gaps, the wide and loose are very difficult to trade",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1328,
+      "p1": {
+        "price": 122.2498,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 200.0438,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1329,
+      "p1": {
+        "price": 133.1986,
+        "time": {
+          "day": 2,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 199.1794,
+        "time": {
+          "day": 9,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "boxWidth": 220,
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1330,
+      "price": 209.2638,
+      "text": "Stop hunting non-stop",
+      "time": {
+        "day": 22,
+        "month": 5,
+        "year": 2025
+      },
+      "type": "text",
+      "wrapWidth": 199
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1331,
+      "p1": {
+        "price": 196.01,
+        "time": {
+          "day": 28,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 233.1783,
+        "time": {
+          "day": 8,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Entirely lost momentum",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1332,
+      "p1": {
+        "price": 196.5863,
+        "time": {
+          "day": 23,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 230.297,
+        "time": {
+          "day": 5,
+          "month": 12,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "Started lower high",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1333,
+      "p1": {
+        "price": 161.1468,
+        "time": {
+          "day": 19,
+          "month": 3,
+          "year": 2026
+        }
+      },
+      "p2": {
+        "price": 221.3651,
+        "time": {
+          "day": 6,
+          "month": 1,
+          "year": 2026
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    }
+  ],
   "PLUG_2025": [
     {
       "color": "#000000",
@@ -21023,6 +24395,458 @@
       "width": 2
     }
   ],
+  "VST_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1260,
+      "p1": {
+        "price": 25.5238,
+        "time": {
+          "day": 17,
+          "month": 4,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 39.9733,
+        "time": {
+          "day": 17,
+          "month": 1,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Very nice trend with bullish EMA alignments",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1261,
+      "price": 27.1735,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1262,
+      "p1": {
+        "price": 27.7993,
+        "time": {
+          "day": 21,
+          "month": 7,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 22.4519,
+        "time": {
+          "day": 11,
+          "month": 9,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Clean breakout holding the 20 EMA very well",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1263,
+      "p1": {
+        "price": 32.4641,
+        "time": {
+          "day": 26,
+          "month": 10,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 31.1557,
+        "time": {
+          "day": 4,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Second interesting area. Yes broke 20EMA but EMAs and range both tight. Sideway consolidation",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1264,
+      "p1": {
+        "price": 34.8534,
+        "time": {
+          "day": 20,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 35.7067,
+        "time": {
+          "day": 15,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Another tight range",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1265,
+      "p1": {
+        "price": 38.9493,
+        "time": {
+          "day": 3,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 49.0184,
+        "time": {
+          "day": 22,
+          "month": 6,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Honestly here only shows continuation. No clear entry. Should position well",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1266,
+      "p1": {
+        "price": 67.7892,
+        "time": {
+          "day": 16,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 52.8345,
+        "time": {
+          "day": 30,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "A stop out candle",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1267,
+      "p1": {
+        "price": 70.0623,
+        "time": {
+          "day": 25,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 65.2768,
+        "time": {
+          "day": 16,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "wild movement would stop out but same day reclaim strong close is a re-entry signal",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1268,
+      "p1": {
+        "price": 95.7843,
+        "time": {
+          "day": 3,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 104.0393,
+        "time": {
+          "day": 28,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "stop out here",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1269,
+      "p1": {
+        "price": 91.2381,
+        "time": {
+          "day": 12,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 105.7142,
+        "time": {
+          "day": 5,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "It is a tight setup could position",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1270,
+      "p1": {
+        "price": 88.2471,
+        "time": {
+          "day": 15,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 93.0326,
+        "time": {
+          "day": 6,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "stop out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1271,
+      "p1": {
+        "price": 84.4187,
+        "time": {
+          "day": 13,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 71.2586,
+        "time": {
+          "day": 11,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Nice reclaim with strong ADR expansion",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1272,
+      "p1": {
+        "price": 127.726,
+        "time": {
+          "day": 15,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 205.1751,
+        "time": {
+          "day": 15,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Here things start becoming a bit difficult. \nThe entire structure is wide and loose with consistant stop out",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1273,
+      "p1": {
+        "price": 125.1566,
+        "time": {
+          "day": 7,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 83.6791,
+        "time": {
+          "day": 10,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This is a U&R play but hard to pull the trigger given the intra-day stop (could be stopped out during the day)",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1274,
+      "p1": {
+        "price": 135.8012,
+        "time": {
+          "day": 7,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 243.3489,
+        "time": {
+          "day": 4,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "chasing here gives you very little edge",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1275,
+      "p1": {
+        "price": 151.5847,
+        "time": {
+          "day": 10,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 225.7302,
+        "time": {
+          "day": 14,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "This area continue to be wide and loose. Can position but would probably be frustrating",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1276,
+      "p1": {
+        "price": 146.0788,
+        "time": {
+          "day": 2,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 103.1332,
+        "time": {
+          "day": 11,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "A leg that is possible to play but see the end candle",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1277,
+      "p1": {
+        "price": 153.0529,
+        "time": {
+          "day": 27,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 209.2127,
+        "time": {
+          "day": 14,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "style": "solid",
+      "text": "90% chance you end up losing money",
+      "type": "note",
+      "width": 2
+    }
+  ],
   "WBD_2025": [
     {
       "color": "#000000",
@@ -21413,6 +25237,146 @@
       },
       "style": "solid",
       "text": "11 Dec top $188.77. Best style-fit chart of the batch. Low ADR (4.0%), 17-week streak, 0 50 EMA tests. Pure trail-the-10 EMA trade — library gold standard.",
+      "type": "note",
+      "width": 2
+    }
+  ],
+  "WULF_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1253,
+      "p1": {
+        "price": 2.3269,
+        "time": {
+          "day": 15,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 9.8195,
+        "time": {
+          "day": 29,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "This entire period is an extended base. With no clear trend. \nLooks like accumulation with increased volume",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1254,
+      "price": 2.8264,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1255,
+      "p1": {
+        "price": 3.0762,
+        "time": {
+          "day": 7,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 0.9782,
+        "time": {
+          "day": 26,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Here the change is not only a breakout from range but also a ADR expansion",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1256,
+      "p1": {
+        "price": 4.7245,
+        "time": {
+          "day": 25,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 12.5418,
+        "time": {
+          "day": 3,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Stop out at below 20EMA",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1258,
+      "p1": {
+        "price": 4.5497,
+        "time": {
+          "day": 23,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 1.0781,
+        "time": {
+          "day": 27,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Here is a typical rise above 50EMA but again move below, \nthe 50EMA was slopping down",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1259,
+      "p1": {
+        "price": 4.4748,
+        "time": {
+          "day": 16,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 15.6636,
+        "time": {
+          "day": 7,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This reclaim was much more interesting because it reclaimed both EMAs with 50 EMA turning up again",
       "type": "note",
       "width": 2
     }
@@ -21869,6 +25833,1869 @@
       "text": "Tradable. Three REAL EPs in clean sequence, summer and early autumn gold, late autumn deteriorates but main move done. Wayfair retail rotation play — textbook VCP / EP combo.",
       "type": "note",
       "width": 2
+    }
+  ],
+  "ZETA_2024": [
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1238,
+      "p1": {
+        "price": 8.8111,
+        "time": {
+          "day": 10,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 5.7163,
+        "time": {
+          "day": 13,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Strong move above the EMAs, the EMAs turned into bullist alignment. expect consolidation but interesting",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1239,
+      "p1": {
+        "price": 9.9811,
+        "time": {
+          "day": 31,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 19.4165,
+        "time": {
+          "day": 20,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "text": "Tightness. Interesting to position",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1240,
+      "p1": {
+        "price": 9.5659,
+        "time": {
+          "day": 13,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 15.0384,
+        "time": {
+          "day": 4,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1241,
+      "p1": {
+        "price": 9.0375,
+        "time": {
+          "day": 17,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 14.8497,
+        "time": {
+          "day": 1,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "style": "solid",
+      "type": "seg",
+      "width": 2
+    },
+    {
+      "boxWidth": 220,
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1242,
+      "price": 16.0575,
+      "text": "double stop out at 20 EMA but the structure reamains bullish",
+      "time": {
+        "day": 13,
+        "month": 10,
+        "year": 2023
+      },
+      "type": "text",
+      "wrapWidth": 199
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1243,
+      "p1": {
+        "price": 10.0566,
+        "time": {
+          "day": 15,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 7.6033,
+        "time": {
+          "day": 19,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Immediate U&R, here need to consider giving a wider stop given how frequent the stop happens",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1244,
+      "p1": {
+        "price": 10.5472,
+        "time": {
+          "day": 3,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 9.0375,
+        "time": {
+          "day": 10,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "If widen to 50 EMA would not be an issue",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1246,
+      "p1": {
+        "price": 15.4913,
+        "time": {
+          "day": 20,
+          "month": 6,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 13.3778,
+        "time": {
+          "day": 3,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This would be difficult to hold through even assuming 50EMA, \nunless has strong discipline",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1247,
+      "p1": {
+        "price": 15.3404,
+        "time": {
+          "day": 7,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 24.5493,
+        "time": {
+          "day": 8,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "Strong EP gap up and hold the intra-day position well",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1248,
+      "p1": {
+        "price": 25.8704,
+        "time": {
+          "day": 27,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 33.8862,
+        "time": {
+          "day": 9,
+          "month": 5,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This move trail 20 EMA well but had a few close shakeouts",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1249,
+      "p1": {
+        "price": 30.7833,
+        "time": {
+          "day": 17,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 37.9717,
+        "time": {
+          "day": 26,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "This bar and the next are clear exit signal",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "fontFamily": "Arial",
+      "fontSize": 12,
+      "id": 1251,
+      "p1": {
+        "price": 28.1459,
+        "time": {
+          "day": 5,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 34.7136,
+        "time": {
+          "day": 13,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "style": "solid",
+      "text": "crazy wide and loose final firework",
+      "type": "note",
+      "width": 2
+    },
+    {
+      "color": "#ffffff",
+      "id": 1252,
+      "price": 13.3146,
+      "style": "solid",
+      "type": "hline",
+      "width": 2
+    }
+  ],
+  "ALPN_2024": [
+    {
+      "type": "note",
+      "p1": {
+        "price": 13.9708,
+        "time": {
+          "day": 2,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 23.5511,
+        "time": {
+          "day": 12,
+          "month": 9,
+          "year": 2023
+        }
+      },
+      "text": "EP gap up, strogn volume",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1334
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 11.733,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 3.0618,
+        "time": {
+          "day": 24,
+          "month": 10,
+          "year": 2023
+        }
+      },
+      "text": "Poor price action, filled the entire gap. Increased Volume",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1335
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 14.0407,
+        "time": {
+          "day": 17,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 31.593,
+        "time": {
+          "day": 21,
+          "month": 8,
+          "year": 2023
+        }
+      },
+      "text": "Holding 10 EMA, moved back into the first candle area. \npotential entry",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1337
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 17.9567,
+        "time": {
+          "day": 5,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 32.9916,
+        "time": {
+          "day": 20,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "text": "Stop out at 20 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1338
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 18.726,
+        "time": {
+          "day": 24,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 30.544,
+        "time": {
+          "day": 26,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "text": "Second stop out",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1339
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 19.4952,
+        "time": {
+          "day": 25,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 4.8799,
+        "time": {
+          "day": 1,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "text": "Tradable intra-day candle. \nHere open below 20 EMA. \nReclaimed both 10 and 20 EMA on high volume. Entry here with stop at LoD",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1340
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 36.0553,
+        "time": {
+          "day": 4,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 25.9153,
+        "time": {
+          "day": 12,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "text": "Stop under 20 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1341
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 38.8389,
+        "time": {
+          "day": 9,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 58.9201,
+        "time": {
+          "day": 8,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "text": "reclaim candle and inside day",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1342
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 38.3418,
+        "time": {
+          "day": 10,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 33.1724,
+        "time": {
+          "day": 22,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "text": "Very trcky candle as it opened below 20 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1343
+    },
+    {
+      "type": "hline",
+      "price": 15.0793,
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "id": 1344
+    }
+  ],
+  "CLSK_2024": [
+    {
+      "type": "note",
+      "p1": {
+        "price": 5.4657,
+        "time": {
+          "day": 27,
+          "month": 11,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": 19.9291,
+        "time": {
+          "day": 7,
+          "month": 9,
+          "year": 2023
+        }
+      },
+      "text": "Reclaimed all EMAs, good volume, EMAs in bullish pattern",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1345
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 8.8508,
+        "time": {
+          "day": 4,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "p2": {
+        "price": -2.5354,
+        "time": {
+          "day": 24,
+          "month": 10,
+          "year": 2023
+        }
+      },
+      "text": "Gapped up above previous high with good volume",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1346
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 9.9586,
+        "time": {
+          "day": 3,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 27.4378,
+        "time": {
+          "day": 1,
+          "month": 12,
+          "year": 2023
+        }
+      },
+      "text": "Stop out here",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1347
+    },
+    {
+      "type": "hline",
+      "price": 7.4352,
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "id": 1349
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 8.1737,
+        "time": {
+          "day": 6,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 1.219,
+        "time": {
+          "day": 23,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "text": "Anticipation setup here. Retested former high. Held.\nEMAs remained bullish 50 EMA up.",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1350
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 10.3894,
+        "time": {
+          "day": 8,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 31.3768,
+        "time": {
+          "day": 19,
+          "month": 1,
+          "year": 2024
+        }
+      },
+      "text": "2nd entry opp",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1351
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 17.9596,
+        "time": {
+          "day": 29,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 35.008,
+        "time": {
+          "day": 9,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "text": "Stopped out here. Given pace 10 EMA stop",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1352
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 16.5441,
+        "time": {
+          "day": 12,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 5.2195,
+        "time": {
+          "day": 8,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "text": "wide and loose here. \nMAybe tempted to chase",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1353
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 19.5599,
+        "time": {
+          "day": 22,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 39.624,
+        "time": {
+          "day": 13,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "text": "Attempt entry",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1354
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 19.0675,
+        "time": {
+          "day": 1,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 25.099,
+        "time": {
+          "day": 15,
+          "month": 4,
+          "year": 2024
+        }
+      },
+      "text": "Stop out",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1355
+    }
+  ],
+  "OKLO_2024": [
+    {
+      "type": "note",
+      "p1": {
+        "price": 8.2968,
+        "time": {
+          "day": 20,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 14.9439,
+        "time": {
+          "day": 16,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "text": "Break above all EMAs",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1356
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 8.4199,
+        "time": {
+          "day": 25,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 24.976,
+        "time": {
+          "day": 29,
+          "month": 7,
+          "year": 2024
+        }
+      },
+      "text": "bullish EMAs, good volume. Entry here, stop below Low of breakout bar",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1357
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 20.6061,
+        "time": {
+          "day": 4,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 1.1575,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "text": "Stop here trailing 10 EMA given velocity",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1358
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 21.5909,
+        "time": {
+          "day": 6,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 35.3158,
+        "time": {
+          "day": 28,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "text": "tempted re-entry",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1359
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 18.6982,
+        "time": {
+          "day": 15,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 11.9896,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "text": "stop",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1360
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 20.5446,
+        "time": {
+          "day": 4,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 3.1885,
+        "time": {
+          "day": 5,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "text": "wide and loose",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1361
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 23.0065,
+        "time": {
+          "day": 31,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 39.7472,
+        "time": {
+          "day": 29,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "text": "tempted re-entry with quic washout",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1362
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 25.7145,
+        "time": {
+          "day": 17,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 14.7593,
+        "time": {
+          "day": 27,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "text": "Takes a lot of courage to re-enter here as \nthe previous choppiness would make it very difficult to try again",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1364
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 32.0538,
+        "time": {
+          "day": 27,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 23.9912,
+        "time": {
+          "day": 12,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "text": "wide and loose again",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1365
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 51.4492,
+        "time": {
+          "day": 19,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 62.7778,
+        "time": {
+          "day": 7,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "text": "strong move but not easy to capture",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1366
+    }
+  ],
+  "QUBT_2024": [
+    {
+      "type": "note",
+      "p1": {
+        "price": 0.8188,
+        "time": {
+          "day": 17,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 1.6359,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "text": "Interesting candle. The EMAs are tangled up",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1367
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 1.36,
+        "time": {
+          "day": 12,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": -0.4111,
+        "time": {
+          "day": 17,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "text": "Probably a lot of doubt in this area but price action should be expected\n to be loose for low cap name like this. Not sure how far this could go",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1369
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 2.0032,
+        "time": {
+          "day": 13,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 2.954,
+        "time": {
+          "day": 11,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "text": "God candle. Switch to trail mode. Split between 10 and 20 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1370
+    },
+    {
+      "type": "seg",
+      "p1": {
+        "price": 6.5143,
+        "time": {
+          "day": 11,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 4.6957,
+        "time": {
+          "day": 16,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "id": 1372
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 6.0442,
+        "time": {
+          "day": 3,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 4.6462,
+        "time": {
+          "day": 10,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "text": "First candle of challenge. Probably sell half, trail the rest",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1373
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 10.7324,
+        "time": {
+          "day": 16,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 14.4862,
+        "time": {
+          "day": 21,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "text": "Oh boy another god candle. Switch back to 10 EMA trail",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1374
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 24.8801,
+        "time": {
+          "day": 18,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 27.9643,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "text": "This is quite crazy would have thought it is way beyond 5x ATR from 50 EMA. Definitely trimming to the last 20-25%",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1375
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 17.9543,
+        "time": {
+          "day": 2,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 28.3431,
+        "time": {
+          "day": 14,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "text": "Probably a stop out here",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1376
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 11.299,
+        "time": {
+          "day": 8,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 22.824,
+        "time": {
+          "day": 21,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "text": "If not then definitely sell everything here",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1377
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 7.295,
+        "time": {
+          "day": 2,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 0.3691,
+        "time": {
+          "day": 9,
+          "month": 4,
+          "year": 2025
+        }
+      },
+      "text": "Tight EMA, starting to see bullish EMA alignments this is a good spot",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1378
+    }
+  ],
+  "QBTS_2024": [
+    {
+      "type": "note",
+      "p1": {
+        "price": 1.2274,
+        "time": {
+          "day": 12,
+          "month": 2,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 0.5362,
+        "time": {
+          "day": 12,
+          "month": 3,
+          "year": 2024
+        }
+      },
+      "text": "Definitely an interesting candle but relative to QUBT you notice that the EMAs are not as tight",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1379
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 1.017,
+        "time": {
+          "day": 5,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 0.5862,
+        "time": {
+          "day": 2,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "text": "Here things are tighter",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1380
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 1.3977,
+        "time": {
+          "day": 8,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 2.9606,
+        "time": {
+          "day": 9,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "text": "Same entry tactic, stop just below 200 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1381
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 3.1911,
+        "time": {
+          "day": 25,
+          "month": 11,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 4.2731,
+        "time": {
+          "day": 10,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "text": "Possible trim and set stop at 10 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1382
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 4.9443,
+        "time": {
+          "day": 6,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 5.2849,
+        "time": {
+          "day": 24,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "text": "Second trim here way above 50EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1383
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 3.9656,
+        "time": {
+          "day": 12,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": -2.322,
+        "time": {
+          "day": 11,
+          "month": 10,
+          "year": 2024
+        }
+      },
+      "text": "Gotta hold these bars without being shaken out",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1384
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 8.7387,
+        "time": {
+          "day": 18,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 10.4368,
+        "time": {
+          "day": 19,
+          "month": 8,
+          "year": 2024
+        }
+      },
+      "text": "You gotta trim these few bars again. Down to last 20-25%",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1385
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 6.2603,
+        "time": {
+          "day": 20,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 2.4511,
+        "time": {
+          "day": 30,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "text": "Definitely wide and loose, \n70% chance being stopped out here",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1387
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 10.0926,
+        "time": {
+          "day": 31,
+          "month": 12,
+          "year": 2024
+        }
+      },
+      "p2": {
+        "price": 13.5806,
+        "time": {
+          "day": 23,
+          "month": 9,
+          "year": 2024
+        }
+      },
+      "text": "Final party time, if bought back would trail 10 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1388
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 6.3521,
+        "time": {
+          "day": 8,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 3.1624,
+        "time": {
+          "day": 20,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "text": "Oh no that is not good.",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1389
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 6.5587,
+        "time": {
+          "day": 13,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 13.879,
+        "time": {
+          "day": 27,
+          "month": 1,
+          "year": 2025
+        }
+      },
+      "text": "Not a very convincing candle. Hard to set a tight stop. \nCould do $6 as stop",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1391
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 8.2797,
+        "time": {
+          "day": 21,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 4.3787,
+        "time": {
+          "day": 18,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "text": "This would be a stop out. The entire move is wide and loose",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1392
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 7.6372,
+        "time": {
+          "day": 2,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 15.9901,
+        "time": {
+          "day": 21,
+          "month": 2,
+          "year": 2025
+        }
+      },
+      "text": "Things look much more interesting here. Tight EMAs. Possible entry",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1393
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 7.0406,
+        "time": {
+          "day": 7,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 5.8014,
+        "time": {
+          "day": 1,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "text": "Would stop out",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1394
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 10.0467,
+        "time": {
+          "day": 8,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 18.8356,
+        "time": {
+          "day": 6,
+          "month": 3,
+          "year": 2025
+        }
+      },
+      "text": "Only reasonable entry is when price tested 10 EMA and rebound. \nBut not obvious at all given how W&L trading has been",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1395
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 17.2751,
+        "time": {
+          "day": 5,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 22.7137,
+        "time": {
+          "day": 2,
+          "month": 6,
+          "year": 2025
+        }
+      },
+      "text": "Stop out at 10 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1396
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 11.0334,
+        "time": {
+          "day": 14,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 9.8172,
+        "time": {
+          "day": 27,
+          "month": 5,
+          "year": 2025
+        }
+      },
+      "text": "This is another entry opp with tight flag with stop at 10 EMA",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1397
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 16.7777,
+        "time": {
+          "day": 4,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 9.1631,
+        "time": {
+          "day": 22,
+          "month": 8,
+          "year": 2025
+        }
+      },
+      "text": "This is another kill zone. Tighter than before but still not easy",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1398
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 17.4997,
+        "time": {
+          "day": 12,
+          "month": 9,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 25.6394,
+        "time": {
+          "day": 30,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "text": "This is a good candle. Moved up",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1399
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 24.8169,
+        "time": {
+          "day": 1,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 45.9836,
+        "time": {
+          "day": 29,
+          "month": 7,
+          "year": 2025
+        }
+      },
+      "text": "Probably not a stop but a trim?",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1400
+    },
+    {
+      "type": "note",
+      "p1": {
+        "price": 38.3497,
+        "time": {
+          "day": 21,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "p2": {
+        "price": 52.403,
+        "time": {
+          "day": 31,
+          "month": 10,
+          "year": 2025
+        }
+      },
+      "text": "Stop out",
+      "color": "#ffffff",
+      "width": 2,
+      "style": "solid",
+      "fontSize": 12,
+      "fontFamily": "Arial",
+      "id": 1401
     }
   ]
 }
