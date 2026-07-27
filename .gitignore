@@ -5,3 +5,4 @@ __pycache__/
 .DS_Store
 .env
 .playwright-cli/
+.market_anchor_sync_state.json
