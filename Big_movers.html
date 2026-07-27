@@ -4,10 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chart Studies</title>
-<script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   :root{
@@ -14655,7 +14652,13 @@ window.Sim = Sim;
         rMultiple: leg.rMultiple != null && isFinite(leg.rMultiple) ? +leg.rMultiple.toFixed(3) : null,
         returnPctOfNotional: notional > 0 ? +(((leg.realizedPnL || 0) / notional) * 100).toFixed(2) : null,
         mfe: leg.mfe != null ? +leg.mfe.toFixed(2) : null,
-        mae: leg.mae != null ? +leg.mae.toFixed(2) : null
+        mae: leg.mae != null ? +leg.mae.toFixed(2) : null,
+        eventsLog: (leg.eventsLog || []).map(function(ev){
+          return Object.assign({}, ev, {
+            direction: ev.direction || leg.direction || 'long',
+            legId: ev.legId || leg.legId || null
+          });
+        })
       });
     });
     return trades;
@@ -14723,6 +14726,34 @@ window.Sim = Sim;
       winRate: trades.length ? (wins.length / trades.length) * 100 : 0,
       profitFactor: sumL > 0 ? sumW / sumL : (sumW > 0 ? Infinity : 0),
       sessionPnL: total
+    };
+  }
+
+  // One source of truth for portfolio run metrics. Both the automatic end
+  // summary and the Stats session record consume this result so their win
+  // rate and deployment numbers cannot drift.
+  function _computePortfolioMetrics(payload){
+    payload = payload || {};
+    let tradeRows = [];
+    (payload.basket || []).forEach(function(entry){
+      if (!entry || !entry.sim) return;
+      tradeRows = tradeRows.concat(
+        _extractTradesFromSim(entry.sim, entry.bars, { symbol: entry.symbol || 'POS' })
+      );
+    });
+    const dep = _deployedPortfolio();
+    const agg = _aggSession(tradeRows);
+    return {
+      tradeRows: tradeRows,
+      tradeCount: agg.tradeCount,
+      winCount: agg.winCount,
+      lossCount: agg.lossCount,
+      winRate: agg.winRate,
+      profitFactor: agg.profitFactor,
+      sessionPnL: agg.sessionPnL,
+      avgPctDeployed: dep.avg,
+      peakPctDeployed: dep.peak,
+      idlePctOfTime: dep.idlePct
     };
   }
 
@@ -14819,18 +14850,12 @@ window.Sim = Sim;
     const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const ts = Date.now();
     const symbols = (payload.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean);
-    let allTrades = [];
-    (payload.basket || []).forEach(function(entry){
-      if (!entry || !entry.sim) return;
-      const t = _extractTradesFromSim(entry.sim, entry.bars, { symbol: entry.symbol || 'POS' });
-      allTrades = allTrades.concat(t);
-    });
+    const portfolioMetrics = payload.portfolioMetrics || _computePortfolioMetrics(payload);
+    const allTrades = portfolioMetrics.tradeRows;
     if (!allTrades.length){
       alert('No trades to record (no entries taken in this sim).');
       return;
     }
-    const dep = _deployedPortfolio();
-    const agg = _aggSession(allTrades);
     // Stamp a runInstanceId on the portfolio state if one wasn't already
     // lazy-set by a review modal open. Join key between session and review.
     const psState = (window.PortSim && window.PortSim._state) || null;
@@ -14847,12 +14872,18 @@ window.Sim = Sim;
       direction: 'long',
       initialEquity: payload.initialEquity || null,
       finalEquity: payload.finalEquity != null ? +(+payload.finalEquity).toFixed(2) : null,
-      sessionPnL: +agg.sessionPnL.toFixed(2),
+      sessionPnL: +portfolioMetrics.sessionPnL.toFixed(2),
       totalReturnPct: payload.totalReturnPct != null ? +(+payload.totalReturnPct).toFixed(2) : null,
-      avgPctDeployed: dep.avg, peakPctDeployed: dep.peak, idlePctOfTime: dep.idlePct,
-      tradeCount: agg.tradeCount, winCount: agg.winCount, lossCount: agg.lossCount,
-      winRate: +agg.winRate.toFixed(1),
-      profitFactor: agg.profitFactor === Infinity ? null : (isFinite(agg.profitFactor) ? +agg.profitFactor.toFixed(2) : null),
+      avgPctDeployed: portfolioMetrics.avgPctDeployed,
+      peakPctDeployed: portfolioMetrics.peakPctDeployed,
+      idlePctOfTime: portfolioMetrics.idlePctOfTime,
+      tradeCount: portfolioMetrics.tradeCount,
+      winCount: portfolioMetrics.winCount,
+      lossCount: portfolioMetrics.lossCount,
+      winRate: +portfolioMetrics.winRate.toFixed(1),
+      profitFactor: portfolioMetrics.profitFactor === Infinity
+        ? null
+        : (isFinite(portfolioMetrics.profitFactor) ? +portfolioMetrics.profitFactor.toFixed(2) : null),
       indexReturnPct: payload.indexReturnPct != null ? +(+payload.indexReturnPct).toFixed(2) : null,
       indexName: payload.indexName || null,
       simStartDate: payload.firstDate || null,
@@ -16129,6 +16160,7 @@ window.Sim = Sim;
     open: _open,
     addCurrent: addCurrent,
     addCurrentPortfolio: addCurrentPortfolio,
+    computePortfolioMetrics: _computePortfolioMetrics,
     loadSessions: _loadSessions,
     loadTrades: _loadTrades
   };
@@ -19118,30 +19150,6 @@ Sim.Ctrl = (function(){
     return nd.toISOString().slice(0, 10);
   }
 
-  // Server-fetch a ticker we don't have locally. Universal range policy:
-  // start = simulation startDate − 6mo, end = today. One API call grabs
-  // the longest contiguous window so subsequent plays anywhere from this
-  // setup forward already have data.
-  function _autoFetchTicker(sym, startDate, endDate) {
-    var todayStr = new Date().toISOString().slice(0, 10);
-    var fetchStart = _shiftMonths(startDate, -6);
-    var fetchEnd = todayStr;
-    return fetch('/api/fetch-ticker', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol: sym, start_date: fetchStart, end_date: fetchEnd })
-    }).then(function (resp) {
-      return resp.json().then(function (data) {
-        if (!resp.ok || (data && data.error)) {
-          return { ok: false, error: data && data.error ? data.error : ('HTTP ' + resp.status) };
-        }
-        return { ok: true, barsAdded: data.bars_added != null ? data.bars_added : '?' };
-      });
-    }).catch(function (e) {
-      return { ok: false, error: e && e.message ? e.message : String(e) };
-    });
-  }
-
   // Normalize the array-or-object response from /api/ohlcv. Real server returns
   // a raw JSON array; defensive fallback handles {bars:[...]} wrapper too.
   function _normalizeOhlcvResponse(json) {
@@ -19159,20 +19167,18 @@ Sim.Ctrl = (function(){
       });
   }
 
-  // Required local-data span before we let a sim start: T-4mo (so the user
-  // gets ~4 months of pre-sim chart context for setup judgement) through
-  // today (so live mark-to-market and any future replay extending past
-  // endDate has fresh bars). Data that doesn't span this window gets
-  // auto-fetched from Twelve Data — no warning, no manual click, just done.
-  function _needsExtend(bars, startDate, todayStr) {
+  // Local coverage helper. Four months before the selected start is useful
+  // context, while the selected end date is the only required right edge.
+  // Extending to today is an explicit user action, never a setup prerequisite.
+  function _needsExtend(bars, startDate, endDate) {
     if (!Array.isArray(bars) || !bars.length) return false;
-    if (!startDate || !todayStr) return false;
+    if (!startDate || !endDate) return false;
     var dateOf = function(b){ return b && (b.date || b.time || b.t || b.Date || b.DateTime); };
     var firstDate = dateOf(bars[0]);
     var lastDate  = dateOf(bars[bars.length - 1]);
     var requiredStart = _shiftMonths(startDate, -4);
     if (firstDate && firstDate > requiredStart) return true;
-    if (lastDate  && lastDate  < todayStr) return true;
+    if (lastDate  && lastDate  < endDate) return true;
     return false;
   }
 
@@ -19189,8 +19195,6 @@ Sim.Ctrl = (function(){
 
     var startDate = cfg.startDate;
     var endDate = cfg.endDate;
-    var todayStr = new Date().toISOString().slice(0, 10);
-    var statusEl = $('#portsim-setup-status');
 
     function processBars(sym, json) {
       var bars = _normalizeOhlcvResponse(json);
@@ -19211,7 +19215,15 @@ Sim.Ctrl = (function(){
         };
       }
       if (endDate && lastDate && lastDate < endDate) {
-        warn = '⚠ ' + sym + ' data ends ' + lastDate + ' (before end ' + endDate + ')';
+        return {
+          sym: sym, bars: bars,
+          error: '✕ ' + sym + ' local data ends ' + lastDate + ', before end date ' + endDate
+            + '. Use Fetch/Extend or choose an earlier end date.'
+        };
+      }
+      var contextStart = _shiftMonths(startDate, -4);
+      if (startDate && firstDate && firstDate > contextStart) {
+        warn = '⚠ ' + sym + ' has less than 4 months of pre-sim context. Use Extend if needed.';
       }
       return { sym: sym, bars: bars, error: null, warn: warn };
     }
@@ -19219,70 +19231,17 @@ Sim.Ctrl = (function(){
     var promises = unique.map(function (sym) {
       return _fetchOneTicker(sym, startDate, endDate).then(function (first) {
         if (first._status === 404) {
-          // Auto-fetch from Twelve Data with extended date range, then retry.
-          if (statusEl) {
-            statusEl.textContent = 'Fetching ' + sym + ' from Twelve Data (start − 6mo … end + 6mo)…';
-            statusEl.className = 'fetch-status';
-          }
-          return _autoFetchTicker(sym, startDate, endDate).then(function (af) {
-            if (!af.ok) {
-              return {
-                sym: sym, bars: null,
-                error: '✕ ' + sym + ' auto-fetch failed: ' + af.error
-              };
-            }
-            // Retry the OHLCV read now that the CSV exists on disk.
-            return _fetchOneTicker(sym, startDate, endDate).then(function (second) {
-              if (second._status !== 200) {
-                return { sym: sym, bars: null, error: '✕ ' + sym + ' still missing after auto-fetch (' + (second._httpErr || ('HTTP ' + second._status)) + ')' };
-              }
-              var r = processBars(sym, second.json);
-              if (!r.error) {
-                r.warn = (r.warn ? r.warn + ' · ' : '') + '↓ auto-fetched ' + af.barsAdded + ' bars';
-              }
-              return r;
-            });
-          });
+          return {
+            sym: sym, bars: null,
+            error: '✕ No local data for ' + sym + '. Use its Fetch button to download it explicitly.'
+          };
         }
         if (first._status !== 200) {
-          return { sym: sym, bars: null, error: '✕ ' + sym + ' fetch error (' + (first._httpErr || ('HTTP ' + first._status)) + ')' };
-        }
-        // Coverage check: local file exists, but does it span T-4mo → today?
-        // If not, auto-fetch the wider range (same call the 404 path uses)
-        // and retry. Falls back to the original bars on fetch failure so
-        // the sim can still launch with whatever data we had.
-        var probeBars = _normalizeOhlcvResponse(first.json);
-        if (_needsExtend(probeBars, startDate, todayStr)) {
-          if (statusEl){
-            statusEl.textContent = 'Extending ' + sym + ' to cover T-4mo → today…';
-            statusEl.className = 'fetch-status';
-          }
-          return _autoFetchTicker(sym, startDate, endDate).then(function (af) {
-            if (!af.ok){
-              var fallback = processBars(sym, first.json);
-              fallback.warn = (fallback.warn ? fallback.warn + ' · ' : '')
-                + '⚠ auto-extend failed: ' + af.error;
-              return fallback;
-            }
-            return _fetchOneTicker(sym, startDate, endDate).then(function (third) {
-              if (third._status !== 200){
-                var fb = processBars(sym, first.json);
-                fb.warn = (fb.warn ? fb.warn + ' · ' : '')
-                  + '⚠ refetch after extend failed: HTTP ' + third._status;
-                return fb;
-              }
-              var r = processBars(sym, third.json);
-              if (!r.error){
-                r.warn = (r.warn ? r.warn + ' · ' : '')
-                  + '↓ auto-extended ' + (af.barsAdded || '?') + ' bars';
-              }
-              return r;
-            });
-          });
+          return { sym: sym, bars: null, error: '✕ ' + sym + ' local read error (' + (first._httpErr || ('HTTP ' + first._status)) + ')' };
         }
         return processBars(sym, first.json);
       }).catch(function (e) {
-        return { sym: sym, bars: null, error: '✕ ' + sym + ' network error: ' + (e && e.message ? e.message : e) };
+        return { sym: sym, bars: null, error: '✕ ' + sym + ' local data error: ' + (e && e.message ? e.message : e) };
       });
     });
 
@@ -19293,7 +19252,7 @@ Sim.Ctrl = (function(){
         perTicker[r.sym] = { bars: r.bars, error: r.error || null, warn: r.warn || null };
         if (r.bars) fetchedBars[r.sym] = r.bars;
       });
-      // Refresh the autocomplete datalist now that potentially-new symbols exist.
+      // Refresh the autocomplete datalist from the local catalogue.
       try { Setup._tickerList = null; populateTickerDatalist(); } catch (e) {}
       return { perTicker: perTicker, fetchedBars: fetchedBars };
     });
@@ -19671,7 +19630,7 @@ Sim.Ctrl = (function(){
     var statusEl = $('#portsim-setup-status');
     if (statusEl) {
       statusEl.className = 'fetch-status';
-      statusEl.textContent = submitting ? 'Fetching basket data…' : '';
+      statusEl.textContent = submitting ? 'Checking local basket data…' : '';
     }
   }
 
@@ -19717,11 +19676,9 @@ Sim.Ctrl = (function(){
     }).then(function (rows) { return Array.isArray(rows) ? rows : []; });
   }
 
-  // Eagerly ensure a noise ticker (one that did NOT have a big move in the
-  // chosen year) has local OHLCV covering the sim window. Best-effort: returns
-  // {ok: true, fetched: bool} on success, {ok: false, error} otherwise. Never
-  // throws — caller decides whether to swap to a different candidate.
-  function _ensureNoiseDataCovers(sym, yearStart, todayStr) {
+  // Check whether a noise ticker has local OHLCV covering the selected
+  // simulation window. Missing data is never downloaded implicitly.
+  function _ensureNoiseDataCovers(sym, windowStart, windowEnd) {
     return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
       .then(function (resp) {
         if (resp.status === 404) return { _missing: true };
@@ -19729,39 +19686,31 @@ Sim.Ctrl = (function(){
         return resp.json().then(function (j) { return { _bars: _normalizeOhlcvResponse(j) }; });
       })
       .then(function (probe) {
-        // Missing locally — fetch a wide range covering year Y onwards.
         if (probe._missing) {
-          return fetch('/api/fetch-ticker', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ symbol: sym, start_date: yearStart, end_date: todayStr })
-          }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok && !(d && d.error), fetched: true, error: d && d.error }; }); })
-            .catch(function (e) { return { ok: false, error: e && e.message ? e.message : 'fetch failed' }; });
+          return { ok: false, fetched: false, error: 'No local data for ' + sym };
         }
         if (probe._httpErr) return { ok: false, error: probe._httpErr };
         var bars = probe._bars || [];
         if (!bars.length) return { ok: false, error: sym + ' has no bars' };
         var b0 = bars[0] || {};
+        var b1 = bars[bars.length - 1] || {};
         var first = b0.date || b0.time || b0.t || b0.Date || b0.DateTime || null;
-        // Local CSV starts AFTER the chosen year — refetch with explicit range.
-        if (first && first > yearStart) {
-          return fetch('/api/fetch-ticker', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ symbol: sym, start_date: yearStart, end_date: todayStr })
-          }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok && !(d && d.error), fetched: true, error: d && d.error }; }); })
-            .catch(function (e) { return { ok: false, error: e && e.message ? e.message : 'fetch failed' }; });
+        var last = b1.date || b1.time || b1.t || b1.Date || b1.DateTime || null;
+        if (first && windowStart && first > windowStart) {
+          return { ok: false, fetched: false, error: sym + ' local data starts after the window' };
         }
-        // Local data already covers — no API call needed.
+        if (last && windowEnd && last < windowEnd) {
+          return { ok: false, fetched: false, error: sym + ' local data ends before the window' };
+        }
         return { ok: true, fetched: false };
       })
-      .catch(function (e) { return { ok: false, error: e && e.message ? e.message : 'probe failed' }; });
+      .catch(function (e) { return { ok: false, fetched: false, error: e && e.message ? e.message : 'local probe failed' }; });
   }
 
   // Walk noise candidates in order, keeping ones that have data covering the
-  // chosen window (auto-fetching when missing). Stops once `target` candidates
-  // are accumulated, or when the candidate pool is exhausted.
-  function _collectNoiseTickers(candidates, target, yearStart, todayStr, onProgress) {
+  // chosen window. Stops once `target` candidates are accumulated, or when
+  // the local candidate pool is exhausted.
+  function _collectNoiseTickers(candidates, target, windowStart, windowEnd, onProgress) {
     var picked = [];
     var fetchedCount = 0;
     function next(idx) {
@@ -19772,7 +19721,7 @@ Sim.Ctrl = (function(){
       var sym = String((row && row.symbol) || '').trim().toUpperCase();
       if (!sym) return next(idx + 1);
       if (onProgress) onProgress(picked.length, target, sym);
-      return _ensureNoiseDataCovers(sym, yearStart, todayStr).then(function (res) {
+      return _ensureNoiseDataCovers(sym, windowStart, windowEnd).then(function (res) {
         if (res.ok) {
           if (res.fetched) fetchedCount++;
           picked.push(row);
@@ -19838,7 +19787,7 @@ Sim.Ctrl = (function(){
       var sd = _toDateStr(startD);
       var ed = _toDateStr(endD);
 
-      function commitBasket(allRowsPicked, fetchedCount) {
+      function commitBasket(allRowsPicked) {
         // Push directly to the form + state.
         var sdEl = $('#portsim-start-date'); if (sdEl) sdEl.value = sd;
         var edEl = $('#portsim-end-date');   if (edEl) edEl.value = ed;
@@ -19860,15 +19809,14 @@ Sim.Ctrl = (function(){
 
         var symList = rowsState.map(function (r) { return r.symbol; }).join(', ');
         var splitTxt = noiseOn
-          ? (' (' + pickedIn.length + ' from ' + year + ', ' + (allRowsPicked.length - pickedIn.length) + ' noise'
-             + (fetchedCount ? ', ↓' + fetchedCount + ' auto-fetched' : '') + ')')
+          ? (' (' + pickedIn.length + ' from ' + year + ', ' + (allRowsPicked.length - pickedIn.length) + ' local noise)')
           : '';
         setStatus('🎲 ' + allRowsPicked.length + ' tickers' + splitTxt + ' · ' + sd + ' → ' + ed
                   + ' · ' + symList + ' · mark ≥1 as Pre-entry to start.', 'success');
       }
 
       if (!noiseOn || noiseTarget === 0) {
-        commitBasket(pickedIn, 0);
+        commitBasket(pickedIn);
         return;
       }
 
@@ -19893,11 +19841,9 @@ Sim.Ctrl = (function(){
       });
       _shuffleInPlace(noiseUnique);
 
-      var yearStart = year + '-01-01';
-      var todayStr = new Date().toISOString().slice(0, 10);
-      setStatus('Picking ' + inYearTarget + ' from ' + year + ' + ' + noiseTarget + ' noise (auto-fetching as needed)…', '');
+      setStatus('Picking ' + inYearTarget + ' from ' + year + ' + ' + noiseTarget + ' noise with local data…', '');
 
-      _collectNoiseTickers(noiseUnique, noiseTarget, yearStart, todayStr, function (got, want, sym) {
+      _collectNoiseTickers(noiseUnique, noiseTarget, sd, ed, function (got, want, sym) {
         setStatus('🌫 Resolving noise ' + (got + 1) + '/' + want + ' (' + sym + ')…', '');
       }).then(function (res) {
         if (res.picked.length < noiseTarget) {
@@ -19911,7 +19857,7 @@ Sim.Ctrl = (function(){
             stillNeeded--;
           }
         }
-        commitBasket(pickedIn.concat(res.picked), res.fetched || 0);
+        commitBasket(pickedIn.concat(res.picked));
       }).catch(function (e) {
         setStatus('Noise resolution failed: ' + (e && e.message ? e.message : e), 'error');
       });
@@ -20068,11 +20014,11 @@ Sim.Ctrl = (function(){
       return;
     }
 
-    // 2) Persist user-input config (no fetched bars) before fetch attempts
+    // 2) Persist user-input config before local data checks
     var pubCfg = buildConfigFromState(false);
     Setup._saveToStorage(pubCfg);
 
-    // 3) Fetch all tickers in parallel
+    // 3) Read all ticker data from the local server in parallel
     setSubmitting(true);
     fetchAllTickers(pubCfg).then(function (dataResults) {
       // Re-run row visualization with data errors
@@ -20201,9 +20147,9 @@ Sim.Ctrl = (function(){
     bindOnce();
   }
 
-  // Expose the fetcher so other modules (e.g. PortSim.Review's 🔄 Rerun)
-  // can reuse the same auto-fetch / coverage-check pipeline that the Setup
-  // wizard's Submit button drives.
+  // Expose the local checker so other modules (e.g. PortSim.Review's 🔄 Rerun)
+  // can reuse the same coverage-check pipeline that the Setup wizard's Submit
+  // button drives.
   Setup.fetchAllTickers = fetchAllTickers;
   PortSim.Setup = Setup;
 })();
@@ -20661,15 +20607,6 @@ Sim.Ctrl = (function(){
       }
     }
 
-    function _shiftMonths(dateStr, months){
-      try {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
-        d.setMonth(d.getMonth() + months);
-        return d.toISOString().slice(0, 10);
-      } catch (e){ return dateStr; }
-    }
-
     function _fetchOhlcvOnce(sym){
       return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
         .then(res => {
@@ -20684,31 +20621,9 @@ Sim.Ctrl = (function(){
         });
     }
 
-    // When NDQ is requested but no NDX/QQQ CSV exists, the server 404s. Try to
-    // populate QQQ via the existing /api/fetch-ticker pipe (Twelve Data) using
-    // the active sim window with a ±6-month buffer, then retry the OHLCV read.
-    function _autoFetchQQQ(){
-      const st = window.PortSim && window.PortSim._state;
-      const todayStr = new Date().toISOString().slice(0, 10);
-      let start = (st && st.startDate) || '2010-01-01';
-      // Universal policy: start − 6mo → today (one call, max length).
-      start = _shiftMonths(start, -6);
-      const end = todayStr;
-      console.log('[PortSim.Index] auto-fetching QQQ via Twelve Data (' + start + ' → ' + end + ')…');
-      return fetch('/api/fetch-ticker', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol: 'QQQ', start_date: start, end_date: end })
-      }).then(res => {
-        if (!res.ok) throw new Error('fetch-ticker QQQ HTTP ' + res.status);
-        return res.json();
-      });
-    }
-
     function fetchAndLoad(name){
       // SPX maps to SPY for the OHLCV endpoint; NDQ stays NDQ.
       const sym = (name === 'SPX') ? 'SPY' : (name || 'SPY');
-      const isNdq = (name === 'NDQ' || name === 'NDX');
 
       // NOTE: This function fetches and resolves with bars but does NOT call
       // setData itself. Both callers (Ctrl.openSetup, _onIndexToggle) want to
@@ -20718,48 +20633,25 @@ Sim.Ctrl = (function(){
       // window so the chart looked like it was just showing the start bar.
 
       // Prefer pre-warmed cache from PortSim.IndexCache (Track Q). The cache is
-      // populated at app startup with the full SPX/NDQ history, so the typical
-      // case is a synchronous hit with no network round-trip.
+      // populated at app startup from the local server's SPX/NDQ history.
       const cache = window.PortSim && window.PortSim.IndexCache;
       if (cache && typeof cache.ensure === 'function'){
         return cache.ensure(name)
           .then(slot => {
             const bars = (slot && slot.bars) || [];
             if (bars.length) return bars;
-            // Empty bars from a 404-swallow → for NDQ try the auto-fetch path.
-            if (isNdq){
-              return _autoFetchQQQ()
-                .then(() => _fetchOhlcvOnce(sym))
-                .then(bars2 => {
-                  if (cache.set) cache.set(name, bars2);
-                  return bars2;
-                })
-                .catch(err2 => {
-                  console.warn('[PortSim.Index] NDQ auto-fetch failed:', err2 && err2.message || err2);
-                  return [];
-                });
-            }
             return [];
           })
           .catch(err => {
-            console.warn('[PortSim.Index] cache miss → network fallback:', err && err.message || err);
+            console.warn('[PortSim.Index] cache miss → local API fallback:', err && err.message || err);
             return _fetchOhlcvOnce(sym).catch(err2 => { return []; });
           });
       }
 
-      // No cache available — fall back to the original network-direct path.
+      // No cache available — read from the local OHLCV endpoint.
       return _fetchOhlcvOnce(sym)
         .catch(err => {
-          // NDQ-specific fallback: pre-warm QQQ via fetch-ticker, retry once.
           const msg = (err && err.message) || String(err || '');
-          if (isNdq && /HTTP\s+404/.test(msg)){
-            return _autoFetchQQQ()
-              .then(() => _fetchOhlcvOnce(sym))
-              .catch(err2 => {
-                console.warn('[PortSim.Index] NDQ auto-fetch failed:', err2 && err2.message || err2);
-                return [];
-              });
-          }
           console.warn('[PortSim.Index] fetchAndLoad failed:', msg);
           return [];
         });
@@ -22020,6 +21912,9 @@ Sim.Ctrl = (function(){
     // Include retired (swapped-out) tickers so their trades count toward
     // session stats. Active basket first to preserve grid order.
     const _allBasketForStats = (_state.basket || []).concat(_state.retiredEntries || []);
+    const _portfolioMetrics = (window.SimStats && typeof window.SimStats.computePortfolioMetrics === 'function')
+      ? window.SimStats.computePortfolioMetrics({ basket: _allBasketForStats })
+      : null;
     const rows = _allBasketForStats.map(function(e){
       let realized = 0;
       let stops = 0;
@@ -22122,6 +22017,25 @@ Sim.Ctrl = (function(){
     _addLine(summary, 'Realized P&L', '$' + _state.realizedPnL.toLocaleString());
     _addLine(summary, 'Max drawdown', '$' + _state.eqMaxDD.toLocaleString(), 'var(--red)');
     _addLine(summary, 'Total stop-outs', String(totalStops));
+    if (_portfolioMetrics){
+      const metricTrades = _portfolioMetrics.tradeCount || 0;
+      const metricWins = _portfolioMetrics.winCount || 0;
+      const winRateText = metricTrades > 0
+        ? _portfolioMetrics.winRate.toFixed(1) + '% (' + metricWins + 'W / ' + metricTrades + ' trades)'
+        : '—';
+      const winRateColor = metricTrades > 0
+        ? (_portfolioMetrics.winRate >= 50 ? 'var(--green)' : 'var(--red)')
+        : null;
+      const avgDeployedText = _portfolioMetrics.avgPctDeployed != null
+        ? _portfolioMetrics.avgPctDeployed.toFixed(1) + '%'
+        : '—';
+      const peakDeployedText = _portfolioMetrics.peakPctDeployed != null
+        ? _portfolioMetrics.peakPctDeployed.toFixed(1) + '%'
+        : '—';
+      _addLine(summary, 'Win rate', winRateText, winRateColor);
+      _addLine(summary, 'Avg capital deployed', avgDeployedText);
+      _addLine(summary, 'Peak capital deployed', peakDeployedText);
+    }
     if (_firstDate && _lastDate){
       _addLine(summary, 'Sim window', _firstDate + ' → ' + _lastDate);
     }
@@ -22239,7 +22153,8 @@ Sim.Ctrl = (function(){
             // _showSummary uses for the summary table.
             basket: (_state.basket || []).concat(_state.retiredEntries || []),
             rows: rows,
-            indexName: _state.index || null
+            indexName: _state.index || null,
+            portfolioMetrics: _portfolioMetrics
           });
         } catch (err) { console.error('[SimStats.addCurrentPortfolio]', err); alert('Add to stats failed: ' + (err && err.message)); }
       });
@@ -25783,7 +25698,7 @@ Sim.Ctrl = (function(){
       // Clear host children
       while (host.firstChild) host.removeChild(host.firstChild);
       if (!slice.length){
-        setStatus('No bars in window. Try a later start date or auto-fetch the ticker first.', 'is-error');
+        setStatus('No local bars in window. Try a later start date or use Fetch first.', 'is-error');
         return;
       }
       buildChart(host, slice);
@@ -27445,8 +27360,10 @@ Sim.Ctrl = (function(){
           mks.push({ time: ev.date, position: 'belowBar', color: '#34d399', shape: 'arrowUp',
             text: '+' + ev.qty + '@' + _r2(ev.price) });
         } else if (ev.type === 'sell' && ev.qty > 0){
-          mks.push({ time: ev.date, position: 'aboveBar', color: '#facc15', shape: 'arrowDown',
-            text: 'S ' + ev.qty + '@' + _r2(ev.price) });
+          var isCover = (ev.direction || l.direction) === 'short';
+          mks.push({ time: ev.date, position: isCover ? 'belowBar' : 'aboveBar', color: '#facc15',
+            shape: isCover ? 'arrowUp' : 'arrowDown',
+            text: (isCover ? 'COVER ' : 'S ') + ev.qty + '@' + _r2(ev.price) });
         } else if (ev.type === 'stop'){
           mks.push({ time: ev.date, position: 'aboveBar', color: '#fb7185', shape: 'arrowDown',
             text: 'STOP ' + ev.qty + '@' + _r2(ev.price) });
@@ -28405,9 +28322,10 @@ Sim.Ctrl = (function(){
   }
 
   // Rerun the loaded saved review as a fresh sim. Reconstructs a wizard
-  // config from _data.meta, runs the standard fetch-and-publish pipeline so
-  // any missing OHLCV gets auto-fetched, then hands off to the live Ctrl
-  // bootstrap. Active sim (if any) is torn down inside _bootstrapFromConfig.
+  // config from _data.meta, runs the standard local coverage checks, then
+  // hands off to the live Ctrl bootstrap. Missing OHLCV is reported so the
+  // user can Fetch explicitly. Active sim (if any) is torn down inside
+  // _bootstrapFromConfig.
   function _onRerun(){
     var meta = _data && _data.meta;
     if (!meta || !meta.startDate || !meta.endDate || !Array.isArray(meta.basket) || !meta.basket.length){
@@ -28817,8 +28735,11 @@ Sim.Ctrl = (function(){
       // Synthesize an exit event so _markersFromLegs draws an exit marker
       // even though we don't have the live sim's eventsLog. Entry markers
       // are drawn off leg.entryDate directly so no synth needed there.
-      var events = [];
-      if (t.exitDate && t.exitPrice != null && t.exitReason && t.exitReason !== 'aggregate'){
+      var hasStoredEvents = Array.isArray(t.eventsLog);
+      var events = hasStoredEvents
+        ? t.eventsLog.map(function(ev){ return Object.assign({}, ev); })
+        : [];
+      if (!hasStoredEvents && t.exitDate && t.exitPrice != null && t.exitReason && t.exitReason !== 'aggregate'){
         var evType = t.exitReason === 'stop' ? 'stop'
                    : t.exitReason === 'close' ? 'close'
                    : 'sell';
@@ -29301,8 +29222,7 @@ Sim.Ctrl = (function(){
 //   PortSim.IndexCache.ensure(name) → Promise<{bars, dateMap}>
 //     Resolves with cached entry, kicking off a fetch if none in flight.
 //   PortSim.IndexCache.getBars(name) → bars[] | null  (sync; null if not ready)
-//   PortSim.IndexCache.set(name, bars)                (warm from outside, e.g.
-//                                                      after an NDQ auto-fetch)
+//   PortSim.IndexCache.set(name, bars)                (warm from a local refresh)
 //   PortSim.IndexCache.prewarm()                      (kick both fetches; safe
 //                                                      to call repeatedly)
 (function(){
@@ -29375,8 +29295,8 @@ Sim.Ctrl = (function(){
       .catch(function(err){
         slot.error = err;
         slot.promise = null;
-        // For NDQ specifically, swallow 404 to an empty result so callers can
-        // hit their own fallback path (e.g. /api/fetch-ticker → QQQ). SPX 404
+        // For NDQ specifically, swallow 404 to an empty result so the index
+        // strip can stay blank without forcing an external fetch. SPX 404
         // means SPY is missing entirely, which is a hard error worth surfacing.
         if (key === 'NDQ' && (err && (err.status === 404 || /HTTP\s+404/.test(String(err.message || ''))))){
           slot.bars = [];
@@ -29798,8 +29718,8 @@ Sim.Ctrl = (function(){
         </div>
       </div>
       <label class="portsim-randomize-noise" for="portsim-rand-noise">
-        <input type="checkbox" id="portsim-rand-noise">
-        <span>🌫 Cross-year noise — mix in up to 50% tickers that ran in <em>other</em> years (kills the "this is a known runner" sample bias). Will auto-fetch missing price data.</span>
+        <input type="checkbox" id="portsim-rand-noise" checked>
+        <span>🌫 Cross-year noise — mix in up to 50% tickers that ran in <em>other</em> years (kills the "this is a known runner" sample bias). Uses local price data only; fetch missing tickers manually.</span>
       </label>
       <div class="portsim-randomize-hint">Picks N random tickers that had a big move in the chosen year (from <code>big_movers_result.csv</code>) plus a random 4–6 month window inside the year. Replaces current basket rows and dates.</div>
     </div>

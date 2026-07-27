@@ -69,12 +69,12 @@ Each tool has independent color, width, and line style (solid/dashed/dotted). Dr
 ## Technical Stack
 
 - **Backend** — Python/Flask, Python stdlib only (no build dependencies beyond Flask itself)
-- **Charts** — Lightweight Charts v3.8 (TradingView open-source library, loaded from CDN)
+- **Charts** — Lightweight Charts v3.8 (TradingView open-source library, bundled locally)
 - **Frontend** — Single HTML file, all CSS/JS inline, ~5600 lines. No build step. Edit → refresh → done.
 - **Storage** — Browser localStorage for chart config, JSON files on server for drawings/metadata/reviews, CSV for OHLCV data
-- **Data** — Local daily CSV files in `collected_stocks/`, optional Twelve Data API for new tickers
+- **Data** — Local daily CSV files in `collected_stocks/`; Twelve Data is used only when you explicitly Fetch or Extend
 
-Everything runs offline. No cloud, no subscription, no telemetry.
+Normal study and simulation workflows run offline. No cloud, no subscription, no telemetry. Internet access is optional and used only for explicit Twelve Data Fetch/Extend actions or external links such as TradingView.
 
 ---
 
@@ -121,6 +121,7 @@ big_movers/
 ├── big_movers_result.csv       # Precomputed setups (symbol, year, gain, dates)
 ├── SPY Historical Data.csv     # Benchmark data
 ├── collected_stocks/           # ~929 ticker OHLCV CSVs
+├── vendor/                     # Locally bundled browser dependencies
 ├── classifier/                 # Setup classification engine
 ├── drawings.json               # Per-move annotations
 ├── metadata.json               # Per-move tags, ratings, notes
