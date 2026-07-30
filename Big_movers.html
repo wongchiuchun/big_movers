@@ -7964,6 +7964,16 @@ function getArrowGeometry(x,y,direction='up'){
   return {points};
 }
 
+function getCircleGeometry(cx,cy,edgeX,edgeY){
+  return {cx,cy,edgeX,edgeY,radius:Math.hypot(edgeX-cx,edgeY-cy)};
+}
+
+function getCircleHitPart(mx,my,geometry,threshold,endpointThreshold){
+  if(Math.hypot(mx-geometry.edgeX,my-geometry.edgeY)<endpointThreshold)return'radius';
+  if(Math.hypot(mx-geometry.cx,my-geometry.cy)<endpointThreshold)return'whole';
+  return Math.abs(Math.hypot(mx-geometry.cx,my-geometry.cy)-geometry.radius)<threshold?'whole':null;
+}
+
 function drawOne(d,sel=false){
   if(!textNotesVisible && (d.type==='text'||d.type==='note')) return;
   const rawCol=d.color||'#ffffff';
