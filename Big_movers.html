@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chart Studies</title>
 <script src="vendor/lightweight-charts.standalone.production.js"></script>
+<script src="portfolio_basket.js"></script>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   :root{
@@ -4641,6 +4642,21 @@
   }
   .portsim-review-stats strong.is-pos{color:var(--green);}
   .portsim-review-stats strong.is-neg{color:var(--red);}
+  .portsim-review-origin{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    margin:0 0 14px;padding:9px 12px;
+    border:1px solid var(--border);border-radius:6px;background:var(--bg3);
+    font-family:var(--mono);font-size:10px;color:var(--text-2);
+  }
+  .portsim-review-origin label{
+    color:var(--muted);font-size:8px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.12em;
+  }
+  .portsim-review-origin strong{color:var(--accent);text-transform:uppercase;}
+  .portsim-review-role{
+    color:var(--text-2);font-size:9px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.08em;
+  }
   .portsim-review-table{
     width:100%;border-collapse:collapse;
     font-family:var(--mono);font-size:11px;
@@ -15066,6 +15082,13 @@ window.Sim = Sim;
     const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const ts = Date.now();
     const symbols = (payload.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean);
+    const basketRoles = {};
+    (payload.basket || []).forEach(function(entry){
+      if (!entry || !entry.symbol || Object.prototype.hasOwnProperty.call(basketRoles, entry.symbol)) return;
+      basketRoles[entry.symbol] = /^(mover|anchor|noise)$/.test(entry.role)
+        ? entry.role
+        : 'unknown';
+    });
     const portfolioMetrics = payload.portfolioMetrics || _computePortfolioMetrics(payload);
     const allTrades = portfolioMetrics.tradeRows;
     if (!allTrades.length){
@@ -15104,6 +15127,12 @@ window.Sim = Sim;
       indexName: payload.indexName || null,
       simStartDate: payload.firstDate || null,
       simEndDate: payload.lastDate || null,
+      basketRoles: basketRoles,
+      basketGeneration: psState && psState.basketGeneration
+        ? JSON.parse(JSON.stringify(psState.basketGeneration))
+        : (payload.basketGeneration
+          ? JSON.parse(JSON.stringify(payload.basketGeneration))
+          : null),
       // Phase 2 review skeleton — populated by the guided review modal
       // (Phase 3). reviewSkipped defaults to true; flips to false when the
       // user completes the structured review. legs is keyed by tradeId.
@@ -19162,7 +19191,8 @@ Sim.Ctrl = (function(){
       initialCash: 100000,
       startDate: '',
       endDate: '',
-      index: 'SPX'
+      index: 'SPX',
+      basketGeneration: null
     }
   };
 
@@ -19219,6 +19249,9 @@ Sim.Ctrl = (function(){
         startDate: cfg.startDate,
         endDate: cfg.endDate,
         index: cfg.index,
+        basketGeneration: cfg.basketGeneration
+          ? JSON.parse(JSON.stringify(cfg.basketGeneration))
+          : null,
         tickers: (cfg.tickers || []).map(function (t) {
           return {
             symbol: t.symbol,
@@ -19477,6 +19510,12 @@ Sim.Ctrl = (function(){
   // ----------------------------------------------------- form <-> state ----
   function readFormToState() {
     var s = Setup._state;
+    var previousStart = s.startDate;
+    var previousEnd = s.endDate;
+    var previousSymbols = s.rows
+      .map(function (row) { return String((row && row.symbol) || '').trim().toUpperCase(); })
+      .filter(Boolean)
+      .join('|');
     s.initialCash = safeNum($('#portsim-initial-cash').value);
     s.startDate = $('#portsim-start-date').value || '';
     s.endDate = $('#portsim-end-date').value || '';
@@ -19501,6 +19540,15 @@ Sim.Ctrl = (function(){
         sizeValue: sizeVal === '' ? '' : safeNum(sizeVal)
       };
     });
+    var nextSymbols = s.rows.map(function (row) { return row.symbol; }).filter(Boolean).join('|');
+    if (
+      s.basketGeneration &&
+      (previousStart !== s.startDate ||
+       previousEnd !== s.endDate ||
+       previousSymbols !== nextSymbols)
+    ) {
+      s.basketGeneration = null;
+    }
   }
 
   function buildConfigFromState(includeBars) {
@@ -19510,6 +19558,9 @@ Sim.Ctrl = (function(){
       startDate: s.startDate,
       endDate: s.endDate,
       index: s.index,
+      basketGeneration: s.basketGeneration
+        ? JSON.parse(JSON.stringify(s.basketGeneration))
+        : null,
       tickers: s.rows
         .filter(function (r) { return r.symbol && r.symbol.trim().length > 0; })
         .map(function (r) {
@@ -19539,6 +19590,9 @@ Sim.Ctrl = (function(){
       startDate: s.startDate,
       endDate: s.endDate,
       index: s.index,
+      basketGeneration: s.basketGeneration
+        ? JSON.parse(JSON.stringify(s.basketGeneration))
+        : null,
       tickers: s.rows.map(function (r) {
         var t = {
           symbol: r.symbol ? r.symbol.trim().toUpperCase() : '',
@@ -19590,6 +19644,9 @@ Sim.Ctrl = (function(){
       symEl.value = (symEl.value || '').trim().toUpperCase();
     });
     symEl.addEventListener('input', clearRowErrorOnInput.bind(null, node));
+    symEl.addEventListener('input', function () {
+      Setup._state.basketGeneration = null;
+    });
 
     preCb.addEventListener('change', function () {
       if (preCb.checked) node.classList.add('pre-on');
@@ -19604,6 +19661,7 @@ Sim.Ctrl = (function(){
     });
 
     removeBtn.addEventListener('click', function () {
+      Setup._state.basketGeneration = null;
       var rows = $$('#portsim-basket-rows .portsim-basket-row');
       if (rows.length <= MIN_ROWS) {
         // Don't remove last row — just clear it
@@ -19746,6 +19804,7 @@ Sim.Ctrl = (function(){
     if (!host) return;
     var count = $$('#portsim-basket-rows .portsim-basket-row').length;
     if (count >= MAX_ROWS) return;
+    Setup._state.basketGeneration = null;
     var el = makeRowEl(defaultRow());
     if (el) host.appendChild(el);
     renumberRows();
@@ -19864,9 +19923,9 @@ Sim.Ctrl = (function(){
   }
 
   function _toDateStr(d) {
-    var y = d.getFullYear();
-    var m = String(d.getMonth() + 1).padStart(2, '0');
-    var da = String(d.getDate()).padStart(2, '0');
+    var y = d.getUTCFullYear();
+    var m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    var da = String(d.getUTCDate()).padStart(2, '0');
     return y + '-' + m + '-' + da;
   }
 
@@ -19892,193 +19951,337 @@ Sim.Ctrl = (function(){
     }).then(function (rows) { return Array.isArray(rows) ? rows : []; });
   }
 
-  // Check whether a noise ticker has local OHLCV covering the selected
-  // simulation window. Missing data is never downloaded implicitly.
-  function _ensureNoiseDataCovers(sym, windowStart, windowEnd) {
-    return fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
-      .then(function (resp) {
-        if (resp.status === 404) return { _missing: true };
-        if (!resp.ok) return { _httpErr: 'HTTP ' + resp.status };
-        return resp.json().then(function (j) { return { _bars: _normalizeOhlcvResponse(j) }; });
-      })
-      .then(function (probe) {
-        if (probe._missing) {
-          return { ok: false, fetched: false, error: 'No local data for ' + sym };
-        }
-        if (probe._httpErr) return { ok: false, error: probe._httpErr };
-        var bars = probe._bars || [];
-        if (!bars.length) return { ok: false, error: sym + ' has no bars' };
-        var b0 = bars[0] || {};
-        var b1 = bars[bars.length - 1] || {};
-        var first = b0.date || b0.time || b0.t || b0.Date || b0.DateTime || null;
-        var last = b1.date || b1.time || b1.t || b1.Date || b1.DateTime || null;
-        if (first && windowStart && first > windowStart) {
-          return { ok: false, fetched: false, error: sym + ' local data starts after the window' };
-        }
-        if (last && windowEnd && last < windowEnd) {
-          return { ok: false, fetched: false, error: sym + ' local data ends before the window' };
-        }
-        return { ok: true, fetched: false };
-      })
-      .catch(function (e) { return { ok: false, fetched: false, error: e && e.message ? e.message : 'local probe failed' }; });
+  // The manifest is immutable for a running server, so share one request per
+  // page. A rejected promise is discarded so a temporary local-server error
+  // can be retried by the next click.
+  function _getAnchorManifest() {
+    if (!_getAnchorManifest._promise) {
+      _getAnchorManifest._promise = fetch('/api/market-anchors')
+        .then(function (response) {
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return response.json();
+        })
+        .catch(function (error) {
+          _getAnchorManifest._promise = null;
+          throw error;
+        });
+    }
+    return _getAnchorManifest._promise;
   }
 
-  // Walk noise candidates in order, keeping ones that have data covering the
-  // chosen window. Stops once `target` candidates are accumulated, or when
-  // the local candidate pool is exhausted.
-  function _collectNoiseTickers(candidates, target, windowStart, windowEnd, onProgress) {
-    var picked = [];
-    var fetchedCount = 0;
-    function next(idx) {
-      if (picked.length >= target || idx >= candidates.length) {
-        return Promise.resolve({ picked: picked, fetched: fetchedCount });
+  // Cache local bars for the duration of one Randomize click. Missing local
+  // files are empty candidates; no remote provider is ever called here.
+  function _makeLocalBarsCache() {
+    var cache = Object.create(null);
+    return function load(sym) {
+      var symbol = String(sym || '').trim().toUpperCase();
+      if (!symbol) return Promise.resolve([]);
+      if (!cache[symbol]) {
+        cache[symbol] = fetch('/api/ohlcv?symbol=' + encodeURIComponent(symbol))
+          .then(function (response) {
+            if (response.status === 404) return [];
+            if (!response.ok) throw new Error('HTTP ' + response.status + ' for ' + symbol);
+            return response.json().then(function (json) {
+              if (Array.isArray(json)) return json;
+              return json && Array.isArray(json.bars) ? json.bars : [];
+            });
+          });
       }
-      var row = candidates[idx];
-      var sym = String((row && row.symbol) || '').trim().toUpperCase();
-      if (!sym) return next(idx + 1);
-      if (onProgress) onProgress(picked.length, target, sym);
-      return _ensureNoiseDataCovers(sym, windowStart, windowEnd).then(function (res) {
-        if (res.ok) {
-          if (res.fetched) fetchedCount++;
-          picked.push(row);
-        }
-        return next(idx + 1);
-      });
+      return cache[symbol];
+    };
+  }
+
+  function _uniqueSymbolRows(rows) {
+    var seen = Object.create(null);
+    var unique = [];
+    (Array.isArray(rows) ? rows : []).forEach(function (row) {
+      var symbol = String((row && row.symbol) || '').trim().toUpperCase();
+      if (!symbol || seen[symbol]) return;
+      seen[symbol] = true;
+      unique.push(Object.assign({}, row, { symbol: symbol }));
+    });
+    return unique;
+  }
+
+  function _newBasketSeed() {
+    if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') {
+      throw new Error('Secure random generator unavailable.');
     }
-    return next(0);
+    var words = new Uint32Array(4);
+    window.crypto.getRandomValues(words);
+    return Array.prototype.map.call(words, function (word) {
+      return word.toString(16).padStart(8, '0');
+    }).join('');
+  }
+
+  function _makeRandomWindow(year, rng) {
+    var startMonth = Math.floor(rng() * 8); // Jan..Aug
+    var startDay = 1 + Math.floor(rng() * 28);
+    var windowDays = 120 + Math.floor(rng() * 61);
+    var start = new Date(Date.UTC(year, startMonth, startDay));
+    var end = new Date(Date.UTC(year, startMonth, startDay + windowDays));
+    var yearEnd = new Date(Date.UTC(year, 11, 31));
+    if (end.getTime() > yearEnd.getTime()) end = yearEnd;
+    return { start: _toDateStr(start), end: _toDateStr(end) };
+  }
+
+  // Resolve all quotas for one window before moving to another. Dependencies
+  // are injectable so the retry boundary can be verified without DOM/network.
+  async function _resolveBalancedBasket(options) {
+    options = options || {};
+    var api = options.basketApi;
+    var manifest = options.manifest || {};
+    var manifestRows = _uniqueSymbolRows(manifest.symbols);
+    var manifestSymbols = manifestRows.map(function (row) { return row.symbol; });
+    var manifestSet = new Set(manifestSymbols);
+    var rows = Array.isArray(options.rows) ? options.rows : [];
+    var year = Number(options.year);
+    var size = Math.max(1, Math.min(10, Math.trunc(Number(options.size) || 6)));
+    var seed = String(options.seed || '');
+    var loadBars = options.loadBars;
+    var rng = api.createRng(seed + ':windows');
+    var makeWindow = options.makeWindow || function () {
+      var startMonth = Math.floor(rng() * 8);
+      var startDay = 1 + Math.floor(rng() * 28);
+      var windowDays = 120 + Math.floor(rng() * 61);
+      var startDate = new Date(Date.UTC(year, startMonth, startDay));
+      var endDate = new Date(Date.UTC(year, startMonth, startDay + windowDays));
+      var lastDate = new Date(Date.UTC(year, 11, 31));
+      if (endDate.getTime() > lastDate.getTime()) endDate = lastDate;
+      return {
+        start: startDate.toISOString().slice(0, 10),
+        end: endDate.toISOString().slice(0, 10)
+      };
+    };
+    var dataStart = String(manifest.data_start || '');
+    var dataEnd = String(manifest.data_end || '');
+    if (
+      (dataStart && year < Number(dataStart.slice(0, 4))) ||
+      (dataEnd && year > Number(dataEnd.slice(0, 4)))
+    ) {
+      return {
+        selection: null,
+        attempts: [],
+        error: 'Balanced baskets are available only for ' +
+          dataStart.slice(0, 4) + '–' + dataEnd.slice(0, 4) + ' local data.'
+      };
+    }
+
+    function shuffled(candidates, suffix) {
+      var copy = candidates.slice();
+      var poolRng = api.createRng(seed + ':' + suffix);
+      for (var index = copy.length - 1; index > 0; index--) {
+        var swapIndex = Math.floor(poolRng() * (index + 1));
+        var held = copy[index];
+        copy[index] = copy[swapIndex];
+        copy[swapIndex] = held;
+      }
+      return copy;
+    }
+
+    async function eligibleBars(candidates, windowStart, windowEnd, limit, predicate) {
+      var eligible = [];
+      for (var index = 0; index < candidates.length && eligible.length < limit; index++) {
+        var row = candidates[index];
+        var bars = await loadBars(row.symbol);
+        if (
+          api.hasWindowCoverage(bars, windowStart, windowEnd) &&
+          (!predicate || predicate(row, bars))
+        ) {
+          eligible.push(row);
+        }
+      }
+      return eligible;
+    }
+
+    var moverRows = shuffled(_uniqueSymbolRows(rows.filter(function (row) {
+      return Number(row && row.year) === year;
+    })), 'movers');
+    var noiseRows = shuffled(_uniqueSymbolRows(rows.filter(function (row) {
+      var symbol = String((row && row.symbol) || '').trim().toUpperCase();
+      return Number(row && row.year) !== year && symbol && !manifestSet.has(symbol);
+    })), 'noise');
+    var growthRows = shuffled(manifestRows.filter(function (row) {
+      return String(row.group || '').toLowerCase() === 'growth';
+    }), 'growth');
+    var broadRows = shuffled(manifestRows.filter(function (row) {
+      return String(row.group || '').toLowerCase() === 'broad';
+    }), 'broad');
+
+    var attempts = [];
+    var distinct = new Set();
+    var generationGuard = 0;
+    var lastCounts = { movers: 0, growth: 0, broad: 0, noise: 0 };
+    while (attempts.length < 12 && generationGuard < 240) {
+      generationGuard++;
+      var windowRange = makeWindow(attempts.length, rng);
+      if (!windowRange || !windowRange.start || !windowRange.end) continue;
+      var windowKey = windowRange.start + '|' + windowRange.end;
+      if (distinct.has(windowKey)) continue;
+      distinct.add(windowKey);
+
+      var movers = await eligibleBars(
+        moverRows, windowRange.start, windowRange.end, size + 3
+      );
+      var growth = await eligibleBars(
+        growthRows.filter(function (row) {
+          return api.isAnchorEligible(row, windowRange.start);
+        }),
+        windowRange.start, windowRange.end, size + 3
+      );
+      var broad = await eligibleBars(
+        broadRows.filter(function (row) {
+          return api.isAnchorEligible(row, windowRange.start);
+        }),
+        windowRange.start, windowRange.end, size + 3
+      );
+      var noise = await eligibleBars(
+        noiseRows,
+        windowRange.start,
+        windowRange.end,
+        size * 2 + 3,
+        function (_row, bars) {
+          return api.noiseLiquidity(bars, windowRange.start);
+        }
+      );
+      var anchors = growth.concat(broad);
+      lastCounts = {
+        movers: movers.length,
+        growth: growth.length,
+        broad: broad.length,
+        noise: noise.length
+      };
+      attempts.push({
+        start: windowRange.start,
+        end: windowRange.end,
+        counts: lastCounts
+      });
+
+      var selection = api.selectBasket({
+        size: size,
+        seed: seed + ':' + windowKey,
+        movers: movers,
+        anchors: anchors,
+        noise: noise,
+        manifestSymbols: manifestSymbols
+      });
+      if (selection) {
+        return {
+          selection: selection,
+          start: windowRange.start,
+          end: windowRange.end,
+          attempts: attempts
+        };
+      }
+    }
+
+    var countText = 'movers ' + lastCounts.movers +
+      ', growth anchors ' + lastCounts.growth +
+      ', broad anchors ' + lastCounts.broad +
+      ', noise ' + lastCounts.noise;
+    return {
+      selection: null,
+      attempts: attempts,
+      error: 'No complete balanced basket after ' + attempts.length +
+        ' distinct windows; limiting local pools: ' + countText + '.'
+    };
+  }
+
+  function _commitRandomBasket(result, seed, mode, year) {
+    var rowsState = result.selection.rows.map(function (row) {
+      return {
+        symbol: String(row.symbol || '').trim().toUpperCase(),
+        hasPreEntry: false,
+        entryPrice: '',
+        stopPrice: '',
+        sizeMode: 'shares',
+        sizeValue: ''
+      };
+    });
+    var startEl = $('#portsim-start-date');
+    var endEl = $('#portsim-end-date');
+    if (startEl) startEl.value = result.start;
+    if (endEl) endEl.value = result.end;
+    Setup._state.startDate = result.start;
+    Setup._state.endDate = result.end;
+    Setup._state.rows = rowsState;
+    Setup._state.basketGeneration = {
+      version: 1,
+      mode: mode,
+      seed: seed,
+      composition: result.selection.composition,
+      roles: result.selection.roles
+    };
+    rebuildRowsFromState(rowsState);
+    var symbols = rowsState.map(function (row) { return row.symbol; }).join(', ');
+    var label = mode === 'balanced' ? 'Balanced basket ready' : 'Same-year basket ready';
+    setStatus('🎲 ' + label + ' · ' + result.start + ' → ' + result.end +
+      ' · ' + symbols + ' · mark ≥1 as Pre-entry to start.', 'success');
   }
 
   function handleRandomize() {
     var yearEl = $('#portsim-rand-year');
     var countEl = $('#portsim-rand-count');
-    var noiseEl = $('#portsim-rand-noise');
+    var balancedEl = $('#portsim-rand-noise');
     var year = parseInt(yearEl && yearEl.value, 10);
     var count = parseInt(countEl && countEl.value, 10);
-    var noiseOn = !!(noiseEl && noiseEl.checked);
+    var balancedOn = !!(balancedEl && balancedEl.checked);
     if (!Number.isFinite(year)) { setStatus('Pick a year first.', 'error'); return; }
-    if (!Number.isFinite(count) || count < 1) count = 4;
+    if (!Number.isFinite(count) || count < 1) count = 6;
     count = Math.min(count, MAX_ROWS);
 
-    setStatus('Loading results for ' + year + '…', '');
-    _getResultRows().then(function (rows) {
-      var inYearRows = rows.filter(function (r) { return parseInt(r && r.year, 10) === year; });
-      if (inYearRows.length === 0) {
-        var ys = _yearsAvailable(rows);
-        setStatus('No tickers found for ' + year + '. Available years: ' + (ys.length ? ys.join(', ') : '(none)'), 'error');
-        return;
-      }
-
-      // 50/50 split when noise is on. ceil() guarantees at least half come
-      // from the chosen year (e.g. N=5 → 3 in-year + 2 noise).
-      var inYearTarget = noiseOn ? Math.ceil(count / 2) : count;
-      var noiseTarget = noiseOn ? (count - inYearTarget) : 0;
-
-      // Pick in-year tickers
-      var shuffledIn = _shuffleInPlace(inYearRows.slice());
-      var pickedIn = [];
-      var seen = Object.create(null);
-      for (var i = 0; i < shuffledIn.length && pickedIn.length < inYearTarget; i++) {
-        var symI = String((shuffledIn[i] && shuffledIn[i].symbol) || '').trim().toUpperCase();
-        if (!symI || seen[symI]) continue;
-        seen[symI] = true;
-        pickedIn.push(shuffledIn[i]);
-      }
-      if (pickedIn.length === 0) {
-        setStatus('Could not pick any tickers for ' + year + '.', 'error');
-        return;
-      }
-
-      // Pick a random 4–6 month window inside the year. Latest start month is
-      // Aug so that a min-120-day window doesn't get clipped against year-end
-      // (Aug 1 + 120 = Nov 29; with up to 180 days we can bump into Dec 31 —
-      // the clamp below handles that).
-      var startMonth = _randInt(0, 7); // Jan..Aug
-      var startDay = _randInt(1, 28);
-      var startD = new Date(year, startMonth, startDay);
-      var winLen = _randInt(120, 180); // 4–6 months
-      var endD = new Date(year, startMonth, startDay + winLen);
-      var yearEnd = new Date(year, 11, 31);
-      if (endD.getTime() > yearEnd.getTime()) endD = yearEnd;
-
-      var sd = _toDateStr(startD);
-      var ed = _toDateStr(endD);
-
-      function commitBasket(allRowsPicked) {
-        // Push directly to the form + state.
-        var sdEl = $('#portsim-start-date'); if (sdEl) sdEl.value = sd;
-        var edEl = $('#portsim-end-date');   if (edEl) edEl.value = ed;
-
-        var rowsState = allRowsPicked.map(function (r) {
-          return {
-            symbol: String(r.symbol || '').trim().toUpperCase(),
-            hasPreEntry: false,
-            entryPrice: '',
-            stopPrice: '',
-            sizeMode: 'shares',
-            sizeValue: ''
-          };
-        });
-        Setup._state.startDate = sd;
-        Setup._state.endDate = ed;
-        Setup._state.rows = rowsState;
-        rebuildRowsFromState(rowsState);
-
-        var symList = rowsState.map(function (r) { return r.symbol; }).join(', ');
-        var splitTxt = noiseOn
-          ? (' (' + pickedIn.length + ' from ' + year + ', ' + (allRowsPicked.length - pickedIn.length) + ' local noise)')
-          : '';
-        setStatus('🎲 ' + allRowsPicked.length + ' tickers' + splitTxt + ' · ' + sd + ' → ' + ed
-                  + ' · ' + symList + ' · mark ≥1 as Pre-entry to start.', 'success');
-      }
-
-      if (!noiseOn || noiseTarget === 0) {
-        commitBasket(pickedIn);
-        return;
-      }
-
-      // Build the noise candidate pool: rows with year ≠ Y, dedup against
-      // already-picked symbols. Shuffle so we don't always try the same ones.
-      var noiseRows = rows.filter(function (r) {
-        var y = parseInt(r && r.year, 10);
-        if (!Number.isFinite(y) || y === year) return false;
-        var sym = String((r && r.symbol) || '').trim().toUpperCase();
-        return sym && !seen[sym];
-      });
-      // Dedup by symbol — a ticker may appear in the catalogue multiple times
-      // (different years). Keep only the first row per symbol so we don't
-      // double-count it as a candidate.
-      var bySym = Object.create(null);
-      var noiseUnique = [];
-      noiseRows.forEach(function (r) {
-        var s = String((r && r.symbol) || '').trim().toUpperCase();
-        if (!s || bySym[s]) return;
-        bySym[s] = true;
-        noiseUnique.push(r);
-      });
-      _shuffleInPlace(noiseUnique);
-
-      setStatus('Picking ' + inYearTarget + ' from ' + year + ' + ' + noiseTarget + ' noise with local data…', '');
-
-      _collectNoiseTickers(noiseUnique, noiseTarget, sd, ed, function (got, want, sym) {
-        setStatus('🌫 Resolving noise ' + (got + 1) + '/' + want + ' (' + sym + ')…', '');
-      }).then(function (res) {
-        if (res.picked.length < noiseTarget) {
-          // Fall back gracefully: top up from in-year if noise pool was thin.
-          var stillNeeded = noiseTarget - res.picked.length;
-          for (var k = 0; k < shuffledIn.length && stillNeeded > 0; k++) {
-            var symX = String((shuffledIn[k] && shuffledIn[k].symbol) || '').trim().toUpperCase();
-            if (seen[symX]) continue;
-            seen[symX] = true;
-            pickedIn.push(shuffledIn[k]);
-            stillNeeded--;
-          }
+    setStatus('Loading local candidates for ' + year + '…', '');
+    var rowsPromise = _getResultRows();
+    if (!balancedOn) {
+      rowsPromise.then(function (rows) {
+        var sameYear = _shuffleInPlace(_uniqueSymbolRows(rows.filter(function (row) {
+          return Number(row && row.year) === year;
+        })));
+        if (sameYear.length < count) {
+          throw new Error('Only ' + sameYear.length + ' same-year tickers are available for ' + year + '.');
         }
-        commitBasket(pickedIn.concat(res.picked));
-      }).catch(function (e) {
-        setStatus('Noise resolution failed: ' + (e && e.message ? e.message : e), 'error');
+        var seed = _newBasketSeed();
+        var rng = PortSimBasket.createRng(seed + ':legacy-window');
+        var windowRange = _makeRandomWindow(year, rng);
+        var picked = sameYear.slice(0, count);
+        var roles = {};
+        picked.forEach(function (row) { roles[row.symbol] = 'mover'; });
+        _commitRandomBasket({
+          start: windowRange.start,
+          end: windowRange.end,
+          selection: {
+            rows: picked,
+            roles: roles,
+            composition: { mover: picked.length, anchor: 0, noise: 0 }
+          }
+        }, seed, 'same-year', year);
+      }).catch(function (error) {
+        setStatus('Randomize failed: ' + (error && error.message ? error.message : error), 'error');
       });
-    }).catch(function (e) {
-      setStatus('Randomize failed: ' + (e && e.message ? e.message : e), 'error');
+      return;
+    }
+
+    Promise.all([rowsPromise, _getAnchorManifest()]).then(function (values) {
+      if (!window.PortSimBasket) throw new Error('Balanced basket module is unavailable.');
+      var seed = _newBasketSeed();
+      var loadBars = _makeLocalBarsCache();
+      return _resolveBalancedBasket({
+        year: year,
+        size: count,
+        seed: seed,
+        rows: values[0],
+        manifest: values[1],
+        loadBars: loadBars,
+        basketApi: window.PortSimBasket
+      }).then(function (result) {
+        if (!result.selection) {
+          if (window.console) console.warn('[PortSim.Setup] ' + (result.error || 'Balanced resolution failed.'));
+          throw new Error('No complete balanced basket is available for the selected year using local data.');
+        }
+        _commitRandomBasket(result, seed, 'balanced', year);
+      });
+    }).catch(function (error) {
+      setStatus('Balanced randomize failed: ' + (error && error.message ? error.message : error), 'error');
     });
   }
 
@@ -20105,6 +20308,9 @@ Sim.Ctrl = (function(){
       s.startDate = saved.startDate || '';
       s.endDate = saved.endDate || '';
       s.index = saved.index || 'SPX';
+      s.basketGeneration = saved.basketGeneration
+        ? JSON.parse(JSON.stringify(saved.basketGeneration))
+        : null;
       s.rows = Array.isArray(saved.tickers) ? saved.tickers.map(function (t) {
         return {
           symbol: t.symbol || '',
@@ -20121,6 +20327,7 @@ Sim.Ctrl = (function(){
       s.endDate = '';
       s.index = 'SPX';
       s.rows = [];
+      s.basketGeneration = null;
     }
 
     // Push state → form
@@ -20307,6 +20514,7 @@ Sim.Ctrl = (function(){
     Setup._state.endDate = '';
     Setup._state.index = 'SPX';
     Setup._state.rows = [];
+    Setup._state.basketGeneration = null;
 
     // Persisted setup is no longer relevant — drop it so a future Open()
     // doesn't repopulate stale data.
@@ -20332,6 +20540,15 @@ Sim.Ctrl = (function(){
 
     var randBtn = $('#portsim-rand-btn');
     if (randBtn) randBtn.addEventListener('click', handleRandomize);
+
+    ['#portsim-start-date', '#portsim-end-date'].forEach(function (selector) {
+      var dateEl = $(selector);
+      if (dateEl) {
+        dateEl.addEventListener('input', function () {
+          Setup._state.basketGeneration = null;
+        });
+      }
+    });
 
     // Index pill toggle
     $$('#portsim-index-pills .portsim-index-pill').forEach(function (b) {
@@ -21030,6 +21247,8 @@ Sim.Ctrl = (function(){
     cash: 0,
     realizedPnL: 0,
     basket: [],         // [{ symbol, year, bars, dateToBarIdx, lastCloseSeen, sim, card }]
+    basketGeneration: null,
+    reviewFinalized: false,
     index: 'SPX',
     indexBars: [],
     indexDateMap: null,
@@ -21076,10 +21295,17 @@ Sim.Ctrl = (function(){
       throw new Error('config missing tickers');
     }
     const fetched = cfg.fetchedBars || {};
+    const basketGeneration = cfg.basketGeneration
+      ? JSON.parse(JSON.stringify(cfg.basketGeneration))
+      : null;
     // Stash the config so Replay can re-bootstrap from day 0 with the same
     // basket. fetchedBars stays in memory via this reference, so replay
     // doesn't need to refetch OHLCV.
-    _state._lastConfig = cfg;
+    _state._lastConfig = Object.assign({}, cfg, {
+      basketGeneration: basketGeneration
+        ? JSON.parse(JSON.stringify(basketGeneration))
+        : null
+    });
 
     // Reset internal state.
     _state.active = true;
@@ -21088,6 +21314,8 @@ Sim.Ctrl = (function(){
     _state.initialEquity = +cfg.initialCash || 0;
     _state.cash = _state.initialEquity;
     _state.realizedPnL = 0;
+    _state.basketGeneration = basketGeneration;
+    _state.reviewFinalized = false;
     // shortLocks: { legId → { shares, proceeds, avgEntry } }. Each open short fences
     // its proceeds here. cash is NOT credited at short open; covers settle realized
     // P&L back to cash and decrement the lock.
@@ -21141,6 +21369,12 @@ Sim.Ctrl = (function(){
       const card = PortSim.Cards.createCard(grid, sym, initSlice, {});
       const entry = {
         symbol: sym,
+        role: /^(mover|anchor|noise|unknown)$/.test(tCfg.role)
+          ? tCfg.role
+          : (basketGeneration && basketGeneration.roles &&
+            /^(mover|anchor|noise)$/.test(basketGeneration.roles[sym])
+              ? basketGeneration.roles[sym]
+              : 'unknown'),
         year: null,
         bars: bars,
         dateToBarIdx: dateToBarIdx,
@@ -22070,6 +22304,7 @@ Sim.Ctrl = (function(){
   function _showSummary(opts){
     opts = opts || {};
     const viewOnly = !!opts.viewOnly;
+    _state.reviewFinalized = !viewOnly;
     // Defensive: if this is the final summary (not a viewOnly peek) AND
     // we're at the end of the unified timeline, sweep up any positions
     // still open. Normally _advanceAll's end-of-sim hook already closed
@@ -22598,6 +22833,7 @@ Sim.Ctrl = (function(){
     if (!Array.isArray(_state.retiredEntries)) _state.retiredEntries = [];
     _state.retiredEntries.push({
       symbol: prev.symbol,
+      role: /^(mover|anchor|noise)$/.test(prev.role) ? prev.role : 'unknown',
       year: prev.year || null,
       bars: prev.bars,
       dateToBarIdx: prev.dateToBarIdx,
@@ -22670,6 +22906,7 @@ Sim.Ctrl = (function(){
 
       var entry = {
         symbol: sym,
+        role: 'unknown',
         year: null,
         bars: bars,
         dateToBarIdx: dateToBarIdx,
@@ -27713,15 +27950,55 @@ Sim.Ctrl = (function(){
     var maxDDDol = +ctx.maxDDDol || 0;
     var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
     var openCount = +ctx.openCount || 0;
+    var generation = ctx.basketGeneration || null;
+    var composition = generation && generation.composition
+      ? generation.composition
+      : {};
+    var originMode = generation && generation.mode
+      ? String(generation.mode)
+      : 'unknown';
+    var originSeed = generation && generation.seed != null
+      ? String(generation.seed)
+      : 'unknown';
+    var liveState = window.PortSim && window.PortSim._state;
+    var atFinalBar = liveState && Array.isArray(liveState.unifiedDates) &&
+      liveState.unifiedDates.length > 0 &&
+      liveState.playIdx >= liveState.unifiedDates.length - 1;
+    var revealBasketOrigin = !!(
+      _viewOnly ||
+      (liveState && liveState.reviewFinalized) ||
+      atFinalBar
+    );
     var tickerRows = (ctx.basket || []).map(function(e){
+      var role = /^(mover|anchor|noise)$/.test(e.role)
+        ? e.role
+        : (e.role === 'unknown'
+          ? 'unknown'
+          : (generation && generation.roles &&
+          /^(mover|anchor|noise)$/.test(generation.roles[e.symbol])
+            ? generation.roles[e.symbol]
+            : 'unknown'));
       return {
         sym: e.symbol,
+        role: role,
         legs: (e.legs || []).length,
         realized: +e.totalRealized || 0,
         stops: +e.stops || 0,
         status: e.status || 'idle'
       };
     });
+
+    var originHTML = revealBasketOrigin
+      ? ('<div class="portsim-review-origin">'
+        + '<label>BASKET ORIGIN</label>'
+        + '<strong>' + _esc(originMode) + '</strong>'
+        + '<span>mover ' + (generation ? (+composition.mover || 0) : 'unknown') + '</span>'
+        + '<span>anchor ' + (generation ? (+composition.anchor || 0) : 'unknown') + '</span>'
+        + '<span>noise ' + (generation ? (+composition.noise || 0) : 'unknown') + '</span>'
+        + '<span>seed ' + _esc(originSeed) + '</span>'
+        + '</div>')
+      : '';
+    var roleHeader = revealBasketOrigin ? '<th>ROLE</th>' : '';
 
     body.innerHTML = ''
       + '<div class="portsim-review-stats">'
@@ -27734,12 +28011,17 @@ Sim.Ctrl = (function(){
       +   '<div><label>MAX DD</label><strong class="is-neg">' + _moneyS(maxDDDol) + ' (' + maxDDPct.toFixed(2) + '%)</strong></div>'
       +   '<div><label>OPEN</label><strong>' + openCount + '</strong></div>'
       + '</div>'
+      + originHTML
       + '<table class="portsim-review-table">'
-      +   '<thead><tr><th>SYMBOL</th><th>LEGS</th><th>REALIZED P&amp;L</th><th>STOPS</th><th>STATUS</th></tr></thead>'
+      +   '<thead><tr><th>SYMBOL</th>' + roleHeader + '<th>LEGS</th><th>REALIZED P&amp;L</th><th>STOPS</th><th>STATUS</th></tr></thead>'
       +   '<tbody>'
       +     tickerRows.map(function(r){
             var cls = r.realized > 0 ? 'is-pos' : (r.realized < 0 ? 'is-neg' : '');
-            return '<tr><td>' + _esc(r.sym) + '</td><td>' + r.legs + '</td>'
+            return '<tr><td>' + _esc(r.sym) + '</td>'
+              + (revealBasketOrigin
+                ? '<td class="portsim-review-role">' + _esc(r.role) + '</td>'
+                : '')
+              + '<td>' + r.legs + '</td>'
               + '<td class="' + cls + '">' + _moneyS(r.realized) + '</td>'
               + '<td>' + r.stops + '</td>'
               + '<td>' + _esc(r.status) + '</td></tr>';
@@ -28317,10 +28599,14 @@ Sim.Ctrl = (function(){
     var totalPnL = equity - initial;
     var peak = +st.eqPeak || initial;
     var maxDDDol = +st.eqMaxDD || 0;
+    var basketGeneration = st.basketGeneration
+      ? JSON.parse(JSON.stringify(st.basketGeneration))
+      : null;
     return {
       startDate: st.startDate || '',
       endDate: st.endDate || '',
       index: st.index || 'SPX',
+      basketGeneration: basketGeneration,
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
@@ -28331,6 +28617,14 @@ Sim.Ctrl = (function(){
         var legs = _legSnapshots(e);
         return {
           symbol: e.symbol,
+          role: /^(mover|anchor|noise)$/.test(e.role)
+            ? e.role
+            : (e.role === 'unknown'
+              ? 'unknown'
+              : (basketGeneration && basketGeneration.roles &&
+              /^(mover|anchor|noise)$/.test(basketGeneration.roles[e.symbol])
+                ? basketGeneration.roles[e.symbol]
+                : 'unknown')),
           legs: legs,
           totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
           stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
@@ -28478,7 +28772,7 @@ Sim.Ctrl = (function(){
     }
     var year = +(ctx.startDate || '').slice(0, 4);
     // Prefer same-year row so the chart-zoom matches the period; fall back
-    // to any year for the symbol (e.g. cross-year noise picks).
+    // to any year for the symbol (e.g. balanced-basket picks).
     var target = allRows.find(function(r){
       return r && r.symbol === sym && (Number.isFinite(year) ? +r.year === year : true);
     }) || allRows.find(function(r){ return r && r.symbol === sym; });
@@ -28560,8 +28854,15 @@ Sim.Ctrl = (function(){
       startDate: meta.startDate,
       endDate: meta.endDate,
       index: meta.index || 'SPX',
+      basketGeneration: meta.basketGeneration
+        ? JSON.parse(JSON.stringify(meta.basketGeneration))
+        : null,
       tickers: meta.basket.map(function(b){
-        return { symbol: String(b.symbol || '').trim().toUpperCase(), hasPreEntry: false };
+        return {
+          symbol: String(b.symbol || '').trim().toUpperCase(),
+          hasPreEntry: false,
+          role: /^(mover|anchor|noise)$/.test(b.role) ? b.role : 'unknown'
+        };
       })
     };
 
@@ -28983,10 +29284,23 @@ Sim.Ctrl = (function(){
     Object.keys(bySym).forEach(function(sym){
       bySym[sym].sort(function(a, b){ return (a.idx || 0) - (b.idx || 0); });
     });
+    var basketGeneration = session.basketGeneration
+      ? JSON.parse(JSON.stringify(session.basketGeneration))
+      : null;
     var basket = order.map(function(sym){
       var legs = bySym[sym];
+      var role = basketGeneration && basketGeneration.roles &&
+        /^(mover|anchor|noise)$/.test(basketGeneration.roles[sym])
+        ? basketGeneration.roles[sym]
+        : 'unknown';
+      if (session.basketRoles && Object.prototype.hasOwnProperty.call(session.basketRoles, sym)) {
+        role = /^(mover|anchor|noise)$/.test(session.basketRoles[sym])
+          ? session.basketRoles[sym]
+          : 'unknown';
+      }
       return {
         symbol: sym,
+        role: role,
         legs: legs,
         totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
         stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
@@ -29000,6 +29314,7 @@ Sim.Ctrl = (function(){
       startDate: session.simStartDate || '',
       endDate: session.simEndDate || '',
       index: session.indexName || 'SPX',
+      basketGeneration: basketGeneration,
       initialEquity: initial,
       cash: equity, equity: equity,
       realized: trades.reduce(function(s, t){ return s + (+t.realizedPnL || 0); }, 0),
@@ -29926,7 +30241,7 @@ Sim.Ctrl = (function(){
         </div>
         <div class="fetch-field">
           <label for="portsim-rand-count"># Tickers</label>
-          <input type="number" min="1" max="10" step="1" id="portsim-rand-count" value="4">
+          <input type="number" min="1" max="10" step="1" id="portsim-rand-count" value="6">
         </div>
         <div class="fetch-field">
           <label>&nbsp;</label>
@@ -29935,9 +30250,9 @@ Sim.Ctrl = (function(){
       </div>
       <label class="portsim-randomize-noise" for="portsim-rand-noise">
         <input type="checkbox" id="portsim-rand-noise" checked>
-        <span>🌫 Cross-year noise — mix in up to 50% tickers that ran in <em>other</em> years (kills the "this is a known runner" sample bias). Uses local price data only; fetch missing tickers manually.</span>
+        <span>⚖️ Balanced basket — combines same-year movers, liquid market anchors, and cross-year candidates using local price data only.</span>
       </label>
-      <div class="portsim-randomize-hint">Picks N random tickers that had a big move in the chosen year (from <code>big_movers_result.csv</code>) plus a random 4–6 month window inside the year. Replaces current basket rows and dates.</div>
+      <div class="portsim-randomize-hint">Builds a hidden balanced mix for a random 4–6 month window. Turn it off for legacy same-year-only selection. Replaces current basket rows and dates.</div>
     </div>
 
     <div class="portsim-section-title">

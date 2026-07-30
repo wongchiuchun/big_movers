@@ -56,6 +56,13 @@ Each tool has independent color, width, and line style (solid/dashed/dotted). Dr
 - **Extend existing** — append missing bars from last-recorded date to today
 - **Remove ticker** — confirmation modal, removes from results, optionally deletes OHLCV file, cleans metadata and drawings
 
+### Portfolio Simulation
+- **Balanced baskets by default** — six visible tickers drawn from hidden mixtures of same-year movers, liquid point-in-time market anchors, and liquid cross-year comparison names
+- **Flexible basket size** — supports one through ten tickers while retaining at least one genuine mover
+- **No look-ahead selection** — anchors use eligibility at the simulation start; comparison-name liquidity uses only the preceding 20–60 daily bars
+- **Blind live roles** — source roles stay hidden during setup and playback, then appear with the basket composition and reproducible seed in Trade Review
+- **Offline randomization** — selection reads only `big_movers_result.csv`, `market_anchor_universe.json`, and local OHLCV files; it never downloads missing data
+
 ### Export
 - **Screenshot** — composites chart + drawings + volume pane + header (symbol, gain, rating, tags) + footer (notes) into a single PNG download. Ctrl+Shift+S shortcut.
 
@@ -110,6 +117,26 @@ tail -f server.log          # watch requests live
 
 Tested with Python 3.13 + Flask. For Twelve Data ticker fetching, put `TWELVE_API_KEY=<your-key>` in `.env` (either in the project dir or the parent dir — both are checked).
 
+### Market-anchor data maintenance
+
+The reviewed anchor manifest contains 50 liquid leaders with point-in-time eligibility and a fixed initial coverage target of `2015-01-01` through `2025-12-31`. These CSVs live in `collected_stocks/`; they are deliberately not added to `big_movers_result.csv`.
+
+Audit local coverage without internet access:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
+  tools/sync_market_anchors.py --dry-run
+```
+
+Explicitly synchronize missing coverage:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
+  tools/sync_market_anchors.py
+```
+
+Synchronization uses a minimum nine-second request interval, respects provider limits, writes atomically, and records resumable progress in the ignored `.market_anchor_sync_state.json`. Normal app startup and simulation never invoke it.
+
 ---
 
 ## File Layout
@@ -118,6 +145,9 @@ Tested with Python 3.13 + Flask. For Twelve Data ticker fetching, put `TWELVE_AP
 big_movers/
 ├── Big_movers.html             # Single-file frontend
 ├── Big_movers_server.py        # Flask backend, port 5051
+├── portfolio_basket.js         # Seeded balanced-basket selection engine
+├── market_anchor_universe.json # Reviewed 50-name point-in-time anchor pool
+├── market_anchor_sync.py       # Explicit audit/synchronization engine
 ├── big_movers_result.csv       # Precomputed setups (symbol, year, gain, dates)
 ├── SPY Historical Data.csv     # Benchmark data
 ├── collected_stocks/           # ~929 ticker OHLCV CSVs

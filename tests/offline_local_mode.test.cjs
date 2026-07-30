@@ -101,29 +101,77 @@ test('missing local ticker reports an explicit-fetch error without auto-fetching
   assert.match(result.perTicker.MISSING.error, /Fetch/i);
 });
 
-test('cross-year noise checks local bars without calling fetch-ticker', async () => {
+test('balanced randomizer reads anchors and bars from local endpoints only', async () => {
   const requests = [];
-  const { _ensureNoiseDataCovers } = loadFunctions(
-    ['_ensureNoiseDataCovers'],
+  const { _getAnchorManifest, _makeLocalBarsCache } = loadFunctions(
+    ['_getAnchorManifest', '_makeLocalBarsCache'],
     {
       fetch(url) {
         requests.push(url);
         return Promise.resolve({
-          ok: false,
-          status: 404,
-          json: () => Promise.resolve({ error: 'not found' })
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(url === '/api/market-anchors'
+            ? { symbols: [] }
+            : [])
         });
       },
       encodeURIComponent
     }
   );
 
-  const result = await _ensureNoiseDataCovers('LOCAL', '2020-01-01', '2020-12-31');
+  await _getAnchorManifest();
+  const loadBars = _makeLocalBarsCache();
+  await loadBars('LOCAL');
 
-  assert.equal(requests.length, 1);
-  assert.equal(requests[0], '/api/ohlcv?symbol=LOCAL');
-  assert.equal(result.ok, false);
-  assert.match(result.error, /local/i);
+  assert.deepEqual(requests, [
+    '/api/market-anchors',
+    '/api/ohlcv?symbol=LOCAL'
+  ]);
+  assert.equal(requests.some(url => /fetch-ticker|^https?:\/\//i.test(url)), false);
+});
+
+test('balanced randomizer caches each local ticker once per click', async () => {
+  let requests = 0;
+  const { _makeLocalBarsCache } = loadFunctions(
+    ['_makeLocalBarsCache'],
+    {
+      fetch() {
+        requests++;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve([])
+        });
+      },
+      encodeURIComponent
+    }
+  );
+  const loadBars = _makeLocalBarsCache();
+  await Promise.all([loadBars('aapl'), loadBars('AAPL'), loadBars(' AAPL ')]);
+  assert.equal(requests, 1);
+});
+
+test('anchor manifest cache resets after a rejected local request', async () => {
+  let requests = 0;
+  const { _getAnchorManifest } = loadFunctions(
+    ['_getAnchorManifest'],
+    {
+      fetch() {
+        requests++;
+        if (requests === 1) return Promise.reject(new Error('server restarting'));
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ symbols: [] })
+        });
+      }
+    }
+  );
+
+  await assert.rejects(_getAnchorManifest(), /server restarting/);
+  await _getAnchorManifest();
+  assert.equal(requests, 2);
 });
 
 test('index loading never auto-fetches QQQ', () => {
@@ -132,7 +180,7 @@ test('index loading never auto-fetches QQQ', () => {
   assert.doesNotMatch(fetchAndLoad, /\/api\/fetch-ticker/);
 });
 
-test('randomizer explains that noise selection is local-only', () => {
-  assert.match(html, /Cross-year noise[^]*Uses local price data only/);
-  assert.doesNotMatch(html, /Cross-year noise[^]*Will auto-fetch missing price data/);
+test('randomizer explains that balanced selection is local-only', () => {
+  assert.match(html, /Balanced basket[^]*local price data/i);
+  assert.doesNotMatch(html, /Balanced basket[^]*auto-fetch missing price data/i);
 });

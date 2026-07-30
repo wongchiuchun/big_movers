@@ -282,3 +282,68 @@ test('end summary and Stats persistence use the same portfolio metrics', () => {
   const addStatsFn = extractFunction(html, 'addCurrentPortfolio');
   assert.match(addStatsFn, /_computePortfolioMetrics\(payload\)/);
 });
+
+test('balanced basket provenance flows into controller, saved review, and rerun', () => {
+  const bootstrap = extractFunction(html, '_bootstrapFromConfig');
+  const buildMeta = extractFunction(html, '_buildMeta');
+  const rerun = extractFunction(html, '_onRerun');
+
+  assert.match(bootstrap, /basketGeneration/);
+  assert.match(bootstrap, /\brole\b/);
+  assert.match(buildMeta, /basketGeneration/);
+  assert.match(buildMeta, /\brole\b/);
+  assert.match(rerun, /basketGeneration/);
+});
+
+test('review reveals basket origin while live cards remain role-neutral', () => {
+  const overview = extractFunction(html, '_renderOverview');
+  const bootstrap = extractFunction(html, '_bootstrapFromConfig');
+  const summary = extractLastFunction(html, '_showSummary');
+
+  assert.match(overview, /BASKET ORIGIN/);
+  assert.match(overview, /unknown/);
+  assert.match(overview, /mover/);
+  assert.match(overview, /anchor/);
+  assert.match(overview, /noise/);
+  assert.match(overview, /reviewFinalized/);
+  assert.match(summary, /reviewFinalized\s*=\s*!viewOnly/);
+
+  const createCardCall = bootstrap.match(/PortSim\.Cards\.createCard\([^;]+;/);
+  assert.ok(createCardCall, 'controller card creation call is missing');
+  assert.doesNotMatch(createCardCall[0], /role|mover|anchor|noise/);
+});
+
+test('Stats session reconstruction preserves basket roles and seed', () => {
+  const { _synthMetaFromSession } = loadFunctions(['_synthMetaFromSession']);
+  const generation = {
+    version: 1,
+    mode: 'balanced',
+    seed: 'seed-42',
+    composition: { mover: 1, anchor: 1, noise: 0 },
+    roles: { MOVE: 'mover', LIQ: 'anchor' }
+  };
+  const meta = _synthMetaFromSession(
+    {
+      initialEquity: 100000,
+      finalEquity: 101000,
+      sessionPnL: 1000,
+      simStartDate: '2020-01-02',
+      simEndDate: '2020-06-30',
+      basketGeneration: generation
+    },
+    [{
+      symbol: 'MOVE',
+      legIndex: 1,
+      entryDate: '2020-01-03',
+      entryPrice: 10,
+      qty: 100,
+      exitDate: '2020-02-03',
+      exitPrice: 20,
+      exitReason: 'close',
+      realizedPnL: 1000
+    }]
+  );
+
+  assert.deepEqual(plain(meta.basketGeneration), generation);
+  assert.equal(meta.basket[0].role, 'mover');
+});
