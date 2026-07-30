@@ -7827,17 +7827,41 @@ function resizeCanvas(){
 
 const price2p=p=>priceSeries?.priceToCoordinate(p)??null;
 
+function drawingTimeToMs(time){
+  if(time instanceof Date)return time.getTime();
+  if(time&&typeof time==='object'&&time.year!=null&&time.month!=null&&time.day!=null){
+    return Date.UTC(Number(time.year),Number(time.month)-1,Number(time.day));
+  }
+  if(typeof time==='number'&&Number.isFinite(time)){
+    return Math.abs(time)>=1e12?time:time*1000;
+  }
+  if(typeof time==='string'){
+    const parsed=Date.parse(time);
+    return Number.isFinite(parsed)?parsed:NaN;
+  }
+  return NaN;
+}
+
+function nearestBarTime(bars,targetTime){
+  const targetMs=drawingTimeToMs(targetTime);
+  if(!Number.isFinite(targetMs))return null;
+  let best=null,bestDiff=Infinity;
+  for(const bar of bars){
+    const barMs=drawingTimeToMs(bar&&bar.time);
+    if(!Number.isFinite(barMs))continue;
+    const diff=Math.abs(barMs-targetMs);
+    if(diff<bestDiff){bestDiff=diff;best=bar.time;}
+  }
+  return best;
+}
+
 function time2p(t){
   if(!chart||!t) return null;
   const direct=chart.timeScale().timeToCoordinate(t);
   if(direct!=null) return direct;
   if(!currentBars.length) return null;
   const resampled=resampleBars(currentBars, currentTF);
-  let best=null, bestDiff=Infinity;
-  for(const b of resampled){
-    const d=Math.abs(new Date(b.time)-new Date(t));
-    if(d<bestDiff){ bestDiff=d; best=b.time; }
-  }
+  const best=nearestBarTime(resampled,t);
   if(!best) return null;
   return chart.timeScale().timeToCoordinate(best);
 }

@@ -105,3 +105,24 @@ test('circle placement, rendering, hit testing, and editing use the two anchors'
   assert.match(applyDrag, /d\.p2=\{\.\.\.d\.p2,price:toPrice\(o\.p2\.price,dy\),time:toTime\(o\.p2\.time,dx\)\}/);
   assert.match(applyDrag, /d\.p1=\{\.\.\.d\.p1,price:toPrice\(o\.p1\.price,dy\),time:toTime\(o\.p1\.time,dx\)\}/);
 });
+
+test('timeframe fallback maps BusinessDay drawing anchors to the nearest resampled bar', () => {
+  const { drawingTimeToMs, nearestBarTime } = loadFunctions([
+    'drawingTimeToMs',
+    'nearestBarTime'
+  ]);
+  const bars = [
+    { time: '2000-02-07' },
+    { time: '2000-02-14' }
+  ];
+
+  assert.equal(
+    drawingTimeToMs({ year: 2000, month: 2, day: 8 }),
+    Date.UTC(2000, 1, 8)
+  );
+  assert.equal(
+    nearestBarTime(bars, { year: 2000, month: 2, day: 8 }),
+    '2000-02-07'
+  );
+  assert.match(extractFunction(html, 'time2p'), /nearestBarTime\(resampled,t\)/);
+});
