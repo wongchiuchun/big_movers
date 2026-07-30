@@ -7924,7 +7924,10 @@ function drawPreview(){
   ctx2.globalAlpha=0.75;
   ctx2.strokeStyle=drawColor;ctx2.lineWidth=drawWidth;ctx2.setLineDash([5,4]);
   ctx2.beginPath();
-  if(drawTool==='ray'){
+  if(drawTool==='circle'){
+    const geometry=getCircleGeometry(x1,y1,previewMouseX,previewMouseY);
+    ctx2.arc(geometry.cx,geometry.cy,geometry.radius,0,Math.PI*2);
+  } else if(drawTool==='ray'){
     const dx=previewMouseX-x1,dy=previewMouseY-y1,len=Math.sqrt(dx*dx+dy*dy)||1;
     ctx2.moveTo(x1,y1);ctx2.lineTo(x1+(dx/len)*canvas.width*3,y1+(dy/len)*canvas.width*3);
   } else if(drawTool==='line'){
@@ -7992,6 +7995,7 @@ const ARROW_LENGTH=18;
 const ARROW_HEAD_LENGTH=9;
 const ARROW_HEAD_HALF_WIDTH=7;
 const ARROW_SHAFT_HALF_WIDTH=2.5;
+const MIN_CIRCLE_RADIUS=4;
 
 function getArrowGeometry(x,y,direction='up'){
   const vectors={
@@ -8063,6 +8067,22 @@ function drawOne(d,sel=false){
     for(let i=1;i<geometry.points.length;i++) ctx2.lineTo(geometry.points[i].x,geometry.points[i].y);
     ctx2.closePath();
     ctx2.fill();
+  }
+  else if(d.type==='circle'){
+    const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
+    const x2=time2p(d.p2.time),y2=price2p(d.p2.price);
+    if(x1==null||y1==null||x2==null||y2==null){ctx2.restore();return;}
+    const geometry=getCircleGeometry(x1,y1,x2,y2);
+    ctx2.strokeStyle=c;ctx2.lineWidth=lw;
+    applyLineStyle(d.style);
+    ctx2.beginPath();
+    ctx2.arc(geometry.cx,geometry.cy,geometry.radius,0,Math.PI*2);
+    ctx2.stroke();ctx2.setLineDash([]);
+    if(sel){
+      ctx2.fillStyle=c;
+      ctx2.beginPath();ctx2.arc(geometry.cx,geometry.cy,4,0,Math.PI*2);ctx2.fill();
+      ctx2.beginPath();ctx2.arc(geometry.edgeX,geometry.edgeY,5,0,Math.PI*2);ctx2.fill();
+    }
   }
   else if(d.type==='ray'||d.type==='seg'||d.type==='line'){
     const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
@@ -8325,7 +8345,7 @@ function setupChartEvents(){
       saveDrawings();
       setTool('pan');
     }
-    else if(drawTool==='ray'||drawTool==='seg'||drawTool==='line'||drawTool==='note'){
+    else if(drawTool==='ray'||drawTool==='seg'||drawTool==='line'||drawTool==='note'||drawTool==='circle'){
       if(!pendingP1){
         pendingP1={price,time};
         document.getElementById('hint').classList.remove('hidden');
@@ -8351,7 +8371,15 @@ function setupChartEvents(){
           });
           return;
         }
-        addDrawing({type:drawTool,p1:pendingP1,p2:{price,time},color:drawColor,width:drawWidth,style:drawLineStyle});
+        if(drawTool==='circle'){
+          const x1=time2p(pendingP1.time),y1=price2p(pendingP1.price);
+          if(x1==null||y1==null)return;
+          const geometry=getCircleGeometry(x1,y1,param.point.x,param.point.y);
+          if(geometry.radius<MIN_CIRCLE_RADIUS)return;
+          addDrawing({type:'circle',p1:pendingP1,p2:{price,time},color:drawColor,width:drawWidth,style:drawLineStyle});
+        } else {
+          addDrawing({type:drawTool,p1:pendingP1,p2:{price,time},color:drawColor,width:drawWidth,style:drawLineStyle});
+        }
         pendingP1=null;
         document.getElementById('hint').classList.add('hidden');
         saveDrawings();
@@ -8519,6 +8547,14 @@ function applyDrag(id,part,dx,dy){
   if(d.type==='hline'){
     d.price=toPrice(o.price,dy);
   }
+  else if(d.type==='circle'){
+    if(part==='radius'){
+      d.p2={...d.p2,price:toPrice(o.p2.price,dy),time:toTime(o.p2.time,dx)};
+    } else {
+      d.p1={...d.p1,price:toPrice(o.p1.price,dy),time:toTime(o.p1.time,dx)};
+      d.p2={...d.p2,price:toPrice(o.p2.price,dy),time:toTime(o.p2.time,dx)};
+    }
+  }
   else if(d.type==='ray'||d.type==='seg'||d.type==='line'||d.type==='note'){
     if(part==='p1'){
       d.p1={...d.p1,price:toPrice(o.p1.price,dy),time:toTime(o.p1.time,dx)};
@@ -8589,6 +8625,15 @@ function getHitPart(d,mx,my){
     if(x==null||y==null)return null;
     const points=getArrowGeometry(x,y,d.direction).points;
     return pointHitsPolygon(mx,my,points,4)?'whole':null;
+  }
+  if(d.type==='circle'){
+    const cutoff=(window.Sim&&Sim.Ctrl&&typeof Sim.Ctrl.getCutoffBarTime==='function')?Sim.Ctrl.getCutoffBarTime():null;
+    if(cutoff!=null&&_drawingExceedsCutoff(d,cutoff))return null;
+    const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
+    const x2=time2p(d.p2.time),y2=price2p(d.p2.price);
+    if(x1==null||y1==null||x2==null||y2==null)return null;
+    const geometry=getCircleGeometry(x1,y1,x2,y2);
+    return getCircleHitPart(mx,my,geometry,THRESH,ENDPOINT_THRESH);
   }
   if(d.type==='ray'||d.type==='seg'||d.type==='line'||d.type==='note'){
     const x1=time2p(d.p1.time),y1=price2p(d.p1.price);

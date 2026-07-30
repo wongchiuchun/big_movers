@@ -72,3 +72,36 @@ test('circle toolbar exposes persistent palette, width, style, and shortcut sett
   assert.match(html, /const TOOLS=\['pan','arrow','circle','hline','line','ray','seg','text','note','measure'\]/);
   assert.match(html, /'c':'circle'/);
 });
+
+test('circle placement, rendering, hit testing, and editing use the two anchors', () => {
+  const preview = extractFunction(html, 'drawPreview');
+  const drawOne = extractFunction(html, 'drawOne');
+  const setupEvents = extractFunction(html, 'setupChartEvents');
+  const hitPart = extractFunction(html, 'getHitPart');
+  const applyDrag = extractFunction(html, 'applyDrag');
+
+  assert.match(html, /const MIN_CIRCLE_RADIUS=4;/);
+  assert.match(preview, /drawTool==='circle'/);
+  assert.match(preview, /getCircleGeometry\(x1,y1,previewMouseX,previewMouseY\)/);
+  assert.match(preview, /ctx2\.arc\(geometry\.cx,geometry\.cy,geometry\.radius,0,Math\.PI\*2\)/);
+
+  assert.match(drawOne, /else if\(d\.type==='circle'\)/);
+  assert.match(drawOne, /getCircleGeometry\(x1,y1,x2,y2\)/);
+  assert.match(drawOne, /ctx2\.arc\(geometry\.cx,geometry\.cy,geometry\.radius,0,Math\.PI\*2\)/);
+  assert.match(drawOne, /if\(sel\)\{/);
+
+  assert.match(setupEvents, /drawTool==='circle'/);
+  assert.match(setupEvents, /geometry\.radius<MIN_CIRCLE_RADIUS/);
+  assert.match(
+    setupEvents,
+    /type:'circle',p1:pendingP1,p2:\{price,time\},color:drawColor,width:drawWidth,style:drawLineStyle/
+  );
+
+  assert.match(hitPart, /if\(d\.type==='circle'\)/);
+  assert.match(hitPart, /_drawingExceedsCutoff\(d,cutoff\)/);
+  assert.match(hitPart, /getCircleHitPart\(mx,my,geometry,THRESH,ENDPOINT_THRESH\)/);
+
+  assert.match(applyDrag, /if\(part==='radius'\)/);
+  assert.match(applyDrag, /d\.p2=\{\.\.\.d\.p2,price:toPrice\(o\.p2\.price,dy\),time:toTime\(o\.p2\.time,dx\)\}/);
+  assert.match(applyDrag, /d\.p1=\{\.\.\.d\.p1,price:toPrice\(o\.p1\.price,dy\),time:toTime\(o\.p1\.time,dx\)\}/);
+});
