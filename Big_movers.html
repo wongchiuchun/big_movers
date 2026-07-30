@@ -933,12 +933,14 @@
     cursor: pointer;
     padding: 0;
   }
-  .arrow-color-presets {
+  .arrow-color-presets,
+  .circle-color-presets {
     display: flex;
     gap: 6px;
     align-items: center;
   }
-  .arrow-color-swatch {
+  .arrow-color-swatch,
+  .circle-color-swatch {
     width: 22px;
     height: 22px;
     padding: 0;
@@ -948,11 +950,14 @@
     cursor: pointer;
   }
   .arrow-color-swatch:hover,
-  .arrow-color-swatch:focus-visible {
+  .arrow-color-swatch:focus-visible,
+  .circle-color-swatch:hover,
+  .circle-color-swatch:focus-visible {
     border-color: var(--text);
     outline: none;
   }
-  .arrow-color-swatch.selected {
+  .arrow-color-swatch.selected,
+  .circle-color-swatch.selected {
     border-color: #ffffff;
     box-shadow: 0 0 0 2px var(--accent);
   }
@@ -6102,6 +6107,35 @@
               </div>
             </span>
             <span class="tool-group">
+              <button class="tb-btn" id="tool-circle" title="Circle annotation [Alt+C]" aria-label="Circle annotation">
+                <span class="tb-ico" aria-hidden="true" style="color:#2196f3">
+                  <svg viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="6" style="fill:none;stroke:currentColor;stroke-width:2" />
+                  </svg>
+                </span>
+              </button>
+              <button class="tool-cfg-btn" id="cfg-circle" title="Circle style" aria-label="Circle settings">
+                <svg viewBox="0 0 20 20"><path d="M10 2l1.4 2.5 2.9.6-2 2.2.3 3-2.6-1.2-2.6 1.2.3-3-2-2.2 2.9-.6L10 2z"/></svg>
+              </button>
+              <div class="tool-popup hidden" id="popup-circle">
+                <label>Presets</label>
+                <div class="circle-color-presets" role="group" aria-label="Circle preset colors">
+                  <button type="button" class="circle-color-swatch selected" data-color="#2196f3" style="--swatch-color:#2196f3" title="Blue" aria-label="Blue"></button>
+                  <button type="button" class="circle-color-swatch" data-color="#ff6b35" style="--swatch-color:#ff6b35" title="Orange" aria-label="Orange"></button>
+                  <button type="button" class="circle-color-swatch" data-color="#f5c842" style="--swatch-color:#f5c842" title="Yellow" aria-label="Yellow"></button>
+                </div>
+                <label for="circle-color">Custom</label><input id="circle-color" type="color" class="cfg-color" value="#2196f3">
+                <label for="circle-width">Width</label>
+                <select id="circle-width" class="cfg-width">
+                  <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option>
+                </select>
+                <label for="circle-style">Style</label>
+                <select id="circle-style" class="cfg-style">
+                  <option value="solid">——</option><option value="dash">- -</option><option value="dot">···</option>
+                </select>
+              </div>
+            </span>
+            <span class="tool-group">
               <button class="tb-btn" id="tool-hline" title="Horizontal Line [Alt+H]" aria-label="H-Line">
                 <span class="tb-ico" aria-hidden="true">
                   <svg viewBox="0 0 20 20">
@@ -6514,6 +6548,7 @@ function syncPersistedRightOffset(){
 // per-tool style settings
 const toolSettings={
   arrow:{color:'#2196f3',direction:'up'},
+  circle:{color:'#2196f3',width:2,style:'solid'},
   hline:{color:'#ffffff',width:2,style:'solid'},
   ray:  {color:'#ffffff',width:2,style:'solid'},
   seg:  {color:'#ffffff',width:2,style:'solid'},
@@ -6532,6 +6567,19 @@ function syncArrowColorUI(color){
     btn.classList.toggle('selected',(btn.dataset.color||'').toLowerCase()===normalized);
   });
   const icon=document.querySelector('#tool-arrow .tb-ico');
+  if(icon)icon.style.color=normalized;
+}
+
+function syncCircleColorUI(color){
+  const normalized=/^#[0-9a-f]{6}$/i.test(color||'')?color.toLowerCase():'#2196f3';
+  toolSettings.circle.color=normalized;
+  const popup=document.getElementById('popup-circle');
+  const custom=popup?.querySelector('.cfg-color');
+  if(custom)custom.value=normalized;
+  popup?.querySelectorAll('.circle-color-swatch').forEach(btn=>{
+    btn.classList.toggle('selected',(btn.dataset.color||'').toLowerCase()===normalized);
+  });
+  const icon=document.querySelector('#tool-circle .tb-ico');
   if(icon)icon.style.color=normalized;
 }
 
@@ -7478,7 +7526,7 @@ function setLog(v){
 document.getElementById('log-toggle').addEventListener('click',()=>{setLog(!isLogScale);saveSettings();});
 
 // per-tool popup setup
-['arrow','hline','line','ray','seg','text','note'].forEach(tool=>{
+['arrow','circle','hline','line','ray','seg','text','note'].forEach(tool=>{
   const cfgBtn=document.getElementById('cfg-'+tool);
   const popup=document.getElementById('popup-'+tool);
   if(!cfgBtn||!popup)return;
@@ -7494,11 +7542,18 @@ document.getElementById('log-toggle').addEventListener('click',()=>{setLog(!isLo
   popup.querySelector('.cfg-color')?.addEventListener('input',e=>{
     toolSettings[tool].color=e.target.value;
     if(tool==='arrow')syncArrowColorUI(e.target.value);
+    if(tool==='circle')syncCircleColorUI(e.target.value);
     syncDrawVars(); saveSettings();
   });
   popup.querySelectorAll('.arrow-color-swatch').forEach(btn=>btn.addEventListener('click',()=>{
     if(tool!=='arrow')return;
     syncArrowColorUI(btn.dataset.color);
+    syncDrawVars();
+    saveSettings();
+  }));
+  popup.querySelectorAll('.circle-color-swatch').forEach(btn=>btn.addEventListener('click',()=>{
+    if(tool!=='circle')return;
+    syncCircleColorUI(btn.dataset.color);
     syncDrawVars();
     saveSettings();
   }));
@@ -8139,7 +8194,7 @@ function drawMeasure(){
 // ==============================================
 // TOOL SETUP
 // ==============================================
-const TOOLS=['pan','arrow','hline','line','ray','seg','text','note','measure'];
+const TOOLS=['pan','arrow','circle','hline','line','ray','seg','text','note','measure'];
 function setTool(t){
   drawTool=t;pendingP1=null;
   document.getElementById('hint').classList.add('hidden');
@@ -8726,7 +8781,7 @@ document.addEventListener('keydown',e=>{
     return;
   }
   if(!inInput && e.altKey && !e.ctrlKey && !e.metaKey){
-    const keyMap={'v':'pan','w':'arrow','h':'hline','a':'line','r':'ray','s':'seg','t':'text','n':'note','m':'measure'};
+    const keyMap={'v':'pan','w':'arrow','c':'circle','h':'hline','a':'line','r':'ray','s':'seg','t':'text','n':'note','m':'measure'};
     if(keyMap[e.key.toLowerCase()]){
       e.preventDefault();
       setTool(keyMap[e.key.toLowerCase()]);
@@ -9254,7 +9309,7 @@ function initChart(){
 
   if(saved?.toolSettings){
     Object.assign(toolSettings, saved.toolSettings);
-    ['arrow','hline','line','ray','seg','text','note'].forEach(t=>{
+    ['arrow','circle','hline','line','ray','seg','text','note'].forEach(t=>{
       const s=toolSettings[t];
       const popup=document.getElementById('popup-'+t);
       if(!popup)return;
@@ -9266,6 +9321,7 @@ function initChart(){
     });
   }
   syncArrowColorUI(toolSettings.arrow?.color);
+  syncCircleColorUI(toolSettings.circle?.color);
   syncDrawVars();
   setupChartEvents();
   resizeCanvas();

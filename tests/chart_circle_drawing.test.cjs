@@ -55,3 +55,20 @@ test('circle hit classification distinguishes resize handle and whole circle', (
   assert.equal(getCircleHitPart(100, 120, geometry, 8, 10), 'whole');
   assert.equal(getCircleHitPart(108, 108, geometry, 8, 10), null);
 });
+
+test('circle toolbar exposes persistent palette, width, style, and shortcut settings', () => {
+  assert.match(html, /\bid="tool-circle"/);
+  assert.match(html, /\bid="cfg-circle"/);
+  assert.match(html, /\bid="popup-circle"/);
+  assert.match(html, /\bid="circle-color"[^>]*\bvalue="#2196f3"/);
+  assert.match(html, /\bid="circle-width"/);
+  assert.match(html, /\bid="circle-style"/);
+  for (const color of ['#2196f3', '#ff6b35', '#f5c842']) {
+    assert.match(html, new RegExp(`circle-color-swatch[^>]+data-color="${color}"`));
+  }
+  assert.match(html, /circle:\{color:'#2196f3',width:2,style:'solid'\}/);
+  assert.match(html, /function syncCircleColorUI\(/);
+  assert.match(html, /\['arrow','circle','hline','line','ray','seg','text','note'\]/);
+  assert.match(html, /const TOOLS=\['pan','arrow','circle','hline','line','ray','seg','text','note','measure'\]/);
+  assert.match(html, /'c':'circle'/);
+});
