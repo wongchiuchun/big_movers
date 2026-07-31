@@ -107,8 +107,9 @@ test('circle placement, rendering, hit testing, and editing use the two anchors'
 });
 
 test('timeframe fallback maps BusinessDay drawing anchors to the nearest resampled bar', () => {
-  const { drawingTimeToMs, nearestBarTime } = loadFunctions([
+  const { drawingTimeToMs, nearestBarIndex, nearestBarTime } = loadFunctions([
     'drawingTimeToMs',
+    'nearestBarIndex',
     'nearestBarTime'
   ]);
   const bars = [
