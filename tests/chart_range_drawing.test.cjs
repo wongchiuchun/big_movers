@@ -105,3 +105,21 @@ test('date range counts active-timeframe bars inclusively in either direction', 
   assert.equal(countBarsInRange(monthly, '2026-01-15', '2026-03-01'), 3);
   assert.equal(countBarsInRange([], '2026-01-01', '2026-01-02'), 0);
 });
+
+test('toolbar replaces the temporary measure tool with separate range tools', () => {
+  assert.match(html, /\bid="tool-price-range"/);
+  assert.match(html, /\bid="tool-date-range"/);
+  assert.doesNotMatch(html, /\bid="tool-measure"/);
+  assert.match(html, /const TOOLS=\['pan','arrow','circle','hline','line','ray','seg','text','note','price-range','date-range'\]/);
+  assert.match(html, /'p':'price-range'/);
+  assert.match(html, /'m':'date-range'/);
+  assert.match(html, /\.draw-toolbar\.collapsed #tool-price-range/);
+  assert.match(html, /\.draw-toolbar\.collapsed #tool-date-range/);
+});
+
+test('legacy transient measure state and renderer are removed', () => {
+  assert.doesNotMatch(html, /\bmeasureStart\b/);
+  assert.doesNotMatch(html, /\bmeasureEnd\b/);
+  assert.doesNotMatch(html, /function drawMeasure\(/);
+  assert.doesNotMatch(html, /drawTool==='measure'/);
+});

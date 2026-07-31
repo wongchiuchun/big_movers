@@ -69,7 +69,7 @@ test('circle toolbar exposes persistent palette, width, style, and shortcut sett
   assert.match(html, /circle:\{color:'#2196f3',width:2,style:'solid'\}/);
   assert.match(html, /function syncCircleColorUI\(/);
   assert.match(html, /\['arrow','circle','hline','line','ray','seg','text','note'\]/);
-  assert.match(html, /const TOOLS=\['pan','arrow','circle','hline','line','ray','seg','text','note','measure'\]/);
+  assert.match(html, /const TOOLS=\['pan','arrow','circle','hline','line','ray','seg','text','note','price-range','date-range'\]/);
   assert.match(html, /'c':'circle'/);
 });
 

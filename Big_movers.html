@@ -828,7 +828,8 @@
   .draw-toolbar.collapsed .tb-sep,
   .draw-toolbar.collapsed #log-toggle,
   .draw-toolbar.collapsed #tool-clear,
-  .draw-toolbar.collapsed #tool-measure,
+  .draw-toolbar.collapsed #tool-price-range,
+  .draw-toolbar.collapsed #tool-date-range,
   .draw-toolbar.collapsed #tool-pan,
   .draw-toolbar.collapsed #tool-hline,
   .draw-toolbar.collapsed #tool-line,
@@ -6270,12 +6271,17 @@
                 </select>
               </div>
             </span>
-            <button class="tb-btn" id="tool-measure" title="Measure [Alt+M]" aria-label="Measure">
+            <button class="tb-btn" id="tool-price-range" title="Price Range [Alt+P]" aria-label="Price Range">
               <span class="tb-ico" aria-hidden="true">
                 <svg viewBox="0 0 20 20">
-                  <path d="M5 14L15 4" />
-                  <circle cx="7" cy="6" r="1.6" />
-                  <circle cx="13" cy="12" r="1.6" />
+                  <path d="M10 3V17M6.5 6.5L10 3L13.5 6.5M6.5 13.5L10 17L13.5 13.5" />
+                </svg>
+              </span>
+            </button>
+            <button class="tb-btn" id="tool-date-range" title="Date Range [Alt+M]" aria-label="Date Range">
+              <span class="tb-ico" aria-hidden="true">
+                <svg viewBox="0 0 20 20">
+                  <path d="M3 10H17M6.5 6.5L3 10L6.5 13.5M13.5 6.5L17 10L13.5 13.5" />
                 </svg>
               </span>
             </button>
@@ -6592,8 +6598,6 @@ function syncDrawVars(){
 }
 let pendingP1=null;   // first click for ray/seg
 let undoHistory=[];   // [{symbol, snapshot}]
-let measureStart=null; // measure tool first point
-let measureEnd=null;   // measure tool second point (live)
 let selectedId=null;
 let previewMouseX=0,previewMouseY=0;
 // drag state (global so document listeners can access)
@@ -7891,7 +7895,6 @@ function redrawAll(){
     }
   }
   if(pendingP1)drawPreview();
-  if(measureStart)drawMeasure();
 }
 
 // True when ANY anchor point of the drawing is past the cutoff. hline /
@@ -8206,76 +8209,13 @@ function drawOne(d,sel=false){
   ctx2.restore();
 }
 
-function drawMeasure(){
-  if(!measureStart)return;
-  const x1=time2p(measureStart.time), y1=price2p(measureStart.price);
-  const x2=previewMouseX, y2=previewMouseY;
-  if(x1==null||y1==null)return;
-
-  const endPrice=priceSeries?.coordinateToPrice(y2);
-  if(!endPrice)return;
-
-  const priceDiff=endPrice-measureStart.price;
-  const pct=(priceDiff/measureStart.price*100).toFixed(2);
-  const sign=priceDiff>=0?'+':'';
-  const color=priceDiff>=0?'#26a69a':'#ef5350';
-
-  let bars=0;
-  if(currentBars.length){
-    const nearestBar=(px)=>{
-      let best=-1,bestDist=Infinity;
-      for(let i=0;i<currentBars.length;i++){
-        const bx=time2p(currentBars[i].time);
-        if(bx==null)continue;
-        const d=Math.abs(bx-px);
-        if(d<bestDist){bestDist=d;best=i;}
-      }
-      return best;
-    };
-    const si=nearestBar(x1);
-    const ei=nearestBar(x2);
-    if(si>=0&&ei>=0) bars=Math.abs(ei-si);
-  }
-
-  ctx2.save();
-
-  const rx=Math.min(x1,x2), ry=Math.min(y1,y2);
-  const rw=Math.abs(x2-x1), rh=Math.abs(y2-y1);
-  ctx2.fillStyle=priceDiff>=0?'rgba(38,166,154,0.08)':'rgba(239,83,80,0.08)';
-  ctx2.fillRect(rx,ry,rw,rh);
-  ctx2.strokeStyle=color;
-  ctx2.lineWidth=1;
-  ctx2.setLineDash([4,3]);
-  ctx2.strokeRect(rx,ry,rw,rh);
-  ctx2.setLineDash([]);
-
-  const label=`${sign}${pct}%  ${bars}bars`;
-  // Match chart axis/crosshair UI font
-  ctx2.font='bold 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
-  const lw=ctx2.measureText(label).width;
-  const lx=rx+rw/2-lw/2;
-  const ly=ry+rh/2+5;
-  ctx2.fillStyle='rgba(10,12,15,0.85)';
-  ctx2.fillRect(lx-6,ly-14,lw+12,20);
-  ctx2.fillStyle=color;
-  ctx2.fillText(label,lx,ly);
-
-  ctx2.font='10px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
-  ctx2.fillStyle=color;
-  ctx2.fillText(measureStart.price.toFixed(2),x1+4,y1-3);
-  ctx2.fillText(endPrice.toFixed(2),x2+4,y2-3);
-
-  ctx2.restore();
-}
-
 // ==============================================
 // TOOL SETUP
 // ==============================================
-const TOOLS=['pan','arrow','circle','hline','line','ray','seg','text','note','measure'];
+const TOOLS=['pan','arrow','circle','hline','line','ray','seg','text','note','price-range','date-range'];
 function setTool(t){
   drawTool=t;pendingP1=null;
   document.getElementById('hint').classList.add('hidden');
-  if(t!=='measure'){measureStart=null;measureEnd=null;}
   TOOLS.forEach(id=>document.getElementById('tool-'+id).classList.toggle('active',id===t));
   syncDrawVars();
 }
@@ -8348,7 +8288,7 @@ function setupChartEvents(){
       else window._setCrosshairX?.(param.point.x, label, yOverlay);
     }catch(e){}
     
-    if (pendingP1 || measureStart) redrawAll();
+    if (pendingP1) redrawAll();
     if (drawTool === 'pan' && drawKey()) {
       const hit = hitTest(param.point.x, param.point.y);
       chartEl.style.cursor = hit != null ? (hit === selectedId ? 'move' : 'pointer') : '';
@@ -8445,16 +8385,6 @@ function setupChartEvents(){
     }
     else if(drawTool==='text'){
       showTextInput(param.point.x,param.point.y,price,time);
-    }
-    else if(drawTool==='measure'){
-      if(!measureStart){
-        measureStart={price,time,x:param.point.x,y:param.point.y};
-        document.getElementById('hint').classList.remove('hidden');
-      } else {
-        measureEnd={price,time,x:param.point.x,y:param.point.y};
-        document.getElementById('hint').classList.add('hidden');
-        measureStart=null; measureEnd=null;
-      }
     }
   });
 
@@ -8883,7 +8813,7 @@ document.addEventListener('keydown',e=>{
     return;
   }
   if(!inInput && e.altKey && !e.ctrlKey && !e.metaKey){
-    const keyMap={'v':'pan','w':'arrow','c':'circle','h':'hline','a':'line','r':'ray','s':'seg','t':'text','n':'note','m':'measure'};
+    const keyMap={'v':'pan','w':'arrow','c':'circle','h':'hline','a':'line','r':'ray','s':'seg','t':'text','n':'note','p':'price-range','m':'date-range'};
     if(keyMap[e.key.toLowerCase()]){
       e.preventDefault();
       setTool(keyMap[e.key.toLowerCase()]);
