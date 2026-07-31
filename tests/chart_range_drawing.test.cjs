@@ -123,3 +123,67 @@ test('legacy transient measure state and renderer are removed', () => {
   assert.doesNotMatch(html, /function drawMeasure\(/);
   assert.doesNotMatch(html, /drawTool==='measure'/);
 });
+
+test('range helpers map tool names, format price labels, and hit both handles and body', () => {
+  const {
+    isRangeTool,
+    rangeDrawingTypeForTool,
+    formatRangePrice,
+    getRangeHitPart,
+    getRangeGeometry
+  } = loadFunctions([
+    'isRangeTool',
+    'rangeDrawingTypeForTool',
+    'formatRangePrice',
+    'getRangeHitPart',
+    'getRangeGeometry'
+  ]);
+
+  assert.equal(isRangeTool('price-range'), true);
+  assert.equal(isRangeTool('date-range'), true);
+  assert.equal(isRangeTool('seg'), false);
+  assert.equal(rangeDrawingTypeForTool('price-range'), 'priceRange');
+  assert.equal(rangeDrawingTypeForTool('date-range'), 'dateRange');
+  assert.equal(formatRangePrice(2.5), '+$2.50');
+  assert.equal(formatRangePrice(-0.125), '-$0.125');
+  assert.equal(formatRangePrice(0), '+$0.00');
+
+  const geometry = plain(getRangeGeometry(10, 20, 110, 80));
+  assert.equal(getRangeHitPart(10, 20, geometry, 8, 10), 'p1');
+  assert.equal(getRangeHitPart(110, 80, geometry, 8, 10), 'p2');
+  assert.equal(getRangeHitPart(50, 50, geometry, 8, 10), 'whole');
+  assert.equal(getRangeHitPart(50, 89, geometry, 8, 10), null);
+
+  const flat = plain(getRangeGeometry(20, 40, 100, 40));
+  assert.equal(getRangeHitPart(60, 45, flat, 8, 10), 'whole');
+});
+
+test('range tools persist, preview, render, count timeframe bars, and support editing', () => {
+  const preview = extractFunction(html, 'drawPreview');
+  const drawOne = extractFunction(html, 'drawOne');
+  const setupEvents = extractFunction(html, 'setupChartEvents');
+  const hitPart = extractFunction(html, 'getHitPart');
+  const applyDrag = extractFunction(html, 'applyDrag');
+
+  assert.match(html, /const MIN_RANGE_SPAN=4;/);
+  assert.match(preview, /isRangeTool\(drawTool\)/);
+  assert.match(preview, /coordinateToPrice\(previewMouseY\)/);
+  assert.match(preview, /coordinateToTime\(previewMouseX\)/);
+  assert.match(preview, /drawRangeOverlay\(/);
+
+  assert.match(drawOne, /d\.type==='priceRange'\|\|d\.type==='dateRange'/);
+  assert.match(drawOne, /drawRangeOverlay\(/);
+  assert.match(html, /countBarsInRange\(resampleBars\(currentBars,currentTF\),p1\.time,p2\.time\)/);
+
+  assert.match(setupEvents, /isRangeTool\(drawTool\)/);
+  assert.match(setupEvents, /rangeDrawingTypeForTool\(drawTool\)/);
+  assert.match(setupEvents, /geometry\.width<MIN_RANGE_SPAN&&geometry\.height<MIN_RANGE_SPAN/);
+
+  assert.match(hitPart, /d\.type==='priceRange'\|\|d\.type==='dateRange'/);
+  assert.match(hitPart, /_drawingExceedsCutoff\(d,cutoff\)/);
+  assert.match(hitPart, /getRangeHitPart\(/);
+
+  assert.match(applyDrag, /d\.type==='priceRange'\|\|d\.type==='dateRange'/);
+  assert.match(applyDrag, /part==='p1'/);
+  assert.match(applyDrag, /part==='p2'/);
+});

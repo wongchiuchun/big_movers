@@ -7958,6 +7958,18 @@ function drawPreview(){
   if(!pendingP1)return;
   const x1=time2p(pendingP1.time),y1=price2p(pendingP1.price);
   if(x1==null||y1==null)return;
+  if(isRangeTool(drawTool)){
+    const previewPrice=priceSeries?.coordinateToPrice(previewMouseY);
+    const previewTime=chart?.timeScale().coordinateToTime(previewMouseX);
+    if(previewPrice==null||previewTime==null)return;
+    drawRangeOverlay(
+      rangeDrawingTypeForTool(drawTool),
+      pendingP1,
+      {price:previewPrice,time:previewTime},
+      x1,y1,previewMouseX,previewMouseY,false,true
+    );
+    return;
+  }
   ctx2.save();
   ctx2.globalAlpha=0.75;
   ctx2.strokeStyle=drawColor;ctx2.lineWidth=drawWidth;ctx2.setLineDash([5,4]);
@@ -8034,6 +8046,7 @@ const ARROW_HEAD_LENGTH=9;
 const ARROW_HEAD_HALF_WIDTH=7;
 const ARROW_SHAFT_HALF_WIDTH=2.5;
 const MIN_CIRCLE_RADIUS=4;
+const MIN_RANGE_SPAN=4;
 
 function getArrowGeometry(x,y,direction='up'){
   const vectors={
@@ -8080,6 +8093,25 @@ function getRangeGeometry(x1,y1,x2,y2){
   };
 }
 
+function isRangeTool(tool){
+  return tool==='price-range'||tool==='date-range';
+}
+
+function rangeDrawingTypeForTool(tool){
+  return tool==='price-range'?'priceRange':tool==='date-range'?'dateRange':null;
+}
+
+function getRangeHitPart(mx,my,geometry,threshold,endpointThreshold,labelBox=null){
+  if(Math.hypot(mx-geometry.x1,my-geometry.y1)<endpointThreshold)return'p1';
+  if(Math.hypot(mx-geometry.x2,my-geometry.y2)<endpointThreshold)return'p2';
+  if(
+    mx>=geometry.left-threshold&&mx<=geometry.right+threshold&&
+    my>=geometry.top-threshold&&my<=geometry.bottom+threshold
+  )return'whole';
+  if(labelBox&&mx>=labelBox.left&&mx<=labelBox.right&&my>=labelBox.top&&my<=labelBox.bottom)return'whole';
+  return null;
+}
+
 function calculatePriceRange(startPrice,endPrice){
   const start=Number(startPrice),end=Number(endPrice);
   if(!Number.isFinite(start)||!Number.isFinite(end)){
@@ -8091,6 +8123,91 @@ function calculatePriceRange(startPrice,endPrice){
     percentage:start===0?null:(change/start*100),
     direction:change<0?'loss':'gain'
   };
+}
+
+function formatRangePrice(change){
+  const value=Number(change);
+  if(!Number.isFinite(value))return'—';
+  const normalized=Math.abs(value)<0.0000005?0:value;
+  const absolute=Math.abs(normalized);
+  const decimals=absolute>0&&absolute<1?4:2;
+  const amount=decimals===2
+    ?absolute.toFixed(2)
+    :absolute.toFixed(4).replace(/(\.\d*?[1-9])0+$|\.0+$/, '$1');
+  return `${normalized<0?'-':'+'}$${amount}`;
+}
+
+function getRangeBarCount(p1,p2){
+  return countBarsInRange(resampleBars(currentBars,currentTF),p1.time,p2.time);
+}
+
+function getRangeLabelContent(type,p1,p2){
+  if(type==='priceRange'){
+    const metrics=calculatePriceRange(p1.price,p2.price);
+    const percentage=metrics.percentage==null?'—%':`${metrics.percentage>=0?'+':''}${metrics.percentage.toFixed(2)}%`;
+    return {primary:percentage,secondary:formatRangePrice(metrics.change),direction:metrics.direction};
+  }
+  const bars=getRangeBarCount(p1,p2);
+  return {primary:`${bars} ${bars===1?'bar':'bars'}`,secondary:'',direction:'date'};
+}
+
+function getRangeLabelLayout(type,geometry,p1,p2){
+  const content=getRangeLabelContent(type,p1,p2);
+  ctx2.save();
+  ctx2.font='700 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+  const primaryWidth=ctx2.measureText(content.primary).width;
+  ctx2.font='11px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+  const secondaryWidth=content.secondary?ctx2.measureText(content.secondary).width:0;
+  ctx2.restore();
+  const width=Math.ceil(Math.max(primaryWidth,secondaryWidth)+16);
+  const height=content.secondary?40:26;
+  const desiredLeft=geometry.left+geometry.width/2-width/2;
+  const desiredTop=geometry.top+geometry.height/2-height/2;
+  const left=Math.max(4,Math.min(canvas.width-width-4,desiredLeft));
+  const top=Math.max(4,Math.min(canvas.height-height-4,desiredTop));
+  return {...content,left,top,right:left+width,bottom:top+height,width,height};
+}
+
+function drawRangeOverlay(type,p1,p2,x1,y1,x2,y2,selected=false,preview=false){
+  const geometry=getRangeGeometry(x1,y1,x2,y2);
+  const content=getRangeLabelContent(type,p1,p2);
+  const baseColor=type==='dateRange'?'#2196f3':content.direction==='loss'?'#ef5350':'#26a69a';
+  const color=selected?'#ffdd00':baseColor;
+  const fillColor=selected?'rgba(255,221,0,0.10)':type==='dateRange'?'rgba(33,150,243,0.10)':content.direction==='loss'?'rgba(239,83,80,0.10)':'rgba(38,166,154,0.10)';
+  const label=getRangeLabelLayout(type,geometry,p1,p2);
+  ctx2.save();
+  ctx2.globalAlpha=preview?0.78:1;
+  ctx2.fillStyle=fillColor;
+  ctx2.fillRect(geometry.left,geometry.top,geometry.width,geometry.height);
+  ctx2.strokeStyle=color;
+  ctx2.lineWidth=selected?2:1;
+  ctx2.setLineDash(preview?[5,4]:[4,3]);
+  ctx2.strokeRect(geometry.left,geometry.top,geometry.width,geometry.height);
+  if(geometry.width<1){ctx2.beginPath();ctx2.moveTo(geometry.left,geometry.top);ctx2.lineTo(geometry.left,geometry.bottom);ctx2.stroke();}
+  if(geometry.height<1){ctx2.beginPath();ctx2.moveTo(geometry.left,geometry.top);ctx2.lineTo(geometry.right,geometry.top);ctx2.stroke();}
+  ctx2.setLineDash([]);
+
+  ctx2.fillStyle='rgba(10,12,15,0.88)';
+  ctx2.fillRect(label.left,label.top,label.width,label.height);
+  ctx2.strokeStyle=color;
+  ctx2.lineWidth=1;
+  ctx2.strokeRect(label.left,label.top,label.width,label.height);
+  ctx2.textAlign='center';
+  ctx2.textBaseline='middle';
+  ctx2.fillStyle=color;
+  ctx2.font='700 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+  ctx2.fillText(label.primary,label.left+label.width/2,label.top+(label.secondary?13:label.height/2));
+  if(label.secondary){
+    ctx2.fillStyle=selected?color:'#d8dee9';
+    ctx2.font='11px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
+    ctx2.fillText(label.secondary,label.left+label.width/2,label.top+29);
+  }
+  if(selected){
+    ctx2.fillStyle=color;
+    ctx2.beginPath();ctx2.arc(geometry.x1,geometry.y1,5,0,Math.PI*2);ctx2.fill();
+    ctx2.beginPath();ctx2.arc(geometry.x2,geometry.y2,5,0,Math.PI*2);ctx2.fill();
+  }
+  ctx2.restore();
 }
 
 function drawOne(d,sel=false){
@@ -8143,6 +8260,12 @@ function drawOne(d,sel=false){
       ctx2.beginPath();ctx2.arc(geometry.cx,geometry.cy,4,0,Math.PI*2);ctx2.fill();
       ctx2.beginPath();ctx2.arc(geometry.edgeX,geometry.edgeY,5,0,Math.PI*2);ctx2.fill();
     }
+  }
+  else if(d.type==='priceRange'||d.type==='dateRange'){
+    const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
+    const x2=time2p(d.p2.time),y2=price2p(d.p2.price);
+    if(x1==null||y1==null||x2==null||y2==null){ctx2.restore();return;}
+    drawRangeOverlay(d.type,d.p1,d.p2,x1,y1,x2,y2,sel,false);
   }
   else if(d.type==='ray'||d.type==='seg'||d.type==='line'){
     const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
@@ -8342,7 +8465,7 @@ function setupChartEvents(){
       saveDrawings();
       setTool('pan');
     }
-    else if(drawTool==='ray'||drawTool==='seg'||drawTool==='line'||drawTool==='note'||drawTool==='circle'){
+    else if(drawTool==='ray'||drawTool==='seg'||drawTool==='line'||drawTool==='note'||drawTool==='circle'||isRangeTool(drawTool)){
       if(!pendingP1){
         pendingP1={price,time};
         document.getElementById('hint').classList.remove('hidden');
@@ -8374,6 +8497,12 @@ function setupChartEvents(){
           const geometry=getCircleGeometry(x1,y1,param.point.x,param.point.y);
           if(geometry.radius<MIN_CIRCLE_RADIUS)return;
           addDrawing({type:'circle',p1:pendingP1,p2:{price,time},color:drawColor,width:drawWidth,style:drawLineStyle});
+        } else if(isRangeTool(drawTool)){
+          const x1=time2p(pendingP1.time),y1=price2p(pendingP1.price);
+          if(x1==null||y1==null)return;
+          const geometry=getRangeGeometry(x1,y1,param.point.x,param.point.y);
+          if(geometry.width<MIN_RANGE_SPAN&&geometry.height<MIN_RANGE_SPAN)return;
+          addDrawing({type:rangeDrawingTypeForTool(drawTool),p1:pendingP1,p2:{price,time}});
         } else {
           addDrawing({type:drawTool,p1:pendingP1,p2:{price,time},color:drawColor,width:drawWidth,style:drawLineStyle});
         }
@@ -8542,6 +8671,16 @@ function applyDrag(id,part,dx,dy){
       d.p2={...d.p2,price:toPrice(o.p2.price,dy),time:toTime(o.p2.time,dx)};
     }
   }
+  else if(d.type==='priceRange'||d.type==='dateRange'){
+    if(part==='p1'){
+      d.p1={...d.p1,price:toPrice(o.p1.price,dy),time:toTime(o.p1.time,dx)};
+    } else if(part==='p2'){
+      d.p2={...d.p2,price:toPrice(o.p2.price,dy),time:toTime(o.p2.time,dx)};
+    } else {
+      d.p1={...d.p1,price:toPrice(o.p1.price,dy),time:toTime(o.p1.time,dx)};
+      d.p2={...d.p2,price:toPrice(o.p2.price,dy),time:toTime(o.p2.time,dx)};
+    }
+  }
   else if(d.type==='ray'||d.type==='seg'||d.type==='line'||d.type==='note'){
     if(part==='p1'){
       d.p1={...d.p1,price:toPrice(o.p1.price,dy),time:toTime(o.p1.time,dx)};
@@ -8621,6 +8760,16 @@ function getHitPart(d,mx,my){
     if(x1==null||y1==null||x2==null||y2==null)return null;
     const geometry=getCircleGeometry(x1,y1,x2,y2);
     return getCircleHitPart(mx,my,geometry,THRESH,ENDPOINT_THRESH);
+  }
+  if(d.type==='priceRange'||d.type==='dateRange'){
+    const cutoff=(window.Sim&&Sim.Ctrl&&typeof Sim.Ctrl.getCutoffBarTime==='function')?Sim.Ctrl.getCutoffBarTime():null;
+    if(cutoff!=null&&_drawingExceedsCutoff(d,cutoff))return null;
+    const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
+    const x2=time2p(d.p2.time),y2=price2p(d.p2.price);
+    if(x1==null||y1==null||x2==null||y2==null)return null;
+    const geometry=getRangeGeometry(x1,y1,x2,y2);
+    const labelBox=getRangeLabelLayout(d.type,geometry,d.p1,d.p2);
+    return getRangeHitPart(mx,my,geometry,THRESH,ENDPOINT_THRESH,labelBox);
   }
   if(d.type==='ray'||d.type==='seg'||d.type==='line'||d.type==='note'){
     const x1=time2p(d.p1.time),y1=price2p(d.p1.price);
