@@ -6480,6 +6480,68 @@ let chartType='candle'; // 'candle' | 'ohlc'
 let priceColors = { up: '#26a69a', down: '#ef5350' };
 let drawings={};      // {symbol:[{id,type,...}]}
 let drawIdCtr=0;
+let activeDrawingVersions={}; // session-only, keyed by move key
+
+function drawingVersionOf(d){
+  const value=Number(d&&d.version);
+  return Number.isInteger(value)&&value>=1&&value<=3?value:1;
+}
+
+function drawingsForVersion(list,version){
+  const value=Number(version);
+  const target=Number.isInteger(value)&&value>=1&&value<=3?value:1;
+  return(Array.isArray(list)?list:[]).filter(d=>drawingVersionOf(d)===target);
+}
+
+function replaceDrawingVersion(list,version,replacement){
+  const value=Number(version);
+  const target=Number.isInteger(value)&&value>=1&&value<=3?value:1;
+  const keep=(Array.isArray(list)?list:[]).filter(d=>drawingVersionOf(d)!==target);
+  return keep.concat(Array.isArray(replacement)?replacement:[]);
+}
+
+function addDrawingToVersion(list,version,drawing){
+  const value=Number(version);
+  const target=Number.isInteger(value)&&value>=1&&value<=3?value:1;
+  return(Array.isArray(list)?list:[]).concat({...drawing,version:target});
+}
+
+function removeDrawingFromVersion(list,version,id){
+  const value=Number(version);
+  const target=Number.isInteger(value)&&value>=1&&value<=3?value:1;
+  return(Array.isArray(list)?list:[]).filter(d=>drawingVersionOf(d)!==target||d.id!==id);
+}
+
+function setDrawingVersionForKey(state,key,version){
+  const value=Number(version);
+  const target=Number.isInteger(value)&&value>=1&&value<=3?value:1;
+  return{...(state||{}),[key]:target};
+}
+
+function restoreDrawingVersionFromHistory(list,history,moveKey,version){
+  const entries=Array.isArray(history)?history.slice():[];
+  for(let i=entries.length-1;i>=0;i--){
+    const entry=entries[i];
+    if(entry.moveKey===moveKey&&entry.version===version){
+      entries.splice(i,1);
+      return{
+        drawings:replaceDrawingVersion(list,version,entry.snapshot),
+        history:entries,
+        restored:true
+      };
+    }
+  }
+  return{drawings:list,history:entries,restored:false};
+}
+
+function activeDrawingVersion(key=drawKey()){
+  const value=key&&activeDrawingVersions[key];
+  return Number.isInteger(value)&&value>=1&&value<=3?value:1;
+}
+
+function activeDrawings(key=drawKey()){
+  return key?drawingsForVersion(drawings[key],activeDrawingVersion(key)):[];
+}
 
 // AI indicator overlay state
 let aiIndicators = null;
