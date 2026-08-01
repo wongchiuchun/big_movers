@@ -38,11 +38,14 @@ The goal is not signal generation. It's deliberate pattern-recognition practice:
 
 Each tool has independent color, width, and line style (solid/dashed/dotted). Drawings lock toggle, undo (Ctrl+Z), delete selected, copy-across-timeframe, and full persistence per move.
 
+- **Annotation versions** — switch among three independent drawing versions per chart; existing drawings remain version 1, and confirmed reset affects only the active version
+
 ### Study Drawer
 - **Tags** — preset setups (Breakout, VCP, EP, Gap & Go, Double Bottom, Pocket Pivot, etc.) plus custom tags with rename/delete management
 - **Rating** — A–E grade per move
 - **Direction** — long / short classification
 - **Notes** — free-form rich text, AI-vs-human comparison tracking
+- **Manual Leg Reviews** — optionally select chart date ranges and add period-specific detail notes without changing the main Study Notes or AI review
 - **Filter views** — save named filter combinations (by tag, direction, min rating, min gain, symbol, year) and mark one as default
 
 ### AI Classification + Review
