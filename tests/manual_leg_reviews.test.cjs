@@ -59,3 +59,20 @@ test('manual legs normalize, sort, and update notes independently', () => {
   const afterDelete = deleteManualLeg(updated, 'a');
   assert.deepEqual(plain(afterDelete).map((leg, index) => [index + 1, leg.id]), [[1, 'b']]);
 });
+
+test('manual leg reviews are optional additional detail below AI review', () => {
+  const reviewPos = html.indexOf('id="review-box"');
+  const manualPos = html.indexOf('id="manual-leg-reviews"');
+  const notesPos = html.indexOf('id="study-notes"');
+  assert.ok(reviewPos >= 0 && manualPos > reviewPos && notesPos > manualPos);
+  assert.match(html, /id="manual-leg-add"/);
+  assert.match(html, /id="manual-leg-save-status"/);
+  assert.match(html, /function startManualLegPick\(/);
+  assert.match(html, /function renderManualLegReviews\(/);
+  assert.match(html, /showDateRangeHighlight\(/);
+  assert.doesNotMatch(extractFunction(html, 'renderManualLegReviews'), /study-notes/);
+  assert.doesNotMatch(extractFunction(html, 'cancelManualLegPick'), /manualLegClickConsumed\s*=\s*false/);
+  assert.match(html, /if\(manualLegPick\|\|manualLegClickConsumed\)return;/);
+  assert.match(extractFunction(html, 'saveMetadata'), /if\s*\(!r\.ok\)/);
+  assert.match(extractFunction(html, 'saveMetadata'), /return false/);
+});

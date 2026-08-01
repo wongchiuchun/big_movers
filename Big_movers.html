@@ -238,6 +238,18 @@
   .review-style-fit{background:var(--bg4);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:11px;}
   .review-style-fit strong{color:var(--text);}
   .review-myth{font-size:10px;color:var(--muted);font-style:italic;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);}
+  .manual-leg-title{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  #manual-leg-add{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--accent);font-family:var(--mono);font-size:9px;padding:4px 7px;cursor:pointer;}
+  #manual-leg-add:hover,#manual-leg-add.active{border-color:var(--accent);background:rgba(212,165,116,0.08);}
+  .manual-leg-item{border:1px solid var(--border);border-radius:8px;background:var(--bg4);padding:8px;margin-top:7px;}
+  .manual-leg-head{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-family:var(--mono);font-size:10px;}
+  .manual-leg-range{flex:1;border:0;background:transparent;color:var(--text-2);font-family:var(--mono);font-size:10px;text-align:left;cursor:pointer;}
+  .manual-leg-range strong{color:var(--accent);}
+  .manual-leg-delete{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;}
+  .manual-leg-delete:hover{color:var(--red);}
+  .manual-leg-notes{width:100%;min-height:62px;resize:vertical;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:11px;line-height:1.45;padding:7px 8px;outline:none;}
+  .manual-leg-notes:focus{border-color:var(--accent);}
+  #manual-leg-save-status{min-height:14px;margin-top:5px;color:var(--red);font-family:var(--mono);font-size:9px;}
   .notes-popup{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:500;display:none;align-items:center;justify-content:center;}
   .notes-popup.open{display:flex;}
   .notes-popup-panel{background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);border:1px solid var(--border-bright);border-radius:16px;width:min(700px,90vw);max-height:80vh;overflow-y:auto;padding:28px 32px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.6);}
@@ -5445,6 +5457,14 @@
           </div>
           <div id="review-box" style="display:none"></div>
         </div>
+        <div class="study-section" id="manual-leg-reviews">
+          <div class="study-label manual-leg-title">
+            <span>Manual Leg Reviews</span>
+            <button type="button" id="manual-leg-add">+ Add manual leg</button>
+          </div>
+          <div id="manual-leg-list"></div>
+          <div id="manual-leg-save-status" role="status"></div>
+        </div>
         <div class="study-section" style="margin-bottom:10px">
           <button id="compare-btn" style="width:100%;padding:8px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-family:var(--mono);font-size:11px;cursor:pointer;font-weight:600;transition:all 0.15s;">Compare Side-by-Side</button>
         </div>
@@ -6490,6 +6510,9 @@ let priceColors = { up: '#26a69a', down: '#ef5350' };
 let drawings={};      // {symbol:[{id,type,...}]}
 let drawIdCtr=0;
 let activeDrawingVersions={}; // session-only, keyed by move key
+let manualLegPick=null; // {moveKey, moveRow, start}
+let manualLegClickConsumed=false;
+let manualLegSaveTimers={};
 
 function drawingVersionOf(d){
   const value=Number(d&&d.version);
@@ -7302,12 +7325,16 @@ function setupNameToId(name) {
 
 async function saveMetadata() {
   try {
-    await fetch('/api/metadata', {
+    const r = await fetch('/api/metadata', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(metadata)
     });
-  } catch(e) {}
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    return true;
+  } catch(e) {
+    return false;
+  }
 }
 async function loadMetadata() {
   try {
@@ -7849,6 +7876,7 @@ function updateSpyOverlay(){
 }
 
 function setTimeframe(tf){
+  if(manualLegPick)cancelManualLegPick();
   currentTF=tf;
   ['D','W','M'].forEach(t=>document.getElementById('tf-'+t).classList.toggle('active',t===tf));
   if(activeIdx>=0) selectRow(activeIdx);
@@ -8484,6 +8512,7 @@ function drawOne(d,sel=false){
 // ==============================================
 const TOOLS=['pan','arrow','circle','hline','line','ray','seg','text','note','price-range','date-range'];
 function setTool(t){
+  if(manualLegPick)cancelManualLegPick();
   drawTool=t;pendingP1=null;
   document.getElementById('hint').classList.add('hidden');
   TOOLS.forEach(id=>document.getElementById('tool-'+id).classList.toggle('active',id===t));
@@ -8546,6 +8575,10 @@ function setupChartEvents(){
     
     previewMouseX = param.point.x;
     previewMouseY = param.point.y;
+    if(manualLegPick&&manualLegPick.start&&param.time){
+      const end=normalizeManualLegDate(param.time);
+      if(end)showDateRangeHighlight(manualLegPick.start,end);
+    }
 
     // Update custom crosshair overlay: snap X to bar center via timeToCoordinate.
     try{
@@ -8589,6 +8622,7 @@ function setupChartEvents(){
 
   chart.subscribeClick(param=>{
     if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
+    if(handleManualLegChartPick(param&&param.time))return;
     if(!drawKey()||drawTool==='pan')return;
     if(!param.point)return;
     let price=priceSeries?.coordinateToPrice(param.point.y);
@@ -8665,6 +8699,7 @@ function setupChartEvents(){
 
   chart.subscribeClick(param=>{
     if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
+    if(manualLegClickConsumed||manualLegPick)return;
     if(drawTool!=='pan'||!drawKey()||!param.point||drawingsLocked)return;
     const x=param.point.x, y=param.point.y;
     const hit=hitTest(x,y);
@@ -10023,6 +10058,7 @@ async function loadIndexInChart(idxName){
 }
 
 async function selectRow(i){
+  if(manualLegPick)cancelManualLegPick();
   if (activeOhlcvController) {
     try { activeOhlcvController.abort(); } catch (e) {}
     activeOhlcvController = null;
@@ -10132,6 +10168,7 @@ function updateStudyPanel() {
   updateAISection();
   // Review section
   updateReviewSection();
+  renderManualLegReviews();
 }
 
 function _escHtml(s) {
@@ -10247,6 +10284,150 @@ async function loadReviews() {
     reviewsCache = await r.json() || {};
   } catch (e) { reviewsCache = {}; }
   return reviewsCache;
+}
+
+function setManualLegSaveStatus(message){
+  const status=document.getElementById('manual-leg-save-status');
+  if(status)status.textContent=message||'';
+}
+
+function assignManualLegs(r,legs){
+  const key=moveKey(r);
+  if(!key)return[];
+  if(!metadata.items)metadata.items={};
+  const normalized=normalizeManualLegs(legs);
+  metadata.items[key]={...getMeta(r),manualLegs:normalized};
+  return normalized;
+}
+
+async function persistManualLegs(r,legs){
+  assignManualLegs(r,legs);
+  const ok=await saveMetadata();
+  if(moveKey(currentMoveRow)===moveKey(r)){
+    setManualLegSaveStatus(ok?'':'Could not save leg notes');
+  }
+  return ok;
+}
+
+function scheduleManualLegNoteSave(r,id,notes){
+  const key=moveKey(r);
+  if(!key)return;
+  const next=updateManualLegNotes(getMeta(r).manualLegs,id,notes);
+  assignManualLegs(r,next);
+  const timerKey=`${key}:${id}`;
+  clearTimeout(manualLegSaveTimers[timerKey]);
+  manualLegSaveTimers[timerKey]=setTimeout(async()=>{
+    delete manualLegSaveTimers[timerKey];
+    const ok=await saveMetadata();
+    if(moveKey(currentMoveRow)===key){
+      setManualLegSaveStatus(ok?'':'Could not save leg notes');
+    }
+  },500);
+}
+
+function renderManualLegReviews(focusId){
+  const host=document.getElementById('manual-leg-list');
+  if(!host)return;
+  host.innerHTML='';
+  const r=currentMoveRow;
+  if(!r)return;
+  const legs=normalizeManualLegs(getMeta(r).manualLegs);
+  legs.forEach((leg,index)=>{
+    const item=document.createElement('div');
+    item.className='manual-leg-item';
+    item.dataset.legId=leg.id;
+
+    const head=document.createElement('div');
+    head.className='manual-leg-head';
+    const range=document.createElement('button');
+    range.type='button';
+    range.className='manual-leg-range';
+    const title=document.createElement('strong');
+    title.textContent=`Leg ${index+1}`;
+    range.appendChild(title);
+    range.appendChild(document.createTextNode(` · ${leg.start} → ${leg.end}`));
+    range.addEventListener('mouseenter',()=>showDateRangeHighlight(leg.start,leg.end));
+    range.addEventListener('mouseleave',hideLegHighlight);
+    range.addEventListener('click',()=>showDateRangeHighlight(leg.start,leg.end));
+
+    const remove=document.createElement('button');
+    remove.type='button';
+    remove.className='manual-leg-delete';
+    remove.title=`Delete Leg ${index+1}`;
+    remove.setAttribute('aria-label',`Delete Leg ${index+1}`);
+    remove.textContent='✕';
+    remove.addEventListener('click',()=>{
+      if(!confirm(`Delete Leg ${index+1} (${leg.start} → ${leg.end})?`))return;
+      const next=deleteManualLeg(getMeta(r).manualLegs,leg.id);
+      assignManualLegs(r,next);
+      renderManualLegReviews();
+      persistManualLegs(r,next);
+    });
+
+    const textarea=document.createElement('textarea');
+    textarea.className='manual-leg-notes';
+    textarea.rows=3;
+    textarea.placeholder=`Additional details for Leg ${index+1}…`;
+    textarea.value=leg.notes;
+    textarea.addEventListener('input',()=>scheduleManualLegNoteSave(r,leg.id,textarea.value));
+
+    head.appendChild(range);
+    head.appendChild(remove);
+    item.appendChild(head);
+    item.appendChild(textarea);
+    host.appendChild(item);
+  });
+  if(focusId){
+    requestAnimationFrame(()=>host.querySelector(`[data-leg-id="${CSS.escape(focusId)}"] textarea`)?.focus());
+  }
+}
+
+function cancelManualLegPick(){
+  manualLegPick=null;
+  const add=document.getElementById('manual-leg-add');
+  if(add){add.classList.remove('active');add.textContent='+ Add manual leg';}
+  hideLegHighlight();
+}
+
+function startManualLegPick(){
+  if(!currentMoveRow||!chart)return;
+  setTool('pan');
+  manualLegPick={moveKey:moveKey(currentMoveRow),moveRow:currentMoveRow,start:null};
+  const add=document.getElementById('manual-leg-add');
+  if(add){add.classList.add('active');add.textContent='Pick start…';}
+  flash('Select the first date for the manual leg');
+}
+
+function finishManualLegPick(start,end){
+  const pick=manualLegPick;
+  if(!pick)return;
+  const id=`manual-leg-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+  const created=normalizeManualLegs([{id,start,end,notes:''}])[0];
+  if(!created){cancelManualLegPick();return;}
+  const r=pick.moveRow;
+  const next=normalizeManualLegs([...(getMeta(r).manualLegs||[]),created]);
+  assignManualLegs(r,next);
+  cancelManualLegPick();
+  renderManualLegReviews(created.id);
+  persistManualLegs(r,next);
+}
+
+function handleManualLegChartPick(time){
+  if(!manualLegPick)return false;
+  manualLegClickConsumed=true;
+  setTimeout(()=>{manualLegClickConsumed=false;},0);
+  const date=normalizeManualLegDate(time);
+  if(!date)return true;
+  if(!manualLegPick.start){
+    manualLegPick.start=date;
+    const add=document.getElementById('manual-leg-add');
+    if(add)add.textContent='Pick end…';
+    showDateRangeHighlight(date,date);
+    flash('Select the final date for the manual leg');
+    return true;
+  }
+  finishManualLegPick(manualLegPick.start,date);
+  return true;
 }
 
 async function updateReviewSection() {
@@ -10420,11 +10601,9 @@ document.addEventListener('keydown', (e) => {
 })();
 
 // Leg highlight on chart when hovering review legs
-function showLegHighlight(legEl) {
+function showDateRangeHighlight(start,end) {
   const hl = document.getElementById('leg-highlight');
   if (!hl || !chart) return;
-  const start = legEl.getAttribute('data-start');
-  const end = legEl.getAttribute('data-end');
   if (!start || !end) { hl.style.display = 'none'; return; }
   const x1 = time2p(start);
   const x2 = time2p(end);
@@ -10434,6 +10613,13 @@ function showLegHighlight(legEl) {
   hl.style.left = left + 'px';
   hl.style.width = width + 'px';
   hl.style.display = 'block';
+}
+
+function showLegHighlight(legEl) {
+  showDateRangeHighlight(
+    legEl.getAttribute('data-start'),
+    legEl.getAttribute('data-end')
+  );
 }
 
 function hideLegHighlight() {
@@ -10571,6 +10757,10 @@ document.getElementById('tag-manage-btn').addEventListener('click', () => {
 
 // Study panel event listeners
 document.getElementById('study-toggle-btn').addEventListener('click', toggleStudyPanel);
+document.getElementById('manual-leg-add').addEventListener('click',()=>{
+  if(manualLegPick)cancelManualLegPick();
+  else startManualLegPick();
+});
 
 // AI overlay toggle (MA lines only — swings and pivot have their own)
 document.getElementById('ai-overlay-toggle').addEventListener('click', () => {
@@ -10657,6 +10847,7 @@ document.getElementById('study-add-tag-btn').addEventListener('click', () => {
 document.addEventListener('click', e => {
   const panel = document.getElementById('study-panel');
   const btn = document.getElementById('study-toggle-btn');
+  if(manualLegPick||manualLegClickConsumed)return;
   if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) {
     panel.classList.remove('open');
   }
