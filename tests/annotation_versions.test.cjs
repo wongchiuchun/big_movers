@@ -83,3 +83,23 @@ test('drawing versions preserve legacy data and scope switch, add, delete, reset
   assert.deepEqual(plain(restored.drawings).map(d => d.id), [1, 3, 4, 2]);
   assert.equal(restored.history.length, 1);
 });
+
+test('annotation controls switch and reset only the active version without toolbar overflow', () => {
+  assert.match(html, /class="drawing-version-group"/);
+  assert.match(html, /data-drawing-version="1"/);
+  assert.match(html, /data-drawing-version="2"/);
+  assert.match(html, /data-drawing-version="3"/);
+  assert.match(html, /id="drawing-version-reset"/);
+  assert.doesNotMatch(html, /id="tool-clear"/);
+  assert.match(html, /\.drawing-version-group\s*\{[^}]*flex:\s*0 0 auto/s);
+  assert.match(html, /\.chart-topbar\s*\{[^}]*flex-wrap:\s*wrap/s);
+
+  const redraw = extractFunction(html, 'redrawAll');
+  const add = extractFunction(html, 'addDrawing');
+  const undo = extractFunction(html, 'undoActiveDrawingVersion');
+  const selectRow = extractFunction(html, 'selectRow');
+  assert.match(redraw, /activeDrawings\(/);
+  assert.match(add, /addDrawingToVersion\(/);
+  assert.match(undo, /restoreDrawingVersionFromHistory\(/);
+  assert.match(selectRow, /syncDrawingVersionControls\(\)/);
+});

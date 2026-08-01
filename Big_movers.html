@@ -192,6 +192,20 @@
   .chart-topbar .ma-toggle-btn{width:var(--ctrl);height:var(--ctrl);border-radius:10px;}
   .chart-topbar .ma-toggle-btn.text{width:auto;min-width:var(--ctrl);padding:0 12px;font-size:12px;font-weight:900;letter-spacing:0.02em;font-family:var(--mono);}
   .chart-topbar .ma-toggle-btn.active{border-color:var(--accent);color:var(--accent);}
+  .drawing-version-group{
+    display:flex;align-items:center;flex:0 0 auto;min-width:max-content;height:var(--ctrl);
+    overflow:hidden;border:1px solid var(--border);border-radius:9px;background:var(--bg3);
+  }
+  .drawing-version-label{padding:0 7px;color:var(--muted);font-size:9px;letter-spacing:0.05em;text-transform:uppercase;}
+  .drawing-version-btn,.drawing-version-reset{
+    flex:0 0 27px;width:27px;height:100%;border:0;border-left:1px solid var(--border);
+    background:transparent;color:var(--text-2);font-family:var(--mono);font-size:11px;cursor:pointer;
+  }
+  .drawing-version-btn.active{background:var(--accent);color:var(--bg);font-weight:800;}
+  .drawing-version-btn:hover:not(.active){color:var(--accent);background:var(--bg4);}
+  .drawing-version-reset{color:var(--red);font-size:14px;}
+  .drawing-version-reset:hover{background:color-mix(in srgb,var(--red) 12%,transparent);}
+  .drawing-version-btn:focus-visible,.drawing-version-reset:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
   /* Study drawer */
   .study-float{position:absolute;top:50px;right:16px;z-index:200;background:linear-gradient(180deg,var(--bg3) 0%,var(--bg2) 100%);border:1px solid var(--border-bright);border-radius:16px;padding:20px 22px;width:320px;display:none;box-shadow:0 24px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(212,165,116,0.04);max-height:calc(100vh - 130px);overflow-y:auto;}
   .study-float.open{display:block;}
@@ -827,7 +841,6 @@
   .draw-toolbar.collapsed .tool-group,
   .draw-toolbar.collapsed .tb-sep,
   .draw-toolbar.collapsed #log-toggle,
-  .draw-toolbar.collapsed #tool-clear,
   .draw-toolbar.collapsed #tool-price-range,
   .draw-toolbar.collapsed #tool-date-range,
   .draw-toolbar.collapsed #tool-pan,
@@ -5309,6 +5322,13 @@
         <button id="st-toggle" class="ma-toggle-btn text" title="ML Adaptive SuperTrend overlay" style="margin-left:4px">ST</button>
         <button id="st-cfg-btn" class="ma-toggle-btn text" title="SuperTrend settings" style="margin-left:1px;font-size:9px">⚙</button>
         <button id="txt-notes-toggle" class="ma-toggle-btn text active" title="Toggle text & note annotations" style="margin-left:4px">Txt</button>
+        <div class="drawing-version-group" role="group" aria-label="Annotation versions">
+          <span class="drawing-version-label">Versions</span>
+          <button type="button" data-drawing-version="1" class="drawing-version-btn active" aria-pressed="true">1</button>
+          <button type="button" data-drawing-version="2" class="drawing-version-btn" aria-pressed="false">2</button>
+          <button type="button" data-drawing-version="3" class="drawing-version-btn" aria-pressed="false">3</button>
+          <button type="button" id="drawing-version-reset" class="drawing-version-reset" title="Reset active annotation version" aria-label="Reset active annotation version">↺</button>
+        </div>
         <button id="draw-lock-toggle" class="ma-toggle-btn text" title="Lock drawings (prevent select/edit/drag)" style="margin-left:2px">🔓</button>
         <button id="defs-btn" class="ma-toggle-btn text" title="Setup definitions reference" style="margin-left:2px">Defs</button>
         <button id="study-toggle-btn" class="ma-toggle-btn text" title="Study panel (tags, rating, notes)" style="margin-left:4px">Study</button>
@@ -6285,17 +6305,6 @@
                 </svg>
               </span>
             </button>
-            <button class="tb-btn" id="tool-clear" title="Clear all drawings" aria-label="Clear">
-              <span class="tb-ico" aria-hidden="true">
-                <!-- trash can icon -->
-                <svg viewBox="0 0 20 20">
-                  <path d="M5 6h10" />
-                  <path d="M8 6V4h4v2" />
-                  <path d="M6.5 6l.8 11h5.4l.8-11" />
-                  <path d="M8.5 9v6M10 9v6M11.5 9v6" />
-                </svg>
-              </span>
-            </button>
           </div>
           <div class="placeholder" id="placeholder"><div class="icon">📈</div><p>Select a move from the list to view chart</p></div>
           <div class="loading hidden" id="loading">Loading chart data...</div>
@@ -6543,6 +6552,47 @@ function activeDrawings(key=drawKey()){
   return key?drawingsForVersion(drawings[key],activeDrawingVersion(key)):[];
 }
 
+function syncDrawingVersionControls(){
+  const version=activeDrawingVersion();
+  document.querySelectorAll('[data-drawing-version]').forEach(btn=>{
+    const active=Number(btn.dataset.drawingVersion)===version;
+    btn.classList.toggle('active',active);
+    btn.setAttribute('aria-pressed',active?'true':'false');
+  });
+  const reset=document.getElementById('drawing-version-reset');
+  if(reset){
+    reset.title=`Reset annotation version ${version}`;
+    reset.setAttribute('aria-label',`Reset annotation version ${version}`);
+  }
+}
+
+function setActiveDrawingVersion(version){
+  const dk=drawKey();
+  if(!dk)return;
+  activeDrawingVersions=setDrawingVersionForKey(activeDrawingVersions,dk,version);
+  pendingP1=null;
+  selectedId=null;
+  if(typeof cancelManualLegPick==='function')cancelManualLegPick();
+  document.getElementById('hint')?.classList.add('hidden');
+  chart?.applyOptions({handleScroll:true,handleScale:true});
+  syncDrawingVersionControls();
+  redrawAll();
+}
+
+function resetActiveDrawingVersion(){
+  const dk=drawKey();
+  const version=activeDrawingVersion(dk);
+  if(!dk||!activeDrawings(dk).length)return;
+  const label=dk.replace(/_([^_]*)$/,' $1');
+  if(!confirm(`Reset annotation version ${version} on ${label}? Other versions are not affected.`))return;
+  pushUndo();
+  drawings[dk]=replaceDrawingVersion(drawings[dk],version,[]);
+  selectedId=null;
+  chart?.applyOptions({handleScroll:true,handleScale:true});
+  redrawAll();
+  saveDrawings();
+}
+
 // AI indicator overlay state
 let aiIndicators = null;
 let aiSeries = {};
@@ -6659,7 +6709,7 @@ function syncDrawVars(){
   drawColor=s.color; drawWidth=s.width||2; drawLineStyle=s.style||'solid'; drawFontSize=s.fontSize||12; drawFontFamily=s.fontFamily||'IBM Plex Mono';
 }
 let pendingP1=null;   // first click for ray/seg
-let undoHistory=[];   // [{symbol, snapshot}]
+let undoHistory=[];   // [{moveKey, version, snapshot}]
 let selectedId=null;
 let previewMouseX=0,previewMouseY=0;
 // drag state (global so document listeners can access)
@@ -7946,12 +7996,12 @@ function time2p(t){
 function redrawAll(){
   ctx2.clearRect(0,0,canvas.width,canvas.height);
   const dk=drawKey();
-  if(dk&&drawings[dk]){
+  if(dk&&activeDrawings(dk).length){
     // While a sim is active, skip drawings whose anchor is beyond the current
     // playback bar — otherwise text annotations that name future events ("Aug
     // round-trip to $7.50") leak the move's outcome.
     const cutoff = (window.Sim && Sim.Ctrl && typeof Sim.Ctrl.getCutoffBarTime === 'function') ? Sim.Ctrl.getCutoffBarTime() : null;
-    for(const d of drawings[dk]){
+    for(const d of activeDrawings(dk)){
       if (cutoff != null && _drawingExceedsCutoff(d, cutoff)) continue;
       drawOne(d,d.id===selectedId);
     }
@@ -8405,11 +8455,10 @@ function setTool(t){
   syncDrawVars();
 }
 TOOLS.forEach(t=>document.getElementById('tool-'+t).addEventListener('click',()=>setTool(t)));
-document.getElementById('tool-clear').addEventListener('click',()=>{
-  const dk=drawKey();
-  if(!dk)return;
-  drawings[dk]=[];selectedId=null;redrawAll();saveDrawings();
+document.querySelectorAll('[data-drawing-version]').forEach(btn=>{
+  btn.addEventListener('click',()=>setActiveDrawingVersion(Number(btn.dataset.drawingVersion)));
 });
+document.getElementById('drawing-version-reset').addEventListener('click',resetActiveDrawingVersion);
 
 // ==============================================
 // CHART EVENTS
@@ -8668,7 +8717,8 @@ function setupDrag(){
     e.preventDefault();
     e.stopPropagation();
     pushUndo();
-    drawings[drawKey()]=drawings[drawKey()].filter(dd=>dd.id!==hit);
+    const dk=drawKey();
+    drawings[dk]=removeDrawingFromVersion(drawings[dk],activeDrawingVersion(dk),hit);
     selectedId=null;
     chart.applyOptions({handleScroll:true,handleScale:true});
     redrawAll();
@@ -8707,8 +8757,8 @@ function setupDrag(){
 
 function getDrawing(id){
   const dk=drawKey();
-  if(!dk||!drawings[dk])return null;
-  return drawings[dk].find(d=>d.id===id)||null;
+  if(!dk)return null;
+  return activeDrawings(dk).find(d=>d.id===id)||null;
 }
 
 function applyDrag(id,part,dx,dy){
@@ -8764,8 +8814,8 @@ const ENDPOINT_THRESH=10;
 
 function hitTest(mx,my){
   const dk=drawKey();
-  if(!dk||!drawings[dk])return null;
-  for(const d of[...drawings[dk]].reverse()){
+  if(!dk)return null;
+  for(const d of[...activeDrawings(dk)].reverse()){
     if(isHit(d,mx,my))return d.id;
   }
   return null;
@@ -8773,8 +8823,8 @@ function hitTest(mx,my){
 
 function hitTestFull(mx,my){
   const dk=drawKey();
-  if(!dk||!drawings[dk])return null;
-  for(const d of[...drawings[dk]].reverse()){
+  if(!dk)return null;
+  for(const d of[...activeDrawings(dk)].reverse()){
     const part=getHitPart(d,mx,my);
     if(part)return{id:d.id,part};
   }
@@ -8900,17 +8950,29 @@ function distSeg(px,py,x1,y1,x2,y2){
 function pushUndo(){
   const dk=drawKey();
   if(!dk)return;
-  const snapshot=JSON.parse(JSON.stringify(drawings[dk]||[]));
-  undoHistory.push({symbol:dk,snapshot});
+  const version=activeDrawingVersion(dk);
+  const snapshot=JSON.parse(JSON.stringify(activeDrawings(dk)));
+  undoHistory.push({moveKey:dk,version,snapshot});
   if(undoHistory.length>50)undoHistory.shift();
+}
+
+function undoActiveDrawingVersion(){
+  const dk=drawKey();
+  if(!dk)return false;
+  const version=activeDrawingVersion(dk);
+  const result=restoreDrawingVersionFromHistory(drawings[dk],undoHistory,dk,version);
+  drawings[dk]=result.drawings;
+  undoHistory=result.history;
+  return result.restored;
 }
 
 function addDrawing(d){
   const dk=drawKey();
   if(!dk)return;
   pushUndo();
-  if(!drawings[dk])drawings[dk]=[];
-  d.id=++drawIdCtr;drawings[dk].push(d);redrawAll();
+  d.id=++drawIdCtr;
+  drawings[dk]=addDrawingToVersion(drawings[dk],activeDrawingVersion(dk),d);
+  redrawAll();
 }
 
 // ==============================================
@@ -9015,9 +9077,9 @@ document.addEventListener('keydown',e=>{
     ||document.activeElement.tagName==='TEXTAREA';
   if((e.key==='Delete'||e.key==='Backspace')&&selectedId!=null&&!inInput&&!drawingsLocked){
     const dk=drawKey();
-    if(!dk||!drawings[dk])return;
+    if(!dk)return;
     pushUndo();
-    drawings[dk]=drawings[dk].filter(d=>d.id!==selectedId);
+    drawings[dk]=removeDrawingFromVersion(drawings[dk],activeDrawingVersion(dk),selectedId);
     selectedId=null;
     chart.applyOptions({handleScroll:true,handleScale:true});
     redrawAll();saveDrawings();
@@ -9041,16 +9103,11 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();
     const dk=drawKey();
     if(!dk||!undoHistory.length)return;
-    for(let i=undoHistory.length-1;i>=0;i--){
-      if(undoHistory[i].symbol===dk){
-        drawings[dk]=JSON.parse(JSON.stringify(undoHistory[i].snapshot));
-        undoHistory.splice(i,1);
-        selectedId=null;
-        chart.applyOptions({handleScroll:true,handleScale:true});
-        redrawAll();saveDrawings();
-        flash('Undo');
-        return;
-      }
+    if(undoActiveDrawingVersion()){
+      selectedId=null;
+      chart.applyOptions({handleScroll:true,handleScale:true});
+      redrawAll();saveDrawings();
+      flash('Undo');
     }
     return;
   }
@@ -9947,6 +10004,7 @@ async function selectRow(i){
   currentMoveRow = r;
   _syncWindowBars();
   currentSymbol=r.symbol;
+  syncDrawingVersionControls();
   document.getElementById('ct-sym').textContent=r.symbol;
   document.getElementById('ct-cond').textContent=r.year;
   document.getElementById('ct-gain').textContent=`+${parseFloat(r.gain_pct).toFixed(2)}%`;
