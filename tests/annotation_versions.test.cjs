@@ -110,3 +110,40 @@ test('annotation controls switch and reset only the active version without toolb
   assert.match(reset, /await saveDrawings\(/);
   assert.match(selectRow, /syncDrawingVersionControls\(\)/);
 });
+
+test('drawing saves serialize reset and undo snapshots in call order', async () => {
+  const payloads = [];
+  let active = 0;
+  let maxActive = 0;
+  let releaseFirst;
+  const drawings = { ABVX_2025: [] };
+  const sandbox = {
+    drawings,
+    drawingSaveQueue: Promise.resolve(),
+    flash: () => {},
+    fetch: async (_url, options) => {
+      payloads.push(JSON.parse(options.body));
+      active++;
+      maxActive = Math.max(maxActive, active);
+      if (payloads.length === 1) {
+        await new Promise(resolve => { releaseFirst = resolve; });
+      }
+      active--;
+      return { ok: true };
+    }
+  };
+  vm.createContext(sandbox);
+  const saveSource = extractFunction(html, 'saveDrawings').replace(/^function /, 'async function ');
+  vm.runInContext(saveSource + '\nthis.saveDrawings = saveDrawings;', sandbox);
+
+  const reset = sandbox.saveDrawings();
+  await new Promise(resolve => setImmediate(resolve));
+  drawings.ABVX_2025.push({ id: 1, type: 'text' });
+  const undo = sandbox.saveDrawings();
+  releaseFirst();
+
+  assert.equal(await reset, true);
+  assert.equal(await undo, true);
+  assert.equal(maxActive, 1);
+  assert.deepEqual(payloads.map(payload => payload.ABVX_2025.length), [0, 1]);
+});

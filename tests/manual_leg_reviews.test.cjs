@@ -75,6 +75,7 @@ test('manual leg reviews are optional additional detail below AI review', () => 
   assert.match(html, /if\(manualLegPick\|\|manualLegClickConsumed\)return;/);
   assert.match(extractFunction(html, 'loadIndexInChart'), /if\(manualLegPick\)cancelManualLegPick\(\)/);
   assert.match(extractFunction(html, 'setupDrag'), /if\(manualLegPick\)return;/);
+  assert.match(extractFunction(html, 'setupDrag'), /if\(manualLegPick\|\|manualLegClickConsumed\)return;/);
   assert.match(extractFunction(html, 'clearCurrentMoveRow'), /cancelManualLegPick\(\)/);
   assert.equal((html.match(/currentMoveRow\s*=\s*null/g) || []).length, 2);
   assert.match(extractFunction(html, 'saveMetadata'), /if\s*\(!r\.ok\)/);

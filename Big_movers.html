@@ -6509,6 +6509,7 @@ let chartType='candle'; // 'candle' | 'ohlc'
 let priceColors = { up: '#26a69a', down: '#ef5350' };
 let drawings={};      // {symbol:[{id,type,...}]}
 let drawIdCtr=0;
+let drawingSaveQueue=Promise.resolve();
 let activeDrawingVersions={}; // session-only, keyed by move key
 let manualLegPick=null; // {moveKey, moveRow, start}
 let manualLegClickConsumed=false;
@@ -6849,16 +6850,21 @@ function saveSettings(){
   flash('Settings saved');
 }
 function loadSettings(){try{return JSON.parse(localStorage.getItem('bm_cfg')||'null');}catch(e){return null;}}
-async function saveDrawings(failureMessage='Could not save drawings'){
-  try{
-    const r=await fetch('/api/drawings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(drawings)});
-    if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    flash('Drawings saved');
-    return true;
-  }catch(e){
-    flash(failureMessage);
-    return false;
-  }
+function saveDrawings(failureMessage='Could not save drawings'){
+  const body=JSON.stringify(drawings);
+  const run=drawingSaveQueue.then(async()=>{
+    try{
+      const r=await fetch('/api/drawings',{method:'POST',headers:{'Content-Type':'application/json'},body});
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
+      flash('Drawings saved');
+      return true;
+    }catch(e){
+      flash(failureMessage);
+      return false;
+    }
+  });
+  drawingSaveQueue=run.then(()=>undefined,()=>undefined);
+  return run;
 }
 async function loadDrawings(){
   try{const r=await fetch('/api/drawings');drawings=await r.json();}catch(e){drawings={};}
@@ -8795,6 +8801,7 @@ function setupDrag(){
 
   wrapEl.addEventListener('dblclick',e=>{
     if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
+    if(manualLegPick||manualLegClickConsumed)return;
     if(drawTool!=='pan'||!drawKey()||drawingsLocked)return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
