@@ -181,7 +181,7 @@
     "APLD_2025": {
       "direction": "long",
       "notes": "[Human] No clear pattern. More just a breakout from a downtrend with 200EMA reclaim. Very typical but the momentum was weak between May and Mid Sept - this is what I said about names that would be hard to trade for me because the strong pull back from each high into the 50 EMA was enough to shake me out a few times and in between the entries showed a lof of pullbacks into the 50 EMA. Only the final move after 9 Sept was something I could have considered. The rest would have been very difficult",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout"
       ]
@@ -210,10 +210,11 @@
     "ARWR_2025": {
       "direction": "long",
       "notes": "[AI] Borderline tradable. 77% 10EMA but 13 50SMA touches. Would need wider stops.\n\n[Human] I disagree. I think bulk of the leg was tradable. Entry 1 in Aug ran all the way till late Oct this leg was perfectly tradable and easy to hold through. The consolidation into Nov ws difficult but the reversal on 24 (undercut and rally) was a clear entry which allowed you to ride up to mid Dec. Also tradable",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout",
-        "Double Bottom"
+        "Steady momentum",
+        "momentum burst"
       ]
     },
     "ASTS_2024": {
@@ -229,7 +230,7 @@
     "ASTS_2025": {
       "direction": "long",
       "notes": "[Human] This did not have any particular pattern but a simple breakout. The tradable legs were not easy but there were times when it just worked.",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout"
       ]
@@ -245,16 +246,16 @@
     "AU_2025": {
       "direction": "long",
       "notes": "I think this is arguably a VCP and breakout play but this is also one of thos names that I would not be able to hold. This is the kind of slow moving stock with great trend and when you zoom out you see the smooth trend up but just look that how often it revisits the 50EMA. I would have been stopped out a million times and made no money. Not a setup i would chase",
-      "rating": "",
+      "rating": "C",
       "tags": [
         "VCP",
         "Breakout"
       ]
     },
     "AVAV_2025": {
-      "direction": "",
+      "direction": "long",
       "notes": "Not a double bottom. I believe it was a simple breakout from downtrend. This is not my tradable setup. The entire move took too long to shape up. Only the final leg was reasonably tradable based on my style. The rest. Not so much",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout"
       ]
@@ -290,7 +291,7 @@
     "BBAI_2025": {
       "direction": "long",
       "notes": "[AI] Hard chart. ADR 9.3%, 2 TRAPs (Jun 25, Sep 12) that killed chasers, -43% summer drawdown. 3-week longest streak. Tradable only in narrow spring window and after Oct 13 REAL. Not a style fit — quantum/AI volatility.\n\n[Human] Honestly whilst it looked tradable at times the reality is the strong retrace was a big red flag, the stock almost always retrace 95% of the move with lots of traps. Not one you would like to be in bed with",
-      "rating": "",
+      "rating": "D",
       "tags": [
         "EP",
         "Breakout"
@@ -305,7 +306,7 @@
     "BE_2025": {
       "direction": "long",
       "notes": "Actually closed to a flat base breakout and multiple EP setup. I think the leg on 24 Jul EP was quite tradable all the way until Sept. After which the price action was very loose and it would have been hard to hold through the move",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout",
         "Flat Base",
@@ -330,7 +331,7 @@
     "BITF_2025": {
       "direction": "long",
       "notes": "[AI] Late-breakout story. 5 months of chop $0.85-1.30, then explosive Q4 $1.34 → $6.47 on catalyst cluster (Sep 11 REAL, Oct 15 REAL). Base-above-base structure. Tradable only after Aug character change — earlier chop would stop out.\n\n[Human] - very tradable strong stock which went 5x in a short 2 month run. Sep breakout was clearly tradable. It was a perfect candidate for swing trading",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout",
         "EP"
@@ -347,7 +348,7 @@
     "BTDR_2025": {
       "direction": "long",
       "notes": "[AI] Partially tradable crypto miner. Spring 5-week streak ($7 → $13) was the cleanest early leg, then 3 months chop with 16 50 EMA tests, then autumn recovery $14 → $26. Only 1 logged gap the whole year. Two-window trade.\n\n[Human] very borderline actually not very tradable. Lack of clean movement, sideway movement and chops most of the time.",
-      "rating": "",
+      "rating": "D",
       "tags": [
         "Breakout"
       ]
@@ -364,7 +365,7 @@
     "CAR_2025": {
       "direction": "long",
       "notes": "[AI] Clean short move. 81% 10EMA, 2 50SMA touches. Proof that shorter moves can be very tradable.\n\n[Human] - Agree mostly. The move was quite tradable after the broke of 200MA. The gap down was also a clean signal for short",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout"
       ]
@@ -399,7 +400,7 @@
     "CDE_2025": {
       "direction": "long",
       "notes": "[AI] Best style-fit precious-metal miner of the batch. Low ADR (4.8%), 10-week Aug-Oct 10 EMA streak (library-class for a grinder), 0 50 EMA tests across Q4. Only 1 logged EP but the 10-week autumn streak was the trade.",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout"
       ]
@@ -422,7 +423,7 @@
     "CIEN_2025": {
       "direction": "long",
       "notes": "I think it is not wrong to see this as a VCP setup primarily but I think it seems more like a Cup and handle breakout. Before the EP gap up this one would be a difficult one for me as between Jun and Oct 25 the stock basically tested 50 EMA 3 times. The Aud one was a big shakeout. Knowing myself this period would be very difficult to trade for me most likely will end with a small loss and give up on the name. The best entry from a trading point of view is actually Sep 25 on the EP day (or D+2 when you see no weakness). That move up was so power ful and relatively easy to hold if you work with 10EMA/ 20EMA. you would be able to hold till end Nov before you are stopped out",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "EP",
         "VCP",
@@ -440,7 +441,7 @@
     "CIFR_2025": {
       "direction": "long",
       "notes": "I think it is a round bottom breakout. The entire move is quite tradable with the bulk of the move respecting 10MA. A very tradable setup for me",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Round Bottom Breakout"
       ]
@@ -466,7 +467,7 @@
     "CLS_2025": {
       "direction": "long",
       "notes": "[AI] CIFR-quality chart. 85% 10EMA, 0 50SMA touches during trend. Clean 10EMA tracking May-Jul (12 weeks). Aug+Sep EPs accelerated the move. One of the best charts in the 2025 library.\n\n[Human] I think this could be broken down into 2 legs. The leg between Apr and Sep would have been very tradable based on my style. However the mid sept move onwards was less clean with constant chopping below 20 EMA all the way until late Oct. Even on breakout in mid Oct the price pulled back hard to touch the EMA. It was perhaps a one leg swing mostly",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout",
         "EP"
@@ -485,7 +486,7 @@
     "COHR_2025": {
       "direction": "long",
       "notes": "[AI] Tradable May-Aug 10EMA trend, then Aug 15 -32% weekly shakeout destroyed it. Recovery in Sep-Dec with Nov EP. The shakeout is the defining event — ends most positions.\n\n[Human] Agree with assessment. The movement afterwards were trailing 20 EMA with a lot of undercuts. Not my favorite target",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout",
         "Flat Base",
@@ -519,7 +520,7 @@
     "CRCL_2025": {
       "direction": "long",
       "notes": "[AI] IPO parabolic, not a setup. 12-day $64 → $299 with 100% 10 EMA tracking but 0 50 SMA tests and no base — nowhere to size a position. Textbook untradable for this style. Skip.\n\n[Human] REquire a different playbook for IPO The initial consolidation range was tradable but requires users to look past valuation and initial gain. Not easy. Mostly trap after the initial move. lower highs and lower lows",
-      "rating": "",
+      "rating": "D",
       "tags": [
         "Breakout"
       ]
@@ -537,7 +538,7 @@
     "CRDO_2025": {
       "direction": "long",
       "notes": "[AI] CRDO is the worst EP stock in library — 0 good, 4 traps. Proves that EP close quality filter is essential.\n\n[Human] Not exactly. The stock had a orderly setup for 4 months which were very tradable. Mostly respecting 10 EMA. the acceleration happened in Sept with an undercut and rally",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout",
         "Cup and Handle Breakout"
@@ -546,7 +547,7 @@
     "CRML_2025": {
       "direction": "long",
       "notes": "[AI] Tradable in narrow windows. High ADR (14.0%), -49% drawdown, 11 logged gaps mostly volatile. 3-week Aug streak was clean; Oct 6 MEGA +44% vol 12.6x close@32% was catalyst-driven blow-off (trim-zone). Late Oct 13-14 REALs were top-cycle.",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "EP",
         "Breakout"
@@ -572,7 +573,7 @@
     "CRWV_2025": {
       "direction": "long",
       "notes": "In hindsight this was a fantastic trade with the entire move right above 10MA strong moves up almost non-stop. The challenge was in the huge pullback that happened above 10MA - I would have felt so uncomfortable to hodl onto the name and there would be a good chance I exit in late May instead",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "IPO Base"
       ]
@@ -589,7 +590,7 @@
     "DAVE_2025": {
       "direction": "long",
       "notes": "[AI] May 8 EP is a textbook example — +25% gap, 5.6x vol, close at 98% of range. Validates EP close quality filter. 8-week 10EMA run after. But Jul collapse (-31% in one week) ended the move violently.\n\n[Human] a very tradable move with price respecting 10 EMA amost the entire time. using a 10EMA stop is a very good tactic here",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "EP",
         "Episodic Pivot"
@@ -664,7 +665,7 @@
     "EOSE_2025": {
       "direction": "long",
       "notes": "[AI] Two-window battery storage. May 7 REAL vol 4.9x close@86% kicks spring leg. Summer chop. Sep 11 → Oct 16 5-week 10 EMA streak $9 → $19 acceleration was primary trade. Oct 13 REAL D+5 save after Oct 6 TRAP.\n\n[Human] Not a clean easy name. Sept to Mid Oct leg was very tradable but rest of the time the moves would stop the trader out on  a loss. Not a nice chart overall but partially tradable",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout",
         "EP"
@@ -681,7 +682,7 @@
     "FLNC_2025": {
       "direction": "long",
       "notes": "[AI] Not a style fit. 8.9% ADR, only 1 REAL EP late in the move (15 Oct), 14 50 EMA tests. +647% headline but the holding experience is brutal. Battery-storage name with rotation flow, not a tradable trend.\n\n[Human] Looked order at a glance but the constant retracing and the slow move up made it hard to trade. only real tradable leg was in fact Sep to Nov",
-      "rating": "",
+      "rating": "C",
       "tags": [
         "EP"
       ]
@@ -746,7 +747,7 @@
     "GLXY_2025": {
       "direction": "long",
       "notes": "This is more like a Cup and Handle breakout. The move was not very clean until the general market sentiment became very strong in September. the only tradable leg was then. In reality this was one I traded and failed to profit much from it given how difficult it is to hold. Not my kind of trade",
-      "rating": "",
+      "rating": "D",
       "tags": [
         "Cup and Handle Breakout",
         "Breakout"
@@ -770,7 +771,7 @@
     "GRAL_2025": {
       "direction": "long",
       "notes": "[AI] Two-window biotech. Spring-summer leg $22 → $43 tradable; summer -42% drawdown; autumn 8-week streak $35 → $107 was gold window. Oct 20 TRAP +15% close@25% was explicit exit. Binary-catalyst risk ever-present.",
-      "rating": "",
+      "rating": "C",
       "tags": [
         "Breakout",
         "EP"
@@ -788,7 +789,7 @@
     "HIVE_2025": {
       "direction": "long",
       "notes": "[AI] Two-window crypto miner. Early 5-week streak Apr-May, then 3 months chop, then Sep 12 REAL kicks off autumn leg $2.90 → $6.60. ADR 7.1%. Main trade: Aug-Oct autumn window.",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout",
         "EP"
@@ -797,7 +798,7 @@
     "HL_2025": {
       "direction": "long",
       "notes": "[AI] Library-class 11-week Aug-Oct 10 EMA streak — silver miner. Low ADR (5.0%), slow but sustained. Aug 7 MID +14% was character change. Nov 6 TRAP close@11% was exit near top. Late-Dec recovery window bonus.",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout"
       ]
@@ -823,7 +824,7 @@
     "HOOD_2025": {
       "direction": "long",
       "notes": "Very Classic VCP setup all the way through Apr May and Jun. Like the fact that it was above 10 EMA most of the time during the move with nice price action along the way",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "VCP"
       ]
@@ -839,7 +840,7 @@
     "HUT_2025": {
       "direction": "long",
       "notes": "[AI] Cleanest miner of the batch. ADR 7.2%, only 7 50 EMA tests across 134 days, autumn leg $26 → $54 with 85% 10 EMA and 0 50 EMA tests. Oct 10 TRAP was the explicit exit signal. Tradable end-to-end.",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout"
       ]
@@ -880,7 +881,7 @@
     "IONQ_2025": {
       "direction": "long",
       "notes": "[AI] Quantum-stock pair with QBTS. 8.1% ADR, 17 50 SMA tests, 28% drawdown. Only the Apr 22 - May 29 or Aug 20 - Oct 13 sub-windows were tradable. Waiting for the character-change is the whole edge.",
-      "rating": "",
+      "rating": "C",
       "tags": [
         "Breakout"
       ]
@@ -904,7 +905,7 @@
     "IREN_2025": {
       "direction": "long",
       "notes": "[AI] Tradable despite high ADR. 10-week 10 EMA streak Aug 6 → Oct 16. Three TRAPs (Aug 29, Oct 10, Nov 3) that didn't break trend — crypto-miner volatility profile but the trend was clean enough to hold. +1400% from $5.12 to $76.\n\n[Human] - actually a very very tradable chart. All the way from May. It had a monster 6 month run that mostly respect 10 EMA with fakeouts but still held the EMA. It is just that simple. One to study and try to find",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout"
       ]
@@ -912,7 +913,7 @@
     "JOBY_2025": {
       "direction": "long",
       "notes": "[AI] Tradable EP-driven mover. 5 REAL EPs in 10 weeks (28 May, 9 Jun, 15 Jul, 16 Jul, 4 Aug), only 1 TRAP absorbed. Final stretch tracks 10 EMA on essentially every bar. Fast 82-day move — eVTOL story stock with cleanest EP chain in the library.",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "EP",
         "Episodic Pivot"
@@ -930,7 +931,7 @@
     "KSS_2025": {
       "direction": "long",
       "notes": "[AI] -52% DD is 2nd worst in library. 87% underwater. Untradable.\n\n[Human] Not a tradable stock - weak up trend. Slow moving, lots of undercut of EMAs, not my target play",
-      "rating": "",
+      "rating": "C",
       "tags": [
         "Breakout"
       ]
@@ -938,7 +939,7 @@
     "KTOS_2025": {
       "direction": "long",
       "notes": "[AI] KTOS is a 20EMA stock (87% adherence). 10EMA trader would struggle but 20EMA approach works.\n\n[Human] partially agree. I think it takes more than the 20 EMA rule to trade this one well. Apr through Jul the moves were slow and not clean. Constant test of faith. 11 Jul EP was a clean move for a whie but Aug was mostly sideway movements. Sept had 4 days of undercut. These are all heavy signs of manipulations. Only the Sep leg was clean",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout",
         "VCP"
@@ -947,7 +948,7 @@
     "LAC_2025": {
       "direction": "long",
       "notes": "[AI] Catalyst-dependent. 4 months of chop with 39 50 EMA touches — untradable — then Sep 24 MEGA gap +65% vol 12.3x close@78% REAL (DOE news) launches the move. Without the catalyst this chart was a skip.",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "EP",
         "Episodic Pivot"
@@ -956,7 +957,7 @@
     "LAES_2025": {
       "direction": "long",
       "notes": "[AI] Untradable grind. Loose 10 EMA adherence, only 2 logged REAL EPs across 133 days vs 9 TRAPs. Oct 9 REAL → Oct 10 TRAP D+1 rejection pattern confirms the pumps don't hold. Skip.\n\n[Human] partially tradable but really wide and lose on the Sept leg. It would have been partially tradable setup but not the best one given how deep the pull backs are. This one really is something of a hit an run and need to keep size right",
-      "rating": "",
+      "rating": "C",
       "tags": [
         "EP"
       ]
@@ -973,7 +974,7 @@
     "LCID_2025": {
       "direction": "long",
       "notes": "[AI] News-driven parabolic. 26-day +1181% on Saudi investment news. 96% 10 EMA tracking but first week unsizeable — only the Sep 9-17 tight consolidation gave a clean entry. EV meme-style velocity.",
-      "rating": "",
+      "rating": "E",
       "tags": [
         "Breakout"
       ]
@@ -981,7 +982,7 @@
     "LEU_2025": {
       "direction": "long",
       "notes": "The pivot was nicely identified. (not sure if it was backward looking, if it was identifiable on a forward looking this would be valuable). The setup is a weak VCP because there is only on contraction. I would see this more of a EP kind of setup. This entire move is quite tradable for my style athough I would likely be giving back quite a bit in the August pullback. The Sep setup requires not giving up on the stock in watchlsit",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "VCP",
         "EP"
@@ -990,7 +991,7 @@
     "LITE_2025": {
       "direction": "long",
       "notes": "[AI] Clean tradable +780%. Three TRAP gaps (4 Jun, 27 Oct, 10 Nov) that never broke trend plus one REAL EP (5 Nov) that ignited the parabolic. Lesson: TRAP close-quality without a base break is noise, not exit.",
-      "rating": "",
+      "rating": "A",
       "tags": [
         "Breakout",
         "Episodic Pivot"
@@ -1005,13 +1006,30 @@
         "Parabolic"
       ]
     },
+    "LUMN_2024": {
+      "direction": "long",
+      "notes": "Looked tradable when zoomed out but lots of wide and loose move all over the place. Not an easy one for sure",
+      "rating": "C",
+      "tags": [
+        "momentum burst",
+        "wide and loose"
+      ]
+    },
     "LUMN_2025": {
       "direction": "long",
       "notes": "[AI] Telecom slow grinder. Only the Sep 25 → Nov 3 5-week autumn 10 EMA streak was tradable. Oct 27 REAL +7% close@96% was the only clean EP of the year. Spring-summer was chop.",
-      "rating": "",
+      "rating": "B",
       "tags": [
         "Breakout",
         "EP"
+      ]
+    },
+    "LUNR_2024": {
+      "direction": "long",
+      "notes": "Some legs tradable. Mostly wide and loose. Long consolidation",
+      "rating": "C",
+      "tags": [
+        "Steady momentum"
       ]
     },
     "LWLG_2026": {
@@ -1770,22 +1788,27 @@
         "Tightness"
       ]
     },
-    "LUMN_2024": {
-      "tags": [
-        "momentum burst",
-        "wide and loose"
-      ],
-      "rating": "C",
-      "direction": "long",
-      "notes": "Looked tradable when zoomed out but lots of wide and loose move all over the place. Not an easy one for sure"
-    },
-    "LUNR_2024": {
+    "MMYT_2024": {
       "tags": [
         "Steady momentum"
       ],
       "rating": "C",
       "direction": "long",
-      "notes": "Some legs tradable. Mostly wide and loose. Long consolidation"
+      "notes": "This is one of those names that eat you alive. The constant stop hunting and reclaim makes it a poor candidate",
+      "manualLegs": [
+        {
+          "id": "manual-leg-1785600572454-d5nach",
+          "start": "2023-07-27",
+          "end": "2024-04-08",
+          "notes": "This was the best leg to trade"
+        },
+        {
+          "id": "manual-leg-1785600593555-33f92b",
+          "start": "2024-04-25",
+          "end": "2024-05-23",
+          "notes": "Still possible but easy money already gone"
+        }
+      ]
     }
   },
   "version": 1
