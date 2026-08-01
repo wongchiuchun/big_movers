@@ -20465,9 +20465,11 @@ Sim.Ctrl = (function(){
     var yearEl = $('#portsim-rand-year');
     var countEl = $('#portsim-rand-count');
     var balancedEl = $('#portsim-rand-noise');
+    var extendedEl = $('#portsim-rand-extended');
     var year = parseInt(yearEl && yearEl.value, 10);
     var count = parseInt(countEl && countEl.value, 10);
     var balancedOn = !!(balancedEl && balancedEl.checked);
+    var extendedOn = !!(extendedEl && extendedEl.checked);
     if (!Number.isFinite(year)) { setStatus('Pick a year first.', 'error'); return; }
     if (!Number.isFinite(count) || count < 1) count = 6;
     count = Math.min(count, MAX_ROWS);
@@ -20484,7 +20486,7 @@ Sim.Ctrl = (function(){
         }
         var seed = _newBasketSeed();
         var rng = PortSimBasket.createRng(seed + ':legacy-window');
-        var windowRange = _makeRandomWindow(year, rng);
+        var windowRange = _makeRandomWindow(year, rng, extendedOn);
         var picked = sameYear.slice(0, count);
         var roles = {};
         picked.forEach(function (row) { roles[row.symbol] = 'mover'; });
@@ -20514,6 +20516,7 @@ Sim.Ctrl = (function(){
         rows: values[0],
         manifest: values[1],
         loadBars: loadBars,
+        extended: extendedOn,
         basketApi: window.PortSimBasket
       }).then(function (result) {
         if (!result.selection) {
@@ -30487,14 +30490,18 @@ Sim.Ctrl = (function(){
         </div>
         <div class="fetch-field">
           <label>&nbsp;</label>
-          <button type="button" id="portsim-rand-btn" title="Pick N random tickers from this year and a random 4–6 month window">🎲 Randomize</button>
+          <button type="button" id="portsim-rand-btn" title="Pick N random tickers and dates: 4–6 months normally, or 6–9 months with Extended timeframe">🎲 Randomize</button>
         </div>
       </div>
       <label class="portsim-randomize-noise" for="portsim-rand-noise">
         <input type="checkbox" id="portsim-rand-noise" checked>
         <span>⚖️ Balanced basket — combines same-year movers, liquid market anchors, and cross-year candidates using local price data only.</span>
       </label>
-      <div class="portsim-randomize-hint">Builds a hidden balanced mix for a random 4–6 month window. Turn it off for legacy same-year-only selection. Replaces current basket rows and dates.</div>
+      <label class="portsim-randomize-noise" for="portsim-rand-extended">
+        <input type="checkbox" id="portsim-rand-extended">
+        <span>⏳ Extended timeframe — random 6–9 month window (up to about 180 trading days), with cross-year periods allowed.</span>
+      </label>
+      <div class="portsim-randomize-hint">Uses a random 4–6 month window normally, or 6–9 months with Extended timeframe. Turn Balanced basket off for legacy same-year-only selection. Replaces current basket rows and dates.</div>
     </div>
 
     <div class="portsim-section-title">
