@@ -8055,6 +8055,41 @@ function _drawingTimeKey(time){
   return null;
 }
 
+function normalizeManualLegDate(value){
+  const key=_drawingTimeKey(value);
+  if(key==null)return null;
+  const text=String(key).padStart(8,'0');
+  return`${text.slice(0,4)}-${text.slice(4,6)}-${text.slice(6,8)}`;
+}
+
+function normalizeManualLegs(value){
+  if(!Array.isArray(value))return[];
+  return value.map((leg,index)=>{
+    const source=leg&&typeof leg==='object'?leg:{};
+    let start=normalizeManualLegDate(source.start);
+    let end=normalizeManualLegDate(source.end);
+    if(!start||!end)return null;
+    if(start>end)[start,end]=[end,start];
+    return{
+      ...source,
+      id:String(source.id||`legacy-${index}-${start}-${end}`),
+      start,
+      end,
+      notes:String(source.notes||'')
+    };
+  }).filter(Boolean).sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end));
+}
+
+function updateManualLegNotes(legs,id,notes){
+  return normalizeManualLegs(legs).map(leg=>
+    leg.id===id?{...leg,notes:String(notes||'')}:leg
+  );
+}
+
+function deleteManualLeg(legs,id){
+  return normalizeManualLegs(legs).filter(leg=>leg.id!==id);
+}
+
 function _drawingExceedsCutoff(d, cutoffTime){
   if (!d || cutoffTime==null) return false;
   if (d.type === 'hline') return false;
