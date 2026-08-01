@@ -73,6 +73,46 @@ test('manual leg reviews are optional additional detail below AI review', () => 
   assert.doesNotMatch(extractFunction(html, 'renderManualLegReviews'), /study-notes/);
   assert.doesNotMatch(extractFunction(html, 'cancelManualLegPick'), /manualLegClickConsumed\s*=\s*false/);
   assert.match(html, /if\(manualLegPick\|\|manualLegClickConsumed\)return;/);
+  assert.match(extractFunction(html, 'loadIndexInChart'), /if\(manualLegPick\)cancelManualLegPick\(\)/);
+  assert.match(extractFunction(html, 'setupDrag'), /if\(manualLegPick\)return;/);
+  assert.match(extractFunction(html, 'clearCurrentMoveRow'), /cancelManualLegPick\(\)/);
+  assert.equal((html.match(/currentMoveRow\s*=\s*null/g) || []).length, 2);
   assert.match(extractFunction(html, 'saveMetadata'), /if\s*\(!r\.ok\)/);
   assert.match(extractFunction(html, 'saveMetadata'), /return false/);
+});
+
+test('metadata saves are serialized in call order', async () => {
+  const payloads = [];
+  let active = 0;
+  let maxActive = 0;
+  let releaseFirst;
+  const metadata = { version: 1, customTags: [], items: { move: { notes: 'first' } } };
+  const sandbox = {
+    metadata,
+    metadataSaveQueue: Promise.resolve(),
+    fetch: async (_url, options) => {
+      payloads.push(JSON.parse(options.body));
+      active++;
+      maxActive = Math.max(maxActive, active);
+      if (payloads.length === 1) {
+        await new Promise(resolve => { releaseFirst = resolve; });
+      }
+      active--;
+      return { ok: true };
+    }
+  };
+  vm.createContext(sandbox);
+  const saveSource = extractFunction(html, 'saveMetadata').replace(/^function /, 'async function ');
+  vm.runInContext(saveSource + '\nthis.saveMetadata = saveMetadata;', sandbox);
+
+  const first = sandbox.saveMetadata();
+  await new Promise(resolve => setImmediate(resolve));
+  metadata.items.move.notes = 'second';
+  const second = sandbox.saveMetadata();
+  releaseFirst();
+
+  assert.equal(await first, true);
+  assert.equal(await second, true);
+  assert.equal(maxActive, 1);
+  assert.deepEqual(payloads.map(payload => payload.items.move.notes), ['first', 'second']);
 });

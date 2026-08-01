@@ -6602,7 +6602,7 @@ function setActiveDrawingVersion(version){
   redrawAll();
 }
 
-function resetActiveDrawingVersion(){
+async function resetActiveDrawingVersion(){
   const dk=drawKey();
   const version=activeDrawingVersion(dk);
   if(!dk||!activeDrawings(dk).length)return;
@@ -6613,7 +6613,7 @@ function resetActiveDrawingVersion(){
   selectedId=null;
   chart?.applyOptions({handleScroll:true,handleScale:true});
   redrawAll();
-  saveDrawings();
+  await saveDrawings(`Could not save reset for annotation version ${version}`);
 }
 
 // AI indicator overlay state
@@ -6650,11 +6650,18 @@ let stConfig = {
 };
 
 let metadata = { version: 1, customTags: [], items: {} };
+let metadataSaveQueue = Promise.resolve();
 const PRESET_TAGS = ['EP','VCP','Parabolic','HTF','Breakout','Flag','Power Earnings Gap','IPO Base','Low Cheat','Other'];
 const RATING_COLORS = { A:'#26a69a', B:'#5cb85c', C:'#f5c842', D:'#ff8c00', E:'#ef5350' };
 
 function moveKey(r) { return r ? `${r.symbol}_${r.year}` : ''; }
 function drawKey() { return moveKey(currentMoveRow) || currentSymbol; }
+function clearCurrentMoveRow(nextSymbol='') {
+  if(manualLegPick)cancelManualLegPick();
+  currentMoveRow=null;
+  currentSymbol=nextSymbol;
+  _syncWindowBars();
+}
 function getMeta(r) {
   const k = moveKey(r);
   return (metadata.items && metadata.items[k]) || { tags:[], rating:'', direction:'', notes:'' };
@@ -6842,11 +6849,16 @@ function saveSettings(){
   flash('Settings saved');
 }
 function loadSettings(){try{return JSON.parse(localStorage.getItem('bm_cfg')||'null');}catch(e){return null;}}
-async function saveDrawings(){
+async function saveDrawings(failureMessage='Could not save drawings'){
   try{
-    await fetch('/api/drawings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(drawings)});
+    const r=await fetch('/api/drawings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(drawings)});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
     flash('Drawings saved');
-  }catch(e){}
+    return true;
+  }catch(e){
+    flash(failureMessage);
+    return false;
+  }
 }
 async function loadDrawings(){
   try{const r=await fetch('/api/drawings');drawings=await r.json();}catch(e){drawings={};}
@@ -7323,18 +7335,23 @@ function setupNameToId(name) {
   return hit ? hit.id : null;
 }
 
-async function saveMetadata() {
-  try {
-    const r = await fetch('/api/metadata', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(metadata)
-    });
-    if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    return true;
-  } catch(e) {
-    return false;
-  }
+function saveMetadata() {
+  const body=JSON.stringify(metadata);
+  const run=metadataSaveQueue.then(async()=>{
+    try {
+      const r = await fetch('/api/metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body
+      });
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  });
+  metadataSaveQueue=run.then(()=>undefined,()=>undefined);
+  return run;
 }
 async function loadMetadata() {
   try {
@@ -8724,6 +8741,7 @@ function setupDrag(){
   let dragUndoIndex=-1;
   wrapEl.addEventListener('mousedown',e=>{
     if(window.Sim&&Sim.Ctrl&&Sim.Ctrl.isPicking&&Sim.Ctrl.isPicking())return;
+    if(manualLegPick)return;
     if(drawTool!=='pan'||e.button!==0||!drawKey()||drawingsLocked)return;
     const rect=wrapEl.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
@@ -8802,6 +8820,7 @@ function setupDrag(){
       syncDrawVars();
       showTextInput(px,py,d.p2.price,d.p2.time,d.text||'',function(txt,payload){
         addDrawing({
+          ...d,
           type:'note',
           p1:d.p1,
           p2:{price:payload.price,time:payload.time},
@@ -8821,7 +8840,21 @@ function setupDrag(){
     toolSettings.text.color=d.color||toolSettings.text.color;
     toolSettings.text.fontSize=d.fontSize||12;
     syncDrawVars();
-    showTextInput(px,py,d.price,d.time,d.text,undefined,d.boxWidth||null);
+    showTextInput(px,py,d.price,d.time,d.text,function(txt,payload){
+      addDrawing({
+        ...d,
+        type:'text',
+        price:payload.price,
+        time:payload.time,
+        text:txt,
+        color:toolSettings.text.color,
+        fontSize:toolSettings.text.fontSize||12,
+        fontFamily:'Arial',
+        wrapWidth:payload.wrapWidth,
+        boxWidth:payload.boxWidth
+      });
+      saveDrawings();
+    },d.boxWidth||null);
   });
 }
 
@@ -9886,8 +9919,7 @@ function applySort(){
     document.getElementById('ct-gain').textContent = '';
     document.getElementById('ct-range').textContent = '';
     document.getElementById('ct-vol').textContent = '';
-    currentMoveRow = null;
-    currentSymbol = '';
+    clearCurrentMoveRow();
   }
 }
 ['f-gain','f-sym','f-year'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
@@ -9988,6 +10020,7 @@ async function loadIndexInChart(idxName){
     alert('Enter a 4-digit year in the Year filter to load an index chart.');
     return;
   }
+  if(manualLegPick)cancelManualLegPick();
   if (activeOhlcvController){
     try { activeOhlcvController.abort(); } catch(e){}
     activeOhlcvController = null;
@@ -10021,9 +10054,7 @@ async function loadIndexInChart(idxName){
     try { if (typeof clearAllRLevels === 'function') clearAllRLevels(); } catch(e){}
     extraCandleMarkers = [];
     currentBars = bars;
-    currentSymbol = sym;
-    currentMoveRow = null;
-    _syncWindowBars();
+    clearCurrentMoveRow(sym);
     // Update chart title strip
     document.getElementById('ct-sym').textContent = idxName + ' (' + sym + ')';
     document.getElementById('ct-cond').textContent = year;
@@ -11253,8 +11284,7 @@ document.addEventListener('click', e => {
       // Close panels and refresh
       modal.classList.remove('open');
       document.getElementById('study-panel').classList.remove('open');
-      currentMoveRow = null;
-      currentSymbol = '';
+      clearCurrentMoveRow();
       applyFilters();
       if (filtered.length) selectRow(0);
       else {

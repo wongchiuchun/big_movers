@@ -97,9 +97,16 @@ test('annotation controls switch and reset only the active version without toolb
   const redraw = extractFunction(html, 'redrawAll');
   const add = extractFunction(html, 'addDrawing');
   const undo = extractFunction(html, 'undoActiveDrawingVersion');
+  const edit = extractFunction(html, 'setupDrag');
+  const save = extractFunction(html, 'saveDrawings');
+  const reset = extractFunction(html, 'resetActiveDrawingVersion');
   const selectRow = extractFunction(html, 'selectRow');
   assert.match(redraw, /activeDrawings\(/);
   assert.match(add, /addDrawingToVersion\(/);
   assert.match(undo, /restoreDrawingVersionFromHistory\(/);
+  assert.ok((edit.match(/\.\.\.d/g) || []).length >= 2, 'text and note edits preserve unknown drawing fields');
+  assert.match(save, /if\s*\(!r\.ok\)/);
+  assert.match(save, /return false/);
+  assert.match(reset, /await saveDrawings\(/);
   assert.match(selectRow, /syncDrawingVersionControls\(\)/);
 });
