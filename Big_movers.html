@@ -20261,14 +20261,18 @@ Sim.Ctrl = (function(){
     }).join('');
   }
 
-  function _makeRandomWindow(year, rng) {
+  function _makeRandomWindow(year, rng, extended) {
     var startMonth = Math.floor(rng() * 8); // Jan..Aug
     var startDay = 1 + Math.floor(rng() * 28);
-    var windowDays = 120 + Math.floor(rng() * 61);
+    var minDays = extended ? 180 : 120;
+    var dayVariants = extended ? 91 : 61;
+    var windowDays = minDays + Math.floor(rng() * dayVariants);
     var start = new Date(Date.UTC(year, startMonth, startDay));
     var end = new Date(Date.UTC(year, startMonth, startDay + windowDays));
-    var yearEnd = new Date(Date.UTC(year, 11, 31));
-    if (end.getTime() > yearEnd.getTime()) end = yearEnd;
+    if (!extended) {
+      var yearEnd = new Date(Date.UTC(year, 11, 31));
+      if (end.getTime() > yearEnd.getTime()) end = yearEnd;
+    }
     return { start: _toDateStr(start), end: _toDateStr(end) };
   }
 
@@ -20286,19 +20290,10 @@ Sim.Ctrl = (function(){
     var size = Math.max(1, Math.min(10, Math.trunc(Number(options.size) || 6)));
     var seed = String(options.seed || '');
     var loadBars = options.loadBars;
+    var extended = !!options.extended;
     var rng = api.createRng(seed + ':windows');
     var makeWindow = options.makeWindow || function () {
-      var startMonth = Math.floor(rng() * 8);
-      var startDay = 1 + Math.floor(rng() * 28);
-      var windowDays = 120 + Math.floor(rng() * 61);
-      var startDate = new Date(Date.UTC(year, startMonth, startDay));
-      var endDate = new Date(Date.UTC(year, startMonth, startDay + windowDays));
-      var lastDate = new Date(Date.UTC(year, 11, 31));
-      if (endDate.getTime() > lastDate.getTime()) endDate = lastDate;
-      return {
-        start: startDate.toISOString().slice(0, 10),
-        end: endDate.toISOString().slice(0, 10)
-      };
+      return _makeRandomWindow(year, rng, extended);
     };
     var dataStart = String(manifest.data_start || '');
     var dataEnd = String(manifest.data_end || '');
