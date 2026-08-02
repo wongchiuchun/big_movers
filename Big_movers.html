@@ -14014,7 +14014,10 @@ window.Sim = Sim;
     const curve = curveAll.filter(function(pt){ return pt.date <= cutoff; });
     if (!curve.length) return { startDate: null, endDate: null, initialEquity: st.initialEquity || null, days: [] };
     const eventsByDate = {};
-    (st.basket || []).forEach(function(entry){
+    var tradeEntries = window.PortSimAssets
+      ? PortSimAssets.allTradeEntries(st)
+      : (st.basket || []).concat(st.indexEntries || [], st.retiredEntries || []);
+    tradeEntries.forEach(function(entry){
       const sim = entry && entry.sim; if (!sim) return;
       _allEvents(sim).forEach(function(ev){
         if (!ev.date || ev.date > cutoff) return;
@@ -15558,6 +15561,7 @@ window.Sim = Sim;
   function _extractTradesFromSim(sim, bars, ctx){
     ctx = ctx || {};
     const symbol = ctx.symbol || (sim && sim.symbol) || 'POS';
+    const displaySymbol = ctx.displaySymbol || symbol;
     const trades = [];
     if (!sim) return trades;
 
@@ -15624,6 +15628,11 @@ window.Sim = Sim;
       trades.push({
         legIndex: leg.legIndex,
         symbol: symbol,
+        assetType: ctx.assetType || 'stock',
+        entryKey: ctx.entryKey || null,
+        entryInstanceKey: ctx.entryInstanceKey || null,
+        displaySymbol: displaySymbol,
+        dataSymbol: ctx.dataSymbol || symbol,
         // P7: per-leg direction in CSV/JSON exports.
         direction: leg.direction || 'long',
         legId: leg.legId || null,
@@ -15721,7 +15730,14 @@ window.Sim = Sim;
     (payload.basket || []).forEach(function(entry){
       if (!entry || !entry.sim) return;
       tradeRows = tradeRows.concat(
-        _extractTradesFromSim(entry.sim, entry.bars, { symbol: entry.symbol || 'POS' })
+        _extractTradesFromSim(entry.sim, entry.bars, {
+          symbol: entry.symbol || 'POS',
+          assetType: entry.assetType || 'stock',
+          entryKey: entry.entryKey || null,
+          entryInstanceKey: entry.entryInstanceKey || null,
+          displaySymbol: entry.displaySymbol || entry.symbol || 'POS',
+          dataSymbol: entry.dataSymbol || entry.symbol || 'POS'
+        })
       );
     });
     const dep = _deployedPortfolio();
@@ -15839,7 +15855,7 @@ window.Sim = Sim;
       : (payload.basketGeneration || null);
     const basketRoles = {};
     (payload.basket || []).forEach(function(entry){
-      if (!entry || !entry.symbol || Object.prototype.hasOwnProperty.call(basketRoles, entry.symbol)) return;
+      if (!entry || (entry.assetType || 'stock') !== 'stock' || !entry.symbol || Object.prototype.hasOwnProperty.call(basketRoles, entry.symbol)) return;
       basketRoles[entry.symbol] = window.PortSimBasket && PortSimBasket.resolveRole
         ? PortSimBasket.resolveRole(basketGeneration, entry.symbol, entry.role)
         : (/^(mover|anchor|noise)$/.test(entry.role) ? entry.role : 'unknown');
@@ -15855,6 +15871,30 @@ window.Sim = Sim;
     if (psState && !psState.runInstanceId){
       psState.runInstanceId = 'inst_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
     }
+    const basketAssets = {};
+    (payload.basket || []).forEach(function(entry){
+      if (!entry) return;
+      const instanceKey = entry.entryInstanceKey || entry.entryKey || ((entry.assetType || 'stock') + ':' + (entry.symbol || 'POS'));
+      basketAssets[instanceKey] = {
+        assetType: entry.assetType || 'stock',
+        entryKey: entry.entryKey || null,
+        entryInstanceKey: entry.entryInstanceKey || instanceKey,
+        displaySymbol: entry.displaySymbol || entry.symbol || 'POS',
+        dataSymbol: entry.dataSymbol || entry.symbol || 'POS',
+        symbol: entry.symbol || 'POS',
+        role: entry.role || null,
+        retired: !!entry._retired
+      };
+    });
+    const activeEntryInstanceKeys = psState && window.PortSimAssets
+      ? PortSimAssets.liveEntries(psState).map(function(entry){ return entry && entry.entryInstanceKey; }).filter(Boolean)
+      : (payload.basket || []).filter(function(entry){ return entry && !entry._retired; })
+          .map(function(entry){ return entry.entryInstanceKey; }).filter(Boolean);
+    const activeStockSymbols = psState && Array.isArray(psState.basket)
+      ? psState.basket.map(function(entry){ return entry && entry.symbol; }).filter(Boolean)
+      : (payload.basket || []).filter(function(entry){
+          return entry && (entry.assetType || 'stock') === 'stock' && !entry._retired;
+        }).map(function(entry){ return entry.symbol; }).filter(Boolean);
     const session = {
       v: 3, id: sessionId, ts: ts,
       runInstanceId: psState ? psState.runInstanceId : null,
@@ -15882,9 +15922,9 @@ window.Sim = Sim;
       simStartDate: payload.firstDate || null,
       simEndDate: payload.lastDate || null,
       basketRoles: basketRoles,
-      activeSymbols: psState && Array.isArray(psState.basket)
-        ? psState.basket.map(function(entry){ return entry && entry.symbol; }).filter(Boolean)
-        : symbols.slice(),
+      basketAssets: basketAssets,
+      activeEntryInstanceKeys: activeEntryInstanceKeys,
+      activeSymbols: activeStockSymbols,
       basketGeneration: basketGeneration
         ? JSON.parse(JSON.stringify(basketGeneration))
         : null,
@@ -22030,7 +22070,8 @@ Sim.Ctrl = (function(){
     _history: [],           // snapshot stack for step-back (capped at _HISTORY_MAX)
     notes: [],              // [{ id, date, text, ts }] — captured via 📝 Notes button
     retiredEntries: [],     // tickers swapped out mid-sim — kept so their trades still count toward session stats
-    entrySequence: 0
+    entrySequence: 0,
+    runSequence: 0
   };
   const _HISTORY_MAX = 300;
   PortSim._state = _state;
@@ -22060,6 +22101,14 @@ Sim.Ctrl = (function(){
     return assetKey + '#' + _state.entrySequence;
   }
 
+  function _liveTradeEntries(){
+    return PortSimAssets.liveEntries(_state);
+  }
+
+  function _allTradeEntries(){
+    return PortSimAssets.allTradeEntries(_state);
+  }
+
   function _tradeActionsAvailable(entry){
     return !(entry && entry._fixedIndex && entry._indexLoadState !== 'ready');
   }
@@ -22077,6 +22126,7 @@ Sim.Ctrl = (function(){
     const card = PortSim.Cards.createCard(host, opts.symbol, initialBars, {});
     const entry = {
       symbol: opts.symbol,
+      displaySymbol: opts.displaySymbol || opts.symbol,
       assetType: opts.assetType || 'stock',
       entryKey: entryKey,
       entryInstanceKey: _newEntryInstanceKey(entryKey),
@@ -22099,6 +22149,10 @@ Sim.Ctrl = (function(){
     if (opts.cacheSymbol) entry.cacheSymbol = opts.cacheSymbol;
     if (opts._fixedIndex) entry._fixedIndex = true;
     if (opts._indexLoadState) entry._indexLoadState = opts._indexLoadState;
+    if (entry._fixedIndex && card.cardEl){
+      const hideBtn = card.cardEl.querySelector('.portcard-hide-btn');
+      if (hideBtn) hideBtn.remove();
+    }
 
     _attachCardActions(entry);
     card.cardEl.addEventListener('click', function(ev){
@@ -22174,6 +22228,18 @@ Sim.Ctrl = (function(){
       entry.lastCloseSeen = initialBars.length ? +initialBars[initialBars.length - 1].close : null;
       entry._indexLoadState = 'ready';
       entry.card.setBadge('idle', 'idle');
+      // Merge the newly-ready trade card into the portfolio clock without
+      // moving the play head back to day zero.
+      _state.unifiedDates = _buildUnifiedDates(
+        _liveTradeEntries(),
+        _state.indexBars || [],
+        _state.startDate,
+        _state.endDate
+      );
+      for (let i = 0; i < _state.unifiedDates.length; i++){
+        if (_state.unifiedDates[i] >= currentDate){ _state.playIdx = i; break; }
+      }
+      _renderAll();
     }).catch(function(err){
       _setFixedIndexUnavailable(runToken, entry, err);
     });
@@ -22207,6 +22273,8 @@ Sim.Ctrl = (function(){
     _state.realizedPnL = 0;
     _state.basketGeneration = basketGeneration;
     _state.reviewFinalized = false;
+    _state.runSequence += 1;
+    _state.runInstanceId = 'inst_' + Date.now().toString(36) + '_' + _state.runSequence.toString(36);
     // shortLocks: { legId → { shares, proceeds, avgEntry } }. Each open short fences
     // its proceeds here. cash is NOT credited at short open; covers settle realized
     // P&L back to cash and decrement the lock.
@@ -22307,7 +22375,7 @@ Sim.Ctrl = (function(){
     // Compute unified dates from union of basket + (later) index.
     // Index bars added in fetchAndLoad — for now compute from basket only,
     // we'll re-merge after the index resolves.
-    _state.unifiedDates = _buildUnifiedDates(_state.basket, [], _state.startDate, _state.endDate);
+    _state.unifiedDates = _buildUnifiedDates(_liveTradeEntries(), [], _state.startDate, _state.endDate);
     if (!_state.unifiedDates.length){
       throw new Error('no overlapping trading days in [' + _state.startDate + ', ' + _state.endDate + ']');
     }
@@ -22376,7 +22444,7 @@ Sim.Ctrl = (function(){
           _state.indexDateMap.set(idxAll[i].time, i);
         }
         // Re-merge unified dates so index trading days are included.
-        _state.unifiedDates = _buildUnifiedDates(_state.basket, idxAll, _state.startDate, _state.endDate);
+        _state.unifiedDates = _buildUnifiedDates(_liveTradeEntries(), idxAll, _state.startDate, _state.endDate);
         // Reset playIdx to start.
         _state.playIdx = 0;
         for (let i = 0; i < _state.unifiedDates.length; i++){
@@ -22895,9 +22963,9 @@ Sim.Ctrl = (function(){
       eqPeakIdx: _state.eqPeakIdx,
       eqMaxDD: _state.eqMaxDD,
       maxDDDays: _state.maxDDDays,
-      entries: _state.basket.map(function(e){
+      entries: _liveTradeEntries().map(function(e){
         return {
-          symbol: e.symbol,
+          entryInstanceKey: e.entryInstanceKey,
           sim: _cloneSim(e.sim),
           lastCloseSeen: e.lastCloseSeen,
           _lastRealized: e._lastRealized
@@ -22928,8 +22996,8 @@ Sim.Ctrl = (function(){
 
     // Restore per-entry sim + reset Track J shadow + repaint chart history.
     const date = _state.unifiedDates[_state.playIdx];
-    _state.basket.forEach(function(e, i){
-      const snapEntry = snap.entries.find(function(x){ return x.symbol === e.symbol; }) || snap.entries[i];
+    _liveTradeEntries().forEach(function(e){
+      const snapEntry = snap.entries.find(function(x){ return x.entryInstanceKey === e.entryInstanceKey; });
       if (!snapEntry) return;
       // Replace sim ref so Track J detects the change and rebuilds markers/stop lines.
       e.sim = snapEntry.sim;
@@ -22950,13 +23018,18 @@ Sim.Ctrl = (function(){
       } catch(err){ console.warn('[PortSim.Ctrl] _stepBack clear:', err); }
       // Rebuild chart bars from the ticker's full history up to (and including)
       // the bar at the new playIdx (or the most recent bar ≤ that date).
-      const lastBarIdx = _findBarIdxAtOrBefore(e.bars, date);
-      const slice = (lastBarIdx >= 0) ? e.bars.slice(0, lastBarIdx + 1) : [];
+      const bars = Array.isArray(e.bars) ? e.bars : [];
+      const lastBarIdx = _findBarIdxAtOrBefore(bars, date);
+      const slice = (lastBarIdx >= 0) ? bars.slice(0, lastBarIdx + 1) : [];
       try { e.card.setData(slice); }
       catch(err){ console.warn('[PortSim.Ctrl] _stepBack setData ' + e.symbol + ':', err); }
       // Reset card badge based on the restored sim's state.
       const sim = e.sim;
-      if (!sim){
+      if (e._fixedIndex && e._indexLoadState !== 'ready'){
+        e.card.setBadge(e._indexLoadState === 'unavailable' ? 'unavailable' : 'loading', 'idle');
+        e.card.setActive(false);
+        if (e._newLegBtn) e._newLegBtn.style.display = 'none';
+      } else if (!sim){
         e.card.setBadge('idle', 'idle');
         e.card.setActive(false);
         if (e._newLegBtn) e._newLegBtn.style.display = 'none';
@@ -23003,10 +23076,12 @@ Sim.Ctrl = (function(){
       _state.playIdx += 1;
       const date = _state.unifiedDates[_state.playIdx];
 
-      // ---- Pass 1: collect engine events per basket entry ----
+      // ---- Pass 1: collect engine events per live trade entry ----
       const allEvents = [];
-      for (let i = 0; i < _state.basket.length; i++){
-        const entry = _state.basket[i];
+      const liveEntries = _liveTradeEntries();
+      for (let i = 0; i < liveEntries.length; i++){
+        const entry = liveEntries[i];
+        if (entry._fixedIndex && entry._indexLoadState !== 'ready') continue;
         const barIdx = entry.dateToBarIdx.get(date);
         if (barIdx == null){
           if (entry.card.setBadge){
@@ -23016,11 +23091,15 @@ Sim.Ctrl = (function(){
               ? (entry.bars[entry.bars.length - 1].time || entry.bars[entry.bars.length - 1].date)
               : null;
             const reason = 'No bar for ' + date + (last ? ' — local CSV ends at ' + last : '')
-              + '. Click to fetch missing bars from Twelve Data.';
-            entry.card.setBadge('stale ↻', 'stale', {
-              title: reason,
-              onClick: function(){ _extendStaleTicker(entry); }
-            });
+              + (entry._fixedIndex ? '.' : '. Click to fetch missing bars from Twelve Data.');
+            if (entry._fixedIndex){
+              entry.card.setBadge('stale', 'stale', { title: reason });
+            } else {
+              entry.card.setBadge('stale ↻', 'stale', {
+                title: reason,
+                onClick: function(){ _extendStaleTicker(entry); }
+              });
+            }
           }
           continue;
         }
@@ -23053,7 +23132,7 @@ Sim.Ctrl = (function(){
       _recomputeRealizedFromCash();
 
       // Detect newly-stopped-out cards → reveal '+ New Entry'.
-      _state.basket.forEach(function(e){
+      _liveTradeEntries().forEach(function(e){
         if (e.sim && (e.sim.stoppedOut || e.sim.closed) && !e.sim.between){
           if (e._newLegBtn) e._newLegBtn.style.display = '';
           e.card.setBadge('between', 'between');
@@ -23076,7 +23155,7 @@ Sim.Ctrl = (function(){
       // rate / profit factor / avg R) reflects every dollar — no leftover
       // unrealized P&L masquerading as "open" through to the summary.
       if (_state.playIdx === _state.unifiedDates.length - 1){
-        _state.basket.forEach(function(e){
+        _liveTradeEntries().forEach(function(e){
           if (!e || !e.sim) return;
           const sim = e.sim;
           if (sim.closed || sim.stoppedOut || sim.between) return;
@@ -23110,8 +23189,7 @@ Sim.Ctrl = (function(){
     let totalRealized = 0;
     // Sum across both live + retired so a swap-out doesn't erase the
     // realized P&L the swapped ticker contributed during its run.
-    const _allEntries = (_state.basket || []).concat(_state.retiredEntries || []);
-    _allEntries.forEach(function(e){
+    _allTradeEntries().forEach(function(e){
       if (!e.sim) return;
       const legSum = (e.sim.legs || []).reduce(function(s, l){ return s + (l.realizedPnL || 0); }, 0);
       totalRealized += legSum + (e.sim.realizedPnL || 0);
@@ -23123,7 +23201,8 @@ Sim.Ctrl = (function(){
   // Render + invariant assertion
   // =====================================================================
   function _renderAll(){
-    _state.basket.forEach(function(e){
+    const liveEntries = _liveTradeEntries();
+    liveEntries.forEach(function(e){
       const snap = _miniPanelSnapshot(e);
       const px = e.lastCloseSeen;
       e.card.setHeader({
@@ -23144,7 +23223,7 @@ Sim.Ctrl = (function(){
 
     let unreal = 0;
     let openCount = 0;
-    _state.basket.forEach(function(e){
+    liveEntries.forEach(function(e){
       if (!e.sim || e.sim.qty <= 0) return;
       const mark = _markFor(e);
       if (mark == null) return;
@@ -23157,12 +23236,12 @@ Sim.Ctrl = (function(){
     // P6 centralized equity via Sim.PortfolioValuation. Replaces duplicated
     // formula at this site (and the two below). Note: we inject mark via a
     // temporary lastCloseSeen so the helper sees the latest price.
-    const _basketForValuation = _state.basket.map(function(e){
+    const _basketForValuation = liveEntries.map(function(e){
       return { sim: e.sim, lastCloseSeen: _markFor(e) };
     });
     const equity = (window.Sim && window.Sim.PortfolioValuation)
       ? window.Sim.PortfolioValuation.computeEquity(_state, _basketForValuation)
-      : _r2(_state.cash + _state.basket.reduce(function(s, e){
+      : _r2(_state.cash + liveEntries.reduce(function(s, e){
           if (!e.sim || e.sim.qty <= 0) return s;
           const mark = _markFor(e);
           if (mark == null) return s;
@@ -23215,8 +23294,8 @@ Sim.Ctrl = (function(){
     // the last bar (after auto-close fired) wouldn't get caught.
     if (!viewOnly &&
         _state.playIdx >= _state.unifiedDates.length - 1 &&
-        _state.basket.some(function(e){ return e && e.sim && e.sim.qty > 0 && !e.sim.closed && !e.sim.stoppedOut && !e.sim.between; })){
-      _state.basket.forEach(function(e){
+        _liveTradeEntries().some(function(e){ return e && e.sim && e.sim.qty > 0 && !e.sim.closed && !e.sim.stoppedOut && !e.sim.between; })){
+      _liveTradeEntries().forEach(function(e){
         if (!e || !e.sim) return;
         const sim = e.sim;
         if (sim.closed || sim.stoppedOut || sim.between) return;
@@ -23265,7 +23344,7 @@ Sim.Ctrl = (function(){
     let unreal = 0;
     // Include retired (swapped-out) tickers so their trades count toward
     // session stats. Active basket first to preserve grid order.
-    const _allBasketForStats = (_state.basket || []).concat(_state.retiredEntries || []);
+    const _allBasketForStats = _allTradeEntries();
     const _portfolioMetrics = (window.SimStats && typeof window.SimStats.computePortfolioMetrics === 'function')
       ? window.SimStats.computePortfolioMetrics({ basket: _allBasketForStats })
       : null;
@@ -23312,12 +23391,13 @@ Sim.Ctrl = (function(){
       };
     });
     // P6: equity via centralized helper.
-    const _basketForValuationS = _state.basket.map(function(e){
+    const _liveBasketForValuationS = _liveTradeEntries();
+    const _basketForValuationS = _liveBasketForValuationS.map(function(e){
       return { sim: e.sim, lastCloseSeen: _markFor(e) };
     });
     const equity = (window.Sim && window.Sim.PortfolioValuation)
       ? window.Sim.PortfolioValuation.computeEquity(_state, _basketForValuationS)
-      : _r2(_state.cash + _state.basket.reduce(function(s, e){
+      : _r2(_state.cash + _liveBasketForValuationS.reduce(function(s, e){
           if (!e.sim || e.sim.qty <= 0) return s;
           const mark = _markFor(e);
           if (mark == null) return s;
@@ -23505,7 +23585,7 @@ Sim.Ctrl = (function(){
             // Merge retired (swapped-out) tickers so their per-leg trades
             // count toward win-rate, profit factor, EV, etc. Same union
             // _showSummary uses for the summary table.
-            basket: (_state.basket || []).concat(_state.retiredEntries || []),
+            basket: _allBasketForStats,
             rows: rows,
             indexName: _state.index || null,
             portfolioMetrics: _portfolioMetrics
@@ -23782,6 +23862,7 @@ Sim.Ctrl = (function(){
     if (!Array.isArray(_state.retiredEntries)) _state.retiredEntries = [];
     _state.retiredEntries.push({
       symbol: prev.symbol,
+      displaySymbol: prev.displaySymbol || prev.symbol,
       role: /^(mover|anchor|noise)$/.test(prev.role) ? prev.role : 'unknown',
       year: prev.year || null,
       bars: prev.bars,
@@ -23880,7 +23961,7 @@ Sim.Ctrl = (function(){
 
       // Re-merge unified dates with the new ticker. Preserve play head by date.
       var prevDate = currentDate;
-      _state.unifiedDates = _buildUnifiedDates(_state.basket, _state.indexBars || [], _state.startDate, _state.endDate);
+      _state.unifiedDates = _buildUnifiedDates(_liveTradeEntries(), _state.indexBars || [], _state.startDate, _state.endDate);
       _state.playIdx = 0;
       for (var k = 0; k < _state.unifiedDates.length; k++){
         if (_state.unifiedDates[k] >= prevDate){ _state.playIdx = k; break; }
@@ -23905,6 +23986,8 @@ Sim.Ctrl = (function(){
     _state: _state,
     _advanceAll: _advanceAll,
     _renderAll: _renderAll,
+    _liveTradeEntries: _liveTradeEntries,
+    _allTradeEntries: _allTradeEntries,
     showSummary: function(opts){
       if (!_state.active){ alert('No active portfolio simulation.'); return; }
       _pause();
@@ -26049,6 +26132,11 @@ Sim.Ctrl = (function(){
   window.PortSim = window.PortSim || {};
 
   // ---- helpers ----
+  function _liveEntries(st){
+    return window.PortSimAssets
+      ? PortSimAssets.liveEntries(st)
+      : (st.basket || []).concat(st.indexEntries || []);
+  }
   function _safe(label, fn){
     try { return fn(); }
     catch(e){
@@ -26577,6 +26665,7 @@ Sim.Ctrl = (function(){
 
   function _onReplaceClick(entry){
     if (!entry) return;
+    if (entry._fixedIndex) return;
     if (!window.PortSim || !window.PortSim.RuntimeTicker){
       if (window.console) console.warn('[Track J] RuntimeTicker not loaded');
       return;
@@ -26591,13 +26680,17 @@ Sim.Ctrl = (function(){
     if (sh.toolbarReady) return;
     if (!_isCardOk(entry.card)) return;
     _safe('ensureToolbar', function(){
-      window.PortSim.CardPanel.ensureToolbar(entry.card, {
+      var toolbar = window.PortSim.CardPanel.ensureToolbar(entry.card, {
         onLegsClick:    function(){ _onLegsClick(entry); },
         onStopsClick:   function(){ _onStopsClick(entry); },
         onCsvClick:     function(){ _onCsvClick(entry); },
         onExpandClick:  function(){ _onExpandClick(entry); },
-        onReplaceClick: function(){ _onReplaceClick(entry); }
+        onReplaceClick: entry._fixedIndex ? null : function(){ _onReplaceClick(entry); }
       });
+      if (entry._fixedIndex && toolbar){
+        var replaceBtn = toolbar.querySelector('button[data-tool="replace"]');
+        if (replaceBtn) replaceBtn.remove();
+      }
       sh.toolbarReady = true;
     });
   }
@@ -26608,7 +26701,7 @@ Sim.Ctrl = (function(){
   function _afterAdvance(){
     var st = window.PortSim && window.PortSim._state;
     if (!st || !st.active) return;
-    var basket = st.basket || [];
+    var basket = _liveEntries(st);
     for (var i = 0; i < basket.length; i++){
       var entry = basket[i];
       if (!entry || !_isCardOk(entry.card)) continue;
@@ -26622,7 +26715,7 @@ Sim.Ctrl = (function(){
   function _afterRender(){
     var st = window.PortSim && window.PortSim._state;
     if (!st || !st.active) return;
-    var basket = st.basket || [];
+    var basket = _liveEntries(st);
     for (var i = 0; i < basket.length; i++){
       var entry = basket[i];
       if (!entry || !_isCardOk(entry.card)) continue;
@@ -26670,16 +26763,16 @@ Sim.Ctrl = (function(){
   function _stateSignature(){
     var st = window.PortSim && window.PortSim._state;
     if (!st || !st.active) return '';
-    var basket = st.basket || [];
+    var basket = _liveEntries(st);
     // Build a compact signature: playIdx + per-entry sim ref id + eventsLog
     // length + qty + stopLevels length. Sim ref id is approximated via a
     // monotonic stamp we attach the first time we see a sim instance.
-    var parts = [String(st.playIdx)];
+    var parts = [String(st.runSequence || 0), String(st.playIdx)];
     for (var i = 0; i < basket.length; i++){
       var e = basket[i];
       if (!e) { parts.push('-'); continue; }
       var sim = e.sim;
-      if (!sim){ parts.push('0'); continue; }
+      if (!sim){ parts.push((e.entryInstanceKey || e.symbol || '-') + ':0:' + (e._indexLoadState || '')); continue; }
       if (sim._trkjId == null){
         _simIdCounter = (_simIdCounter || 0) + 1;
         sim._trkjId = _simIdCounter;
@@ -26688,7 +26781,7 @@ Sim.Ctrl = (function(){
       var stopLen = (sim.stopLevels && sim.stopLevels.length) || 0;
       var firedCount = (sim.stopLevels || []).reduce(function(acc, s){ return acc + (s.fired ? 1 : 0); }, 0);
       var entryBar = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : -1;
-      parts.push(sim._trkjId + ':' + evLen + ':' + stopLen + ':' + firedCount + ':' + sim.qty + ':' + entryBar +
+      parts.push((e.entryInstanceKey || e.symbol || '-') + ':' + sim._trkjId + ':' + evLen + ':' + stopLen + ':' + firedCount + ':' + sim.qty + ':' + entryBar +
                  ':' + (sim.between?'B':'-') + (sim.closed?'C':'-') + (sim.stoppedOut?'S':'-'));
     }
     return parts.join('|');
@@ -26782,7 +26875,8 @@ Sim.Ctrl = (function(){
     }
     // Close any lingering popovers + clean up document listeners.
     try {
-      var basket = (window.PortSim && PortSim._state && PortSim._state.basket) || [];
+      var st = window.PortSim && PortSim._state;
+      var basket = st ? _liveEntries(st) : [];
       basket.forEach(function(e){
         if (e && e.card){
           try { if (window.PortSim.CardPanel.closeLegsPopover) window.PortSim.CardPanel.closeLegsPopover(e.card); } catch(err){}
@@ -26807,7 +26901,8 @@ Sim.Ctrl = (function(){
 
   function _onWindowResize(){
     // Re-call open* for any open popover so positioning + content stay current.
-    var basket = (window.PortSim && PortSim._state && PortSim._state.basket) || [];
+    var st = window.PortSim && PortSim._state;
+    var basket = st ? _liveEntries(st) : [];
     basket.forEach(function(e){
       if (!e || !e.card) return;
       var openKind = _verifyOpenPopover(e.card);
@@ -26819,7 +26914,8 @@ Sim.Ctrl = (function(){
   // Refresh open popover content on every render so live edits / advancing
   // bars don't leave the popover stale (codex review finding #2).
   function _refreshOpenPopovers(){
-    var basket = (window.PortSim && PortSim._state && PortSim._state.basket) || [];
+    var st = window.PortSim && PortSim._state;
+    var basket = st ? _liveEntries(st) : [];
     basket.forEach(function(e){
       if (!e || !e.card) return;
       var openKind = _verifyOpenPopover(e.card);
@@ -27325,6 +27421,16 @@ Sim.Ctrl = (function(){
   if (window.PortSim.Positions) return; // idempotent
 
   function _host(){ return document.getElementById('portsim-positions'); }
+  function _liveEntries(st){
+    return window.PortSimAssets
+      ? PortSimAssets.liveEntries(st)
+      : (st.basket || []).concat(st.indexEntries || []);
+  }
+  function _allEntries(st){
+    return window.PortSimAssets
+      ? PortSimAssets.allTradeEntries(st)
+      : _liveEntries(st).concat(st.retiredEntries || []);
+  }
 
   function _fmt$(n){
     if (n == null || !isFinite(n)) return '—';
@@ -27385,7 +27491,8 @@ Sim.Ctrl = (function(){
     var sim = entry && entry.sim;
     if (!sim || sim.qty <= 0 || sim.between || sim.closed || sim.stoppedOut) return null;
     var mark = _markFor(entry);
-    var unreal = (mark != null && isFinite(mark)) ? sim.qty * (mark - sim.avgCost) : 0;
+    var sgn = sim.direction === 'short' ? -1 : 1;
+    var unreal = (mark != null && isFinite(mark)) ? sim.qty * (mark - sim.avgCost) * sgn : 0;
     var realized = sim.realizedPnL || 0;
     var totalPnL = realized + unreal;
     var rUnits = (sim.initialRisk && sim.initialRisk > 0) ? totalPnL / sim.initialRisk : 0;
@@ -27445,7 +27552,8 @@ Sim.Ctrl = (function(){
     var realized = +st.realizedPnL || 0;
     var unreal = 0;
     var openCount = 0;
-    var basket = st.basket || [];
+    var basket = _liveEntries(st);
+    var metricEntries = _allEntries(st);
     basket.forEach(function(e){
       if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
       var mark = _markFor(e);
@@ -27536,7 +27644,7 @@ Sim.Ctrl = (function(){
         rTrades += 1;
       }
     }
-    basket.forEach(function(e){
+    metricEntries.forEach(function(e){
       if (!e || !e.sim) return;
       var s = e.sim;
       if (Array.isArray(s.legs)) s.legs.forEach(_foldLeg);
@@ -27848,7 +27956,8 @@ Sim.Ctrl = (function(){
     if (sim.qty > 0 && !sim.between && !sim.closed && !sim.stoppedOut){
       var mark = _markFor(entry);
       if (mark != null && isFinite(mark)){
-        realized += sim.qty * (mark - sim.avgCost);
+        var sgn = sim.direction === 'short' ? -1 : 1;
+        realized += sim.qty * (mark - sim.avgCost) * sgn;
       }
     }
     // Roll in any prior-leg realized P&L stored on sim.legs.
@@ -27860,8 +27969,9 @@ Sim.Ctrl = (function(){
     var st = window.PortSim && window.PortSim._state;
     if (!st || !st.active) return;
     if (!_ensureEquityChart()) return;
-    // Reset on new sim — detect via _state ref + initialEquity + startDate.
-    var marker = (st.initialEquity || 0) + '|' + (st.startDate || '') + '|' + (st.basket && st.basket.length || 0);
+    // Reset only when the controller starts a new run. Async index hydration
+    // must not erase an in-progress curve.
+    var marker = String(st.runSequence || 0);
     if (marker !== _lastBootstrapMarker){
       _lastBootstrapMarker = marker;
       _resetEquityChart();
@@ -27884,14 +27994,18 @@ Sim.Ctrl = (function(){
       }
     }
 
-    // Per-position cumulative P&L
-    (st.basket || []).forEach(function(e){
+    // Per-symbol cumulative P&L, including completed history from retired stocks.
+    var pnlBySymbol = {};
+    _allEntries(st).forEach(function(e){
       if (!e || !e.sim) return;
-      var s = _ensurePositionSeries(e.symbol);
       var v = _positionTotalPnL(e);
-      pt.positions[e.symbol] = parseFloat(v.toFixed(2));
+      pnlBySymbol[e.symbol] = (pnlBySymbol[e.symbol] || 0) + v;
+    });
+    Object.keys(pnlBySymbol).forEach(function(symbol){
+      var s = _ensurePositionSeries(symbol);
+      pt.positions[symbol] = parseFloat(pnlBySymbol[symbol].toFixed(2));
       if (!s) return;
-      try { s.update({ time: date, value: pt.positions[e.symbol] }); } catch(err){}
+      try { s.update({ time: date, value: pt.positions[symbol] }); } catch(err){}
     });
     _curve.push(pt);
 
@@ -27923,16 +28037,20 @@ Sim.Ctrl = (function(){
         '</div>'
       );
     }
-    (st.basket || []).forEach(function(e){
+    var pnlBySymbol = {};
+    _allEntries(st).forEach(function(e){
       if (!e || !e.sim) return;
-      var s = _positionSeries[e.symbol];
+      pnlBySymbol[e.symbol] = (pnlBySymbol[e.symbol] || 0) + _positionTotalPnL(e);
+    });
+    Object.keys(pnlBySymbol).forEach(function(symbol){
+      var s = _positionSeries[symbol];
       var color = (s && s._color) || '#888';
-      var v = _positionTotalPnL(e);
+      var v = pnlBySymbol[symbol];
       var cls = _statsCls(v);
       rows.push(
         '<div class="portsim-equity-legend-item">' +
           '<span class="portsim-equity-legend-swatch" style="background:' + color + '"></span>' +
-          '<span class="portsim-equity-legend-sym">' + e.symbol + '</span>' +
+          '<span class="portsim-equity-legend-sym">' + symbol + '</span>' +
           '<span class="portsim-equity-legend-val ' + cls + '">' + _fmt$Signed(v) + '</span>' +
         '</div>'
       );
@@ -27955,7 +28073,7 @@ Sim.Ctrl = (function(){
       _lastBootstrapMarker = null;
       return;
     }
-    var basket = st.basket || [];
+    var basket = _liveEntries(st);
     var snaps = [];
     basket.forEach(function(e){
       var s = _snap(e);
@@ -27994,19 +28112,19 @@ Sim.Ctrl = (function(){
   function _stateSignature(){
     var st = window.PortSim && window.PortSim._state;
     if (!st || !st.active) return '';
-    var basket = st.basket || [];
+    var basket = _liveEntries(st);
     // Compact sig: playIdx | cash | realizedPnL | per-entry { qty | avgCost |
     // lastCloseSeen | stopLevels.length | firedCount | between/closed/stopped }
-    var parts = [String(st.playIdx), String(st.cash), String(st.realizedPnL),
+    var parts = [String(st.runSequence || 0), String(st.playIdx), String(st.cash), String(st.realizedPnL),
                  String(st.eqPeak), String(st.eqMaxDD)];
     for (var i = 0; i < basket.length; i++){
       var e = basket[i];
       var sim = e && e.sim;
-      if (!sim){ parts.push('-'); continue; }
+      if (!sim){ parts.push((e.entryInstanceKey || e.symbol || '-') + ':-:' + (e._indexLoadState || '')); continue; }
       var stopLen = (sim.stopLevels && sim.stopLevels.length) || 0;
       var firedCount = (sim.stopLevels || []).reduce(function(a, s){ return a + (s.fired ? 1 : 0); }, 0);
       parts.push(
-        e.symbol + ':' + sim.qty + ':' + sim.avgCost + ':' + (e.lastCloseSeen || 0) +
+        (e.entryInstanceKey || e.symbol) + ':' + sim.qty + ':' + sim.avgCost + ':' + (e.lastCloseSeen || 0) +
         ':' + stopLen + ':' + firedCount +
         ':' + (sim.between ? 'B' : '-') + (sim.closed ? 'C' : '-') + (sim.stoppedOut ? 'S' : '-')
       );
@@ -28072,6 +28190,7 @@ Sim.Ctrl = (function(){
     var shell = document.getElementById('portsim-shell');
     var btn = document.getElementById('portsim-toggle-index');
     var grid = document.getElementById('portsim-grid');
+    var indexGrid = document.getElementById('portsim-index-grid');
     var inactiveBtn = document.getElementById('portsim-toggle-inactive');
     if (idx) idx.style.height = _state.indexHeight + 'px';
     if (pos) pos.style.height = _state.positionsHeight + 'px';
@@ -28083,6 +28202,10 @@ Sim.Ctrl = (function(){
     if (grid){
       if (_state.hideInactiveCards) grid.classList.add('hide-inactive');
       else grid.classList.remove('hide-inactive');
+    }
+    if (indexGrid){
+      if (_state.hideInactiveCards) indexGrid.classList.add('hide-inactive');
+      else indexGrid.classList.remove('hide-inactive');
     }
     if (inactiveBtn){
       inactiveBtn.textContent = _state.hideInactiveCards ? '👁 Show All' : '👁 Active Only';
@@ -28244,7 +28367,12 @@ Sim.Ctrl = (function(){
       alert('No active portfolio simulation to export.');
       return;
     }
-    var basket = st.basket || [];
+    var liveEntries = window.PortSimAssets
+      ? PortSimAssets.liveEntries(st)
+      : (st.basket || []).concat(st.indexEntries || []);
+    var basket = window.PortSimAssets
+      ? PortSimAssets.allTradeEntries(st)
+      : liveEntries.concat(st.retiredEntries || []);
     var rows = [];
 
     // ---- 1. Header ----
@@ -28256,7 +28384,7 @@ Sim.Ctrl = (function(){
     rows.push('# current_date,' + _csvEscape(curDate || ''));
     rows.push('# current_play_idx,' + (st.playIdx | 0));
     rows.push('# index_benchmark,' + _csvEscape(st.index || 'SPX'));
-    rows.push('# basket_size,' + basket.length);
+    rows.push('# basket_size,' + liveEntries.length);
 
     // ---- 2. Portfolio summary ----
     var initial = +st.initialEquity || 0;
@@ -28265,7 +28393,7 @@ Sim.Ctrl = (function(){
     var unrealOpen = 0;
     var openCount = 0;
     // P6: equity via centralized helper.
-    var _basketForVal = basket
+    var _basketForVal = liveEntries
       .filter(function(e){ return e && e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
       .map(function(e){
         var mk = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen))
@@ -28276,7 +28404,7 @@ Sim.Ctrl = (function(){
     var equity = (window.Sim && window.Sim.PortfolioValuation)
       ? window.Sim.PortfolioValuation.computeEquity(st, _basketForVal)
       : cash;
-    basket.forEach(function(e){
+    liveEntries.forEach(function(e){
       if (!e || !e.sim) return;
       if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
         var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen))
@@ -28306,7 +28434,7 @@ Sim.Ctrl = (function(){
     rows.push('Max Drawdown $,'   + _sgn(maxDDDol));
     rows.push('Max Drawdown %,'   + _sgnPct(maxDDPct));
     rows.push('Open Positions,'   + openCount);
-    rows.push('Basket Size,'      + basket.length);
+    rows.push('Basket Size,'      + liveEntries.length);
 
     // ---- 3. Per-position summary ----
     rows.push('');
@@ -28736,7 +28864,8 @@ Sim.Ctrl = (function(){
     if (!st) return null;
     var sd = st.startDate || '';
     var ed = st.endDate || '';
-    var syms = (st.basket || []).map(function(e){ return e.symbol; }).sort().join('-');
+    var syms = (window.PortSimAssets ? PortSimAssets.liveEntries(st) : (st.basket || []).concat(st.indexEntries || []))
+      .map(function(e){ return e.symbol; }).sort().join('-');
     return STORAGE_PREFIX + sd + '__' + ed + '__' + syms;
   }
   function _loadData(runId){
@@ -28915,7 +29044,7 @@ Sim.Ctrl = (function(){
         document.getElementById('portsim-review-body').innerHTML = '<div class="portsim-review-empty">Start a portfolio sim first, or click 📂 LOAD to open a saved review.</div>';
         return;
       }
-      ctx = st;
+      ctx = _buildMeta();
     }
     var basket = ctx.basket || [];
     var tickerSyms = basket.map(function(e){ return e.symbol; });
@@ -29003,6 +29132,7 @@ Sim.Ctrl = (function(){
         : (/^(mover|anchor|noise)$/.test(e.role) ? e.role : 'unknown');
       return {
         sym: e.symbol,
+        entryInstanceKey: e.entryInstanceKey || null,
         role: role,
         legs: (e.legs || []).length,
         realized: +e.totalRealized || 0,
@@ -29011,8 +29141,11 @@ Sim.Ctrl = (function(){
         retired: !!e.retired
       };
     });
+    var activeEntryInstanceKeys = Array.isArray(ctx.activeEntryInstanceKeys) ? ctx.activeEntryInstanceKeys : null;
     var activeSymbols = Array.isArray(ctx.activeSymbols) ? ctx.activeSymbols : null;
-    var activeTickerRows = activeSymbols
+    var activeTickerRows = activeEntryInstanceKeys
+      ? tickerRows.filter(function(row){ return activeEntryInstanceKeys.indexOf(row.entryInstanceKey) >= 0; })
+      : activeSymbols
       ? tickerRows.filter(function(row){ return activeSymbols.indexOf(row.sym) >= 0; })
       : tickerRows.filter(function(row){ return !row.retired; });
     var currentCounts = window.PortSimBasket && PortSimBasket.countCurrentRoles
@@ -29280,7 +29413,7 @@ Sim.Ctrl = (function(){
     // Extend-to-today button: refresh bars and redraw the same chart host.
     _wireExtendButton(
       document.getElementById('portsim-review-extend-' + sym),
-      sym,
+      ctxEntry.dataSymbol || sym,
       function(bars){
         var host = document.getElementById('portsim-review-chart-' + sym);
         if (!host || !bars || !bars.length) return;
@@ -29296,7 +29429,7 @@ Sim.Ctrl = (function(){
       var phHost = document.getElementById('portsim-review-chart-' + sym);
       if (phHost){
         phHost.innerHTML = '<div class="portsim-review-chart-placeholder">Loading chart…</div>';
-        fetch('/api/ohlcv?symbol=' + encodeURIComponent(sym))
+        fetch('/api/ohlcv?symbol=' + encodeURIComponent(ctxEntry.dataSymbol || sym))
           .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
           .then(function(j){
             var bars = Array.isArray(j) ? j : (j && j.bars) || [];
@@ -29317,10 +29450,13 @@ Sim.Ctrl = (function(){
     // (swapped-out tickers live there). A retired entry has its sim/bars
     // intact so the chart and markers still render.
     var st = window.PortSim._state;
-    var liveEntry = st && (
-      (st.basket || []).filter(function(e){ return e.symbol === sym; })[0] ||
-      (st.retiredEntries || []).filter(function(e){ return e.symbol === sym; })[0]
-    );
+    var tradeEntries = st && (window.PortSimAssets
+      ? PortSimAssets.allTradeEntries(st)
+      : (st.basket || []).concat(st.indexEntries || [], st.retiredEntries || []));
+    var liveEntry = tradeEntries && tradeEntries.filter(function(e){
+      if (ctxEntry.entryInstanceKey && e.entryInstanceKey) return e.entryInstanceKey === ctxEntry.entryInstanceKey;
+      return e.symbol === sym;
+    })[0];
     setTimeout(function(){
       var host = document.getElementById('portsim-review-chart-' + sym);
       if (host && liveEntry) _drawTickerChart(host, liveEntry, legs);
@@ -29608,13 +29744,18 @@ Sim.Ctrl = (function(){
     // toward win/loss, P&L, leg counts, and per-ticker tabs in the review.
     // Live basket goes first so the active grid order stays intact; retired
     // entries land at the end with status='retired'.
-    var basket = (st.basket || []).concat(st.retiredEntries || []);
+    var basket = window.PortSimAssets
+      ? PortSimAssets.allTradeEntries(st)
+      : (st.basket || []).concat(st.indexEntries || [], st.retiredEntries || []);
+    var liveEntries = window.PortSimAssets
+      ? PortSimAssets.liveEntries(st)
+      : (st.basket || []).concat(st.indexEntries || []);
     var initial = +st.initialEquity || 0;
     var cash = +st.cash || 0;
     var realized = +st.realizedPnL || 0;
     var unreal = 0, openCount = 0;
     // P6: equity via centralized helper.
-    var _basketForValM = basket
+    var _basketForValM = liveEntries
       .filter(function(e){ return e.sim && e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut; })
       .map(function(e){
         var mk = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
@@ -29624,7 +29765,7 @@ Sim.Ctrl = (function(){
     var equity = (window.Sim && window.Sim.PortfolioValuation)
       ? window.Sim.PortfolioValuation.computeEquity(st, _basketForValM)
       : cash;
-    basket.forEach(function(e){
+    liveEntries.forEach(function(e){
       if (!e.sim) return;
       if (e.sim.qty > 0 && !e.sim.between && !e.sim.closed && !e.sim.stoppedOut){
         var mark = (e.lastCloseSeen != null && isFinite(e.lastCloseSeen)) ? +e.lastCloseSeen
@@ -29646,6 +29787,7 @@ Sim.Ctrl = (function(){
       index: st.index || 'SPX',
       basketGeneration: basketGeneration,
       activeSymbols: (st.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean),
+      activeEntryInstanceKeys: liveEntries.map(function(e){ return e && e.entryInstanceKey; }).filter(Boolean),
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
@@ -29656,6 +29798,11 @@ Sim.Ctrl = (function(){
         var legs = _legSnapshots(e);
         return {
           symbol: e.symbol,
+          assetType: e.assetType || 'stock',
+          entryKey: e.entryKey || null,
+          entryInstanceKey: e.entryInstanceKey || null,
+          displaySymbol: e.displaySymbol || e.symbol,
+          dataSymbol: e.dataSymbol || e.symbol,
           role: window.PortSimBasket && PortSimBasket.resolveRole
             ? PortSimBasket.resolveRole(basketGeneration, e.symbol, e.role)
             : (/^(mover|anchor|noise)$/.test(e.role) ? e.role : 'unknown'),
@@ -30616,7 +30763,7 @@ Sim.Ctrl = (function(){
     }
   }
   function hide(cardEl){
-    if (!cardEl) return;
+    if (!cardEl || !cardEl.closest || !cardEl.closest('#portsim-grid')) return;
     cardEl.classList.add('is-hidden');
     _refreshHiddenPill();
   }
