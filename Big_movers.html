@@ -4277,6 +4277,24 @@
     background:var(--bg2);
     flex:0 0 auto;
   }
+  .portcard-expand-analysis{
+    display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;
+    font-family:var(--mono);font-size:9px;
+  }
+  .portcard-expand-timeframe{
+    display:flex;overflow:hidden;border:1px solid var(--border-bright);border-radius:6px;
+  }
+  .portcard-expand-timeframe button{
+    border:0;border-right:1px solid var(--border-bright);background:var(--bg3);
+    color:var(--muted);font-family:var(--mono);font-size:9px;padding:5px 8px;cursor:pointer;
+  }
+  .portcard-expand-timeframe button:last-child{border-right:0;}
+  .portcard-expand-timeframe button.is-active{background:var(--accent);color:var(--bg);}
+  .portcard-expand-ema-toggle{
+    display:inline-flex;align-items:center;gap:4px;color:var(--text-2);white-space:nowrap;
+    border:1px solid var(--border);border-radius:6px;padding:4px 7px;background:var(--bg3);cursor:pointer;
+  }
+  .portcard-expand-ema-toggle input{accent-color:var(--accent);}
   .portcard-expand-title{
     font-family:var(--mono);
     font-size:18px;font-weight:700;
@@ -6014,6 +6032,18 @@
               <button class="portcard-expand-action-btn"            data-action="sell"    type="button" hidden>– Sell</button>
               <button class="portcard-expand-action-btn is-stop"    data-action="movestop" type="button" hidden>↕ Stop</button>
               <button class="portcard-expand-action-btn is-danger"  data-action="close"   type="button" hidden>✕ Close</button>
+            </div>
+            <div class="portcard-expand-analysis">
+              <div class="portcard-expand-timeframe" id="portcard-expand-timeframe" aria-label="Expanded chart timeframe">
+                <button type="button" data-timeframe="D" class="is-active">Daily</button>
+                <button type="button" data-timeframe="W">Weekly</button>
+              </div>
+              <label class="portcard-expand-ema-toggle" for="portcard-expand-ema100">
+                <input type="checkbox" id="portcard-expand-ema100">100 EMA
+              </label>
+              <label class="portcard-expand-ema-toggle" for="portcard-expand-ema250">
+                <input type="checkbox" id="portcard-expand-ema250">250 EMA
+              </label>
             </div>
             <span class="portcard-expand-spacer"></span>
             <button class="portcard-expand-close" id="portcard-expand-close" type="button" title="Close (Esc)">×</button>
@@ -22003,6 +22033,7 @@ Sim.Ctrl = (function(){
             /^(mover|anchor|noise)$/.test(basketGeneration.roles[sym])
               ? basketGeneration.roles[sym]
               : 'unknown'),
+        expandedChartPrefs: { timeframe: 'D', ema100: false, ema250: false },
         year: null,
         bars: bars,
         dateToBarIdx: dateToBarIdx,
@@ -23535,6 +23566,7 @@ Sim.Ctrl = (function(){
       var entry = {
         symbol: sym,
         role: 'unknown',
+        expandedChartPrefs: { timeframe: 'D', ema100: false, ema250: false },
         year: null,
         bars: bars,
         dateToBarIdx: dateToBarIdx,
@@ -24564,6 +24596,9 @@ Sim.Ctrl = (function(){
       dateEl:     document.getElementById('portcard-expand-date'),
       statusEl:   document.getElementById('portcard-expand-status'),
       actionsEl:  document.getElementById('portcard-expand-actions'),
+      timeframeEl: document.getElementById('portcard-expand-timeframe'),
+      ema100El:   document.getElementById('portcard-expand-ema100'),
+      ema250El:   document.getElementById('portcard-expand-ema250'),
       closeBtn:   document.getElementById('portcard-expand-close'),
       chartWrap:  null,
       chartHost:  document.getElementById('portcard-expand-chart-host'),
@@ -24643,6 +24678,32 @@ Sim.Ctrl = (function(){
     var idx = _currentPlayIdxForEntry(entry);
     if (idx < 0) return bars.slice();
     return bars.slice(0, idx + 1);
+  }
+
+  function _expandedBarsForTimeframe(revealedBars, timeframe){
+    var bars = Array.isArray(revealedBars) ? revealedBars.slice() : [];
+    if (timeframe !== 'W') return bars;
+    return typeof resampleBars === 'function' ? resampleBars(bars, 'W') : bars;
+  }
+
+  function _expandedMarkerTime(dateText, timeframe){
+    if (timeframe !== 'W' || typeof dateText !== 'string') return dateText;
+    var date = new Date(dateText + 'T00:00:00Z');
+    if (isNaN(date.getTime())) return dateText;
+    var day = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() - (day - 1));
+    return date.toISOString().slice(0, 10);
+  }
+
+  function _expandedPrefs(entry){
+    var saved = entry && entry.expandedChartPrefs;
+    var prefs = {
+      timeframe: saved && saved.timeframe === 'W' ? 'W' : 'D',
+      ema100: !!(saved && saved.ema100),
+      ema250: !!(saved && saved.ema250)
+    };
+    if (entry) entry.expandedChartPrefs = prefs;
+    return prefs;
   }
 
   function _toLWCBars(bars){
@@ -24809,7 +24870,8 @@ Sim.Ctrl = (function(){
   }
 
   // ---------- Chart construction ----------
-  function _buildChart(host, bars){
+  function _buildChart(host, bars, prefs){
+    prefs = prefs || { timeframe: 'D', ema100: false, ema250: false };
     var th = _theme();
     var chart = window.LightweightCharts.createChart(host, {
       width: host.clientWidth || 600,
@@ -24842,6 +24904,8 @@ Sim.Ctrl = (function(){
       { p: 20, color: '#6ee7b7' },
       { p: 50, color: '#fb7185' },
     ];
+    if (prefs.ema100) EMA_DEFS.push({ p: 100, color: '#60a5fa' });
+    if (prefs.ema250) EMA_DEFS.push({ p: 250, color: '#c084fc' });
     var emaSeries = EMA_DEFS.map(function(def){
       return chart.addLineSeries({
         color: def.color,
@@ -25190,7 +25254,13 @@ Sim.Ctrl = (function(){
   // ---------- Annotations: markers + stop lines (cheap, no chart rebuild) ----------
   function _paintAnnotations(entry){
     if (!state.candleSeries) return;
-    try { state.candleSeries.setMarkers(_buildMarkers(entry)); } catch(e){}
+    var prefs = _expandedPrefs(entry);
+    var markers = _buildMarkers(entry).map(function(marker){
+      return Object.assign({}, marker, {
+        time: _expandedMarkerTime(marker.time, prefs.timeframe)
+      });
+    });
+    try { state.candleSeries.setMarkers(markers); } catch(e){}
     // Tear down existing price lines and re-add from current sim state.
     if (state.priceLines && state.priceLines.length){
       state.priceLines.forEach(function(pl){
@@ -25237,6 +25307,77 @@ Sim.Ctrl = (function(){
     _renderLegs(entry);
     _renderStops(entry);
     _paintAnnotations(entry);
+  }
+
+  function _renderAnalysisControls(entry){
+    var d = _dom();
+    var prefs = _expandedPrefs(entry);
+    if (d.timeframeEl){
+      Array.prototype.slice.call(d.timeframeEl.querySelectorAll('button[data-timeframe]')).forEach(function(btn){
+        btn.classList.toggle('is-active', btn.getAttribute('data-timeframe') === prefs.timeframe);
+      });
+    }
+    if (d.ema100El) d.ema100El.checked = prefs.ema100;
+    if (d.ema250El) d.ema250El.checked = prefs.ema250;
+  }
+
+  function _mountChart(){
+    var entry = state.entry;
+    var d = _dom();
+    if (!entry || !d.chartHost) return;
+    _disposeChart();
+    var prefs = _expandedPrefs(entry);
+    var bars = _expandedBarsForTimeframe(_slicedBarsForEntry(entry), prefs.timeframe);
+    try {
+      var built = _buildChart(d.chartHost, bars, prefs);
+      state.chart = built.chart;
+      state.candleSeries = built.candleSeries;
+      state.volSeries = built.volSeries;
+      state.emaSeries = built.emaSeries;
+      _paintAnnotations(entry);
+      state.chartClickHandler = function(){ _onChartClick(); };
+      try { state.chart.subscribeClick(state.chartClickHandler); } catch(e){}
+      var defaultBars = prefs.timeframe === 'W' ? 104 : 180;
+      if (bars.length > 1){
+        var lastIdx = bars.length - 1;
+        var fromIdx = Math.max(0, lastIdx - (defaultBars - 1));
+        try { state.chart.timeScale().setVisibleRange({ from: bars[fromIdx].time, to: bars[lastIdx].time }); } catch(e){}
+      } else {
+        try { state.chart.timeScale().fitContent(); } catch(e){}
+      }
+      if (typeof ResizeObserver !== 'undefined'){
+        state.ro = new ResizeObserver(function(){
+          if (!state.chart) return;
+          var width = d.chartHost.clientWidth, height = d.chartHost.clientHeight;
+          if (width > 0 && height > 0){ try { state.chart.resize(width, height); } catch(e){} }
+        });
+        state.ro.observe(d.chartHost);
+      }
+    } catch(e){
+      if (window.console) console.warn('[ExpandModal] build:', e && e.message);
+    }
+  }
+
+  function _wireAnalysisControls(){
+    var d = _dom();
+    if (d.timeframeEl){
+      d.timeframeEl.onclick = function(ev){
+        var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-timeframe]') : null;
+        if (!btn || !state.entry) return;
+        _expandedPrefs(state.entry).timeframe = btn.getAttribute('data-timeframe') === 'W' ? 'W' : 'D';
+        _renderAnalysisControls(state.entry);
+        _mountChart();
+      };
+    }
+    function onEmaChange(){
+      if (!state.entry) return;
+      var prefs = _expandedPrefs(state.entry);
+      prefs.ema100 = !!(d.ema100El && d.ema100El.checked);
+      prefs.ema250 = !!(d.ema250El && d.ema250El.checked);
+      _mountChart();
+    }
+    if (d.ema100El) d.ema100El.onchange = onEmaChange;
+    if (d.ema250El) d.ema250El.onchange = onEmaChange;
   }
 
   // ---------- Cleanup ----------
@@ -25288,9 +25429,11 @@ Sim.Ctrl = (function(){
     _renderStats(entry);
     _renderLegs(entry);
     _renderStops(entry);
+    _renderAnalysisControls(entry);
 
     // Wire action buttons (idempotent).
     _wireActions();
+    _wireAnalysisControls();
 
     // Show overlay BEFORE building chart so the host has measurable size.
     d.overlay.classList.add('is-open');
@@ -25298,51 +25441,10 @@ Sim.Ctrl = (function(){
     state.isOpen = true;
 
     // Build chart on next frame so layout is committed.
-    var bars = _slicedBarsForEntry(entry);
     var raf = window.requestAnimationFrame || function(cb){ return setTimeout(cb, 16); };
     raf(function(){
-      try {
-        var built = _buildChart(d.chartHost, bars);
-        state.chart = built.chart;
-        state.candleSeries = built.candleSeries;
-        state.volSeries = built.volSeries;
-        state.emaSeries = built.emaSeries;
-        // Apply markers + stop lines via the shared annotation helper.
-        _paintAnnotations(entry);
-        // LWC click subscription — mirrors mini-card bare-click behavior.
-        try {
-          state.chartClickHandler = function(){ _onChartClick(); };
-          state.chart.subscribeClick(state.chartClickHandler);
-        } catch(e){}
-        var DEFAULT_BARS = 180;
-        if (bars.length > 1){
-          var lastIdx = bars.length - 1;
-          var fromIdx = Math.max(0, lastIdx - (DEFAULT_BARS - 1));
-          try {
-            state.chart.timeScale().setVisibleRange({
-              from: bars[fromIdx].time,
-              to: bars[lastIdx].time,
-            });
-          } catch(e){}
-        } else {
-          try { state.chart.timeScale().fitContent(); } catch(e){}
-        }
-      } catch(e){
-        if (window.console) console.warn('[ExpandModal] build:', e && e.message);
-      }
+      _mountChart();
     });
-
-    // Resize observer
-    if (typeof ResizeObserver !== 'undefined' && d.chartHost){
-      state.ro = new ResizeObserver(function(){
-        if (!state.chart) return;
-        var w = d.chartHost.clientWidth, h = d.chartHost.clientHeight;
-        if (w > 0 && h > 0){
-          try { state.chart.resize(w, h); } catch(e){}
-        }
-      });
-      state.ro.observe(d.chartHost);
-    }
 
     state.escHandler = function(ev){
       if (ev.key === 'Escape'){ ev.preventDefault(); close(); }
@@ -25375,6 +25477,9 @@ Sim.Ctrl = (function(){
       state.overlayHandler = null;
     }
     if (d.closeBtn){ d.closeBtn.onclick = null; }
+    if (d.timeframeEl) d.timeframeEl.onclick = null;
+    if (d.ema100El) d.ema100El.onchange = null;
+    if (d.ema250El) d.ema250El.onchange = null;
     state.isOpen = false;
     state.entry = null;
   }
