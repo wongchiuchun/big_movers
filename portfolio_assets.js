@@ -43,15 +43,14 @@
 
   function isIndexEntry(entry) {
     if (!entry || typeof entry !== 'object') return false;
-    if (String(entry.assetType || '').toLowerCase() === 'index') return true;
-    return INDEX_METADATA.some(function (definition) {
-      return entry.key === definition.key;
-    });
+    return entry.assetType === 'index';
   }
 
   function entryKey(entry) {
     if (!entry || typeof entry !== 'object') return '';
-    if (typeof entry.key === 'string' && entry.key.trim()) return entry.key.trim();
+    if (typeof entry.entryKey === 'string' && entry.entryKey.trim()) {
+      return entry.entryKey.trim();
+    }
     if (isIndexEntry(entry)) {
       var indexSymbol = normalizedSymbol(entry.symbol);
       return 'index:' + indexSymbol;
