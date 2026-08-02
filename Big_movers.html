@@ -23434,6 +23434,7 @@ Sim.Ctrl = (function(){
       if (!tab) return;
       tab.classList.toggle('is-active', active);
       tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      tab.tabIndex = active ? 0 : -1;
     });
     if (stocksGrid) stocksGrid.classList.toggle('is-tab-hidden', indicesActive);
     if (indicesGrid) indicesGrid.classList.toggle('is-tab-hidden', !indicesActive);
@@ -23445,6 +23446,24 @@ Sim.Ctrl = (function(){
       if (!tab || tab._portsimCardTabBound) return;
       tab._portsimCardTabBound = true;
       tab.addEventListener('click', function(){ _setCardTab(pair[1]); });
+      tab.addEventListener('keydown', function(ev){
+        const tabs = ['stocks', 'indices'];
+        let target = null;
+        if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight'){
+          const current = tabs.indexOf(pair[1]);
+          const offset = ev.key === 'ArrowRight' ? 1 : -1;
+          target = tabs[(current + offset + tabs.length) % tabs.length];
+        } else if (ev.key === 'Home'){
+          target = tabs[0];
+        } else if (ev.key === 'End'){
+          target = tabs[tabs.length - 1];
+        }
+        if (!target) return;
+        ev.preventDefault();
+        _setCardTab(target);
+        const targetTab = _byId('portsim-card-tab-' + target);
+        if (targetTab) targetTab.focus();
+      });
     });
   }
 
@@ -31338,8 +31357,8 @@ Sim.Ctrl = (function(){
   </div>
   <div class="portsim-resize-h" data-resize="positions" title="Drag to resize the positions panel"></div>
   <div class="portsim-card-tabs" role="tablist" aria-label="Portfolio cards">
-    <button id="portsim-card-tab-stocks" class="portsim-card-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="portsim-grid">Stocks</button>
-    <button id="portsim-card-tab-indices" class="portsim-card-tab" type="button" role="tab" aria-selected="false" aria-controls="portsim-index-grid">Indices</button>
+    <button id="portsim-card-tab-stocks" class="portsim-card-tab is-active" type="button" role="tab" tabindex="0" aria-selected="true" aria-controls="portsim-grid">Stocks</button>
+    <button id="portsim-card-tab-indices" class="portsim-card-tab" type="button" role="tab" tabindex="-1" aria-selected="false" aria-controls="portsim-index-grid">Indices</button>
   </div>
   <div id="portsim-grid" class="portsim-grid" role="tabpanel" aria-labelledby="portsim-card-tab-stocks"></div>
   <div id="portsim-index-grid" class="portsim-grid cols-2 is-tab-hidden" role="tabpanel" aria-labelledby="portsim-card-tab-indices"></div>
