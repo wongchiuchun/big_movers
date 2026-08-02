@@ -258,6 +258,50 @@ def _parse_volume_maybe(x):
     except (ValueError, TypeError):
         return 0.0
 
+
+def _parse_index_history_csv(path):
+    """Read the root-level SPY/NDX history format or canonical DateTime CSV."""
+    bars = []
+    try:
+        with open(path, "r", encoding="utf-8-sig", newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                date_str = _normalize_date_maybe(row.get("Date") or row.get("DateTime"))
+                o = _parse_float_maybe(row.get("Open"))
+                h = _parse_float_maybe(row.get("High"))
+                l = _parse_float_maybe(row.get("Low"))
+                c = _parse_float_maybe(row.get("Close"))
+                if c is None:
+                    c = _parse_float_maybe(row.get("Price"))
+                v = _parse_volume_maybe(row.get("Volume"))
+                if not v:
+                    v = _parse_volume_maybe(row.get("Vol."))
+                if not date_str or c is None or c <= 0 or o is None or h is None or l is None:
+                    continue
+                bars.append({
+                    "time": date_str,
+                    "open": o,
+                    "high": h,
+                    "low": l,
+                    "close": c,
+                    "volume": v,
+                })
+    except Exception:
+        return []
+    bars.sort(key=lambda bar: bar["time"])
+    return bars
+
+
+def _write_canonical_bars(path, bars):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["DateTime", "Open", "High", "Low", "Close", "Volume"])
+        for bar in bars:
+            writer.writerow([
+                bar["time"], bar["open"], bar["high"], bar["low"], bar["close"], int(bar.get("volume") or 0)
+            ])
+
 def _load_spy_bars():
     global _SPY_BARS_CACHE
     if _SPY_BARS_CACHE is not None:
@@ -345,8 +389,9 @@ def api_ohlcv():
     if not symbol:
         return jsonify({"error": "symbol required"}), 400
 
-    # Special-case SPY: serve from SPY Historical Data.csv
-    if symbol == "SPY":
+    # SPX is the UI/cache alias; SPY remains accepted for backwards
+    # compatibility. Both read the same persisted proxy source.
+    if symbol in ("SPX", "SPY"):
         try:
             return jsonify(_load_spy_bars())
         except Exception as e:
@@ -533,6 +578,7 @@ def api_metadata():
 def api_fetch_ticker():
     """Fetch OHLCV from Twelve Data API. Saves to collected_stocks/ and optionally
     appends to results CSV. Supports both new tickers and extending existing ones."""
+    global _SPY_BARS_CACHE, _NDQ_BARS_CACHE
     if not TWELVE_API_KEY:
         return jsonify({"error": "TWELVE_API_KEY not found in .env"}), 500
 
@@ -547,22 +593,48 @@ def api_fetch_ticker():
     if not start_date and not extend:
         return jsonify({"error": "start_date required for new tickers"}), 400
 
-    csv_path = os.path.join(STOCKS_DIRS[0], f"{symbol}.csv")
+    # Index aliases are a source contract, not just ticker synonyms. SPX is
+    # always backed by SPY_HIST_CSV. NDQ keeps whichever price-level history
+    # already owns the local source: NDX historical data when present,
+    # otherwise QQQ in collected_stocks/. Never merge NDX and QQQ histories.
+    requested_symbol = symbol
+    fetch_symbol = symbol
+    reload_symbol = symbol
+    storage_kind = "collected"
+    index_alias = None
+    if symbol in ("SPX", "SPY"):
+        index_alias = "SPX"
+        fetch_symbol = "SPY"
+        reload_symbol = "SPX"
+        csv_path = SPY_HIST_CSV
+        storage_kind = "index_history"
+    elif symbol in ("NDQ", "NDX"):
+        index_alias = "NDQ"
+        reload_symbol = "NDQ"
+        if os.path.exists(NDX_HIST_CSV):
+            fetch_symbol = "NDX"
+            csv_path = NDX_HIST_CSV
+            storage_kind = "index_history"
+        else:
+            fetch_symbol = "QQQ"
+            csv_path = os.path.join(STOCKS_DIRS[0], "QQQ.csv")
+    else:
+        csv_path = os.path.join(STOCKS_DIRS[0], f"{symbol}.csv")
 
     # For extend mode, find the last date in existing CSV
+    existing_bars = []
+    if extend and index_alias and not os.path.exists(csv_path):
+        return jsonify({
+            "error": f"{index_alias} local source is unavailable; cannot extend {fetch_symbol} without an existing history",
+            "symbol": requested_symbol,
+            "source_symbol": fetch_symbol,
+            "reload_symbol": reload_symbol,
+        }), 404
     if extend and os.path.exists(csv_path):
-        last_date = None
-        try:
-            import pandas as pd
-            df = pd.read_csv(csv_path)
-            cols = df.columns.tolist()
-            has_idx = any(c.startswith("Unnamed") for c in cols) or cols[0] == ""
-            date_col = "DateTime" if "DateTime" in cols else ("Date" if "Date" in cols else (cols[1] if has_idx else cols[0]))
-            dates = pd.to_datetime(df[date_col], errors="coerce").dropna()
-            if len(dates) > 0:
-                last_date = dates.max().strftime("%Y-%m-%d")
-        except Exception:
-            pass
+        existing_bars = _parse_index_history_csv(csv_path)
+        if not existing_bars and storage_kind == "collected":
+            existing_bars = _parse_collected_stocks_csv(csv_path)
+        last_date = existing_bars[-1]["time"] if existing_bars else None
         if last_date:
             # Start from the day after the last date
             from datetime import datetime, timedelta
@@ -575,11 +647,17 @@ def api_fetch_ticker():
             return jsonify({"error": "Could not determine last date in existing CSV"}), 400
         # If start_date is already past end_date, nothing to fetch
         if start_date > end_date:
-            return jsonify({"message": "Already up to date", "bars_added": 0, "symbol": symbol})
+            return jsonify({
+                "message": "Already up to date",
+                "bars_added": 0,
+                "symbol": requested_symbol,
+                "source_symbol": fetch_symbol,
+                "reload_symbol": reload_symbol,
+            })
 
     # Fetch from Twelve Data API
     params = urllib.parse.urlencode({
-        "symbol": symbol,
+        "symbol": fetch_symbol,
         "interval": "1day",
         "start_date": start_date,
         "end_date": end_date,
@@ -600,16 +678,27 @@ def api_fetch_ticker():
         with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        return jsonify({"error": f"API HTTP error: {e.code}"}), 502
+        return jsonify({"error": f"Remote symbol {fetch_symbol} request failed: HTTP {e.code}"}), 502
     except Exception as e:
-        return jsonify({"error": f"API request failed: {str(e)}"}), 502
+        return jsonify({"error": f"Remote symbol {fetch_symbol} request failed: {str(e)}"}), 502
 
     if data.get("status") == "error":
-        return jsonify({"error": data.get("message", "Unknown API error")}), 400
+        return jsonify({
+            "error": f"Remote symbol {fetch_symbol} unavailable: {data.get('message', 'Unknown API error')}",
+            "symbol": requested_symbol,
+            "source_symbol": fetch_symbol,
+            "reload_symbol": reload_symbol,
+        }), 400
 
     values = data.get("values", [])
     if not values:
-        return jsonify({"message": "No data returned from API", "bars_added": 0, "symbol": symbol})
+        return jsonify({
+            "message": f"No data returned for {fetch_symbol}",
+            "bars_added": 0,
+            "symbol": requested_symbol,
+            "source_symbol": fetch_symbol,
+            "reload_symbol": reload_symbol,
+        })
 
     # Parse API response into bars
     new_bars = []
@@ -629,69 +718,24 @@ def api_fetch_ticker():
 
     new_bars.sort(key=lambda x: x["time"])
 
-    # Write/append to CSV in "noindex" format: DateTime,Open,High,Low,Close,Volume
-    os.makedirs(STOCKS_DIRS[0], exist_ok=True)
-    if extend and os.path.exists(csv_path):
-        # Read existing data, normalize to noindex format, merge with new bars
-        import pandas as pd
-        try:
-            df = pd.read_csv(csv_path)
-            cols = df.columns.tolist()
-            has_idx = any(c.startswith("Unnamed") for c in cols) or cols[0] == ""
-            date_col = "DateTime" if "DateTime" in cols else ("Date" if "Date" in cols else (cols[1] if has_idx else cols[0]))
-            dates = pd.to_datetime(df[date_col], errors="coerce")
-            existing = pd.DataFrame({
-                "DateTime": dates.dt.strftime("%Y-%m-%d"),
-                "Open": pd.to_numeric(df["Open"], errors="coerce"),
-                "High": pd.to_numeric(df["High"], errors="coerce"),
-                "Low": pd.to_numeric(df["Low"], errors="coerce"),
-                "Close": pd.to_numeric(df["Close"], errors="coerce"),
-                "Volume": pd.to_numeric(df["Volume"], errors="coerce").fillna(0).astype(int),
-            }).dropna(subset=["DateTime", "Open", "High", "Low", "Close"])
-            existing = existing[existing["DateTime"] != "NaT"]
-            existing_dates = set(existing["DateTime"].tolist())
-        except Exception:
-            existing = pd.DataFrame(columns=["DateTime","Open","High","Low","Close","Volume"])
-            existing_dates = set()
-        new_bars = [b for b in new_bars if b["time"] not in existing_dates]
-        if new_bars:
-            new_df = pd.DataFrame([{
-                "DateTime": b["time"], "Open": b["open"], "High": b["high"],
-                "Low": b["low"], "Close": b["close"], "Volume": int(b["volume"])
-            } for b in new_bars])
-            merged = pd.concat([existing, new_df], ignore_index=True)
-            merged = merged.drop_duplicates(subset="DateTime", keep="last")
-            merged = merged.sort_values("DateTime").reset_index(drop=True)
-            merged.to_csv(csv_path, index=False)
-    else:
-        with open(csv_path, "w", encoding="utf-8", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["DateTime", "Open", "High", "Low", "Close", "Volume"])
-            for b in new_bars:
-                writer.writerow([b["time"], b["open"], b["high"], b["low"], b["close"], int(b["volume"])])
+    # Merge only within the selected source, then rewrite to one canonical
+    # format understood by both index-history and collected-stock readers.
+    existing_dates = {bar["time"] for bar in existing_bars}
+    new_bars = [bar for bar in new_bars if bar["time"] not in existing_dates]
+    merged_by_date = {bar["time"]: bar for bar in existing_bars}
+    for bar in new_bars:
+        merged_by_date[bar["time"]] = bar
+    merged_bars = [merged_by_date[key] for key in sorted(merged_by_date)]
+    if new_bars or not extend:
+        _write_canonical_bars(csv_path, merged_bars)
+        if index_alias == "SPX":
+            _SPY_BARS_CACHE = None
+        elif index_alias == "NDQ":
+            _NDQ_BARS_CACHE = None
 
     # Compute summary stats for the result row
     if new_bars:
-        all_bars = new_bars
-        if extend and os.path.exists(csv_path):
-            # Re-read full CSV to compute stats from all data
-            all_bars = []
-            try:
-                with open(csv_path, "r", encoding="utf-8", errors="replace") as f:
-                    reader = csv.reader(f)
-                    next(reader, None)
-                    for row in reader:
-                        if len(row) >= 6:
-                            d = row[0].strip()
-                            if len(row) >= 7:
-                                d = row[1].strip()
-                            all_bars.append({
-                                "time": d[:10] if d else "",
-                                "close": float(row[4] if len(row) < 7 else row[5]),
-                                "volume": float(row[5] if len(row) < 7 else row[6]),
-                            })
-            except Exception:
-                all_bars = new_bars
+        all_bars = merged_bars
 
         closes = [b["close"] for b in all_bars if b.get("close")]
         volumes = [b.get("volume", 0) for b in all_bars]
@@ -722,9 +766,11 @@ def api_fetch_ticker():
 
     return jsonify({
         "ok": True,
-        "symbol": symbol,
+        "symbol": requested_symbol,
+        "source_symbol": fetch_symbol,
+        "reload_symbol": reload_symbol,
         "bars_added": len(new_bars),
-        "total_bars": len(new_bars),
+        "total_bars": len(merged_bars),
         "result_row": result_row,
     })
 

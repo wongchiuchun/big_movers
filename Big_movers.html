@@ -28403,7 +28403,7 @@ Sim.Ctrl = (function(){
     rows.push('# current_play_idx,' + (st.playIdx | 0));
     rows.push('# index_benchmark,' + _csvEscape(st.index || 'SPX'));
     rows.push('# basket_size,' + (st.basket || []).length);
-    rows.push('# tradable_entry_count,' + basket.length);
+    rows.push('# tradable_entry_count,' + liveEntries.length);
 
     // ---- 2. Portfolio summary ----
     var initial = +st.initialEquity || 0;
@@ -28454,7 +28454,7 @@ Sim.Ctrl = (function(){
     rows.push('Max Drawdown %,'   + _sgnPct(maxDDPct));
     rows.push('Open Positions,'   + openCount);
     rows.push('Stock Basket Size,' + (st.basket || []).length);
-    rows.push('Tradable Entry Count,' + basket.length);
+    rows.push('Tradable Entry Count,' + liveEntries.length);
 
     // ---- 3. Per-position summary ----
     rows.push('');
@@ -29345,8 +29345,10 @@ Sim.Ctrl = (function(){
     _renderTradingNotesSection(notesHost, function(){ return _indexChart; }, ctx);
     _wireExtendButton(
       document.getElementById('portsim-review-extend-index'),
-      idxSym,
+      { assetType: 'index', displaySymbol: idxLabel, dataSymbol: idxSym, cacheSymbol: idxLabel },
       function(bars){
+        var liveState = window.PortSim && window.PortSim._state;
+        if (liveState && liveState.index === idxLabel) liveState.indexBars = bars;
         var host = document.getElementById('portsim-review-chart-index');
         if (!host || !bars || !bars.length) return;
         host.innerHTML = '';
@@ -29537,11 +29539,23 @@ Sim.Ctrl = (function(){
     // Extend-to-today button: refresh bars and redraw the same chart host.
     _wireExtendButton(
       document.getElementById(extendId),
-      ctxEntry.dataSymbol || sym,
+      {
+        assetType: _entryAssetType(ctxEntry),
+        displaySymbol: sym,
+        dataSymbol: ctxEntry.dataSymbol || sym,
+        cacheSymbol: ctxEntry.cacheSymbol || null
+      },
       function(bars){
-        if (_entryAssetType(ctxEntry) === 'index' && ctxEntry.cacheSymbol && window.PortSim && PortSim.IndexCache
-            && typeof PortSim.IndexCache.set === 'function'){
-          PortSim.IndexCache.set(ctxEntry.cacheSymbol, bars);
+        if (!_viewOnly && _entryAssetType(ctxEntry) === 'index'){
+          var liveState = window.PortSim && window.PortSim._state;
+          var liveEntries = liveState && window.PortSimAssets ? PortSimAssets.allTradeEntries(liveState) : [];
+          var liveEntry = liveEntries.filter(function(entry){
+            return entry.entryInstanceKey === ctxEntry.entryInstanceKey;
+          })[0];
+          if (liveEntry){
+            liveEntry.bars = bars;
+            liveEntry.dateToBarIdx = new Map(bars.map(function(bar, index){ return [bar.time, index]; }));
+          }
         }
         var host = document.getElementById(chartId);
         if (!host || !bars || !bars.length) return;
@@ -29669,10 +29683,16 @@ Sim.Ctrl = (function(){
   // review charts so the user can refresh stale data without leaving the
   // modal. Caller supplies the button (for status feedback) and a redraw
   // function that takes the new bar array.
-  function _wireExtendButton(btn, symbol, onBars){
+  function _wireExtendButton(btn, source, onBars){
     if (!btn) return;
+    source = typeof source === 'string' ? { dataSymbol: source } : (source || {});
+    var isIndex = source.assetType === 'index';
+    var dataSymbol = String(source.dataSymbol || source.displaySymbol || '').trim().toUpperCase();
+    var indexAlias = String(source.cacheSymbol || source.displaySymbol || '').trim().toUpperCase();
+    var requestSymbol = isIndex ? indexAlias : dataSymbol;
+    var reloadSymbol = isIndex ? indexAlias : dataSymbol;
     btn.addEventListener('click', function(){
-      if (!symbol || btn.disabled) return;
+      if (!requestSymbol || btn.disabled) return;
       var origText = btn.textContent;
       btn.disabled = true;
       btn.classList.remove('is-ok', 'is-err');
@@ -29680,7 +29700,7 @@ Sim.Ctrl = (function(){
       fetch('/api/fetch-ticker', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol: symbol, extend: true })
+        body: JSON.stringify({ symbol: requestSymbol, extend: true })
       }).then(function(r){
         return r.json().then(function(d){
           if (!r.ok || (d && d.error)) throw new Error(d && d.error ? d.error : 'HTTP ' + r.status);
@@ -29688,10 +29708,15 @@ Sim.Ctrl = (function(){
         });
       }).then(function(d){
         var added = (d && typeof d.bars_added === 'number') ? d.bars_added : 0;
-        return fetch('/api/ohlcv?symbol=' + encodeURIComponent(symbol))
+        var resolvedReload = String((d && d.reload_symbol) || reloadSymbol).trim().toUpperCase();
+        return fetch('/api/ohlcv?symbol=' + encodeURIComponent(resolvedReload) + '&_=' + Date.now(), { cache: 'no-store' })
           .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
           .then(function(j){
             var bars = Array.isArray(j) ? j : (j && j.bars) || [];
+            if (!bars.length) throw new Error('Updated source returned no bars for ' + resolvedReload);
+            if (isIndex && window.PortSim && PortSim.IndexCache && typeof PortSim.IndexCache.set === 'function'){
+              PortSim.IndexCache.set(indexAlias, bars);
+            }
             if (typeof onBars === 'function') onBars(bars);
             btn.classList.add('is-ok');
             btn.textContent = added > 0 ? ('✓ +' + added + ' bars') : '✓ Up to date';
