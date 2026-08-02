@@ -1066,6 +1066,28 @@
         "Breakout"
       ]
     },
+    "MMYT_2024": {
+      "direction": "long",
+      "manualLegs": [
+        {
+          "end": "2024-04-08",
+          "id": "manual-leg-1785600572454-d5nach",
+          "notes": "This was the best leg to trade",
+          "start": "2023-07-27"
+        },
+        {
+          "end": "2024-05-23",
+          "id": "manual-leg-1785600593555-33f92b",
+          "notes": "Still possible but easy money already gone",
+          "start": "2024-04-25"
+        }
+      ],
+      "notes": "This is one of those names that eat you alive. The constant stop hunting and reclaim makes it a poor candidate",
+      "rating": "C",
+      "tags": [
+        "Steady momentum"
+      ]
+    },
     "MP_2025": {
       "direction": "long",
       "notes": "I think this was kinda like EP and breakout but honestly the price action was too difficult. I actually traded this name at the time and the intraday selloffs were brutal. This in hindsight was not a very tradable setup. You need to be spot on to make money.",
@@ -1073,6 +1095,36 @@
       "tags": [
         "Breakout",
         "EP"
+      ]
+    },
+    "MSTR_2024": {
+      "direction": "long",
+      "manualLegs": [
+        {
+          "end": "2024-04-05",
+          "id": "manual-leg-1785602378048-hx90c6",
+          "notes": "Tradable leg 1. largesly respect normal structure",
+          "start": "2024-02-08"
+        },
+        {
+          "end": "2024-09-09",
+          "id": "manual-leg-1785602404564-g5laam",
+          "notes": "Extended consolidation with only sideway movements",
+          "start": "2024-04-08"
+        },
+        {
+          "end": "2024-11-22",
+          "id": "manual-leg-1785602431997-aw9a3u",
+          "notes": "Excellent leg respecting 20 EMA the entire time",
+          "start": "2024-09-19"
+        }
+      ],
+      "notes": "I think it is in between an A and B setup. the last leg was strong enough to make up for the prior pain.",
+      "rating": "B",
+      "tags": [
+        "Steady momentum",
+        "Breakout",
+        "Flat Base"
       ]
     },
     "MU_2025": {
@@ -1115,6 +1167,15 @@
       "rating": "",
       "tags": [
         "Breakout"
+      ]
+    },
+    "NNE_2024": {
+      "direction": "long",
+      "notes": "Very near movement for the first breakout move then entirely in distribution",
+      "rating": "B",
+      "tags": [
+        "momentum burst",
+        "IPO Base"
       ]
     },
     "NTLA_2025": {
@@ -1788,27 +1849,71 @@
         "Tightness"
       ]
     },
-    "MMYT_2024": {
+    "NOVA_2024": {
+      "tags": [],
+      "rating": "E",
+      "direction": "",
+      "notes": "No setup whatsoever"
+    },
+    "NTRA_2024": {
       "tags": [
         "Steady momentum"
       ],
+      "rating": "D",
+      "direction": "",
+      "notes": "It was definitely not an easy trade - repeated stop hunt with slow momentum"
+    },
+    "NVAX_2024": {
+      "tags": [
+        "EP",
+        "Gap and Go"
+      ],
       "rating": "C",
       "direction": "long",
-      "notes": "This is one of those names that eat you alive. The constant stop hunting and reclaim makes it a poor candidate",
+      "notes": "One EP gap and go"
+    },
+    "NVDA_2024": {
+      "tags": [
+        "Steady momentum"
+      ],
+      "rating": "B",
+      "direction": "",
+      "notes": "Mostly B+ setup, some repeated chops after mid-year. \n\nThe slop of the EMAs have flattened.",
       "manualLegs": [
         {
-          "id": "manual-leg-1785600572454-d5nach",
-          "start": "2023-07-27",
-          "end": "2024-04-08",
-          "notes": "This was the best leg to trade"
+          "id": "manual-leg-1785641814558-0vlatf",
+          "start": "2024-01-08",
+          "end": "2024-04-04",
+          "notes": "This is a A setup leg"
         },
         {
-          "id": "manual-leg-1785600593555-33f92b",
-          "start": "2024-04-25",
-          "end": "2024-05-23",
-          "notes": "Still possible but easy money already gone"
+          "id": "manual-leg-1785641821474-ovhmy0",
+          "start": "2024-05-02",
+          "end": "2024-06-25",
+          "notes": "This one is also B+ setup"
+        },
+        {
+          "id": "manual-leg-1785641883522-yz4qyr",
+          "start": "2024-06-24",
+          "end": "2025-03-17",
+          "notes": "This is just a choppy range"
         }
       ]
+    },
+    "OSCR_2024": {
+      "tags": [],
+      "rating": "D",
+      "direction": "long",
+      "notes": "Not much of a meaningful move"
+    },
+    "PI_2024": {
+      "tags": [
+        "Steady momentum",
+        "Tightness"
+      ],
+      "rating": "C",
+      "direction": "long",
+      "notes": "Tradable. However also some nasty shakeout. I think this is a B-/C+ setup "
     }
   },
   "version": 1
