@@ -22010,6 +22010,7 @@ Sim.Ctrl = (function(){
     cash: 0,
     realizedPnL: 0,
     basket: [],         // [{ symbol, year, bars, dateToBarIdx, lastCloseSeen, sim, card }]
+    indexEntries: [],   // fixed SPX / NDQ trade-card entries (hydrated independently)
     basketGeneration: null,
     reviewFinalized: false,
     index: 'SPX',
@@ -22059,6 +22060,125 @@ Sim.Ctrl = (function(){
     return assetKey + '#' + _state.entrySequence;
   }
 
+  function _tradeActionsAvailable(entry){
+    return !(entry && entry._fixedIndex && entry._indexLoadState !== 'ready');
+  }
+
+  function _createTradeEntryCard(host, opts){
+    opts = opts || {};
+    const bars = Array.isArray(opts.bars) ? opts.bars : [];
+    const initialBars = Array.isArray(opts.initialBars) ? opts.initialBars : [];
+    const entryKey = opts.entryKey || PortSimAssets.stockKey(opts.symbol);
+    const dateToBarIdx = new Map();
+    for (let i = 0; i < bars.length; i++){
+      const t = bars[i] && bars[i].time;
+      if (t) dateToBarIdx.set(t, i);
+    }
+    const card = PortSim.Cards.createCard(host, opts.symbol, initialBars, {});
+    const entry = {
+      symbol: opts.symbol,
+      assetType: opts.assetType || 'stock',
+      entryKey: entryKey,
+      entryInstanceKey: _newEntryInstanceKey(entryKey),
+      dataSymbol: opts.dataSymbol || opts.symbol,
+      role: opts.role || 'unknown',
+      expandedChartPrefs: { timeframe: 'D', ema100: false, ema250: false },
+      year: opts.year || null,
+      bars: bars,
+      dateToBarIdx: dateToBarIdx,
+      lastCloseSeen: initialBars.length ? +initialBars[initialBars.length - 1].close : null,
+      sim: null,
+      card: card,
+      cardEl: card.cardEl,
+      chart: card.chart,
+      candleSeries: card.candleSeries,
+      volSeries: card.volSeries,
+      _newLegBtn: null,
+      _actionBar: null
+    };
+    if (opts.cacheSymbol) entry.cacheSymbol = opts.cacheSymbol;
+    if (opts._fixedIndex) entry._fixedIndex = true;
+    if (opts._indexLoadState) entry._indexLoadState = opts._indexLoadState;
+
+    _attachCardActions(entry);
+    card.cardEl.addEventListener('click', function(ev){
+      if (ev.target && ev.target.closest && ev.target.closest('.portcard-action-row')) return;
+      if (ev.target && ev.target.closest && ev.target.closest('.portcard-newleg-btn')) return;
+      if (!_tradeActionsAvailable(entry)) return;
+      _onCardBareClick(entry);
+    });
+    return entry;
+  }
+
+  function _destroyEntryCards(entries){
+    if (!Array.isArray(entries)) return;
+    entries.forEach(function(entry){
+      if (entry && entry.card && typeof entry.card.destroy === 'function'){
+        try { entry.card.destroy(); } catch (e){ /* ignore */ }
+      }
+    });
+  }
+
+  function _clearCardGrid(grid){
+    if (!grid) return;
+    while (grid.firstChild) grid.removeChild(grid.firstChild);
+  }
+
+  function _ownsFixedIndexEntry(runToken, entry){
+    return !!(
+      _state.active &&
+      _state._activeRunToken === runToken &&
+      Array.isArray(_state.indexEntries) &&
+      _state.indexEntries.indexOf(entry) >= 0
+    );
+  }
+
+  function _setFixedIndexUnavailable(runToken, entry, err){
+    if (!_ownsFixedIndexEntry(runToken, entry)) return;
+    entry.bars = [];
+    entry.dateToBarIdx = new Map();
+    entry.lastCloseSeen = null;
+    entry._indexLoadState = 'unavailable';
+    try { entry.card.setData([]); } catch (e){ /* ignore */ }
+    entry.card.setBadge('unavailable', 'idle');
+    if (err){
+      console.warn('[PortSim.Ctrl] ' + entry.symbol + ' card unavailable:', err && err.message || err);
+    }
+  }
+
+  function _hydrateFixedIndexEntry(runToken, entry, definition){
+    if (!PortSim.IndexCache || typeof PortSim.IndexCache.ensure !== 'function'){
+      _setFixedIndexUnavailable(runToken, entry, new Error('IndexCache unavailable'));
+      return;
+    }
+    PortSim.IndexCache.ensure(definition.cacheSymbol).then(function(slot){
+      if (!_ownsFixedIndexEntry(runToken, entry)) return;
+      const bars = Array.isArray(slot && slot.bars) ? slot.bars.filter(function(bar){
+        const t = bar && bar.time;
+        if (!t) return false;
+        return !_state.endDate || t <= _state.endDate;
+      }) : [];
+      if (!bars.length){
+        _setFixedIndexUnavailable(runToken, entry);
+        return;
+      }
+      const dateToBarIdx = new Map();
+      for (let i = 0; i < bars.length; i++){
+        dateToBarIdx.set(bars[i].time, i);
+      }
+      const currentDate = (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.startDate;
+      const initialBars = _sliceUpTo(bars, currentDate);
+      entry.bars = bars;
+      entry.dateToBarIdx = dateToBarIdx;
+      entry.card.setData(initialBars);
+      entry.lastCloseSeen = initialBars.length ? +initialBars[initialBars.length - 1].close : null;
+      entry._indexLoadState = 'ready';
+      entry.card.setBadge('idle', 'idle');
+    }).catch(function(err){
+      _setFixedIndexUnavailable(runToken, entry, err);
+    });
+  }
+
   function _bootstrapFromConfig(cfg){
     if (!cfg || !Array.isArray(cfg.tickers) || !cfg.tickers.length){
       throw new Error('config missing tickers');
@@ -22077,6 +22197,8 @@ Sim.Ctrl = (function(){
     });
 
     // Reset internal state.
+    const runToken = {};
+    _state._activeRunToken = runToken;
     _state.active = true;
     _state.startDate = cfg.startDate;
     _state.endDate = cfg.endDate;
@@ -22096,13 +22218,8 @@ Sim.Ctrl = (function(){
     // Destroy any existing card chart instances before resetting basket so we
     // don't leak LWC chart instances when the user re-opens the wizard while
     // a sim is already active.
-    if (Array.isArray(_state.basket)){
-      _state.basket.forEach(function(prev){
-        if (prev && prev.card && typeof prev.card.destroy === 'function'){
-          try { prev.card.destroy(); } catch (e){ /* ignore */ }
-        }
-      });
-    }
+    _destroyEntryCards(_state.basket);
+    _destroyEntryCards(_state.indexEntries);
     _state.unifiedDates = [];
     _state.playIdx = 0;
     _state.prevEquity = null;
@@ -22112,6 +22229,7 @@ Sim.Ctrl = (function(){
     _state.maxDDDays = 0;
     _state._history = [];
     _state.basket = [];
+    _state.indexEntries = [];
     _state.initialEntryRequest = [];
     _state.notes = [];
     _state.retiredEntries = [];
@@ -22121,8 +22239,11 @@ Sim.Ctrl = (function(){
 
     // Clear and prepare the grid.
     const grid = _byId('portsim-grid');
+    const indexGrid = _byId('portsim-index-grid');
     if (!grid) throw new Error('#portsim-grid not in DOM');
-    while (grid.firstChild) grid.removeChild(grid.firstChild);
+    if (!indexGrid) throw new Error('#portsim-index-grid not in DOM');
+    _clearCardGrid(grid);
+    _clearCardGrid(indexGrid);
     grid.classList.remove('cols-1','cols-2','cols-3','cols-4','cols-5','cols-6','cols-7','cols-8','cols-9','cols-10');
     const n = Math.max(1, Math.min(10, cfg.tickers.length));
     grid.classList.add('cols-' + n);
@@ -22131,37 +22252,19 @@ Sim.Ctrl = (function(){
     cfg.tickers.forEach(function(tCfg){
       const sym = (tCfg.symbol || '').toUpperCase();
       const bars = Array.isArray(fetched[sym]) ? fetched[sym] : [];
-      const dateToBarIdx = new Map();
-      for (let i = 0; i < bars.length; i++){
-        const t = bars[i] && bars[i].time;
-        if (t) dateToBarIdx.set(t, i);
-      }
       // Initial chart slice up to startDate so user sees pre-context.
       const initSlice = _sliceUpTo(bars, _state.startDate);
-      const card = PortSim.Cards.createCard(grid, sym, initSlice, {});
-      const entry = {
+      const entry = _createTradeEntryCard(grid, {
         symbol: sym,
         assetType: 'stock',
         entryKey: PortSimAssets.stockKey(sym),
-        entryInstanceKey: _newEntryInstanceKey(PortSimAssets.stockKey(sym)),
         dataSymbol: sym,
         role: window.PortSimBasket && PortSimBasket.resolveRole
           ? PortSimBasket.resolveRole(basketGeneration, sym, tCfg.role)
           : (/^(mover|anchor|noise)$/.test(tCfg.role) ? tCfg.role : 'unknown'),
-        expandedChartPrefs: { timeframe: 'D', ema100: false, ema250: false },
-        year: null,
         bars: bars,
-        dateToBarIdx: dateToBarIdx,
-        lastCloseSeen: initSlice.length ? +initSlice[initSlice.length - 1].close : null,
-        sim: null,
-        card: card,
-        cardEl: card.cardEl,
-        chart: card.chart,
-        candleSeries: card.candleSeries,
-        volSeries: card.volSeries,
-        _newLegBtn: null,
-        _actionBar: null
-      };
+        initialBars: initSlice
+      });
       _state.basket.push(entry);
 
       // Stash any pre-entry request for after-card-built cash debit.
@@ -22176,15 +22279,29 @@ Sim.Ctrl = (function(){
         });
       }
 
-      _attachCardActions(entry);
+    });
 
-      // Card-level click → pause + open per-card menu when paused.
-      card.cardEl.addEventListener('click', function(ev){
-        // Only react to bare clicks on the card (not on action buttons inside).
-        if (ev.target && ev.target.closest && ev.target.closest('.portcard-action-row')) return;
-        if (ev.target && ev.target.closest && ev.target.closest('.portcard-newleg-btn')) return;
-        _onCardBareClick(entry);
+    // Fixed index trade cards are distinct from the selected benchmark strip.
+    // Build both shells now, then hydrate each independently without touching
+    // the portfolio clock, history, benchmark selection, or valuation state.
+    const indexDefinitions = PortSimAssets.indexDefinitions();
+    _applyGridCols(indexGrid, indexDefinitions.length);
+    indexDefinitions.forEach(function(definition){
+      const entry = _createTradeEntryCard(indexGrid, {
+        symbol: definition.symbol,
+        role: 'index',
+        assetType: 'index',
+        entryKey: definition.key,
+        dataSymbol: definition.dataSymbol,
+        cacheSymbol: definition.cacheSymbol,
+        bars: [],
+        initialBars: [],
+        _fixedIndex: true,
+        _indexLoadState: 'loading'
       });
+      entry.card.setBadge('loading', 'idle');
+      _state.indexEntries.push(entry);
+      _hydrateFixedIndexEntry(runToken, entry, definition);
     });
 
     // Compute unified dates from union of basket + (later) index.
@@ -22397,6 +22514,7 @@ Sim.Ctrl = (function(){
   }
 
   function _onCardBareClick(entry){
+    if (!_tradeActionsAvailable(entry)) return;
     // Auto-pause.
     _pause();
     // No sim → setup. Sim closed/stoppedOut/between → newleg. Otherwise: toggle action row.
@@ -22413,7 +22531,7 @@ Sim.Ctrl = (function(){
     if (entry._actionBar){
       const isShown = entry._actionBar.style.display !== 'none';
       // Hide on all other cards.
-      _state.basket.forEach(function(e){
+      PortSimAssets.liveEntries(_state).forEach(function(e){
         if (e._actionBar) e._actionBar.style.display = 'none';
       });
       entry._actionBar.style.display = isShown ? 'none' : 'flex';
@@ -22430,6 +22548,7 @@ Sim.Ctrl = (function(){
   }
 
   function _onCardSetupClick(entry){
+    if (!_tradeActionsAvailable(entry)) return;
     const bar = _currentBarForEntry(entry);
     if (!bar){
       alert('No bar available for ' + entry.symbol + ' at the current date.');
@@ -22492,6 +22611,7 @@ Sim.Ctrl = (function(){
   }
 
   function _onNewLegClick(entry){
+    if (!_tradeActionsAvailable(entry)) return;
     const bar = _currentBarForEntry(entry);
     if (!bar) return;
     if (!entry.sim){ _onCardSetupClick(entry); return; }
@@ -22550,6 +22670,7 @@ Sim.Ctrl = (function(){
   }
 
   function _onCardAction(entry, action){
+    if (!_tradeActionsAvailable(entry)) return;
     if (!entry.sim) return;
     const bar = _currentBarForEntry(entry);
     if (!bar) return;
@@ -22732,10 +22853,13 @@ Sim.Ctrl = (function(){
     _pause();
     _setCardTab('stocks');
     if (PortSim.Header && PortSim.Header.hide) PortSim.Header.hide();
-    _state.basket.forEach(function(e){
-      try { e.card.destroy(); } catch(err){}
-    });
+    _state._activeRunToken = null;
+    _destroyEntryCards(_state.basket);
+    _destroyEntryCards(_state.indexEntries);
     _state.basket = [];
+    _state.indexEntries = [];
+    _clearCardGrid(_byId('portsim-grid'));
+    _clearCardGrid(_byId('portsim-index-grid'));
     _state.active = false;
     if (PortSim.Index && PortSim.Index.reset) try { PortSim.Index.reset(); } catch(e){}
   }
@@ -23710,14 +23834,19 @@ Sim.Ctrl = (function(){
       var bars = res.bars;
       var grid = _byId('portsim-grid');
       if (!grid) return { ok: false, error: '#portsim-grid not in DOM' };
-      var dateToBarIdx = new Map();
-      for (var i = 0; i < bars.length; i++){
-        var t = bars[i] && bars[i].time;
-        if (t) dateToBarIdx.set(t, i);
-      }
       var currentDate = (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.startDate;
       var initSlice = _sliceUpTo(bars, currentDate);
-      var card = PortSim.Cards.createCard(grid, sym, initSlice, {});
+      var entry = _createTradeEntryCard(grid, {
+        symbol: sym,
+        assetType: 'stock',
+        entryKey: PortSimAssets.stockKey(sym),
+        dataSymbol: sym,
+        role: window.PortSimBasket && PortSimBasket.resolveRole
+          ? PortSimBasket.resolveRole(_state.basketGeneration, sym, 'unknown')
+          : 'unknown',
+        bars: bars,
+        initialBars: initSlice
+      });
 
       if (opts.replaceIndex != null){
         var prev = _state.basket[opts.replaceIndex];
@@ -23729,42 +23858,12 @@ Sim.Ctrl = (function(){
         // Insert the new card before the old one's DOM node so DOM order
         // matches basket order, then destroy the old card.
         if (prev && prev.cardEl && prev.cardEl.parentNode){
-          prev.cardEl.parentNode.insertBefore(card.cardEl, prev.cardEl);
+          prev.cardEl.parentNode.insertBefore(entry.cardEl, prev.cardEl);
         }
         try {
           if (prev && prev.card && typeof prev.card.destroy === 'function') prev.card.destroy();
         } catch(e){ /* ignore */ }
       }
-
-      var entry = {
-        symbol: sym,
-        assetType: 'stock',
-        entryKey: PortSimAssets.stockKey(sym),
-        entryInstanceKey: _newEntryInstanceKey(PortSimAssets.stockKey(sym)),
-        dataSymbol: sym,
-        role: window.PortSimBasket && PortSimBasket.resolveRole
-          ? PortSimBasket.resolveRole(_state.basketGeneration, sym, 'unknown')
-          : 'unknown',
-        expandedChartPrefs: { timeframe: 'D', ema100: false, ema250: false },
-        year: null,
-        bars: bars,
-        dateToBarIdx: dateToBarIdx,
-        lastCloseSeen: initSlice.length ? +initSlice[initSlice.length - 1].close : null,
-        sim: null,
-        card: card,
-        cardEl: card.cardEl,
-        chart: card.chart,
-        candleSeries: card.candleSeries,
-        volSeries: card.volSeries,
-        _newLegBtn: null,
-        _actionBar: null
-      };
-      _attachCardActions(entry);
-      card.cardEl.addEventListener('click', function(ev){
-        if (ev.target && ev.target.closest && ev.target.closest('.portcard-action-row')) return;
-        if (ev.target && ev.target.closest && ev.target.closest('.portcard-newleg-btn')) return;
-        _onCardBareClick(entry);
-      });
 
       if (opts.replaceIndex != null){
         _state.basket[opts.replaceIndex] = entry;
