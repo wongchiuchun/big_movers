@@ -27982,6 +27982,12 @@ Sim.Ctrl = (function(){
     return realized + pastLegs;
   }
 
+  function _curveEntryKey(entry, index){
+    if (entry && entry.entryInstanceKey) return String(entry.entryInstanceKey);
+    var base = entry && (entry.entryKey || ((entry.assetType || 'stock') + ':' + (entry.symbol || 'POS')));
+    return String(base || 'entry') + '#curve-legacy-' + index;
+  }
+
   function _appendCurves(){
     var st = window.PortSim && window.PortSim._state;
     if (!st || !st.active) return;
@@ -28000,7 +28006,12 @@ Sim.Ctrl = (function(){
 
     // Portfolio total P&L
     var p = _portfolioSnap();
-    var pt = { date: date, port: 0, equity: 0, cash: 0, openCount: 0, positions: {} };
+    var pt = {
+      date: date, port: 0, equity: 0, cash: 0, openCount: 0,
+      // positions stays as the legacy one-column-per-symbol aggregate.
+      // entryPositions is generation-addressed for provenance-safe exports.
+      positions: {}, entryPositions: {}, entryLabels: {}
+    };
     if (p){
       pt.port      = parseFloat(p.totalPnL.toFixed(2));
       pt.equity    = parseFloat(p.equity.toFixed(2));
@@ -28011,11 +28022,19 @@ Sim.Ctrl = (function(){
       }
     }
 
-    // Per-symbol cumulative P&L, including completed history from retired stocks.
+    // Per-entry cumulative P&L preserves replaced generations independently.
+    // Keep a unique symbol aggregate beside it for chart/calendar compatibility.
     var pnlBySymbol = {};
-    _allEntries(st).forEach(function(e){
+    _allEntries(st).forEach(function(e, entryIndex){
       if (!e || !e.sim) return;
       var v = _positionTotalPnL(e);
+      var entryKey = _curveEntryKey(e, entryIndex);
+      pt.entryPositions[entryKey] = parseFloat(v.toFixed(2));
+      pt.entryLabels[entryKey] = {
+        symbol: e.symbol || 'POS',
+        displaySymbol: e.displaySymbol || e.symbol || 'POS',
+        retired: !!e._retired
+      };
       pnlBySymbol[e.symbol] = (pnlBySymbol[e.symbol] || 0) + v;
     });
     Object.keys(pnlBySymbol).forEach(function(symbol){
@@ -28113,7 +28132,8 @@ Sim.Ctrl = (function(){
   window.PortSim.Positions = {
     update: update,
     // Snapshot of the live equity-curve points captured during this sim run.
-    // Each entry: { date, port, equity, cash, openCount, positions: {SYM: pnl} }.
+    // Each entry also carries entryPositions: {entryInstanceKey: pnl}; positions
+    // remains a unique symbol aggregate for older calendar/chart consumers.
     // Track O (export) reads from here so it doesn't have to re-replay events.
     curve: function(){ return _curve.slice(); }
   };
@@ -28460,7 +28480,7 @@ Sim.Ctrl = (function(){
     rows.push('');
     rows.push('# === Per-Position Summary ===');
     rows.push([
-      'Symbol','Asset Type','State','Qty','AvgCost','LastMark','ActiveStop',
+      'Symbol','Asset Type','Entry Instance Key','Retired','State','Qty','AvgCost','LastMark','ActiveStop',
       'CumulativePnL','R','MFE','MAE','GiveBack',
       'LegCount','EntryDate','EntryPrice','InitialStop','InitialRisk'
     ].join(','));
@@ -28468,7 +28488,11 @@ Sim.Ctrl = (function(){
       if (!e) return;
       var sim = e.sim;
       if (!sim){
-        rows.push([_csvEscape(e.displaySymbol || e.symbol), _csvEscape(e.assetType || 'stock'), 'idle', '', '', '', '', '', '', '', '', '', '0', '', '', '', ''].join(','));
+        rows.push([
+          _csvEscape(e.displaySymbol || e.symbol), _csvEscape(e.assetType || 'stock'),
+          _csvEscape(e.entryInstanceKey || ''), e._retired ? 'true' : 'false',
+          'idle', '', '', '', '', '', '', '', '', '', '0', '', '', '', ''
+        ].join(','));
         return;
       }
       var derived = null;
@@ -28485,6 +28509,8 @@ Sim.Ctrl = (function(){
       rows.push([
         _csvEscape(e.displaySymbol || e.symbol),
         _csvEscape(e.assetType || 'stock'),
+        _csvEscape(e.entryInstanceKey || ''),
+        e._retired ? 'true' : 'false',
         posState,
         sim.qty,
         _r2(sim.avgCost),
@@ -28509,11 +28535,34 @@ Sim.Ctrl = (function(){
       curve = window.PortSim.Positions.curve();
     }
     if (curve && curve.length){
-      var symbols = basket.map(function(e){ return e.symbol; });
+      var hasEntryCurve = curve.some(function(pt){
+        return pt && pt.entryPositions && Object.keys(pt.entryPositions).length;
+      });
+      var curveColumns = [];
+      var curveSeen = {};
+      if (hasEntryCurve){
+        basket.forEach(function(e, index){
+          var key = e.entryInstanceKey || String(e.entryKey || ((e.assetType || 'stock') + ':' + e.symbol)) + '#curve-legacy-' + index;
+          if (curveSeen[key]) return;
+          curveSeen[key] = true;
+          var label = (e.displaySymbol || e.symbol || 'POS') + ' [' + key + ']'
+            + (e._retired ? ' retired' : '');
+          curveColumns.push({ key: key, label: label, perEntry: true });
+        });
+      } else {
+        // Backward compatibility for a curve captured before instance-aware
+        // points: emit one explicitly aggregate column per unique symbol.
+        basket.forEach(function(e){
+          var key = e.symbol || 'POS';
+          if (curveSeen[key]) return;
+          curveSeen[key] = true;
+          curveColumns.push({ key: key, label: key + ' Aggregate', perEntry: false });
+        });
+      }
       rows.push('');
       rows.push('# === Equity Curve ===');
       var head = ['Date','Portfolio P&L','Equity','Cash','Open Count'];
-      symbols.forEach(function(s){ head.push(s + ' P&L'); });
+      curveColumns.forEach(function(column){ head.push(_csvEscape(column.label + ' P&L')); });
       rows.push(head.join(','));
       curve.forEach(function(pt){
         var line = [
@@ -28523,8 +28572,9 @@ Sim.Ctrl = (function(){
           _r2(pt.cash),
           pt.openCount | 0
         ];
-        symbols.forEach(function(s){
-          line.push((pt.positions && pt.positions[s] != null) ? _r2(pt.positions[s]) : '');
+        curveColumns.forEach(function(column){
+          var source = column.perEntry ? pt.entryPositions : pt.positions;
+          line.push((source && source[column.key] != null) ? _r2(source[column.key]) : '');
         });
         rows.push(line.join(','));
       });
@@ -28533,7 +28583,7 @@ Sim.Ctrl = (function(){
     // ---- 5. Combined event log ----
     rows.push('');
     rows.push('# === Event Log ===');
-    rows.push(['Symbol','Asset Type','Leg','Day','BarIdx','Date','Type','Qty','Price','NewStop','Pct','TriggerMode','Note'].join(','));
+    rows.push(['Symbol','Asset Type','Entry Instance Key','Retired','Leg','Day','BarIdx','Date','Type','Qty','Price','NewStop','Pct','TriggerMode','Note'].join(','));
     var allEvents = [];
     basket.forEach(function(e){
       var sim = e && e.sim;
@@ -28544,7 +28594,11 @@ Sim.Ctrl = (function(){
         var legBar = (leg.entry && leg.entry.barIdx != null) ? leg.entry.barIdx : topEntryBar;
         (leg.eventsLog || []).forEach(function(ev){
           allEvents.push({
-            sym: e.displaySymbol || e.symbol, assetType: e.assetType || 'stock', leg: i + 1,
+            sym: e.displaySymbol || e.symbol,
+            assetType: e.assetType || 'stock',
+            entryInstanceKey: e.entryInstanceKey || '',
+            retired: !!e._retired,
+            leg: i + 1,
             day: ev.barIdx != null ? (ev.barIdx - legBar) : '',
             ev: ev
           });
@@ -28554,7 +28608,11 @@ Sim.Ctrl = (function(){
       var curLeg = (sim.legs || []).length + 1;
       (sim.eventsLog || []).forEach(function(ev){
         allEvents.push({
-          sym: e.displaySymbol || e.symbol, assetType: e.assetType || 'stock', leg: curLeg,
+          sym: e.displaySymbol || e.symbol,
+          assetType: e.assetType || 'stock',
+          entryInstanceKey: e.entryInstanceKey || '',
+          retired: !!e._retired,
+          leg: curLeg,
           day: ev.barIdx != null ? (ev.barIdx - topEntryBar) : '',
           ev: ev
         });
@@ -28571,6 +28629,8 @@ Sim.Ctrl = (function(){
       rows.push([
         _csvEscape(rec.sym),
         _csvEscape(rec.assetType),
+        _csvEscape(rec.entryInstanceKey),
+        rec.retired ? 'true' : 'false',
         rec.leg,
         rec.day,
         ev.barIdx != null ? ev.barIdx : '',
@@ -29347,8 +29407,6 @@ Sim.Ctrl = (function(){
       document.getElementById('portsim-review-extend-index'),
       { assetType: 'index', displaySymbol: idxLabel, dataSymbol: idxSym, cacheSymbol: idxLabel },
       function(bars){
-        var liveState = window.PortSim && window.PortSim._state;
-        if (liveState && liveState.index === idxLabel) liveState.indexBars = bars;
         var host = document.getElementById('portsim-review-chart-index');
         if (!host || !bars || !bars.length) return;
         host.innerHTML = '';
@@ -29522,10 +29580,11 @@ Sim.Ctrl = (function(){
 
     var note = document.getElementById(noteId);
     if (note){
-      note.value = (_data.notes && _data.notes[sym]) || '';
+      var savedNotes = _data.notes || {};
+      note.value = savedNotes[row.identity] != null ? savedNotes[row.identity] : (savedNotes[sym] || '');
       note.addEventListener('input', function(){
         _data.notes = _data.notes || {};
-        _data.notes[sym] = note.value;
+        _data.notes[row.identity] = note.value;
         _markDirty();
       });
     }
@@ -29546,17 +29605,6 @@ Sim.Ctrl = (function(){
         cacheSymbol: ctxEntry.cacheSymbol || null
       },
       function(bars){
-        if (!_viewOnly && _entryAssetType(ctxEntry) === 'index'){
-          var liveState = window.PortSim && window.PortSim._state;
-          var liveEntries = liveState && window.PortSimAssets ? PortSimAssets.allTradeEntries(liveState) : [];
-          var liveEntry = liveEntries.filter(function(entry){
-            return entry.entryInstanceKey === ctxEntry.entryInstanceKey;
-          })[0];
-          if (liveEntry){
-            liveEntry.bars = bars;
-            liveEntry.dateToBarIdx = new Map(bars.map(function(bar, index){ return [bar.time, index]; }));
-          }
-        }
         var host = document.getElementById(chartId);
         if (!host || !bars || !bars.length) return;
         host.innerHTML = '';
@@ -29683,6 +29731,30 @@ Sim.Ctrl = (function(){
   // review charts so the user can refresh stale data without leaving the
   // modal. Caller supplies the button (for status feedback) and a redraw
   // function that takes the new bar array.
+  function _propagateIndexBars(alias, bars){
+    alias = String(alias || '').trim().toUpperCase();
+    if (!alias || !Array.isArray(bars)) return;
+    if (window.PortSim && PortSim.IndexCache && typeof PortSim.IndexCache.set === 'function'){
+      PortSim.IndexCache.set(alias, bars);
+    }
+    var st = window.PortSim && window.PortSim._state;
+    if (!st) return;
+    if (st.index === alias) st.indexBars = bars;
+    var currentDate = (st.unifiedDates && st.unifiedDates[st.playIdx]) || st.startDate || '';
+    var visibleBars = bars.filter(function(bar){ return bar && bar.time && (!currentDate || bar.time <= currentDate); });
+    var entries = window.PortSimAssets ? PortSimAssets.liveEntries(st) : (st.indexEntries || []);
+    entries.forEach(function(entry){
+      if (!entry || _entryAssetType(entry) !== 'index') return;
+      var entryAlias = String(entry.cacheSymbol || entry.displaySymbol || entry.symbol || '').trim().toUpperCase();
+      if (entryAlias !== alias) return;
+      entry.bars = bars;
+      entry.dateToBarIdx = new Map(bars.map(function(bar, index){ return [bar.time, index]; }));
+      entry.lastCloseSeen = visibleBars.length ? +visibleBars[visibleBars.length - 1].close : null;
+      entry._indexLoadState = 'ready';
+      try { if (entry.card && typeof entry.card.setData === 'function') entry.card.setData(visibleBars); } catch(e){}
+    });
+  }
+
   function _wireExtendButton(btn, source, onBars){
     if (!btn) return;
     source = typeof source === 'string' ? { dataSymbol: source } : (source || {});
@@ -29714,9 +29786,7 @@ Sim.Ctrl = (function(){
           .then(function(j){
             var bars = Array.isArray(j) ? j : (j && j.bars) || [];
             if (!bars.length) throw new Error('Updated source returned no bars for ' + resolvedReload);
-            if (isIndex && window.PortSim && PortSim.IndexCache && typeof PortSim.IndexCache.set === 'function'){
-              PortSim.IndexCache.set(indexAlias, bars);
-            }
+            if (isIndex) _propagateIndexBars(indexAlias, bars);
             if (typeof onBars === 'function') onBars(bars);
             btn.classList.add('is-ok');
             btn.textContent = added > 0 ? ('✓ +' + added + ' bars') : '✓ Up to date';
@@ -30344,6 +30414,7 @@ Sim.Ctrl = (function(){
   function _buildMD(){
     var ctx = _resolveCtx() || {};
     var basket = ctx.basket || [];
+    var reviewRows = _reviewEntryRows(ctx);
     var initial = +ctx.initialEquity || 0;
     var equity = +ctx.equity || 0;
     var realized = +ctx.realized || 0;
@@ -30415,7 +30486,11 @@ Sim.Ctrl = (function(){
         });
         L.push('');
       }
-      var note = (_data.notes && _data.notes[e.symbol]) || '';
+      var noteRow = reviewRows.filter(function(row){ return row.entry === e; })[0];
+      var noteKey = noteRow && noteRow.identity;
+      var note = (_data.notes && noteKey && _data.notes[noteKey] != null)
+        ? _data.notes[noteKey]
+        : ((_data.notes && _data.notes[e.symbol]) || '');
       if (note.trim()){
         L.push('**Notes:**');
         L.push('');
@@ -31239,7 +31314,7 @@ Sim.Ctrl = (function(){
   }
 
   function _newSlot(){
-    return { bars: null, dateMap: null, fetchedAt: 0, error: null, promise: null };
+    return { bars: null, dateMap: null, fetchedAt: 0, error: null, promise: null, epoch: 0 };
   }
 
   var _cache = { SPX: _newSlot(), NDQ: _newSlot() };
@@ -31284,18 +31359,30 @@ Sim.Ctrl = (function(){
     var slot = _cache[key];
     if (slot.bars && slot.bars.length) return Promise.resolve(slot);
     if (slot.promise) return slot.promise;
-    slot.promise = _fetchOnce(key)
+    var requestEpoch = slot.epoch;
+    var pending = _fetchOnce(key)
       .then(function(bars){
+        // A direct set() from Extend is newer than this request. Resolve every
+        // waiter to the current slot without allowing the stale response to
+        // replace freshly-extended bars.
+        if (slot.epoch !== requestEpoch){
+          if (slot.promise === pending) slot.promise = null;
+          return slot;
+        }
         slot.bars = bars;
         slot.dateMap = _buildDateMap(bars);
         slot.fetchedAt = Date.now();
         slot.error = null;
-        slot.promise = null;
+        if (slot.promise === pending) slot.promise = null;
         return slot;
       })
       .catch(function(err){
+        if (slot.epoch !== requestEpoch){
+          if (slot.promise === pending) slot.promise = null;
+          return slot;
+        }
         slot.error = err;
-        slot.promise = null;
+        if (slot.promise === pending) slot.promise = null;
         // For NDQ specifically, swallow 404 to an empty result so the index
         // strip can stay blank without forcing an external fetch. SPX 404
         // means SPY is missing entirely, which is a hard error worth surfacing.
@@ -31306,7 +31393,8 @@ Sim.Ctrl = (function(){
         }
         throw err;
       });
-    return slot.promise;
+    slot.promise = pending;
+    return pending;
   }
 
   function getBars(name){
@@ -31319,10 +31407,13 @@ Sim.Ctrl = (function(){
   function setExternal(name, bars){
     var key = _alias(name);
     if (!key || !Array.isArray(bars)) return;
-    _cache[key].bars = _normalize(bars);
-    _cache[key].dateMap = _buildDateMap(_cache[key].bars);
-    _cache[key].fetchedAt = Date.now();
-    _cache[key].error = null;
+    var slot = _cache[key];
+    slot.epoch += 1;
+    slot.promise = null;
+    slot.bars = _normalize(bars);
+    slot.dateMap = _buildDateMap(slot.bars);
+    slot.fetchedAt = Date.now();
+    slot.error = null;
   }
 
   function prewarm(){

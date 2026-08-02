@@ -14,6 +14,7 @@ import urllib.error
 import ssl
 import signal
 import threading
+import tempfile
 from datetime import date
 from flask import Flask, jsonify, send_from_directory, request, Response
 
@@ -43,6 +44,21 @@ _SPY_BARS_CACHE = None
 # locally-stored NDX historical CSV exists.
 NDX_HIST_CSV = os.path.join(SCRIPT_DIR, "NDQ Historical Data.csv")
 _NDQ_BARS_CACHE = None
+
+# Per-source locks fence the read/merge/replace/cache-invalidation transaction
+# without serializing remote HTTP fetches for unrelated symbols.
+_SOURCE_LOCKS = {}
+_SOURCE_LOCKS_GUARD = threading.Lock()
+
+
+def _source_lock(path):
+    target = os.path.abspath(path)
+    with _SOURCE_LOCKS_GUARD:
+        lock = _SOURCE_LOCKS.get(target)
+        if lock is None:
+            lock = threading.Lock()
+            _SOURCE_LOCKS[target] = lock
+        return lock
 
 
 def _load_ndq_bars():
@@ -293,14 +309,27 @@ def _parse_index_history_csv(path):
 
 
 def _write_canonical_bars(path, bars):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["DateTime", "Open", "High", "Low", "Close", "Volume"])
-        for bar in bars:
-            writer.writerow([
-                bar["time"], bar["open"], bar["high"], bar["low"], bar["close"], int(bar.get("volume") or 0)
-            ])
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(prefix=".ohlcv-", suffix=".tmp", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["DateTime", "Open", "High", "Low", "Close", "Volume"])
+            for bar in bars:
+                writer.writerow([
+                    bar["time"], bar["open"], bar["high"], bar["low"], bar["close"], int(bar.get("volume") or 0)
+                ])
+            f.flush()
+            os.fsync(f.fileno())
+        os.chmod(tmp_path, 0o644)
+        os.replace(tmp_path, path)
+    finally:
+        try:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+        except OSError:
+            pass
 
 def _load_spy_bars():
     global _SPY_BARS_CACHE
@@ -620,6 +649,7 @@ def api_fetch_ticker():
             csv_path = os.path.join(STOCKS_DIRS[0], "QQQ.csv")
     else:
         csv_path = os.path.join(STOCKS_DIRS[0], f"{symbol}.csv")
+    source_lock = _source_lock(csv_path)
 
     # For extend mode, find the last date in existing CSV
     existing_bars = []
@@ -631,9 +661,10 @@ def api_fetch_ticker():
             "reload_symbol": reload_symbol,
         }), 404
     if extend and os.path.exists(csv_path):
-        existing_bars = _parse_index_history_csv(csv_path)
-        if not existing_bars and storage_kind == "collected":
-            existing_bars = _parse_collected_stocks_csv(csv_path)
+        with source_lock:
+            existing_bars = _parse_index_history_csv(csv_path)
+            if not existing_bars and storage_kind == "collected":
+                existing_bars = _parse_collected_stocks_csv(csv_path)
         last_date = existing_bars[-1]["time"] if existing_bars else None
         if last_date:
             # Start from the day after the last date
@@ -718,20 +749,27 @@ def api_fetch_ticker():
 
     new_bars.sort(key=lambda x: x["time"])
 
-    # Merge only within the selected source, then rewrite to one canonical
-    # format understood by both index-history and collected-stock readers.
-    existing_dates = {bar["time"] for bar in existing_bars}
-    new_bars = [bar for bar in new_bars if bar["time"] not in existing_dates]
-    merged_by_date = {bar["time"]: bar for bar in existing_bars}
-    for bar in new_bars:
-        merged_by_date[bar["time"]] = bar
-    merged_bars = [merged_by_date[key] for key in sorted(merged_by_date)]
-    if new_bars or not extend:
-        _write_canonical_bars(csv_path, merged_bars)
-        if index_alias == "SPX":
-            _SPY_BARS_CACHE = None
-        elif index_alias == "NDQ":
-            _NDQ_BARS_CACHE = None
+    # Re-read and merge under the target source lock: concurrent Extend calls
+    # may fetch the same starting range, but neither can overwrite dates the
+    # other committed while its remote request was in flight.
+    with source_lock:
+        latest_existing = []
+        if extend and os.path.exists(csv_path):
+            latest_existing = _parse_index_history_csv(csv_path)
+            if not latest_existing and storage_kind == "collected":
+                latest_existing = _parse_collected_stocks_csv(csv_path)
+        existing_dates = {bar["time"] for bar in latest_existing}
+        new_bars = [bar for bar in new_bars if bar["time"] not in existing_dates]
+        merged_by_date = {bar["time"]: bar for bar in latest_existing}
+        for bar in new_bars:
+            merged_by_date[bar["time"]] = bar
+        merged_bars = [merged_by_date[key] for key in sorted(merged_by_date)]
+        if new_bars or not extend:
+            _write_canonical_bars(csv_path, merged_bars)
+            if index_alias == "SPX":
+                _SPY_BARS_CACHE = None
+            elif index_alias == "NDQ":
+                _NDQ_BARS_CACHE = None
 
     # Compute summary stats for the result row
     if new_bars:
