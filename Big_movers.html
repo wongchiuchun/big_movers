@@ -4724,6 +4724,10 @@
   }
   .portsim-review-stats strong.is-pos{color:var(--green);}
   .portsim-review-stats strong.is-neg{color:var(--red);}
+  .portsim-review-stats span{
+    font-family:var(--mono);font-size:9px;
+    color:var(--muted);white-space:nowrap;
+  }
   .portsim-review-origin{
     display:flex;align-items:center;gap:12px;flex-wrap:wrap;
     margin:0 0 14px;padding:9px 12px;
@@ -5073,6 +5077,11 @@
     }
     body.portsim-printing .portsim-review-stats strong.is-pos{color:#0a6b3b !important;}
     body.portsim-printing .portsim-review-stats strong.is-neg{color:#a3231f !important;}
+    body.portsim-printing .portsim-review-stats span{
+      font-size:9px !important;
+      color:#666 !important;
+      font-family:'JetBrains Mono','Courier New',monospace;
+    }
 
     /* ----- Tables ----- */
     body.portsim-printing .portsim-review-table{
@@ -29249,6 +29258,43 @@ Sim.Ctrl = (function(){
     }
   }
 
+  function _finiteReviewMetric(value){
+    return value != null && isFinite(value) ? +value : null;
+  }
+
+  // Portfolio performance fields are persisted in review meta rather than
+  // rebuilt from Review's leg snapshots. That keeps Review aligned with the
+  // shared SimStats calculation, including retired entries and infinity.
+  function _portfolioMetricDisplay(ctx){
+    ctx = ctx || {};
+    var tradeCount = _finiteReviewMetric(ctx.tradeCount);
+    var winCount = _finiteReviewMetric(ctx.winCount);
+    var winRate = _finiteReviewMetric(ctx.winRate);
+    var profitFactor = _finiteReviewMetric(ctx.profitFactor);
+    var hasTrades = tradeCount != null && tradeCount > 0;
+    var hasWinRate = hasTrades && winCount != null && winRate != null;
+    var profitFactorInfinite = hasTrades && ctx.profitFactorInfinite === true;
+    var pfClass = hasTrades && (profitFactorInfinite || (profitFactor != null && profitFactor >= 1))
+      ? 'is-pos'
+      : (hasTrades && profitFactor != null && profitFactor < 1 ? 'is-neg' : '');
+    return {
+      avgPctDeployed: _finiteReviewMetric(ctx.avgPctDeployed),
+      tradeCount: tradeCount,
+      winCount: winCount,
+      hasTrades: hasTrades,
+      avgText: _finiteReviewMetric(ctx.avgPctDeployed) != null
+        ? _finiteReviewMetric(ctx.avgPctDeployed).toFixed(1) + '%'
+        : '—',
+      profitFactorText: !hasTrades ? '—'
+        : (profitFactorInfinite ? '∞'
+          : (profitFactor != null ? profitFactor.toFixed(2) : '—')),
+      profitFactorClass: pfClass,
+      winRateText: hasWinRate ? winRate.toFixed(1) + '%' : '—',
+      winRateSubtext: hasWinRate ? (winCount + 'W / ' + tradeCount + ' trades') : '',
+      winRateClass: hasWinRate ? (winRate >= 50 ? 'is-pos' : 'is-neg') : ''
+    };
+  }
+
   // ---------- overview tab ----------
   function _renderOverview(body){
     var ctx = _resolveCtx();
@@ -29310,6 +29356,7 @@ Sim.Ctrl = (function(){
           return counts;
         }, { mover: 0, anchor: 0, noise: 0, unknown: 0 });
     var originLabel = originMode + (generation && generation.modified ? ' · modified' : '');
+    var portfolioMetrics = _portfolioMetricDisplay(ctx);
 
     var originHTML = revealBasketOrigin
       ? ('<div class="portsim-review-origin">'
@@ -29334,6 +29381,10 @@ Sim.Ctrl = (function(){
       +   '<div><label>PEAK</label><strong>' + _money(peak) + '</strong></div>'
       +   '<div><label>MAX DD</label><strong class="is-neg">' + _moneyS(maxDDDol) + ' (' + maxDDPct.toFixed(2) + '%)</strong></div>'
       +   '<div><label>OPEN</label><strong>' + openCount + '</strong></div>'
+      +   '<div><label>AVG CAPITAL DEPLOYED</label><strong>' + portfolioMetrics.avgText + '</strong></div>'
+      +   '<div><label>PROFIT FACTOR</label><strong class="' + portfolioMetrics.profitFactorClass + '">' + portfolioMetrics.profitFactorText + '</strong></div>'
+      +   '<div><label>WIN RATE</label><strong class="' + portfolioMetrics.winRateClass + '">' + portfolioMetrics.winRateText + '</strong>'
+      +     (portfolioMetrics.winRateSubtext ? '<span>' + portfolioMetrics.winRateSubtext + '</span>' : '') + '</div>'
       + '</div>'
       + originHTML
       + '<table class="portsim-review-table">'
@@ -29969,6 +30020,16 @@ Sim.Ctrl = (function(){
     var basket = window.PortSimAssets
       ? PortSimAssets.allTradeEntries(st)
       : (st.basket || []).concat(st.indexEntries || [], st.retiredEntries || []);
+    // Use the same complete trade-entry basket and calculator as the Summary
+    // and Stats views. Do not derive these metrics from Review leg snapshots:
+    // they can omit retired entries and differ from SimStats' trade semantics.
+    var portfolioMetrics = window.SimStats && typeof window.SimStats.computePortfolioMetrics === 'function'
+      ? window.SimStats.computePortfolioMetrics({ basket: basket })
+      : null;
+    var tradeCount = portfolioMetrics && _finiteReviewMetric(portfolioMetrics.tradeCount);
+    var profitFactor = portfolioMetrics && _finiteReviewMetric(portfolioMetrics.profitFactor);
+    if (tradeCount == null) tradeCount = 0;
+    if (tradeCount === 0) profitFactor = null;
     var liveEntries = window.PortSimAssets
       ? PortSimAssets.liveEntries(st)
       : (st.basket || []).concat(st.indexEntries || []);
@@ -30020,6 +30081,13 @@ Sim.Ctrl = (function(){
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
+      avgPctDeployed: portfolioMetrics ? _finiteReviewMetric(portfolioMetrics.avgPctDeployed) : null,
+      tradeCount: tradeCount,
+      winCount: portfolioMetrics ? _finiteReviewMetric(portfolioMetrics.winCount) : null,
+      lossCount: portfolioMetrics ? _finiteReviewMetric(portfolioMetrics.lossCount) : null,
+      winRate: portfolioMetrics ? _finiteReviewMetric(portfolioMetrics.winRate) : null,
+      profitFactor: profitFactor,
+      profitFactorInfinite: !!(portfolioMetrics && tradeCount > 0 && portfolioMetrics.profitFactor === Infinity),
       // P7 backward-compat: emit shortLocks snapshot in saved-review payload.
       shortLocks: st.shortLocks ? JSON.parse(JSON.stringify(st.shortLocks)) : {},
       notes: Array.isArray(st.notes) ? st.notes.slice() : [],
@@ -30425,6 +30493,7 @@ Sim.Ctrl = (function(){
     var peak = +ctx.peak || initial;
     var maxDDDol = +ctx.maxDDDol || 0;
     var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
+    var portfolioMetrics = _portfolioMetricDisplay(ctx);
 
     var L = [];
     L.push('# Portfolio Simulation — Trade Review');
@@ -30448,6 +30517,10 @@ Sim.Ctrl = (function(){
     L.push('| Peak Equity | ' + _money(peak) + ' |');
     L.push('| Max Drawdown | ' + _moneyS(maxDDDol) + ' (' + maxDDPct.toFixed(2) + '%) |');
     L.push('| Open positions | ' + openCount + ' |');
+    L.push('| Avg Capital Deployed | ' + portfolioMetrics.avgText + ' |');
+    L.push('| Profit Factor | ' + portfolioMetrics.profitFactorText + ' |');
+    L.push('| Win Rate | ' + portfolioMetrics.winRateText
+      + (portfolioMetrics.winRateSubtext ? ' (' + portfolioMetrics.winRateSubtext + ')' : '') + ' |');
     L.push('');
     if (_data.portfolio && _data.portfolio.trim()){
       L.push('## Portfolio Review Notes');
@@ -30853,7 +30926,7 @@ Sim.Ctrl = (function(){
     var initial = +session.initialEquity || 0;
     var equity = +session.finalEquity || (initial + (+session.sessionPnL || 0));
     var totalPnL = equity - initial;
-    return {
+    var meta = {
       startDate: session.simStartDate || '',
       endDate: session.simEndDate || '',
       index: session.indexName || 'SPX',
@@ -30869,6 +30942,28 @@ Sim.Ctrl = (function(){
       shortLocks: {}, notes: [],
       basket: basket
     };
+    // Preserve the session's shared portfolio metrics verbatim (apart from
+    // JSON's Infinity limitation). Older sessions lack these fields, so do
+    // not invent them from reconstructed review legs.
+    var hasSessionField = function(field){
+      return Object.prototype.hasOwnProperty.call(session, field);
+    };
+    ['avgPctDeployed', 'tradeCount', 'winCount', 'lossCount', 'winRate'].forEach(function(field){
+      if (hasSessionField(field)) meta[field] = _finiteReviewMetric(session[field]);
+    });
+    var sessionTradeCount = _finiteReviewMetric(session.tradeCount);
+    var sessionWinCount = _finiteReviewMetric(session.winCount);
+    var sessionLossCount = _finiteReviewMetric(session.lossCount);
+    var sessionProfitFactor = _finiteReviewMetric(session.profitFactor);
+    var profitFactorInfinite = session.profitFactorInfinite === true || session.profitFactor === Infinity
+      || (sessionTradeCount != null && sessionTradeCount > 0
+        && sessionWinCount != null && sessionWinCount > 0
+        && sessionLossCount === 0 && session.profitFactor == null);
+    if (hasSessionField('profitFactor') || hasSessionField('profitFactorInfinite') || profitFactorInfinite){
+      meta.profitFactor = sessionTradeCount === 0 ? null : sessionProfitFactor;
+      meta.profitFactorInfinite = sessionTradeCount !== 0 && profitFactorInfinite;
+    }
+    return meta;
   }
 
   // ---------- public open/close ----------
