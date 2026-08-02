@@ -22228,18 +22228,6 @@ Sim.Ctrl = (function(){
       entry.lastCloseSeen = initialBars.length ? +initialBars[initialBars.length - 1].close : null;
       entry._indexLoadState = 'ready';
       entry.card.setBadge('idle', 'idle');
-      // Merge the newly-ready trade card into the portfolio clock without
-      // moving the play head back to day zero.
-      _state.unifiedDates = _buildUnifiedDates(
-        _liveTradeEntries(),
-        _state.indexBars || [],
-        _state.startDate,
-        _state.endDate
-      );
-      for (let i = 0; i < _state.unifiedDates.length; i++){
-        if (_state.unifiedDates[i] >= currentDate){ _state.playIdx = i; break; }
-      }
-      _renderAll();
     }).catch(function(err){
       _setFixedIndexUnavailable(runToken, entry, err);
     });
@@ -22372,10 +22360,9 @@ Sim.Ctrl = (function(){
       _hydrateFixedIndexEntry(runToken, entry, definition);
     });
 
-    // Compute unified dates from union of basket + (later) index.
-    // Index bars added in fetchAndLoad — for now compute from basket only,
-    // we'll re-merge after the index resolves.
-    _state.unifiedDates = _buildUnifiedDates(_liveTradeEntries(), [], _state.startDate, _state.endDate);
+    // Compute unified dates from stocks + (later) selected benchmark only.
+    // Fixed tradable index cards hydrate independently and never own time.
+    _state.unifiedDates = _buildUnifiedDates(_state.basket, [], _state.startDate, _state.endDate);
     if (!_state.unifiedDates.length){
       throw new Error('no overlapping trading days in [' + _state.startDate + ', ' + _state.endDate + ']');
     }
@@ -22443,8 +22430,8 @@ Sim.Ctrl = (function(){
         for (let i = 0; i < idxAll.length; i++){
           _state.indexDateMap.set(idxAll[i].time, i);
         }
-        // Re-merge unified dates so index trading days are included.
-        _state.unifiedDates = _buildUnifiedDates(_liveTradeEntries(), idxAll, _state.startDate, _state.endDate);
+        // Re-merge stock dates with the selected benchmark trading days.
+        _state.unifiedDates = _buildUnifiedDates(_state.basket, idxAll, _state.startDate, _state.endDate);
         // Reset playIdx to start.
         _state.playIdx = 0;
         for (let i = 0; i < _state.unifiedDates.length; i++){
@@ -23961,7 +23948,7 @@ Sim.Ctrl = (function(){
 
       // Re-merge unified dates with the new ticker. Preserve play head by date.
       var prevDate = currentDate;
-      _state.unifiedDates = _buildUnifiedDates(_liveTradeEntries(), _state.indexBars || [], _state.startDate, _state.endDate);
+      _state.unifiedDates = _buildUnifiedDates(_state.basket, _state.indexBars || [], _state.startDate, _state.endDate);
       _state.playIdx = 0;
       for (var k = 0; k < _state.unifiedDates.length; k++){
         if (_state.unifiedDates[k] >= prevDate){ _state.playIdx = k; break; }
