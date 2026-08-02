@@ -15633,6 +15633,7 @@ window.Sim = Sim;
         entryInstanceKey: ctx.entryInstanceKey || null,
         displaySymbol: displaySymbol,
         dataSymbol: ctx.dataSymbol || symbol,
+        cacheSymbol: ctx.cacheSymbol || null,
         // P7: per-leg direction in CSV/JSON exports.
         direction: leg.direction || 'long',
         legId: leg.legId || null,
@@ -15736,7 +15737,8 @@ window.Sim = Sim;
           entryKey: entry.entryKey || null,
           entryInstanceKey: entry.entryInstanceKey || null,
           displaySymbol: entry.displaySymbol || entry.symbol || 'POS',
-          dataSymbol: entry.dataSymbol || entry.symbol || 'POS'
+          dataSymbol: entry.dataSymbol || entry.symbol || 'POS',
+          cacheSymbol: entry.cacheSymbol || null
         })
       );
     });
@@ -15881,6 +15883,7 @@ window.Sim = Sim;
         entryInstanceKey: entry.entryInstanceKey || instanceKey,
         displaySymbol: entry.displaySymbol || entry.symbol || 'POS',
         dataSymbol: entry.dataSymbol || entry.symbol || 'POS',
+        cacheSymbol: entry.cacheSymbol || null,
         symbol: entry.symbol || 'POS',
         role: entry.role || null,
         retired: !!entry._retired
@@ -28399,7 +28402,8 @@ Sim.Ctrl = (function(){
     rows.push('# current_date,' + _csvEscape(curDate || ''));
     rows.push('# current_play_idx,' + (st.playIdx | 0));
     rows.push('# index_benchmark,' + _csvEscape(st.index || 'SPX'));
-    rows.push('# basket_size,' + liveEntries.length);
+    rows.push('# basket_size,' + (st.basket || []).length);
+    rows.push('# tradable_entry_count,' + basket.length);
 
     // ---- 2. Portfolio summary ----
     var initial = +st.initialEquity || 0;
@@ -28449,13 +28453,14 @@ Sim.Ctrl = (function(){
     rows.push('Max Drawdown $,'   + _sgn(maxDDDol));
     rows.push('Max Drawdown %,'   + _sgnPct(maxDDPct));
     rows.push('Open Positions,'   + openCount);
-    rows.push('Basket Size,'      + liveEntries.length);
+    rows.push('Stock Basket Size,' + (st.basket || []).length);
+    rows.push('Tradable Entry Count,' + basket.length);
 
     // ---- 3. Per-position summary ----
     rows.push('');
     rows.push('# === Per-Position Summary ===');
     rows.push([
-      'Symbol','State','Qty','AvgCost','LastMark','ActiveStop',
+      'Symbol','Asset Type','State','Qty','AvgCost','LastMark','ActiveStop',
       'CumulativePnL','R','MFE','MAE','GiveBack',
       'LegCount','EntryDate','EntryPrice','InitialStop','InitialRisk'
     ].join(','));
@@ -28463,7 +28468,7 @@ Sim.Ctrl = (function(){
       if (!e) return;
       var sim = e.sim;
       if (!sim){
-        rows.push([_csvEscape(e.symbol), 'idle', '', '', '', '', '', '', '', '', '', '0', '', '', '', ''].join(','));
+        rows.push([_csvEscape(e.displaySymbol || e.symbol), _csvEscape(e.assetType || 'stock'), 'idle', '', '', '', '', '', '', '', '', '', '0', '', '', '', ''].join(','));
         return;
       }
       var derived = null;
@@ -28478,7 +28483,8 @@ Sim.Ctrl = (function(){
       var cumR  = derived && derived.cumulativeR != null ? derived.cumulativeR : '';
       var give  = derived && derived.giveBack != null ? derived.giveBack : '';
       rows.push([
-        _csvEscape(e.symbol),
+        _csvEscape(e.displaySymbol || e.symbol),
+        _csvEscape(e.assetType || 'stock'),
         posState,
         sim.qty,
         _r2(sim.avgCost),
@@ -28527,7 +28533,7 @@ Sim.Ctrl = (function(){
     // ---- 5. Combined event log ----
     rows.push('');
     rows.push('# === Event Log ===');
-    rows.push(['Symbol','Leg','Day','BarIdx','Date','Type','Qty','Price','NewStop','Pct','TriggerMode','Note'].join(','));
+    rows.push(['Symbol','Asset Type','Leg','Day','BarIdx','Date','Type','Qty','Price','NewStop','Pct','TriggerMode','Note'].join(','));
     var allEvents = [];
     basket.forEach(function(e){
       var sim = e && e.sim;
@@ -28538,7 +28544,7 @@ Sim.Ctrl = (function(){
         var legBar = (leg.entry && leg.entry.barIdx != null) ? leg.entry.barIdx : topEntryBar;
         (leg.eventsLog || []).forEach(function(ev){
           allEvents.push({
-            sym: e.symbol, leg: i + 1,
+            sym: e.displaySymbol || e.symbol, assetType: e.assetType || 'stock', leg: i + 1,
             day: ev.barIdx != null ? (ev.barIdx - legBar) : '',
             ev: ev
           });
@@ -28548,7 +28554,7 @@ Sim.Ctrl = (function(){
       var curLeg = (sim.legs || []).length + 1;
       (sim.eventsLog || []).forEach(function(ev){
         allEvents.push({
-          sym: e.symbol, leg: curLeg,
+          sym: e.displaySymbol || e.symbol, assetType: e.assetType || 'stock', leg: curLeg,
           day: ev.barIdx != null ? (ev.barIdx - topEntryBar) : '',
           ev: ev
         });
@@ -28564,6 +28570,7 @@ Sim.Ctrl = (function(){
       var ev = rec.ev;
       rows.push([
         _csvEscape(rec.sym),
+        _csvEscape(rec.assetType),
         rec.leg,
         rec.day,
         ev.barIdx != null ? ev.barIdx : '',
@@ -28664,6 +28671,70 @@ Sim.Ctrl = (function(){
     if (n == null || !isFinite(n)) return '—';
     var s = n > 0 ? '+' : '';
     return s + n.toFixed(2) + '%';
+  }
+  function _entryAssetType(entry){
+    return entry && entry.assetType === 'index' ? 'index' : 'stock';
+  }
+  function _entryDisplaySymbol(entry){
+    return String((entry && (entry.displaySymbol || entry.symbol)) || 'POS').trim().toUpperCase();
+  }
+  function _entryRole(generation, entry){
+    if (_entryAssetType(entry) === 'index') return 'index';
+    return window.PortSimBasket && PortSimBasket.resolveRole
+      ? PortSimBasket.resolveRole(generation, entry.symbol, entry.role)
+      : (/^(mover|anchor|noise)$/.test(entry && entry.role) ? entry.role : 'unknown');
+  }
+  function _domToken(value){
+    var raw = String(value == null ? '' : value);
+    var hash = 2166136261;
+    for (var i = 0; i < raw.length; i++){
+      hash ^= raw.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    var stem = raw.replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 36) || 'entry';
+    return stem + '-' + (hash >>> 0).toString(36);
+  }
+  function _reviewEntryRows(ctx){
+    var source = (ctx && Array.isArray(ctx.basket)) ? ctx.basket : [];
+    var included = source.filter(function(entry){
+      // The fixed index cards are always present. Only add an index trade tab
+      // when it actually contains a trade; the benchmark tab already covers
+      // an untouched index chart.
+      return _entryAssetType(entry) !== 'index' || (entry.legs || []).length > 0;
+    });
+    var displayTotals = {};
+    var retiredTotals = {};
+    included.forEach(function(entry){
+      var display = _entryDisplaySymbol(entry);
+      displayTotals[display] = (displayTotals[display] || 0) + 1;
+      if (entry.retired) retiredTotals[display] = (retiredTotals[display] || 0) + 1;
+    });
+    var retiredSeen = {};
+    return included.map(function(entry, index){
+      var display = _entryDisplaySymbol(entry);
+      var identity = entry.entryInstanceKey
+        ? String(entry.entryInstanceKey)
+        : String(entry.entryKey || (_entryAssetType(entry) + ':' + display)) + '#legacy-' + index;
+      var label = display;
+      if (entry.retired && displayTotals[display] > 1){
+        retiredSeen[display] = (retiredSeen[display] || 0) + 1;
+        label += ' · retired' + (retiredTotals[display] > 1 ? ' ' + retiredSeen[display] : '');
+      }
+      return {
+        entry: entry,
+        identity: identity,
+        tab: 't:' + encodeURIComponent(identity),
+        token: _domToken(identity),
+        label: label
+      };
+    });
+  }
+  function _reviewEntryRow(ctx, identity){
+    var rows = _reviewEntryRows(ctx);
+    for (var i = 0; i < rows.length; i++){
+      if (rows[i].identity === identity) return rows[i];
+    }
+    return null;
   }
 
   // ---------- structured review form (merged from former Guided Review) ----------
@@ -29061,8 +29132,8 @@ Sim.Ctrl = (function(){
       }
       ctx = _buildMeta();
     }
-    var basket = ctx.basket || [];
-    var tickerSyms = basket.map(function(e){ return e.symbol; });
+    var tickerRows = _reviewEntryRows(ctx);
+    var tickerSyms = tickerRows.map(function(row){ return _entryDisplaySymbol(row.entry); });
     document.getElementById('portsim-review-meta').textContent =
       (_viewOnly ? '[VIEW-ONLY] ' : '')
       + (ctx.startDate || '?') + ' → ' + (ctx.endDate || '?')
@@ -29076,19 +29147,22 @@ Sim.Ctrl = (function(){
     // have enough meta to rebuild a wizard config.
     var rerunBtn = document.getElementById('portsim-review-rerun');
     if (rerunBtn){
+      var hasCurrentStock = Array.isArray(ctx.basket) && ctx.basket.some(function(entry){
+        if (_entryAssetType(entry) !== 'stock') return false;
+        if (Array.isArray(ctx.activeEntryInstanceKeys)) return ctx.activeEntryInstanceKeys.indexOf(entry.entryInstanceKey) >= 0;
+        if (Array.isArray(ctx.activeSymbols)) return ctx.activeSymbols.indexOf(entry.symbol) >= 0;
+        return !entry.retired;
+      });
       var canRerun = _viewOnly && ctx && ctx.startDate && ctx.endDate
-        && Array.isArray(ctx.basket) && ctx.basket.length > 0;
+        && hasCurrentStock;
       rerunBtn.style.display = canRerun ? '' : 'none';
     }
 
-    var tabs = ['overview', 'index'];
-    tickerSyms.forEach(function(sym){ tabs.push('t:' + sym); });
+    var tabs = [{ tab: 'overview', label: 'OVERVIEW' }, { tab: 'index', label: ctx.index || 'INDEX' }]
+      .concat(tickerRows.map(function(row){ return { tab: row.tab, label: row.label }; }));
     var tabsHost = document.getElementById('portsim-review-tabs');
-    tabsHost.innerHTML = tabs.map(function(t){
-      var label = t === 'overview' ? 'OVERVIEW'
-        : (t === 'index' ? (ctx.index || 'INDEX')
-        : t.slice(2));
-      return '<button type="button" class="portsim-review-tab" data-tab="' + _esc(t) + '">' + _esc(label) + '</button>';
+    tabsHost.innerHTML = tabs.map(function(item){
+      return '<button type="button" class="portsim-review-tab" data-tab="' + _esc(item.tab) + '">' + _esc(item.label) + '</button>';
     }).join('');
     Array.prototype.slice.call(tabsHost.querySelectorAll('.portsim-review-tab')).forEach(function(btn){
       btn.addEventListener('click', function(){ _setTab(btn.getAttribute('data-tab')); });
@@ -29108,7 +29182,11 @@ Sim.Ctrl = (function(){
     body.innerHTML = '';
     if (tab === 'overview') _renderOverview(body);
     else if (tab === 'index') _renderIndexTab(body);
-    else if (/^t:/.test(tab)) _renderTickerTab(body, tab.slice(2));
+    else if (/^t:/.test(tab)) {
+      var identity = tab.slice(2);
+      try { identity = decodeURIComponent(identity); } catch(e){}
+      _renderTickerTab(body, _reviewEntryRow(_resolveCtx(), identity));
+    }
   }
 
   // ---------- overview tab ----------
@@ -29142,11 +29220,10 @@ Sim.Ctrl = (function(){
       atFinalBar
     );
     var tickerRows = (ctx.basket || []).map(function(e){
-      var role = window.PortSimBasket && PortSimBasket.resolveRole
-        ? PortSimBasket.resolveRole(generation, e.symbol, e.role)
-        : (/^(mover|anchor|noise)$/.test(e.role) ? e.role : 'unknown');
+      var role = _entryRole(generation, e);
       return {
-        sym: e.symbol,
+        sym: _entryDisplaySymbol(e),
+        assetType: _entryAssetType(e),
         entryInstanceKey: e.entryInstanceKey || null,
         role: role,
         legs: (e.legs || []).length,
@@ -29163,11 +29240,12 @@ Sim.Ctrl = (function(){
       : activeSymbols
       ? tickerRows.filter(function(row){ return activeSymbols.indexOf(row.sym) >= 0; })
       : tickerRows.filter(function(row){ return !row.retired; });
+    var activeStockRows = activeTickerRows.filter(function(row){ return row.assetType !== 'index'; });
     var currentCounts = window.PortSimBasket && PortSimBasket.countCurrentRoles
-      ? PortSimBasket.countCurrentRoles(generation, activeTickerRows.map(function(row){
+      ? PortSimBasket.countCurrentRoles(generation, activeStockRows.map(function(row){
           return { symbol: row.sym, role: row.role };
         }))
-      : activeTickerRows.reduce(function(counts, row){
+      : activeStockRows.reduce(function(counts, row){
           counts[row.role] = (counts[row.role] || 0) + 1;
           return counts;
         }, { mover: 0, anchor: 0, noise: 0, unknown: 0 });
@@ -29335,25 +29413,53 @@ Sim.Ctrl = (function(){
     try { _indexChart.timeScale().fitContent(); } catch(e){}
   }
 
-  // ---------- per-ticker tab ----------
-  function _renderTickerTab(body, sym){
+  function _fetchReviewBars(symbol){
+    return fetch('/api/ohlcv?symbol=' + encodeURIComponent(symbol))
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(j){ return Array.isArray(j) ? j : (j && j.bars) || []; });
+  }
+
+  // Saved index entries retain both their data symbol and their cache alias.
+  // Prefer the shared proxy-aware index cache, then fall back to the persisted
+  // server symbol. Stocks continue to read their own OHLCV symbol directly.
+  function _loadReviewEntryBars(entry){
+    var dataSymbol = entry.dataSymbol || entry.symbol;
+    if (_entryAssetType(entry) !== 'index') return _fetchReviewBars(dataSymbol);
+    var cacheSymbol = entry.cacheSymbol || entry.symbol;
+    if (window.PortSim && PortSim.IndexCache && typeof PortSim.IndexCache.ensure === 'function'){
+      return PortSim.IndexCache.ensure(cacheSymbol).then(function(slot){
+        var bars = (slot && slot.bars) || [];
+        return bars.length ? bars : _fetchReviewBars(dataSymbol);
+      }).catch(function(){ return _fetchReviewBars(dataSymbol); });
+    }
+    return _fetchReviewBars(dataSymbol);
+  }
+
+  // ---------- per-entry tab ----------
+  function _renderTickerTab(body, row){
     var ctx = _resolveCtx();
-    var ctxEntry = ctx && (ctx.basket || []).filter(function(e){ return e.symbol === sym; })[0];
-    if (!ctxEntry){ body.innerHTML = '<div class="portsim-review-empty">No data for ' + _esc(sym) + '</div>'; return; }
+    var ctxEntry = row && row.entry;
+    var sym = ctxEntry ? _entryDisplaySymbol(ctxEntry) : 'POS';
+    if (!ctxEntry){ body.innerHTML = '<div class="portsim-review-empty">No data for this trade entry.</div>'; return; }
+    var token = row.token;
+    var chartId = 'portsim-review-chart-' + token;
+    var extendId = 'portsim-review-extend-' + token;
+    var noteId = 'portsim-review-note-' + token;
     var legs = ctxEntry.legs || [];
+    var canIndividualSim = _entryAssetType(ctxEntry) === 'stock';
 
     body.innerHTML = ''
       + '<div class="portsim-review-tickerhead">'
       +   '<div class="portsim-review-tickersym">' + _esc(sym) + '</div>'
       +   '<div class="portsim-review-tickerstat">' + legs.length + ' leg(s)</div>'
-      +   '<button type="button" class="portsim-review-ticker-sim-btn" data-sim-sym="' + _esc(sym) + '" title="Run an independent individual simulation on ' + _esc(sym) + ' for the same window — try a different approach in isolation">🎯 Sim</button>'
+      +   (canIndividualSim ? '<button type="button" class="portsim-review-ticker-sim-btn" title="Run an independent individual simulation on ' + _esc(sym) + ' for the same window — try a different approach in isolation">🎯 Sim</button>' : '')
       + '</div>'
       + '<div class="portsim-review-charthost">'
       +   '<div class="portsim-review-chartlabel">'
       +     '<span>' + _esc(sym) + ' · sim window with trade markers</span>'
-      +     '<button type="button" class="portsim-review-extend-btn" id="portsim-review-extend-' + _esc(sym) + '" title="Fetch fresh bars up to today from Twelve Data">↻ Extend to today</button>'
+      +     '<button type="button" class="portsim-review-extend-btn" id="' + extendId + '" title="Fetch fresh bars up to today from Twelve Data">↻ Extend to today</button>'
       +   '</div>'
-      +   '<div class="portsim-review-chart" id="portsim-review-chart-' + _esc(sym) + '"></div>'
+      +   '<div class="portsim-review-chart" id="' + chartId + '"></div>'
       + '</div>'
       + '<table class="portsim-review-table">'
       +   '<thead><tr><th>LEG</th><th>ENTRY</th><th>SHARES</th><th>STOP&#8320;</th><th>RISK&#8320;</th><th>EXIT</th><th>REASON</th><th>P&amp;L</th><th>R</th><th>MFE</th><th>MAE</th></tr></thead>'
@@ -29375,21 +29481,24 @@ Sim.Ctrl = (function(){
         }).join('') + '</tbody>'
       + '</table>'
       + '<div class="portsim-review-notes">'
-      +   '<label for="portsim-review-note-' + _esc(sym) + '">REVIEW NOTES — ' + _esc(sym) + '</label>'
-      +   '<textarea id="portsim-review-note-' + _esc(sym) + '" rows="6" placeholder="What did you learn about ' + _esc(sym) + '? Entry timing, stop placement, sizing, hold discipline…"></textarea>'
+      +   '<label for="' + noteId + '">REVIEW NOTES — ' + _esc(sym) + '</label>'
+      +   '<textarea id="' + noteId + '" rows="6" placeholder="What did you learn about ' + _esc(sym) + '? Entry timing, stop placement, sizing, hold discipline…"></textarea>'
       + '</div>';
 
     // Structured per-leg review forms (merged from former Guided Review).
     // Render one form block per leg, hydrated from session.review.legs[tradeId].
     // Trade IDs come from the loaded session trades (_sessionTrades), filtered
     // by symbol and matched by legIndex to ctxEntry.legs[i].idx.
-    var tickerTrades = (_sessionTrades || []).filter(function(t){ return t.symbol === sym; })
+    var tickerTrades = (_sessionTrades || []).filter(function(t){
+      if (ctxEntry.entryInstanceKey && t.entryInstanceKey) return t.entryInstanceKey === ctxEntry.entryInstanceKey;
+      return (t.displaySymbol || t.symbol) === sym;
+    })
       .sort(function(a, b){ return (a.legIndex || 0) - (b.legIndex || 0); });
     var notesBlock = body.querySelector('.portsim-review-notes');
     if (legs.length){
       legs.forEach(function(l, i){
         var trade = tickerTrades[i] || null;
-        var tradeId = trade ? trade.id : ('leg_' + sym + '_' + (l.idx || (i+1)));
+        var tradeId = trade ? trade.id : ('leg_' + token + '_' + (l.idx || (i+1)));
         var tag = (_data.review && _data.review.legs && _data.review.legs[tradeId]) || {};
         var formEl = _renderLegSRForm(l, tradeId, tag, _viewOnly);
         formEl.addEventListener('input', function(){
@@ -29409,7 +29518,7 @@ Sim.Ctrl = (function(){
       });
     }
 
-    var note = document.getElementById('portsim-review-note-' + sym);
+    var note = document.getElementById(noteId);
     if (note){
       note.value = (_data.notes && _data.notes[sym]) || '';
       note.addEventListener('input', function(){
@@ -29419,7 +29528,7 @@ Sim.Ctrl = (function(){
       });
     }
 
-    var simBtn = body.querySelector('.portsim-review-ticker-sim-btn[data-sim-sym="' + sym + '"]');
+    var simBtn = body.querySelector('.portsim-review-ticker-sim-btn');
     if (simBtn){
       simBtn.addEventListener('click', function(){
         _onTickerSim(sym, ctx);
@@ -29427,13 +29536,17 @@ Sim.Ctrl = (function(){
     }
     // Extend-to-today button: refresh bars and redraw the same chart host.
     _wireExtendButton(
-      document.getElementById('portsim-review-extend-' + sym),
+      document.getElementById(extendId),
       ctxEntry.dataSymbol || sym,
       function(bars){
-        var host = document.getElementById('portsim-review-chart-' + sym);
+        if (_entryAssetType(ctxEntry) === 'index' && ctxEntry.cacheSymbol && window.PortSim && PortSim.IndexCache
+            && typeof PortSim.IndexCache.set === 'function'){
+          PortSim.IndexCache.set(ctxEntry.cacheSymbol, bars);
+        }
+        var host = document.getElementById(chartId);
         if (!host || !bars || !bars.length) return;
         host.innerHTML = '';
-        _drawTickerChart(host, { symbol: sym, bars: bars }, legs, ctx.startDate, ctx.endDate);
+        _drawTickerChart(host, { symbol: sym, bars: bars }, legs, ctx.startDate, ctx.endDate, token);
       }
     );
     if (_viewOnly){
@@ -29441,19 +29554,17 @@ Sim.Ctrl = (function(){
       // saved reviews stay reviewable later. Markers come from the saved
       // legs[*].eventsLog (entries, adds, sells, stops, closes) so the
       // user's actual trade actions are restored on the chart.
-      var phHost = document.getElementById('portsim-review-chart-' + sym);
+      var phHost = document.getElementById(chartId);
       if (phHost){
         phHost.innerHTML = '<div class="portsim-review-chart-placeholder">Loading chart…</div>';
-        fetch('/api/ohlcv?symbol=' + encodeURIComponent(ctxEntry.dataSymbol || sym))
-          .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-          .then(function(j){
-            var bars = Array.isArray(j) ? j : (j && j.bars) || [];
+        _loadReviewEntryBars(ctxEntry)
+          .then(function(bars){
             if (!bars.length){
               phHost.innerHTML = '<div class="portsim-review-chart-placeholder">No bars on disk for ' + _esc(sym) + '. Re-fetch via the table\'s Extend-to-Today button.</div>';
               return;
             }
             phHost.innerHTML = '';
-            _drawTickerChart(phHost, { symbol: sym, bars: bars }, legs, ctx.startDate, ctx.endDate);
+            _drawTickerChart(phHost, { symbol: sym, bars: bars }, legs, ctx.startDate, ctx.endDate, token);
           })
           .catch(function(e){
             phHost.innerHTML = '<div class="portsim-review-chart-placeholder">Failed to load chart for ' + _esc(sym) + ': ' + _esc(e && e.message ? e.message : 'unknown') + '</div>';
@@ -29470,15 +29581,15 @@ Sim.Ctrl = (function(){
       : (st.basket || []).concat(st.indexEntries || [], st.retiredEntries || []));
     var liveEntry = tradeEntries && tradeEntries.filter(function(e){
       if (ctxEntry.entryInstanceKey && e.entryInstanceKey) return e.entryInstanceKey === ctxEntry.entryInstanceKey;
-      return e.symbol === sym;
+      return _entryAssetType(e) === _entryAssetType(ctxEntry) && _entryDisplaySymbol(e) === sym;
     })[0];
     setTimeout(function(){
-      var host = document.getElementById('portsim-review-chart-' + sym);
-      if (host && liveEntry) _drawTickerChart(host, liveEntry, legs);
+      var host = document.getElementById(chartId);
+      if (host && liveEntry) _drawTickerChart(host, liveEntry, legs, null, null, token);
     }, 30);
   }
 
-  function _drawTickerChart(host, entry, legs, sdOverride, edOverride){
+  function _drawTickerChart(host, entry, legs, sdOverride, edOverride, chartKey){
     if (typeof LightweightCharts === 'undefined') return;
     var bars = entry.bars || [];
     if (!bars.length){ host.innerHTML = '<div class="portsim-review-empty">No data.</div>'; return; }
@@ -29490,9 +29601,10 @@ Sim.Ctrl = (function(){
       return (!sd || t >= sd) && (!ed || t <= ed);
     });
     if (!win.length) win = bars;
-    if (_tickerCharts[entry.symbol]){
-      try { _tickerCharts[entry.symbol].remove(); } catch(e){}
-      _tickerCharts[entry.symbol] = null;
+    chartKey = chartKey || _domToken(entry.symbol);
+    if (_tickerCharts[chartKey]){
+      try { _tickerCharts[chartKey].remove(); } catch(e){}
+      _tickerCharts[chartKey] = null;
     }
     var w = host.clientWidth || 900, h = host.clientHeight || 380;
     var chart = LightweightCharts.createChart(host, {
@@ -29503,7 +29615,7 @@ Sim.Ctrl = (function(){
       timeScale: { borderColor: '#262932', timeVisible: false },
       crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
     });
-    _tickerCharts[entry.symbol] = chart;
+    _tickerCharts[chartKey] = chart;
     var s = chart.addCandlestickSeries({
       upColor: '#26a69a', downColor: '#ef5350',
       borderVisible: false,
@@ -29796,13 +29908,20 @@ Sim.Ctrl = (function(){
     var basketGeneration = st.basketGeneration
       ? JSON.parse(JSON.stringify(st.basketGeneration))
       : null;
+    function persistedEntryKey(e){
+      return e.entryKey || (window.PortSimAssets ? PortSimAssets.entryKey(e) : (_entryAssetType(e) + ':' + e.symbol));
+    }
+    function persistedInstanceKey(e){
+      if (e.entryInstanceKey) return e.entryInstanceKey;
+      return persistedEntryKey(e) + '#legacy-' + Math.max(0, basket.indexOf(e));
+    }
     return {
       startDate: st.startDate || '',
       endDate: st.endDate || '',
       index: st.index || 'SPX',
       basketGeneration: basketGeneration,
       activeSymbols: (st.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean),
-      activeEntryInstanceKeys: liveEntries.map(function(e){ return e && e.entryInstanceKey; }).filter(Boolean),
+      activeEntryInstanceKeys: liveEntries.map(function(e){ return e && persistedInstanceKey(e); }).filter(Boolean),
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
@@ -29813,14 +29932,13 @@ Sim.Ctrl = (function(){
         var legs = _legSnapshots(e);
         return {
           symbol: e.symbol,
-          assetType: e.assetType || 'stock',
-          entryKey: e.entryKey || null,
-          entryInstanceKey: e.entryInstanceKey || null,
+          assetType: _entryAssetType(e),
+          entryKey: persistedEntryKey(e),
+          entryInstanceKey: persistedInstanceKey(e),
           displaySymbol: e.displaySymbol || e.symbol,
           dataSymbol: e.dataSymbol || e.symbol,
-          role: window.PortSimBasket && PortSimBasket.resolveRole
-            ? PortSimBasket.resolveRole(basketGeneration, e.symbol, e.role)
-            : (/^(mover|anchor|noise)$/.test(e.role) ? e.role : 'unknown'),
+          cacheSymbol: e.cacheSymbol || null,
+          role: _entryRole(basketGeneration, e),
           retired: !!e._retired,
           legs: legs,
           totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
@@ -29851,9 +29969,11 @@ Sim.Ctrl = (function(){
       // Parse the runId tail for display: <prefix><sd>__<ed>__<sym1-sym2-...>
       var rest = k.slice(STORAGE_PREFIX.length);
       var parts = rest.split('__');
-      var sd = parts[0] || '';
-      var ed = parts[1] || '';
-      var syms = (parts[2] || '').split('-').filter(Boolean);
+      var sd = (val.meta && val.meta.startDate) || parts[0] || '';
+      var ed = (val.meta && val.meta.endDate) || parts[1] || '';
+      var syms = val.meta && Array.isArray(val.meta.basket)
+        ? _reviewEntryRows(val.meta).map(function(row){ return _entryDisplaySymbol(row.entry); })
+        : (parts[2] || '').split('-').filter(Boolean);
       var notesCount = 0;
       if (val.notes){
         Object.keys(val.notes).forEach(function(s){
@@ -30039,11 +30159,18 @@ Sim.Ctrl = (function(){
       alert('This saved review is missing the metadata needed to rerun.');
       return;
     }
-    var rerunBasket = Array.isArray(meta.activeSymbols)
-      ? meta.basket.filter(function(b){ return meta.activeSymbols.indexOf(b.symbol) >= 0; })
-      : meta.basket.filter(function(b){ return !b.retired; });
-    if (!rerunBasket.length) rerunBasket = meta.basket.slice();
-    var symList = rerunBasket.map(function(b){ return b.symbol; }).join(', ');
+    var stockEntries = meta.basket.filter(function(b){ return _entryAssetType(b) === 'stock'; });
+    var rerunBasket = Array.isArray(meta.activeEntryInstanceKeys)
+      ? stockEntries.filter(function(b){ return meta.activeEntryInstanceKeys.indexOf(b.entryInstanceKey) >= 0; })
+      : Array.isArray(meta.activeSymbols)
+      ? stockEntries.filter(function(b){ return meta.activeSymbols.indexOf(b.symbol) >= 0; })
+      : stockEntries.filter(function(b){ return !b.retired; });
+    if (!rerunBasket.length) rerunBasket = stockEntries.filter(function(b){ return !b.retired; });
+    if (!rerunBasket.length){
+      alert('This saved review has no current stock entries to rerun.');
+      return;
+    }
+    var symList = rerunBasket.map(function(b){ return _entryDisplaySymbol(b); }).join(', ');
     if (!confirm('Rerun this episode from day 0?\n\n' +
                  meta.startDate + ' → ' + meta.endDate + '\n' +
                  symList + '\n' +
@@ -30114,7 +30241,18 @@ Sim.Ctrl = (function(){
     if (!meta.shortLocks) meta.shortLocks = {};
     if (Array.isArray(meta.basket)){
       meta.basket.forEach(function(e){
-        if (!e || !Array.isArray(e.legs)) return;
+        if (!e) return;
+        var display = String(e.displaySymbol || e.symbol || 'POS').trim().toUpperCase();
+        var isIndex = e.assetType === 'index' || e.role === 'index' || /^index:/.test(String(e.entryKey || ''))
+          || display === 'SPX' || display === 'NDQ';
+        e.assetType = isIndex ? 'index' : 'stock';
+        e.displaySymbol = display;
+        e.symbol = String(e.symbol || display).trim().toUpperCase();
+        e.entryKey = e.entryKey || (e.assetType + ':' + e.symbol);
+        e.dataSymbol = e.dataSymbol || (isIndex && display === 'SPX' ? 'SPY' : e.symbol);
+        e.cacheSymbol = e.cacheSymbol || (isIndex ? display : null);
+        if (isIndex) e.role = 'index';
+        if (!Array.isArray(e.legs)) e.legs = [];
         e.legs.forEach(function(l){
           if (l && l.direction == null) l.direction = 'long';
         });
@@ -30295,7 +30433,7 @@ Sim.Ctrl = (function(){
     if (!body) return;
     var ctx = _resolveCtx();
     if (!ctx) return;
-    var basket = ctx.basket || [];
+    var reviewRows = _reviewEntryRows(ctx);
 
     body.innerHTML = '';
 
@@ -30306,7 +30444,7 @@ Sim.Ctrl = (function(){
       + '<h1 class="portsim-print-cover-title">Portfolio Simulation Review</h1>'
       + '<div class="portsim-print-cover-meta">'
       +   '<div><strong>Window:</strong> ' + _esc(ctx.startDate || '?') + ' → ' + _esc(ctx.endDate || '?') + '</div>'
-      +   '<div><strong>Tickers:</strong> ' + basket.map(function(e){ return _esc(e.symbol); }).join(', ') + '</div>'
+      +   '<div><strong>Tickers:</strong> ' + reviewRows.map(function(row){ return _esc(_entryDisplaySymbol(row.entry)); }).join(', ') + '</div>'
       +   '<div><strong>Index:</strong> ' + _esc(ctx.index || 'SPX') + '</div>'
       +   '<div><strong>Initial:</strong> ' + _money(+ctx.initialEquity || 0) + '</div>'
       +   '<div><strong>Generated:</strong> ' + new Date().toLocaleString() + '</div>'
@@ -30330,8 +30468,8 @@ Sim.Ctrl = (function(){
 
     addSection('Overview', function(host){ _renderOverview(host); });
     addSection('Index · ' + (ctx.index || 'SPX'), function(host){ _renderIndexTab(host); });
-    basket.forEach(function(e){
-      addSection(e.symbol, function(host){ _renderTickerTab(host, e.symbol); });
+    reviewRows.forEach(function(row){
+      addSection(row.label, function(host){ _renderTickerTab(host, row); });
     });
   }
 
@@ -30360,10 +30498,10 @@ Sim.Ctrl = (function(){
       try { _replaceWithImg(iHost, _indexChart.takeScreenshot()); } catch(e){}
     }
     // Per-ticker charts
-    Object.keys(_tickerCharts || {}).forEach(function(sym){
-      var ch = _tickerCharts[sym];
+    Object.keys(_tickerCharts || {}).forEach(function(token){
+      var ch = _tickerCharts[token];
       if (!ch || typeof ch.takeScreenshot !== 'function') return;
-      var host = document.getElementById('portsim-review-chart-' + sym);
+      var host = document.getElementById('portsim-review-chart-' + token);
       try { _replaceWithImg(host, ch.takeScreenshot()); } catch(e){}
     });
   }
@@ -30447,19 +30585,94 @@ Sim.Ctrl = (function(){
   // alone, without needing the live sim state.
   function _synthMetaFromSession(session, trades){
     if (!session) return null;
-    var bySym = {};
+    trades = Array.isArray(trades) ? trades : [];
+    var groups = {};
     var order = [];
+    var basketAssets = session.basketAssets && typeof session.basketAssets === 'object'
+      ? session.basketAssets
+      : {};
+    var activeEntryInstanceKeys = Array.isArray(session.activeEntryInstanceKeys)
+      ? session.activeEntryInstanceKeys.map(function(key){ return String(key || ''); }).filter(Boolean)
+      : null;
     var activeSymbols = Array.isArray(session.activeSymbols)
       ? session.activeSymbols.map(function(sym){ return String(sym || '').trim().toUpperCase(); }).filter(Boolean)
       : null;
-    if (activeSymbols) {
+
+    function normalizedAsset(seed){
+      seed = seed || {};
+      var symbol = String(seed.symbol || seed.displaySymbol || 'POS').trim().toUpperCase();
+      var displaySymbol = String(seed.displaySymbol || symbol).trim().toUpperCase();
+      var entryKey = seed.entryKey || null;
+      var assetType = seed.assetType === 'index' || /^index:/.test(String(entryKey || ''))
+        || displaySymbol === 'SPX' || displaySymbol === 'NDQ'
+        ? 'index' : 'stock';
+      return {
+        symbol: symbol,
+        displaySymbol: displaySymbol,
+        assetType: assetType,
+        entryKey: entryKey || (assetType + ':' + symbol),
+        entryInstanceKey: seed.entryInstanceKey || null,
+        dataSymbol: seed.dataSymbol || (assetType === 'index' && displaySymbol === 'SPX' ? 'SPY' : symbol),
+        cacheSymbol: seed.cacheSymbol || (assetType === 'index' ? displaySymbol : null),
+        role: assetType === 'index' ? 'index' : (seed.role || null),
+        retired: Object.prototype.hasOwnProperty.call(seed, 'retired') ? !!seed.retired : null
+      };
+    }
+
+    function groupKeyFor(asset){
+      return asset.entryInstanceKey
+        ? 'instance:' + asset.entryInstanceKey
+        : 'legacy:' + asset.assetType + ':' + asset.displaySymbol;
+    }
+    function ensureGroup(seed){
+      var asset = normalizedAsset(seed);
+      var key = groupKeyFor(asset);
+      if (!groups[key]){
+        groups[key] = Object.assign({ legs: [] }, asset);
+        order.push(key);
+      } else {
+        Object.keys(asset).forEach(function(field){
+          if (asset[field] != null && asset[field] !== '') groups[key][field] = asset[field];
+        });
+      }
+      return groups[key];
+    }
+
+    Object.keys(basketAssets).forEach(function(storageKey){
+      var raw = basketAssets[storageKey];
+      if (!raw || typeof raw !== 'object') return;
+      var seed = Object.assign({}, raw);
+      if (!seed.entryInstanceKey && storageKey && (
+        storageKey.indexOf('#') >= 0 || (activeEntryInstanceKeys && activeEntryInstanceKeys.indexOf(storageKey) >= 0)
+      )) seed.entryInstanceKey = storageKey;
+      ensureGroup(seed);
+    });
+
+    // Legacy sessions may only carry activeSymbols. Seed those current stock
+    // rows so rerun reconstruction still works even when they never traded.
+    if (!activeEntryInstanceKeys && activeSymbols){
       activeSymbols.forEach(function(sym){
-        if (!bySym[sym]) { bySym[sym] = []; order.push(sym); }
+        var alreadyPresent = order.some(function(key){
+          return groups[key].assetType === 'stock' && groups[key].displaySymbol === sym;
+        });
+        if (!alreadyPresent) ensureGroup({ symbol: sym, displaySymbol: sym, assetType: 'stock' });
       });
     }
+
     trades.forEach(function(t){
-      if (!t || !t.symbol) return;
-      if (!bySym[t.symbol]){ bySym[t.symbol] = []; order.push(t.symbol); }
+      if (!t) return;
+      var persistedAsset = null;
+      if (t.entryInstanceKey && basketAssets[t.entryInstanceKey]) persistedAsset = basketAssets[t.entryInstanceKey];
+      if (!persistedAsset && t.entryInstanceKey){
+        Object.keys(basketAssets).some(function(key){
+          var candidate = basketAssets[key];
+          if (candidate && candidate.entryInstanceKey === t.entryInstanceKey){ persistedAsset = candidate; return true; }
+          return false;
+        });
+      }
+      var seed = Object.assign({}, t, persistedAsset || {});
+      if (t.entryInstanceKey) seed.entryInstanceKey = t.entryInstanceKey;
+      var group = ensureGroup(seed);
       // Synthesize an exit event so _markersFromLegs draws an exit marker
       // even though we don't have the live sim's eventsLog. Entry markers
       // are drawn off leg.entryDate directly so no synth needed there.
@@ -30473,8 +30686,8 @@ Sim.Ctrl = (function(){
                    : 'sell';
         events.push({ type: evType, date: t.exitDate, price: t.exitPrice, qty: t.qty || 0 });
       }
-      bySym[t.symbol].push({
-        idx: t.legIndex || (bySym[t.symbol].length + 1),
+      group.legs.push({
+        idx: t.legIndex || (group.legs.length + 1),
         direction: t.direction || 'long',
         legId: t.legId || null,
         entryDate: t.entryDate || null,
@@ -30492,27 +30705,43 @@ Sim.Ctrl = (function(){
         active: false
       });
     });
-    Object.keys(bySym).forEach(function(sym){
-      bySym[sym].sort(function(a, b){ return (a.idx || 0) - (b.idx || 0); });
+    order.forEach(function(key){
+      groups[key].legs.sort(function(a, b){ return (a.idx || 0) - (b.idx || 0); });
     });
     var basketGeneration = session.basketGeneration
       ? JSON.parse(JSON.stringify(session.basketGeneration))
       : null;
-    var basket = order.map(function(sym){
-      var legs = bySym[sym];
-      var explicitRole = session.basketRoles && Object.prototype.hasOwnProperty.call(session.basketRoles, sym)
-        ? session.basketRoles[sym]
-        : 'unknown';
-      var role = typeof PortSimBasket !== 'undefined' && PortSimBasket.resolveRole
-        ? PortSimBasket.resolveRole(basketGeneration, sym, explicitRole)
-        : (/^(mover|anchor|noise)$/.test(explicitRole)
-          ? explicitRole
-          : (basketGeneration && basketGeneration.roles && /^(mover|anchor|noise)$/.test(basketGeneration.roles[sym])
-            ? basketGeneration.roles[sym]
-            : 'unknown'));
-      var retired = !!(activeSymbols && activeSymbols.indexOf(sym) < 0);
+    var basket = order.map(function(key){
+      var group = groups[key];
+      var legs = group.legs;
+      var explicitRole = group.role || (session.basketRoles && Object.prototype.hasOwnProperty.call(session.basketRoles, group.symbol)
+        ? session.basketRoles[group.symbol]
+        : 'unknown');
+      var role = group.assetType === 'index'
+        ? 'index'
+        : (typeof PortSimBasket !== 'undefined' && PortSimBasket.resolveRole
+          ? PortSimBasket.resolveRole(basketGeneration, group.symbol, explicitRole)
+          : (/^(mover|anchor|noise)$/.test(explicitRole) ? explicitRole : 'unknown'));
+      var retired;
+      if (activeEntryInstanceKeys && group.entryInstanceKey){
+        retired = activeEntryInstanceKeys.indexOf(group.entryInstanceKey) < 0;
+      } else if (group.assetType === 'index') {
+        // Fixed legacy index assets were never replaceable, so absence from
+        // stock-only activeSymbols does not make them retired.
+        retired = false;
+      } else if (activeSymbols) {
+        retired = activeSymbols.indexOf(group.symbol) < 0 && activeSymbols.indexOf(group.displaySymbol) < 0;
+      } else {
+        retired = !!group.retired;
+      }
       return {
-        symbol: sym,
+        symbol: group.symbol,
+        assetType: group.assetType,
+        entryKey: group.entryKey,
+        entryInstanceKey: group.entryInstanceKey,
+        displaySymbol: group.displaySymbol,
+        dataSymbol: group.dataSymbol,
+        cacheSymbol: group.cacheSymbol,
         role: role,
         retired: retired,
         legs: legs,
@@ -30529,6 +30758,7 @@ Sim.Ctrl = (function(){
       endDate: session.simEndDate || '',
       index: session.indexName || 'SPX',
       basketGeneration: basketGeneration,
+      activeEntryInstanceKeys: activeEntryInstanceKeys,
       activeSymbols: activeSymbols,
       initialEquity: initial,
       cash: equity, equity: equity,
