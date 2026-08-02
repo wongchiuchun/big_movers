@@ -20644,14 +20644,18 @@ Sim.Ctrl = (function(){
     }).join('');
   }
 
-  function _makeRandomWindow(year, rng) {
+  function _makeRandomWindow(year, rng, extended) {
     var startMonth = Math.floor(rng() * 8); // Jan..Aug
     var startDay = 1 + Math.floor(rng() * 28);
-    var windowDays = 120 + Math.floor(rng() * 61);
+    var minDays = extended ? 180 : 120;
+    var dayVariants = extended ? 91 : 61;
+    var windowDays = minDays + Math.floor(rng() * dayVariants);
     var start = new Date(Date.UTC(year, startMonth, startDay));
     var end = new Date(Date.UTC(year, startMonth, startDay + windowDays));
-    var yearEnd = new Date(Date.UTC(year, 11, 31));
-    if (end.getTime() > yearEnd.getTime()) end = yearEnd;
+    if (!extended) {
+      var yearEnd = new Date(Date.UTC(year, 11, 31));
+      if (end.getTime() > yearEnd.getTime()) end = yearEnd;
+    }
     return { start: _toDateStr(start), end: _toDateStr(end) };
   }
 
@@ -20669,19 +20673,10 @@ Sim.Ctrl = (function(){
     var size = Math.max(1, Math.min(10, Math.trunc(Number(options.size) || 6)));
     var seed = String(options.seed || '');
     var loadBars = options.loadBars;
+    var extended = !!options.extended;
     var rng = api.createRng(seed + ':windows');
     var makeWindow = options.makeWindow || function () {
-      var startMonth = Math.floor(rng() * 8);
-      var startDay = 1 + Math.floor(rng() * 28);
-      var windowDays = 120 + Math.floor(rng() * 61);
-      var startDate = new Date(Date.UTC(year, startMonth, startDay));
-      var endDate = new Date(Date.UTC(year, startMonth, startDay + windowDays));
-      var lastDate = new Date(Date.UTC(year, 11, 31));
-      if (endDate.getTime() > lastDate.getTime()) endDate = lastDate;
-      return {
-        start: startDate.toISOString().slice(0, 10),
-        end: endDate.toISOString().slice(0, 10)
-      };
+      return _makeRandomWindow(year, rng, extended);
     };
     var dataStart = String(manifest.data_start || '');
     var dataEnd = String(manifest.data_end || '');
@@ -20853,9 +20848,11 @@ Sim.Ctrl = (function(){
     var yearEl = $('#portsim-rand-year');
     var countEl = $('#portsim-rand-count');
     var balancedEl = $('#portsim-rand-noise');
+    var extendedEl = $('#portsim-rand-extended');
     var year = parseInt(yearEl && yearEl.value, 10);
     var count = parseInt(countEl && countEl.value, 10);
     var balancedOn = !!(balancedEl && balancedEl.checked);
+    var extendedOn = !!(extendedEl && extendedEl.checked);
     if (!Number.isFinite(year)) { setStatus('Pick a year first.', 'error'); return; }
     if (!Number.isFinite(count) || count < 1) count = 6;
     count = Math.min(count, MAX_ROWS);
@@ -20872,7 +20869,7 @@ Sim.Ctrl = (function(){
         }
         var seed = _newBasketSeed();
         var rng = PortSimBasket.createRng(seed + ':legacy-window');
-        var windowRange = _makeRandomWindow(year, rng);
+        var windowRange = _makeRandomWindow(year, rng, extendedOn);
         var picked = sameYear.slice(0, count);
         var roles = {};
         picked.forEach(function (row) { roles[row.symbol] = 'mover'; });
@@ -20902,6 +20899,7 @@ Sim.Ctrl = (function(){
         rows: values[0],
         manifest: values[1],
         loadBars: loadBars,
+        extended: extendedOn,
         basketApi: window.PortSimBasket
       }).then(function (result) {
         if (!result.selection) {
@@ -30875,14 +30873,18 @@ Sim.Ctrl = (function(){
         </div>
         <div class="fetch-field">
           <label>&nbsp;</label>
-          <button type="button" id="portsim-rand-btn" title="Pick N random tickers from this year and a random 4–6 month window">🎲 Randomize</button>
+          <button type="button" id="portsim-rand-btn" title="Pick N random tickers and dates: 4–6 months normally, or 6–9 months with Extended timeframe">🎲 Randomize</button>
         </div>
       </div>
       <label class="portsim-randomize-noise" for="portsim-rand-noise">
         <input type="checkbox" id="portsim-rand-noise" checked>
         <span>⚖️ Balanced basket — combines same-year movers, liquid market anchors, and cross-year candidates using local price data only.</span>
       </label>
-      <div class="portsim-randomize-hint">Builds a hidden balanced mix for a random 4–6 month window. Turn it off for legacy same-year-only selection. Replaces current basket rows and dates.</div>
+      <label class="portsim-randomize-noise" for="portsim-rand-extended">
+        <input type="checkbox" id="portsim-rand-extended">
+        <span>⏳ Extended timeframe — random 6–9 month window (up to about 180 trading days), with cross-year periods allowed.</span>
+      </label>
+      <div class="portsim-randomize-hint">Uses a random 4–6 month window normally, or 6–9 months with Extended timeframe. Turn Balanced basket off for legacy same-year-only selection. Replaces current basket rows and dates.</div>
     </div>
 
     <div class="portsim-section-title">

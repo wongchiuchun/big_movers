@@ -62,6 +62,7 @@ Each tool has independent color, width, and line style (solid/dashed/dotted). Dr
 ### Portfolio Simulation
 - **Balanced baskets by default** — six visible tickers drawn from hidden mixtures of same-year movers, liquid point-in-time market anchors, and liquid cross-year comparison names
 - **Flexible basket size** — supports one through ten tickers while retaining at least one genuine mover
+- **Optional extended timeframe** — randomization normally uses 4–6 calendar months; enable Extended timeframe for a random 6–9 month window that may cross into the following year
 - **No look-ahead selection** — anchors use eligibility at the simulation start; comparison-name liquidity uses only the preceding 20–60 daily bars
 - **Blind live roles** — source roles stay hidden during setup and playback, then appear with the basket composition and reproducible seed in Trade Review
 - **Offline randomization** — selection reads only `big_movers_result.csv`, `market_anchor_universe.json`, and local OHLCV files; it never downloads missing data

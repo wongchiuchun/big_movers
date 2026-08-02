@@ -25,7 +25,7 @@ function extractFunction(source, name) {
 }
 
 function loadResolver() {
-  const names = ['_uniqueSymbolRows', '_resolveBalancedBasket'];
+  const names = ['_toDateStr', '_makeRandomWindow', '_uniqueSymbolRows', '_resolveBalancedBasket'];
   const sandbox = { Promise, Set, Map };
   vm.createContext(sandbox);
   vm.runInContext(
@@ -141,4 +141,41 @@ test('balanced resolver stops after twelve distinct failed windows', async () =>
   assert.equal(windowCalls, 12);
   assert.equal(selectCalls, 12);
   assert.equal(result.attempts.some(attempt => attempt.start === windows[12].start), false);
+});
+
+test('balanced resolver uses extended windows from the shared generator', async () => {
+  const resolve = loadResolver();
+
+  const result = await resolve({
+    year: 2020,
+    size: 6,
+    seed: 'extended-cross-year',
+    extended: true,
+    rows: [],
+    manifest: {
+      data_start: '2015-01-01',
+      data_end: '2025-12-31',
+      symbols: []
+    },
+    loadBars() {
+      return Promise.resolve([]);
+    },
+    basketApi: {
+      createRng: basketApi.createRng,
+      hasWindowCoverage: basketApi.hasWindowCoverage,
+      isAnchorEligible: basketApi.isAnchorEligible,
+      noiseLiquidity: basketApi.noiseLiquidity,
+      selectBasket() {
+        return null;
+      }
+    }
+  });
+
+  assert.equal(result.selection, null);
+  assert.equal(result.attempts.length, 12);
+  assert.ok(result.attempts.every(attempt => {
+    const days = (Date.parse(attempt.end) - Date.parse(attempt.start)) / 86400000;
+    return days >= 180 && days <= 270;
+  }));
+  assert.ok(result.attempts.some(attempt => attempt.end.startsWith('2021-')));
 });
