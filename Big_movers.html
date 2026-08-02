@@ -20068,6 +20068,15 @@ Sim.Ctrl = (function(){
     if (nonEmpty.length === 0) {
       errors.push({ path: 'tickers', msg: 'At least 1 ticker symbol is required' });
     }
+    // Index aliases have their own fixed cards on the Indices tab. Reject
+    // them before duplicate/pre-entry checks so stocks can never collide with
+    // the corresponding index display identity.
+    tickers.forEach(function (t, i) {
+      if (!t || !t.symbol || !String(t.symbol).trim()) return;
+      if (PortSimAssets.isReservedIndexAlias(t.symbol)) {
+        rowErrors[i] = 'SPX/NDQ are available on the Indices tab';
+      }
+    });
     // Duplicate symbols
     var seen = Object.create(null);
     tickers.forEach(function (t, i) {
@@ -22019,7 +22028,8 @@ Sim.Ctrl = (function(){
     maxDDDays: 0,           // longest streak under-water (in unifiedDates steps)
     _history: [],           // snapshot stack for step-back (capped at _HISTORY_MAX)
     notes: [],              // [{ id, date, text, ts }] — captured via 📝 Notes button
-    retiredEntries: []      // tickers swapped out mid-sim — kept so their trades still count toward session stats
+    retiredEntries: [],     // tickers swapped out mid-sim — kept so their trades still count toward session stats
+    entrySequence: 0
   };
   const _HISTORY_MAX = 300;
   PortSim._state = _state;
@@ -22042,6 +22052,11 @@ Sim.Ctrl = (function(){
       alert('Portfolio sim failed to start: ' + (e && e.message ? e.message : e));
       _hardExit();
     }
+  }
+
+  function _newEntryInstanceKey(assetKey){
+    _state.entrySequence += 1;
+    return assetKey + '#' + _state.entrySequence;
   }
 
   function _bootstrapFromConfig(cfg){
@@ -22100,6 +22115,7 @@ Sim.Ctrl = (function(){
     _state.initialEntryRequest = [];
     _state.notes = [];
     _state.retiredEntries = [];
+    _state.entrySequence = 0;
 
     _setCardTab('stocks');
 
@@ -22125,6 +22141,10 @@ Sim.Ctrl = (function(){
       const card = PortSim.Cards.createCard(grid, sym, initSlice, {});
       const entry = {
         symbol: sym,
+        assetType: 'stock',
+        entryKey: PortSimAssets.stockKey(sym),
+        entryInstanceKey: _newEntryInstanceKey(PortSimAssets.stockKey(sym)),
+        dataSymbol: sym,
         role: window.PortSimBasket && PortSimBasket.resolveRole
           ? PortSimBasket.resolveRole(basketGeneration, sym, tCfg.role)
           : (/^(mover|anchor|noise)$/.test(tCfg.role) ? tCfg.role : 'unknown'),
@@ -23604,7 +23624,7 @@ Sim.Ctrl = (function(){
         }
         function eligible(r, requireYear){
           var sym = String((r && r.symbol) || '').trim().toUpperCase();
-          if (!sym || taken[sym]) return false;
+          if (!sym || PortSimAssets.isReservedIndexAlias(sym) || taken[sym]) return false;
           if (requireYear && Number.isFinite(year) && +r.year !== year) return false;
           return true;
         }
@@ -23644,6 +23664,10 @@ Sim.Ctrl = (function(){
       dateToBarIdx: prev.dateToBarIdx,
       lastCloseSeen: prev.lastCloseSeen,
       sim: sim,
+      assetType: prev.assetType || 'stock',
+      entryKey: prev.entryKey || PortSimAssets.stockKey(prev.symbol),
+      entryInstanceKey: prev.entryInstanceKey || _newEntryInstanceKey(prev.entryKey || PortSimAssets.stockKey(prev.symbol)),
+      dataSymbol: prev.dataSymbol || prev.symbol,
       _retired: true,
       _retiredAt: (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.startDate || null,
       _lastRealized: prev._lastRealized || 0
@@ -23657,6 +23681,9 @@ Sim.Ctrl = (function(){
     opts = opts || {};
     sym = String(sym || '').trim().toUpperCase();
     if (!sym) return Promise.resolve({ ok: false, error: 'No symbol supplied.' });
+    if (PortSimAssets.isReservedIndexAlias(sym)) {
+      return Promise.resolve({ ok: false, error: 'SPX/NDQ are available on the Indices tab.' });
+    }
     if (!_state.active) return Promise.resolve({ ok: false, error: 'No active simulation.' });
     var taken = _basketSymbolsSet();
     if (taken[sym] && opts.replaceIndex == null){
@@ -23711,6 +23738,10 @@ Sim.Ctrl = (function(){
 
       var entry = {
         symbol: sym,
+        assetType: 'stock',
+        entryKey: PortSimAssets.stockKey(sym),
+        entryInstanceKey: _newEntryInstanceKey(PortSimAssets.stockKey(sym)),
+        dataSymbol: sym,
         role: window.PortSimBasket && PortSimBasket.resolveRole
           ? PortSimBasket.resolveRole(_state.basketGeneration, sym, 'unknown')
           : 'unknown',
