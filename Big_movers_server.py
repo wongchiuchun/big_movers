@@ -768,7 +768,12 @@ def api_fetch_ticker():
             _write_canonical_bars(csv_path, merged_bars)
             if index_alias == "SPX":
                 _SPY_BARS_CACHE = None
-            elif index_alias == "NDQ":
+            elif index_alias == "NDQ" or (
+                os.path.abspath(csv_path) == os.path.abspath(os.path.join(STOCKS_DIRS[0], "QQQ.csv"))
+                and not os.path.exists(NDX_HIST_CSV)
+            ):
+                # A direct QQQ fetch writes the same file used by NDQ's
+                # fallback loader, but must not disturb an active NDX source.
                 _NDQ_BARS_CACHE = None
 
     # Compute summary stats for the result row
