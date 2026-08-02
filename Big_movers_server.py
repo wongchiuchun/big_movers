@@ -49,6 +49,10 @@ _NDQ_BARS_CACHE = None
 # without serializing remote HTTP fetches for unrelated symbols.
 _SOURCE_LOCKS = {}
 _SOURCE_LOCKS_GUARD = threading.Lock()
+_INDEX_CACHE_LOCKS = {
+    "SPX": threading.RLock(),
+    "NDQ": threading.RLock(),
+}
 
 
 def _source_lock(path):
@@ -59,6 +63,16 @@ def _source_lock(path):
             lock = threading.Lock()
             _SOURCE_LOCKS[target] = lock
         return lock
+
+
+def _qqq_fallback_path():
+    """Return the existing QQQ proxy path, preserving legacy lowercase names."""
+    for directory in STOCKS_DIRS:
+        for filename in ("QQQ.csv", "qqq.csv"):
+            candidate = os.path.join(directory, filename)
+            if os.path.exists(candidate):
+                return candidate
+    return os.path.join(STOCKS_DIRS[0], "QQQ.csv")
 
 
 def _load_ndq_bars():
@@ -77,68 +91,25 @@ def _load_ndq_bars():
     would otherwise keep returning 404 even after the file lands.
     """
     global _NDQ_BARS_CACHE
-    if _NDQ_BARS_CACHE is not None and _NDQ_BARS_CACHE != "missing":
-        return _NDQ_BARS_CACHE
-
-    # Source 1: NDQ Historical Data.csv (same DictReader pattern as SPY)
-    if os.path.exists(NDX_HIST_CSV):
-        bars = []
-        try:
-            with open(NDX_HIST_CSV, "r", encoding="utf-8-sig", newline="") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    raw_date = row.get("Date") or row.get("DateTime")
-                    date_str = _normalize_date_maybe(raw_date)
-                    if not date_str:
-                        continue
-                    o = _parse_float_maybe(row.get("Open"))
-                    h = _parse_float_maybe(row.get("High"))
-                    l = _parse_float_maybe(row.get("Low"))
-                    c = _parse_float_maybe(row.get("Close"))
-                    if c is None:
-                        c = _parse_float_maybe(row.get("Price"))
-                    v = _parse_volume_maybe(row.get("Volume"))
-                    if not v:
-                        v = _parse_volume_maybe(row.get("Vol."))
-                    if c is None or c <= 0:
-                        continue
-                    if o is None or h is None or l is None:
-                        continue
-                    bars.append({
-                        "time": date_str,
-                        "open": o,
-                        "high": h,
-                        "low": l,
-                        "close": c,
-                        "volume": v,
-                    })
-        except Exception:
-            bars = []
-        if bars:
-            bars.sort(key=lambda x: x.get("time") or "")
-            _NDQ_BARS_CACHE = bars
+    # The alias lock covers source selection, file read, and cache publish.
+    # Writers take the same lock, so a reader can never republish an old
+    # inode after an atomic replacement invalidated the cache.
+    with _INDEX_CACHE_LOCKS["NDQ"]:
+        if _NDQ_BARS_CACHE is not None and _NDQ_BARS_CACHE != "missing":
             return _NDQ_BARS_CACHE
 
-    # Source 2: collected_stocks/QQQ.csv via the same auto-detect parser
-    qqq_path = None
-    for d in STOCKS_DIRS:
-        for fname in ("QQQ.csv", "qqq.csv"):
-            cand = os.path.join(d, fname)
-            if os.path.exists(cand):
-                qqq_path = cand
-                break
-        if qqq_path:
-            break
+        if os.path.exists(NDX_HIST_CSV):
+            bars = _parse_index_history_csv(NDX_HIST_CSV)
+        else:
+            qqq_path = _qqq_fallback_path()
+            bars = _parse_collected_stocks_csv(qqq_path) if os.path.exists(qqq_path) else []
 
-    if qqq_path:
-        bars = _parse_collected_stocks_csv(qqq_path)
         if bars:
             _NDQ_BARS_CACHE = bars
             return _NDQ_BARS_CACHE
 
-    # Neither source available
-    _NDQ_BARS_CACHE = "missing"
-    return None
+        _NDQ_BARS_CACHE = "missing"
+        return None
 
 
 def _parse_collected_stocks_csv(path):
@@ -333,52 +304,14 @@ def _write_canonical_bars(path, bars):
 
 def _load_spy_bars():
     global _SPY_BARS_CACHE
-    if _SPY_BARS_CACHE is not None:
+    with _INDEX_CACHE_LOCKS["SPX"]:
+        if _SPY_BARS_CACHE is not None:
+            return _SPY_BARS_CACHE
+        if not os.path.exists(SPY_HIST_CSV):
+            _SPY_BARS_CACHE = []
+            return _SPY_BARS_CACHE
+        _SPY_BARS_CACHE = _parse_index_history_csv(SPY_HIST_CSV)
         return _SPY_BARS_CACHE
-
-    if not os.path.exists(SPY_HIST_CSV):
-        _SPY_BARS_CACHE = []
-        return _SPY_BARS_CACHE
-
-    bars = []
-    try:
-        with open(SPY_HIST_CSV, "r", encoding="utf-8-sig", newline="") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                # Support both:
-                # - Date, Price, Open, High, Low, Vol.
-                # - DateTime, Open, High, Low, Close, Volume
-                raw_date = row.get("Date") or row.get("DateTime")
-                date_str = _normalize_date_maybe(raw_date)
-                if not date_str:
-                    continue
-                o = _parse_float_maybe(row.get("Open"))
-                h = _parse_float_maybe(row.get("High"))
-                l = _parse_float_maybe(row.get("Low"))
-                c = _parse_float_maybe(row.get("Close"))
-                if c is None:
-                    c = _parse_float_maybe(row.get("Price"))
-                v = _parse_volume_maybe(row.get("Volume"))
-                if not v:
-                    v = _parse_volume_maybe(row.get("Vol."))
-                if c is None or c <= 0:
-                    continue
-                if o is None or h is None or l is None:
-                    continue
-                bars.append({
-                    "time": date_str,
-                    "open": o,
-                    "high": h,
-                    "low": l,
-                    "close": c,
-                    "volume": v,
-                })
-    except Exception:
-        bars = []
-
-    bars.sort(key=lambda x: x.get("time") or "")
-    _SPY_BARS_CACHE = bars
-    return _SPY_BARS_CACHE
 
 
 def _resolve_index_html_path():
@@ -646,10 +579,16 @@ def api_fetch_ticker():
             storage_kind = "index_history"
         else:
             fetch_symbol = "QQQ"
-            csv_path = os.path.join(STOCKS_DIRS[0], "QQQ.csv")
+            csv_path = _qqq_fallback_path()
     else:
-        csv_path = os.path.join(STOCKS_DIRS[0], f"{symbol}.csv")
+        csv_path = _qqq_fallback_path() if symbol == "QQQ" else os.path.join(STOCKS_DIRS[0], f"{symbol}.csv")
     source_lock = _source_lock(csv_path)
+    qqq_is_active_fallback = (
+        os.path.abspath(csv_path) == os.path.abspath(_qqq_fallback_path())
+        and not os.path.exists(NDX_HIST_CSV)
+    )
+    cache_alias_for_write = index_alias or ("NDQ" if qqq_is_active_fallback else None)
+    transaction_lock = _INDEX_CACHE_LOCKS.get(cache_alias_for_write) or source_lock
 
     # For extend mode, find the last date in existing CSV
     existing_bars = []
@@ -661,7 +600,7 @@ def api_fetch_ticker():
             "reload_symbol": reload_symbol,
         }), 404
     if extend and os.path.exists(csv_path):
-        with source_lock:
+        with transaction_lock:
             existing_bars = _parse_index_history_csv(csv_path)
             if not existing_bars and storage_kind == "collected":
                 existing_bars = _parse_collected_stocks_csv(csv_path)
@@ -752,9 +691,12 @@ def api_fetch_ticker():
     # Re-read and merge under the target source lock: concurrent Extend calls
     # may fetch the same starting range, but neither can overwrite dates the
     # other committed while its remote request was in flight.
-    with source_lock:
+    with transaction_lock:
         latest_existing = []
-        if extend and os.path.exists(csv_path):
+        # Index aliases always merge with their canonical history, even for
+        # non-Extend callers that request a bounded date range. This prevents
+        # a partial fetch from truncating the benchmark file.
+        if (extend or index_alias) and os.path.exists(csv_path):
             latest_existing = _parse_index_history_csv(csv_path)
             if not latest_existing and storage_kind == "collected":
                 latest_existing = _parse_collected_stocks_csv(csv_path)
@@ -768,10 +710,7 @@ def api_fetch_ticker():
             _write_canonical_bars(csv_path, merged_bars)
             if index_alias == "SPX":
                 _SPY_BARS_CACHE = None
-            elif index_alias == "NDQ" or (
-                os.path.abspath(csv_path) == os.path.abspath(os.path.join(STOCKS_DIRS[0], "QQQ.csv"))
-                and not os.path.exists(NDX_HIST_CSV)
-            ):
+            elif cache_alias_for_write == "NDQ":
                 # A direct QQQ fetch writes the same file used by NDQ's
                 # fallback loader, but must not disturb an active NDX source.
                 _NDQ_BARS_CACHE = None

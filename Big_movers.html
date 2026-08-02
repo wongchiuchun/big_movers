@@ -22434,7 +22434,12 @@ Sim.Ctrl = (function(){
     // Init index chart, fetch.
     if (PortSim.Index && typeof PortSim.Index.init === 'function'){
       PortSim.Index.init();
-      PortSim.Index.fetchAndLoad(_state.index).then(function(idxBars){
+      const requestedIndex = _state.index;
+      PortSim.Index.fetchAndLoad(requestedIndex).then(function(idxBars){
+        // Ignore a late response from an exited/replayed run or from a
+        // benchmark that the user changed while this request was in flight.
+        if (!_state.active || _state._activeRunToken !== runToken || _state.index !== requestedIndex) return;
+        const currentDate = _state.unifiedDates[_state.playIdx] || _state.startDate;
         // Keep the FULL bar array (not pre-clipped to startDate) so the user
         // sees ~4 months of pre-sim context on the index chart.
         // _buildUnifiedDates clips its own input to [startDate, endDate].
@@ -22453,20 +22458,21 @@ Sim.Ctrl = (function(){
         }
         // Re-merge stock dates with the selected benchmark trading days.
         _state.unifiedDates = _buildUnifiedDates(_state.basket, idxAll, _state.startDate, _state.endDate);
-        // Reset playIdx to start.
+        // Preserve the active date if playback advanced while the benchmark
+        // request was resolving. Never rewind a live run.
         _state.playIdx = 0;
         for (let i = 0; i < _state.unifiedDates.length; i++){
-          if (_state.unifiedDates[i] >= _state.startDate){ _state.playIdx = i; break; }
+          if (_state.unifiedDates[i] >= currentDate){ _state.playIdx = i; break; }
         }
         // Initial chart paint shows everything up to (and including) startDate
         // — so the user sees the lead-in. Track E's setData applies its own
         // ~90-bar default visible range on top of this.
-        const idxSlice = _sliceUpTo(idxAll, _state.startDate);
+        const idxSlice = _sliceUpTo(idxAll, currentDate);
         if (PortSim.Index && typeof PortSim.Index.setData === 'function'){
-          PortSim.Index.setData(idxSlice, _state.index);
+          PortSim.Index.setData(idxSlice, requestedIndex);
         }
-        _renderAll();
       }).catch(function(e){
+        if (_state._activeRunToken !== runToken) return;
         console.warn('[PortSim.Ctrl] index load failed:', e && e.message || e);
       });
     }
@@ -28249,10 +28255,9 @@ Sim.Ctrl = (function(){
       if (_state.hideInactiveCards) grid.classList.add('hide-inactive');
       else grid.classList.remove('hide-inactive');
     }
-    if (indexGrid){
-      if (_state.hideInactiveCards) indexGrid.classList.add('hide-inactive');
-      else indexGrid.classList.remove('hide-inactive');
-    }
+    // Fixed SPX/NDQ shells must always remain available on their own tab,
+    // even when the stock grid is filtered to active positions only.
+    if (indexGrid) indexGrid.classList.remove('hide-inactive');
     if (inactiveBtn){
       inactiveBtn.textContent = _state.hideInactiveCards ? '👁 Show All' : '👁 Active Only';
       inactiveBtn.classList.toggle('is-active', !!_state.hideInactiveCards);
@@ -29790,9 +29795,17 @@ Sim.Ctrl = (function(){
     }
     var st = window.PortSim && window.PortSim._state;
     if (!st) return;
-    if (st.index === alias) st.indexBars = bars;
     var currentDate = (st.unifiedDates && st.unifiedDates[st.playIdx]) || st.startDate || '';
     var visibleBars = bars.filter(function(bar){ return bar && bar.time && (!currentDate || bar.time <= currentDate); });
+    if (st.index === alias){
+      st.indexBars = bars;
+      st.indexDateMap = new Map(bars.map(function(bar, index){ return [bar.time, index]; }));
+      try {
+        if (window.PortSim && PortSim.Index && typeof PortSim.Index.setData === 'function'){
+          PortSim.Index.setData(visibleBars, alias);
+        }
+      } catch(e){}
+    }
     var entries = window.PortSimAssets ? PortSimAssets.liveEntries(st) : (st.indexEntries || []);
     entries.forEach(function(entry){
       if (!entry || _entryAssetType(entry) !== 'index') return;
@@ -29803,6 +29816,21 @@ Sim.Ctrl = (function(){
       entry.lastCloseSeen = visibleBars.length ? +visibleBars[visibleBars.length - 1].close : null;
       entry._indexLoadState = 'ready';
       try { if (entry.card && typeof entry.card.setData === 'function') entry.card.setData(visibleBars); } catch(e){}
+      try {
+        if (entry.card && typeof entry.card.setBadge === 'function'){
+          var sim = entry.sim;
+          if (sim && sim.qty > 0 && !sim.closed && !sim.stoppedOut && !sim.between){
+            entry.card.setBadge('active', 'active');
+            entry.card.setActive(true);
+          } else if (sim && (sim.between || sim.closed || sim.stoppedOut)){
+            entry.card.setBadge('between', 'between');
+            entry.card.setActive(false);
+          } else {
+            entry.card.setBadge('idle', 'idle');
+            entry.card.setActive(false);
+          }
+        }
+      } catch(e){}
     });
   }
 
