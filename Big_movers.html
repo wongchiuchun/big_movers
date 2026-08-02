@@ -18667,7 +18667,10 @@ Sim.Ctrl = (function(){
   function onMoveStopClick() {
     if (!state.active || !state.sim) return;
     const bar = state.bars[state.sim.playIdx]; pause();
-    const activeStops = (state.sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price);
+    const activeStops = Sim.Direction.sortStopsForFire(
+      state.sim.direction || 'long',
+      (state.sim.stopLevels || []).filter(s => !s.fired)
+    );
     const currentStopPx = activeStops.length ? activeStops[0].price : state.sim.entry.stop;
     Sim.UI.showMoveStopModal({ currentStop: currentStopPx, currentPrice: bar.close, shares0: state.sim.shares0, barDate: bar.time || null, direction: state.sim.direction || 'long' }, form => {
       Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop, pct: form.pct, stopTrail: form.stopTrail || null });
@@ -19890,7 +19893,12 @@ Sim.Ctrl = (function(){
   // Sim.computeDerived(sim, bars) which dereferences bars[sim.playIdx].
   function _readSimState(sim) {
     if (!sim) return {};
-    const activeStop = (sim.stopLevels || []).filter(s => !s.fired).sort((a, b) => b.price - a.price)[0];
+    const direction = sim.direction || 'long';
+    const activeStops = (sim.stopLevels || []).filter(s => !s.fired);
+    const orderedStops = window.Sim && Sim.Direction && Sim.Direction.sortStopsForFire
+      ? Sim.Direction.sortStopsForFire(direction, activeStops)
+      : activeStops.sort((a, b) => direction === 'short' ? a.price - b.price : b.price - a.price);
+    const activeStop = orderedStops[0];
     const riskPerShare = (sim.entry && sim.entry.price != null && sim.entry.stop != null)
       ? (sim.entry.price - sim.entry.stop) : NaN;
     return {
@@ -22012,13 +22020,14 @@ Sim.Ctrl = (function(){
     const value = (derived.qty > 0 && mark != null && isFinite(mark))
       ? derived.qty * mark
       : '';
-    // Open risk for this position = qty × max(0, mark − activeStop). Same
-    // formula the portfolio-level OPEN RISK stat uses, so per-card cells
-    // sum to the portfolio total.
+    // Open risk is the adverse distance from mark to the active stop:
+    // long = mark − stop; short = stop − mark.
     let risk = '';
     if (derived.qty > 0 && mark != null && isFinite(mark)
         && derived.currentStop != null && isFinite(derived.currentStop)){
-      const dist = +mark - +derived.currentStop;
+      const dist = (sim.direction === 'short')
+        ? (+derived.currentStop - +mark)
+        : (+mark - +derived.currentStop);
       risk = (dist > 0) ? derived.qty * dist : 0;
     }
     return {
@@ -23886,6 +23895,13 @@ Sim.Ctrl = (function(){
     }
     if (opts.replaceIndex != null){
       var prevAtIdx = _state.basket[opts.replaceIndex];
+      if (!prevAtIdx){
+        return Promise.resolve({ ok: false, error: 'Replacement slot is no longer available.' });
+      }
+      var prevSim = prevAtIdx.sim;
+      if (prevSim && prevSim.qty > 0 && !prevSim.between && !prevSim.closed && !prevSim.stoppedOut){
+        return Promise.resolve({ ok: false, error: 'Close the ' + prevAtIdx.symbol + ' position first before replacing this card.' });
+      }
       if (prevAtIdx && prevAtIdx.symbol === sym){
         return Promise.resolve({ ok: false, error: sym + ' is already in this slot.' });
       }
@@ -23899,6 +23915,16 @@ Sim.Ctrl = (function(){
     _pause();
     return _runtimeFetchBars(sym).then(function(res){
       if (!res.ok) return res;
+      if (opts.replaceIndex != null){
+        var currentTarget = _state.basket[opts.replaceIndex];
+        if (currentTarget !== prevAtIdx){
+          return { ok: false, error: 'Replacement slot changed while loading ' + sym + '. Try again.' };
+        }
+        var currentSim = currentTarget && currentTarget.sim;
+        if (currentSim && currentSim.qty > 0 && !currentSim.between && !currentSim.closed && !currentSim.stoppedOut){
+          return { ok: false, error: 'Close the ' + currentTarget.symbol + ' position first before replacing this card.' };
+        }
+      }
       var bars = res.bars;
       var grid = _byId('portsim-grid');
       if (!grid) return { ok: false, error: '#portsim-grid not in DOM' };
@@ -23938,6 +23964,9 @@ Sim.Ctrl = (function(){
       } else {
         _state.basket.push(entry);
       }
+      // Step-back snapshots capture entry state, not topology. Once a card is
+      // added or replaced, old snapshots are no longer safe to restore.
+      _state._history = [];
       if (_state.basketGeneration && window.PortSimBasket && PortSimBasket.reconcileGeneration) {
         _state.basketGeneration = PortSimBasket.reconcileGeneration(_state.basketGeneration, {
           startDate: _state.startDate,
@@ -25221,7 +25250,8 @@ Sim.Ctrl = (function(){
     var sim = entry && entry.sim;
     if (!sim || !sim.stopLevels) return out;
     var unfired = sim.stopLevels.filter(function(s){ return !s.fired; });
-    unfired.sort(function(a,b){ return b.price - a.price; });
+    var direction = sim.direction || 'long';
+    unfired.sort(function(a,b){ return direction === 'short' ? a.price - b.price : b.price - a.price; });
     if (unfired.length){
       out.active = { price: +unfired[0].price, label: 'STOP ' + _fmtPx(+unfired[0].price) };
     }
@@ -25325,7 +25355,8 @@ Sim.Ctrl = (function(){
     el.appendChild(_chip('QTY',   sim.qty != null ? String(sim.qty) : '—'));
     el.appendChild(_chip('AVG',   sim.avgCost != null && sim.avgCost > 0 ? _fmtPx(sim.avgCost) : '—'));
     var unfired = (sim.stopLevels || []).filter(function(s){ return !s.fired; });
-    var topStop = unfired.length ? unfired.sort(function(a,b){ return b.price - a.price; })[0] : null;
+    var direction = sim.direction || 'long';
+    var topStop = unfired.length ? unfired.sort(function(a,b){ return direction === 'short' ? a.price - b.price : b.price - a.price; })[0] : null;
     el.appendChild(_chip('STOP', topStop ? _fmtPx(topStop.price) : '—'));
     if (derived){
       el.appendChild(_chip('R',         derived.rCurrent != null ? _fmtR(derived.rCurrent) : '—', derived.rCurrent > 0 ? 'up' : (derived.rCurrent < 0 ? 'down' : '')));
@@ -26360,7 +26391,7 @@ Sim.Ctrl = (function(){
       }
       sh.initialStopPlaced = true;
     }
-    // Active stop = highest non-fired in stopLevels.
+    // Active stop = first price that would fire for this direction.
     var activeStops = (sim.stopLevels || []).filter(function(s){ return !s.fired; });
     if (!activeStops.length){
       // No active stop → clear active line (keep initial as reference).
@@ -26373,7 +26404,8 @@ Sim.Ctrl = (function(){
       }
       return;
     }
-    activeStops.sort(function(a, b){ return b.price - a.price; });
+    var direction = sim.direction || 'long';
+    activeStops.sort(function(a, b){ return direction === 'short' ? a.price - b.price : b.price - a.price; });
     var top = activeStops[0];
     // Compute day count for label.
     var entryBarIdx = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : 0;
@@ -27455,15 +27487,21 @@ Sim.Ctrl = (function(){
     return n > 0 ? 'portsim-pos-pnl-pos' : 'portsim-pos-pnl-neg';
   }
 
-  // Highest non-fired stop on the sim, if any.
+  // First non-fired stop that price would reach for the position direction.
   function _activeStopPrice(sim){
     if (!sim || !Array.isArray(sim.stopLevels)) return null;
     var best = null;
+    var isShort = sim.direction === 'short';
     for (var i = 0; i < sim.stopLevels.length; i++){
       var s = sim.stopLevels[i];
-      if (s && !s.fired && (best == null || s.price > best)) best = +s.price;
+      if (s && !s.fired && (best == null || (isShort ? s.price < best : s.price > best))) best = +s.price;
     }
     return best;
+  }
+
+  function _openRiskDistance(sim, mark, stop){
+    var dist = sim && sim.direction === 'short' ? (+stop - +mark) : (+mark - +stop);
+    return dist > 0 ? dist : 0;
   }
 
   function _markFor(entry){
@@ -27502,12 +27540,10 @@ Sim.Ctrl = (function(){
     }
     var value = (mark != null && isFinite(mark)) ? sim.qty * mark : null;
     var stopPx = _activeStopPrice(sim);
-    // Open risk = qty × max(0, mark − activeStop). Same formula as the
-    // portfolio-level OPEN RISK so the per-row sum matches the header.
+    // Direction-aware open risk; per-row values sum to the header metric.
     var risk = null;
     if (mark != null && isFinite(mark) && stopPx != null && isFinite(stopPx)){
-      var dist = +mark - +stopPx;
-      risk = (dist > 0) ? sim.qty * dist : 0;
+      risk = sim.qty * _openRiskDistance(sim, mark, stopPx);
     }
     return {
       entry: entry,
@@ -27582,27 +27618,18 @@ Sim.Ctrl = (function(){
     var maxDDDays = +st.maxDDDays || 0;
     if (ddDays > maxDDDays) maxDDDays = ddDays;
 
-    // Open risk = sum across open positions of qty × max(0, mark − activeStop).
+    // Open risk = sum of adverse mark-to-stop distances across open positions.
     // This is "how much equity would be lost if every open stop fired right
-    // now" — the live read on portfolio risk-on. Floor at zero because a
-    // negative distance means mark already dipped past the stop (stop is
-    // queued to fire on next open/touch).
+    // now" — the live read on portfolio risk-on. Floor at zero when price is
+    // already beyond the stop in the adverse direction.
     var openRiskDollar = 0;
     basket.forEach(function(e){
       if (!e.sim || e.sim.qty <= 0 || e.sim.between || e.sim.closed || e.sim.stoppedOut) return;
       var m = _markFor(e);
       if (m == null) return;
-      var stopP = null;
-      if (Array.isArray(e.sim.stopLevels)){
-        for (var i = 0; i < e.sim.stopLevels.length; i++){
-          var sL = e.sim.stopLevels[i];
-          if (sL && !sL.fired && (stopP == null || sL.price > stopP)) stopP = +sL.price;
-        }
-      }
+      var stopP = _activeStopPrice(e.sim);
       if (stopP == null || !isFinite(stopP)) return;
-      var dist = m - stopP;
-      if (dist < 0) dist = 0;
-      openRiskDollar += e.sim.qty * dist;
+      openRiskDollar += e.sim.qty * _openRiskDistance(e.sim, m, stopP);
     });
     var openRiskPct = (equity > 0) ? (openRiskDollar / equity) * 100 : 0;
 
@@ -28341,9 +28368,10 @@ Sim.Ctrl = (function(){
   function _activeStopPrice(sim){
     if (!sim || !Array.isArray(sim.stopLevels)) return null;
     var best = null;
+    var isShort = sim.direction === 'short';
     for (var i = 0; i < sim.stopLevels.length; i++){
       var s = sim.stopLevels[i];
-      if (s && !s.fired && (best == null || s.price > best)) best = +s.price;
+      if (s && !s.fired && (best == null || (isShort ? s.price < best : s.price > best))) best = +s.price;
     }
     return best;
   }
