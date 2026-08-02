@@ -6,7 +6,7 @@ Date: 2026-08-02
 
 Extend Portfolio Simulation with two focused capabilities:
 
-1. Let each ticker's expanded analysis chart switch independently between daily and weekly candles and optionally show 100 EMA and 200 EMA.
+1. Let each ticker's expanded analysis chart switch independently between daily and weekly candles and optionally show 100 EMA and 250 EMA.
 2. Let every portfolio stop independently use the existing intraday trigger or an optional end-of-day close trigger.
 
 The portfolio cards, playback timeline, and SPX/NDQ index chart remain daily.
@@ -17,7 +17,7 @@ The expanded ticker modal gets a compact analysis-control group containing:
 
 - a `Daily | Weekly` segmented control;
 - an unchecked `100 EMA` checkbox;
-- an unchecked `200 EMA` checkbox.
+- an unchecked `250 EMA` checkbox.
 
 Daily is the default. The long EMA checkboxes are off by default so their series and values are not calculated until requested. These display preferences belong to the current basket entry, not to the whole portfolio. Closing and reopening that ticker's expanded chart during the same simulation restores its selection. Replacing a ticker creates a new entry with the defaults.
 
@@ -37,7 +37,7 @@ An incomplete current week is therefore a partial candle containing only already
 
 ### EMA behavior
 
-The existing 10, 20, and 50 EMAs remain visible. All EMA calculations use the currently selected candle array, so Weekly 100 EMA means a 100-week EMA. The 100 and 200 EMA line series should be created or populated lazily when enabled and cleared or hidden when disabled.
+The existing 10, 20, and 50 EMAs remain visible. All EMA calculations use the currently selected candle array, so Weekly 100 EMA means a 100-week EMA. The 100 and 250 EMA line series should be created or populated lazily when enabled and cleared or hidden when disabled.
 
 If the selected timeframe does not contain enough candles for an enabled EMA, the line remains empty without showing an error.
 
@@ -90,7 +90,7 @@ Move Stop replaces current unfired stops as it does today; the new stop uses the
 Chart preferences are display-only state on each live portfolio basket entry, for example:
 
 ```text
-expandedChartPrefs: { timeframe: "D", ema100: false, ema200: false }
+expandedChartPrefs: { timeframe: "D", ema100: false, ema250: false }
 ```
 
 They are not part of the simulation engine, cash ledger, or playback snapshots.
@@ -119,7 +119,7 @@ Stop events caused by close-mode stops should record the close fill and identify
 Implementation follows focused test-driven cycles.
 
 1. Weekly aggregation tests cover OHLCV, incomplete weeks, and cross-year input without future bars.
-2. Expanded-chart tests cover Daily/Weekly selection, timeframe-specific EMA input, lazy 100/200 EMA behavior, per-entry preferences, and weekly marker mapping.
+2. Expanded-chart tests cover Daily/Weekly selection, timeframe-specific EMA input, lazy 100/250 EMA behavior, per-entry preferences, and weekly marker mapping.
 3. Stop-engine tests cover:
    - unchanged intraday long and short behavior;
    - long and short close-mode touches;
