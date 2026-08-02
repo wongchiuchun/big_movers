@@ -179,3 +179,21 @@ test('balanced resolver uses extended windows from the shared generator', async 
   }));
   assert.ok(result.attempts.some(attempt => attempt.end.startsWith('2021-')));
 });
+
+test('setup creates and reconciles provenance instead of deleting it', () => {
+  const commit = extractFunction(html, '_commitRandomBasket');
+  const read = extractFunction(html, 'readFormToState');
+  assert.match(commit, /PortSimBasket\.createGeneration/);
+  assert.match(commit, /startDate/);
+  assert.match(commit, /symbols/);
+  assert.match(read, /PortSimBasket\.reconcileGeneration/);
+  assert.doesNotMatch(read, /basketGeneration\s*=\s*null/);
+});
+
+test('controller resolves roles and reconciles runtime basket mutations', () => {
+  const bootstrap = extractFunction(html, '_bootstrapFromConfig');
+  const mutate = extractFunction(html, '_addOrReplaceTicker');
+  assert.match(bootstrap, /PortSimBasket\.resolveRole/);
+  assert.match(mutate, /PortSimBasket\.reconcileGeneration/);
+  assert.match(mutate, /PortSimBasket\.resolveRole/);
+});

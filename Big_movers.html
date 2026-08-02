@@ -15807,12 +15807,16 @@ window.Sim = Sim;
     const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const ts = Date.now();
     const symbols = (payload.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean);
+    const psState = (window.PortSim && window.PortSim._state) || null;
+    const basketGeneration = psState && psState.basketGeneration
+      ? psState.basketGeneration
+      : (payload.basketGeneration || null);
     const basketRoles = {};
     (payload.basket || []).forEach(function(entry){
       if (!entry || !entry.symbol || Object.prototype.hasOwnProperty.call(basketRoles, entry.symbol)) return;
-      basketRoles[entry.symbol] = /^(mover|anchor|noise)$/.test(entry.role)
-        ? entry.role
-        : 'unknown';
+      basketRoles[entry.symbol] = window.PortSimBasket && PortSimBasket.resolveRole
+        ? PortSimBasket.resolveRole(basketGeneration, entry.symbol, entry.role)
+        : (/^(mover|anchor|noise)$/.test(entry.role) ? entry.role : 'unknown');
     });
     const portfolioMetrics = payload.portfolioMetrics || _computePortfolioMetrics(payload);
     const allTrades = portfolioMetrics.tradeRows;
@@ -15822,7 +15826,6 @@ window.Sim = Sim;
     }
     // Stamp a runInstanceId on the portfolio state if one wasn't already
     // lazy-set by a review modal open. Join key between session and review.
-    const psState = (window.PortSim && window.PortSim._state) || null;
     if (psState && !psState.runInstanceId){
       psState.runInstanceId = 'inst_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
     }
@@ -15853,11 +15856,12 @@ window.Sim = Sim;
       simStartDate: payload.firstDate || null,
       simEndDate: payload.lastDate || null,
       basketRoles: basketRoles,
-      basketGeneration: psState && psState.basketGeneration
-        ? JSON.parse(JSON.stringify(psState.basketGeneration))
-        : (payload.basketGeneration
-          ? JSON.parse(JSON.stringify(payload.basketGeneration))
-          : null),
+      activeSymbols: psState && Array.isArray(psState.basket)
+        ? psState.basket.map(function(entry){ return entry && entry.symbol; }).filter(Boolean)
+        : symbols.slice(),
+      basketGeneration: basketGeneration
+        ? JSON.parse(JSON.stringify(basketGeneration))
+        : null,
       // Phase 2 review skeleton — populated by the guided review modal
       // (Phase 3). reviewSkipped defaults to true; flips to false when the
       // user completes the structured review. legs is keyed by tradeId.
@@ -20240,12 +20244,6 @@ Sim.Ctrl = (function(){
   // ----------------------------------------------------- form <-> state ----
   function readFormToState() {
     var s = Setup._state;
-    var previousStart = s.startDate;
-    var previousEnd = s.endDate;
-    var previousSymbols = s.rows
-      .map(function (row) { return String((row && row.symbol) || '').trim().toUpperCase(); })
-      .filter(Boolean)
-      .join('|');
     s.initialCash = safeNum($('#portsim-initial-cash').value);
     s.startDate = $('#portsim-start-date').value || '';
     s.endDate = $('#portsim-end-date').value || '';
@@ -20272,14 +20270,12 @@ Sim.Ctrl = (function(){
         sizeValue: sizeVal === '' ? '' : safeNum(sizeVal)
       };
     });
-    var nextSymbols = s.rows.map(function (row) { return row.symbol; }).filter(Boolean).join('|');
-    if (
-      s.basketGeneration &&
-      (previousStart !== s.startDate ||
-       previousEnd !== s.endDate ||
-       previousSymbols !== nextSymbols)
-    ) {
-      s.basketGeneration = null;
+    if (s.basketGeneration && window.PortSimBasket && PortSimBasket.reconcileGeneration) {
+      s.basketGeneration = PortSimBasket.reconcileGeneration(s.basketGeneration, {
+        startDate: s.startDate,
+        endDate: s.endDate,
+        symbols: s.rows.map(function (row) { return row.symbol; }).filter(Boolean)
+      });
     }
   }
 
@@ -20380,9 +20376,6 @@ Sim.Ctrl = (function(){
       symEl.value = (symEl.value || '').trim().toUpperCase();
     });
     symEl.addEventListener('input', clearRowErrorOnInput.bind(null, node));
-    symEl.addEventListener('input', function () {
-      Setup._state.basketGeneration = null;
-    });
 
     preCb.addEventListener('change', function () {
       if (preCb.checked) node.classList.add('pre-on');
@@ -20397,7 +20390,6 @@ Sim.Ctrl = (function(){
     });
 
     removeBtn.addEventListener('click', function () {
-      Setup._state.basketGeneration = null;
       var rows = $$('#portsim-basket-rows .portsim-basket-row');
       if (rows.length <= MIN_ROWS) {
         // Don't remove last row — just clear it
@@ -20540,7 +20532,6 @@ Sim.Ctrl = (function(){
     if (!host) return;
     var count = $$('#portsim-basket-rows .portsim-basket-row').length;
     if (count >= MAX_ROWS) return;
-    Setup._state.basketGeneration = null;
     var el = makeRowEl(defaultRow());
     if (el) host.appendChild(el);
     renumberRows();
@@ -20937,13 +20928,23 @@ Sim.Ctrl = (function(){
     Setup._state.startDate = result.start;
     Setup._state.endDate = result.end;
     Setup._state.rows = rowsState;
-    Setup._state.basketGeneration = {
-      version: 1,
-      mode: mode,
-      seed: seed,
-      composition: result.selection.composition,
-      roles: result.selection.roles
-    };
+    Setup._state.basketGeneration = window.PortSimBasket && PortSimBasket.createGeneration
+      ? PortSimBasket.createGeneration({
+          mode: mode,
+          seed: seed,
+          composition: result.selection.composition,
+          roles: result.selection.roles,
+          startDate: result.start,
+          endDate: result.end,
+          symbols: rowsState.map(function (row) { return row.symbol; })
+        })
+      : {
+          version: 1,
+          mode: mode,
+          seed: seed,
+          composition: result.selection.composition,
+          roles: result.selection.roles
+        };
     rebuildRowsFromState(rowsState);
     var symbols = rowsState.map(function (row) { return row.symbol; }).join(', ');
     var label = mode === 'balanced' ? 'Balanced basket ready' : 'Same-year basket ready';
@@ -21276,15 +21277,6 @@ Sim.Ctrl = (function(){
 
     var randBtn = $('#portsim-rand-btn');
     if (randBtn) randBtn.addEventListener('click', handleRandomize);
-
-    ['#portsim-start-date', '#portsim-end-date'].forEach(function (selector) {
-      var dateEl = $(selector);
-      if (dateEl) {
-        dateEl.addEventListener('input', function () {
-          Setup._state.basketGeneration = null;
-        });
-      }
-    });
 
     // Index pill toggle
     $$('#portsim-index-pills .portsim-index-pill').forEach(function (b) {
@@ -22105,12 +22097,9 @@ Sim.Ctrl = (function(){
       const card = PortSim.Cards.createCard(grid, sym, initSlice, {});
       const entry = {
         symbol: sym,
-        role: /^(mover|anchor|noise|unknown)$/.test(tCfg.role)
-          ? tCfg.role
-          : (basketGeneration && basketGeneration.roles &&
-            /^(mover|anchor|noise)$/.test(basketGeneration.roles[sym])
-              ? basketGeneration.roles[sym]
-              : 'unknown'),
+        role: window.PortSimBasket && PortSimBasket.resolveRole
+          ? PortSimBasket.resolveRole(basketGeneration, sym, tCfg.role)
+          : (/^(mover|anchor|noise)$/.test(tCfg.role) ? tCfg.role : 'unknown'),
         expandedChartPrefs: { timeframe: 'D', ema100: false, ema250: false },
         year: null,
         bars: bars,
@@ -23647,7 +23636,9 @@ Sim.Ctrl = (function(){
 
       var entry = {
         symbol: sym,
-        role: 'unknown',
+        role: window.PortSimBasket && PortSimBasket.resolveRole
+          ? PortSimBasket.resolveRole(_state.basketGeneration, sym, 'unknown')
+          : 'unknown',
         expandedChartPrefs: { timeframe: 'D', ema100: false, ema250: false },
         year: null,
         bars: bars,
@@ -23673,6 +23664,13 @@ Sim.Ctrl = (function(){
         _state.basket[opts.replaceIndex] = entry;
       } else {
         _state.basket.push(entry);
+      }
+      if (_state.basketGeneration && window.PortSimBasket && PortSimBasket.reconcileGeneration) {
+        _state.basketGeneration = PortSimBasket.reconcileGeneration(_state.basketGeneration, {
+          startDate: _state.startDate,
+          endDate: _state.endDate,
+          symbols: _state.basket.map(function (basketEntry) { return basketEntry.symbol; })
+        });
       }
 
       // Re-merge unified dates with the new ticker. Preserve play head by date.
@@ -28779,9 +28777,6 @@ Sim.Ctrl = (function(){
     var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
     var openCount = +ctx.openCount || 0;
     var generation = ctx.basketGeneration || null;
-    var composition = generation && generation.composition
-      ? generation.composition
-      : {};
     var originMode = generation && generation.mode
       ? String(generation.mode)
       : 'unknown';
@@ -28798,32 +28793,42 @@ Sim.Ctrl = (function(){
       atFinalBar
     );
     var tickerRows = (ctx.basket || []).map(function(e){
-      var role = /^(mover|anchor|noise)$/.test(e.role)
-        ? e.role
-        : (e.role === 'unknown'
-          ? 'unknown'
-          : (generation && generation.roles &&
-          /^(mover|anchor|noise)$/.test(generation.roles[e.symbol])
-            ? generation.roles[e.symbol]
-            : 'unknown'));
+      var role = window.PortSimBasket && PortSimBasket.resolveRole
+        ? PortSimBasket.resolveRole(generation, e.symbol, e.role)
+        : (/^(mover|anchor|noise)$/.test(e.role) ? e.role : 'unknown');
       return {
         sym: e.symbol,
         role: role,
         legs: (e.legs || []).length,
         realized: +e.totalRealized || 0,
         stops: +e.stops || 0,
-        status: e.status || 'idle'
+        status: e.retired ? 'retired' : (e.status || 'idle'),
+        retired: !!e.retired
       };
     });
+    var activeSymbols = Array.isArray(ctx.activeSymbols) ? ctx.activeSymbols : null;
+    var activeTickerRows = activeSymbols
+      ? tickerRows.filter(function(row){ return activeSymbols.indexOf(row.sym) >= 0; })
+      : tickerRows.filter(function(row){ return !row.retired; });
+    var currentCounts = window.PortSimBasket && PortSimBasket.countCurrentRoles
+      ? PortSimBasket.countCurrentRoles(generation, activeTickerRows.map(function(row){
+          return { symbol: row.sym, role: row.role };
+        }))
+      : activeTickerRows.reduce(function(counts, row){
+          counts[row.role] = (counts[row.role] || 0) + 1;
+          return counts;
+        }, { mover: 0, anchor: 0, noise: 0, unknown: 0 });
+    var originLabel = originMode + (generation && generation.modified ? ' · modified' : '');
 
     var originHTML = revealBasketOrigin
       ? ('<div class="portsim-review-origin">'
         + '<label>BASKET ORIGIN</label>'
-        + '<strong>' + _esc(originMode) + '</strong>'
-        + '<span>mover ' + (generation ? (+composition.mover || 0) : 'unknown') + '</span>'
-        + '<span>anchor ' + (generation ? (+composition.anchor || 0) : 'unknown') + '</span>'
-        + '<span>noise ' + (generation ? (+composition.noise || 0) : 'unknown') + '</span>'
-        + '<span>seed ' + _esc(originSeed) + '</span>'
+        + '<strong>' + _esc(originLabel) + '</strong>'
+        + '<span>mover ' + currentCounts.mover + '</span>'
+        + '<span>anchor ' + currentCounts.anchor + '</span>'
+        + '<span>noise ' + currentCounts.noise + '</span>'
+        + (currentCounts.unknown ? '<span>unknown ' + currentCounts.unknown + '</span>' : '')
+        + '<span>' + (generation && generation.modified ? 'original seed ' : 'seed ') + _esc(originSeed) + '</span>'
         + '</div>')
       : '';
     var roleHeader = revealBasketOrigin ? '<th>ROLE</th>' : '';
@@ -29435,6 +29440,7 @@ Sim.Ctrl = (function(){
       endDate: st.endDate || '',
       index: st.index || 'SPX',
       basketGeneration: basketGeneration,
+      activeSymbols: (st.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean),
       initialEquity: initial,
       cash: cash, equity: equity, realized: realized, unreal: unreal,
       totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
@@ -29445,18 +29451,14 @@ Sim.Ctrl = (function(){
         var legs = _legSnapshots(e);
         return {
           symbol: e.symbol,
-          role: /^(mover|anchor|noise)$/.test(e.role)
-            ? e.role
-            : (e.role === 'unknown'
-              ? 'unknown'
-              : (basketGeneration && basketGeneration.roles &&
-              /^(mover|anchor|noise)$/.test(basketGeneration.roles[e.symbol])
-                ? basketGeneration.roles[e.symbol]
-                : 'unknown')),
+          role: window.PortSimBasket && PortSimBasket.resolveRole
+            ? PortSimBasket.resolveRole(basketGeneration, e.symbol, e.role)
+            : (/^(mover|anchor|noise)$/.test(e.role) ? e.role : 'unknown'),
+          retired: !!e._retired,
           legs: legs,
           totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
           stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
-          status: legs.length ? legs[legs.length - 1].exitReason : 'idle'
+          status: e._retired ? 'retired' : (legs.length ? legs[legs.length - 1].exitReason : 'idle')
         };
       })
     };
@@ -29670,7 +29672,11 @@ Sim.Ctrl = (function(){
       alert('This saved review is missing the metadata needed to rerun.');
       return;
     }
-    var symList = meta.basket.map(function(b){ return b.symbol; }).join(', ');
+    var rerunBasket = Array.isArray(meta.activeSymbols)
+      ? meta.basket.filter(function(b){ return meta.activeSymbols.indexOf(b.symbol) >= 0; })
+      : meta.basket.filter(function(b){ return !b.retired; });
+    if (!rerunBasket.length) rerunBasket = meta.basket.slice();
+    var symList = rerunBasket.map(function(b){ return b.symbol; }).join(', ');
     if (!confirm('Rerun this episode from day 0?\n\n' +
                  meta.startDate + ' → ' + meta.endDate + '\n' +
                  symList + '\n' +
@@ -29685,11 +29691,13 @@ Sim.Ctrl = (function(){
       basketGeneration: meta.basketGeneration
         ? JSON.parse(JSON.stringify(meta.basketGeneration))
         : null,
-      tickers: meta.basket.map(function(b){
+      tickers: rerunBasket.map(function(b){
         return {
           symbol: String(b.symbol || '').trim().toUpperCase(),
           hasPreEntry: false,
-          role: /^(mover|anchor|noise)$/.test(b.role) ? b.role : 'unknown'
+          role: window.PortSimBasket && PortSimBasket.resolveRole
+            ? PortSimBasket.resolveRole(meta.basketGeneration, b.symbol, b.role)
+            : (/^(mover|anchor|noise)$/.test(b.role) ? b.role : 'unknown')
         };
       })
     };
@@ -30074,6 +30082,14 @@ Sim.Ctrl = (function(){
     if (!session) return null;
     var bySym = {};
     var order = [];
+    var activeSymbols = Array.isArray(session.activeSymbols)
+      ? session.activeSymbols.map(function(sym){ return String(sym || '').trim().toUpperCase(); }).filter(Boolean)
+      : null;
+    if (activeSymbols) {
+      activeSymbols.forEach(function(sym){
+        if (!bySym[sym]) { bySym[sym] = []; order.push(sym); }
+      });
+    }
     trades.forEach(function(t){
       if (!t || !t.symbol) return;
       if (!bySym[t.symbol]){ bySym[t.symbol] = []; order.push(t.symbol); }
@@ -30117,22 +30133,25 @@ Sim.Ctrl = (function(){
       : null;
     var basket = order.map(function(sym){
       var legs = bySym[sym];
-      var role = basketGeneration && basketGeneration.roles &&
-        /^(mover|anchor|noise)$/.test(basketGeneration.roles[sym])
-        ? basketGeneration.roles[sym]
+      var explicitRole = session.basketRoles && Object.prototype.hasOwnProperty.call(session.basketRoles, sym)
+        ? session.basketRoles[sym]
         : 'unknown';
-      if (session.basketRoles && Object.prototype.hasOwnProperty.call(session.basketRoles, sym)) {
-        role = /^(mover|anchor|noise)$/.test(session.basketRoles[sym])
-          ? session.basketRoles[sym]
-          : 'unknown';
-      }
+      var role = typeof PortSimBasket !== 'undefined' && PortSimBasket.resolveRole
+        ? PortSimBasket.resolveRole(basketGeneration, sym, explicitRole)
+        : (/^(mover|anchor|noise)$/.test(explicitRole)
+          ? explicitRole
+          : (basketGeneration && basketGeneration.roles && /^(mover|anchor|noise)$/.test(basketGeneration.roles[sym])
+            ? basketGeneration.roles[sym]
+            : 'unknown'));
+      var retired = !!(activeSymbols && activeSymbols.indexOf(sym) < 0);
       return {
         symbol: sym,
         role: role,
+        retired: retired,
         legs: legs,
         totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
         stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
-        status: legs.length ? legs[legs.length - 1].exitReason : 'idle'
+        status: retired ? 'retired' : (legs.length ? legs[legs.length - 1].exitReason : 'idle')
       };
     });
     var initial = +session.initialEquity || 0;
@@ -30143,6 +30162,7 @@ Sim.Ctrl = (function(){
       endDate: session.simEndDate || '',
       index: session.indexName || 'SPX',
       basketGeneration: basketGeneration,
+      activeSymbols: activeSymbols,
       initialEquity: initial,
       cash: equity, equity: equity,
       realized: trades.reduce(function(s, t){ return s + (+t.realizedPnL || 0); }, 0),

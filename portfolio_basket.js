@@ -521,6 +521,95 @@
     return median(dollarVolumes) >= minMedianDollarVolume;
   }
 
+  function normalizeRole(role) {
+    return /^(mover|anchor|noise)$/.test(String(role || ''))
+      ? String(role)
+      : null;
+  }
+
+  function normalizeSymbols(symbols) {
+    return (Array.isArray(symbols) ? symbols : []).map(function (item) {
+      return normalizedSymbol(typeof item === 'string' ? { symbol: item } : item);
+    }).filter(Boolean);
+  }
+
+  function normalizeRoles(roles) {
+    var out = {};
+    if (!roles || typeof roles !== 'object') return out;
+    Object.keys(roles).forEach(function (symbol) {
+      var normalized = normalizedSymbol({ symbol: symbol });
+      var role = normalizeRole(roles[symbol]);
+      if (normalized && role) out[normalized] = role;
+    });
+    return out;
+  }
+
+  function cloneObject(value) {
+    return value && typeof value === 'object'
+      ? JSON.parse(JSON.stringify(value))
+      : value;
+  }
+
+  function createGeneration(options) {
+    options = options || {};
+    var composition = options.composition || {};
+    return {
+      version: 2,
+      mode: options.mode === 'same-year' ? 'same-year' : 'balanced',
+      seed: options.seed == null ? null : String(options.seed),
+      composition: {
+        mover: Math.max(0, Math.trunc(Number(composition.mover) || 0)),
+        anchor: Math.max(0, Math.trunc(Number(composition.anchor) || 0)),
+        noise: Math.max(0, Math.trunc(Number(composition.noise) || 0))
+      },
+      roles: normalizeRoles(options.roles),
+      modified: false,
+      origin: {
+        startDate: String(options.startDate || ''),
+        endDate: String(options.endDate || ''),
+        symbols: normalizeSymbols(options.symbols)
+      }
+    };
+  }
+
+  function reconcileGeneration(generation, current) {
+    if (!generation || typeof generation !== 'object') return null;
+    var next = cloneObject(generation);
+    if (!next.origin || typeof next.origin !== 'object') return next;
+    current = current || {};
+    var originSymbols = normalizeSymbols(next.origin.symbols);
+    var currentSymbols = normalizeSymbols(current.symbols);
+    var sameSymbols = originSymbols.length === currentSymbols.length &&
+      originSymbols.every(function (symbol, index) {
+        return symbol === currentSymbols[index];
+      });
+    next.modified = !(
+      String(next.origin.startDate || '') === String(current.startDate || '') &&
+      String(next.origin.endDate || '') === String(current.endDate || '') &&
+      sameSymbols
+    );
+    return next;
+  }
+
+  function resolveRole(generation, symbol, explicitRole) {
+    var explicit = normalizeRole(explicitRole);
+    if (explicit) return explicit;
+    var normalized = normalizedSymbol({ symbol: symbol });
+    var roles = generation && normalizeRoles(generation.roles);
+    return normalized && roles && roles[normalized] ? roles[normalized] : 'unknown';
+  }
+
+  function countCurrentRoles(generation, entries) {
+    var counts = { mover: 0, anchor: 0, noise: 0, unknown: 0 };
+    (Array.isArray(entries) ? entries : []).forEach(function (entry) {
+      var symbol = typeof entry === 'string' ? entry : entry && entry.symbol;
+      var explicitRole = entry && typeof entry === 'object' ? entry.role : null;
+      var role = resolveRole(generation, symbol, explicitRole);
+      counts[role] += 1;
+    });
+    return counts;
+  }
+
   return {
     createRng: createRng,
     validCompositions: validCompositions,
@@ -529,6 +618,10 @@
     selectRoles: selectRoles,
     isAnchorEligible: isAnchorEligible,
     hasWindowCoverage: hasWindowCoverage,
-    noiseLiquidity: noiseLiquidity
+    noiseLiquidity: noiseLiquidity,
+    createGeneration: createGeneration,
+    reconcileGeneration: reconcileGeneration,
+    resolveRole: resolveRole,
+    countCurrentRoles: countCurrentRoles
   };
 });

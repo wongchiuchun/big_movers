@@ -378,3 +378,84 @@ test('noise liquidity ignores every bar on or after the hidden start', () => {
   assert.equal(Basket.noiseLiquidity([...before, ...quietHiddenWindow], '2020-03-01'), true);
   assert.equal(Basket.noiseLiquidity([...before, ...explosiveHiddenWindow], '2020-03-01'), true);
 });
+
+test('generation reconciliation preserves roles and marks setup edits modified', () => {
+  const generated = Basket.createGeneration({
+    mode: 'balanced', seed: 'seed-42',
+    composition: { mover: 1, anchor: 1, noise: 1 },
+    roles: { move: 'mover', liq: 'anchor', cmp: 'noise' },
+    startDate: '2020-01-01', endDate: '2020-06-01',
+    symbols: ['move', 'liq', 'cmp']
+  });
+  assert.equal(generated.version, 2);
+  assert.deepEqual(generated.origin.symbols, ['MOVE', 'LIQ', 'CMP']);
+
+  const edited = Basket.reconcileGeneration(generated, {
+    startDate: '2020-02-01', endDate: '2020-06-01',
+    symbols: ['MOVE', 'LIQ', 'CMP']
+  });
+  assert.equal(edited.modified, true);
+  assert.equal(Basket.resolveRole(edited, 'LIQ', 'unknown'), 'anchor');
+  assert.equal(generated.modified, false, 'reconciliation must not mutate the origin object');
+});
+
+test('reverting exactly to the origin clears modified while order changes remain modified', () => {
+  const generated = Basket.createGeneration({
+    mode: 'balanced', seed: 'seed',
+    composition: { mover: 1, anchor: 1, noise: 0 },
+    roles: { MOVE: 'mover', LIQ: 'anchor' },
+    startDate: '2020-01-01', endDate: '2020-06-01',
+    symbols: ['MOVE', 'LIQ']
+  });
+  const reordered = Basket.reconcileGeneration(generated, {
+    startDate: '2020-01-01', endDate: '2020-06-01', symbols: ['LIQ', 'MOVE']
+  });
+  assert.equal(reordered.modified, true);
+  const restored = Basket.reconcileGeneration(reordered, {
+    startDate: '2020-01-01', endDate: '2020-06-01', symbols: ['MOVE', 'LIQ']
+  });
+  assert.equal(restored.modified, false);
+});
+
+test('current role counts omit removals, restore known symbols, and count additions unknown', () => {
+  const generation = Basket.createGeneration({
+    mode: 'balanced', seed: 'seed',
+    composition: { mover: 1, anchor: 1, noise: 1 },
+    roles: { MOVE: 'mover', LIQ: 'anchor', CMP: 'noise' },
+    startDate: '2020-01-01', endDate: '2020-06-01',
+    symbols: ['MOVE', 'LIQ', 'CMP']
+  });
+  assert.deepEqual(
+    Basket.countCurrentRoles(generation, [
+      { symbol: 'move', role: 'unknown' },
+      { symbol: 'liq', role: 'unknown' },
+      { symbol: 'new', role: 'unknown' }
+    ]),
+    { mover: 1, anchor: 1, noise: 0, unknown: 1 }
+  );
+});
+
+test('invalid explicit roles fall back to generation while valid roles win', () => {
+  const generation = Basket.createGeneration({
+    mode: 'same-year', seed: 'seed', composition: { mover: 1, anchor: 0, noise: 0 },
+    roles: { MOVE: 'mover' }, startDate: '2020-01-01', endDate: '2020-06-01',
+    symbols: ['MOVE']
+  });
+  assert.equal(Basket.resolveRole(generation, 'MOVE', 'unknown'), 'mover');
+  assert.equal(Basket.resolveRole(generation, 'MOVE', 'invalid'), 'mover');
+  assert.equal(Basket.resolveRole(generation, 'MOVE', 'anchor'), 'anchor');
+  assert.equal(Basket.resolveRole(generation, 'NEW', 'unknown'), 'unknown');
+});
+
+test('legacy version-one generation remains readable without guessed modification', () => {
+  const legacy = {
+    version: 1, mode: 'balanced', seed: 'old',
+    composition: { mover: 1, anchor: 1, noise: 0 },
+    roles: { MOVE: 'mover', LIQ: 'anchor' }
+  };
+  const reconciled = Basket.reconcileGeneration(legacy, {
+    startDate: '2020-01-01', endDate: '2020-06-01', symbols: ['MOVE']
+  });
+  assert.equal(reconciled.modified, undefined);
+  assert.equal(Basket.resolveRole(reconciled, 'LIQ', 'unknown'), 'anchor');
+});

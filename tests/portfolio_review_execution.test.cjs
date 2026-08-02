@@ -5,6 +5,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'Big_movers.html'), 'utf8');
+const basketApi = require(path.join(__dirname, '..', 'portfolio_basket.cjs'));
 
 function extractFunction(source, name) {
   const start = source.indexOf('function ' + name + '(');
@@ -289,10 +290,12 @@ test('balanced basket provenance flows into controller, saved review, and rerun'
   const rerun = extractFunction(html, '_onRerun');
 
   assert.match(bootstrap, /basketGeneration/);
-  assert.match(bootstrap, /\brole\b/);
+  assert.match(bootstrap, /PortSimBasket\.resolveRole/);
   assert.match(buildMeta, /basketGeneration/);
-  assert.match(buildMeta, /\brole\b/);
-  assert.match(rerun, /basketGeneration/);
+  assert.match(buildMeta, /PortSimBasket\.resolveRole/);
+  assert.match(buildMeta, /activeSymbols/);
+  assert.match(rerun, /PortSimBasket\.resolveRole/);
+  assert.match(rerun, /activeSymbols/);
 });
 
 test('review reveals basket origin while live cards remain role-neutral', () => {
@@ -305,6 +308,9 @@ test('review reveals basket origin while live cards remain role-neutral', () => 
   assert.match(overview, /mover/);
   assert.match(overview, /anchor/);
   assert.match(overview, /noise/);
+  assert.match(overview, /PortSimBasket\.countCurrentRoles/);
+  assert.match(overview, /modified/);
+  assert.match(overview, /original seed/);
   assert.match(overview, /reviewFinalized/);
   assert.match(summary, /reviewFinalized\s*=\s*!viewOnly/);
 
@@ -314,7 +320,7 @@ test('review reveals basket origin while live cards remain role-neutral', () => 
 });
 
 test('Stats session reconstruction preserves basket roles and seed', () => {
-  const { _synthMetaFromSession } = loadFunctions(['_synthMetaFromSession']);
+  const { _synthMetaFromSession } = loadFunctions(['_synthMetaFromSession'], { PortSimBasket: basketApi });
   const generation = {
     version: 1,
     mode: 'balanced',
@@ -346,4 +352,31 @@ test('Stats session reconstruction preserves basket roles and seed', () => {
 
   assert.deepEqual(plain(meta.basketGeneration), generation);
   assert.equal(meta.basket[0].role, 'mover');
+});
+
+test('modified Stats reconstruction restores known roles and identifies only new symbols', () => {
+  const { _synthMetaFromSession } = loadFunctions(['_synthMetaFromSession'], { PortSimBasket: basketApi });
+  const generation = basketApi.reconcileGeneration(basketApi.createGeneration({
+    mode: 'balanced', seed: 'seed-42',
+    composition: { mover: 1, anchor: 1, noise: 0 },
+    roles: { MOVE: 'mover', LIQ: 'anchor' },
+    startDate: '2020-01-01', endDate: '2020-06-30', symbols: ['MOVE', 'LIQ']
+  }), {
+    startDate: '2020-02-01', endDate: '2020-06-30', symbols: ['LIQ', 'NEW']
+  });
+  const meta = _synthMetaFromSession({
+    initialEquity: 100000, finalEquity: 100000, sessionPnL: 0,
+    simStartDate: '2020-02-01', simEndDate: '2020-06-30',
+    basketGeneration: generation,
+    basketRoles: { LIQ: 'unknown', NEW: 'unknown' },
+    activeSymbols: ['LIQ', 'NEW']
+  }, [
+    { symbol: 'LIQ', legIndex: 1, entryPrice: 10, qty: 10, realizedPnL: 0 },
+    { symbol: 'NEW', legIndex: 1, entryPrice: 10, qty: 10, realizedPnL: 0 },
+    { symbol: 'MOVE', legIndex: 1, entryPrice: 10, qty: 10, realizedPnL: 0 }
+  ]);
+  const roles = Object.fromEntries(meta.basket.map(entry => [entry.symbol, entry.role]));
+  assert.equal(roles.LIQ, 'anchor');
+  assert.equal(roles.NEW, 'unknown');
+  assert.equal(meta.basket.find(entry => entry.symbol === 'MOVE').retired, true);
 });
