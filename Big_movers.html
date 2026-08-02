@@ -2969,7 +2969,7 @@
   }
   .portsim-row-pre-fields{
     display:none;
-    grid-template-columns:1fr 1fr 1fr 1fr;
+    grid-template-columns:1fr 1fr 1fr 1fr 1fr;
     gap:6px;
     padding-top:6px;
     border-top:1px dashed var(--border);
@@ -2991,6 +2991,13 @@
     padding:5px 8px;border-radius:5px;outline:none;
   }
   .portsim-row-pre-fields input:focus{border-color:var(--accent);}
+  .sim-eod-stop-toggle,.portsim-row-eod-toggle{
+    display:flex;align-items:center;gap:7px;color:var(--text-2);
+    font-family:var(--mono);font-size:10px;cursor:pointer;user-select:none;
+  }
+  .sim-eod-stop-toggle input,.portsim-row-pre-fields .portsim-row-eod-toggle input{
+    width:14px;height:14px;padding:0;flex:0 0 auto;accent-color:var(--accent);
+  }
   .portsim-row-size-pills{
     display:flex;gap:2px;margin-bottom:2px;
   }
@@ -5606,6 +5613,10 @@
             <input type="number" step="0.01" id="sim-stop-price">
             <div class="sim-stop-distance" id="sim-stop-distance"></div>
           </div>
+          <label class="sim-eod-stop-toggle" id="sim-setup-stop-eod-wrap" style="display:none">
+            <input type="checkbox" id="sim-setup-stop-eod">
+            <span>Trigger stop at end of day (closing price)</span>
+          </label>
           <div class="fetch-field">
             <label for="sim-end-date">End date (optional · force close)</label>
             <div class="sim-input-with-pick">
@@ -5806,6 +5817,10 @@
             <label for="sim-add-newstop">New stop (optional)</label>
             <input type="number" step="0.01" id="sim-add-newstop" placeholder="leave blank to keep current">
           </div>
+          <label class="sim-eod-stop-toggle" id="sim-add-stop-eod-wrap" style="display:none">
+            <input type="checkbox" id="sim-add-stop-eod">
+            <span>Trigger replacement stop at end of day</span>
+          </label>
           <div class="sim-note">Fills at next bar open</div>
           <div class="sim-readout" id="sim-add-summary">
             <div>New avg cost: <strong>—</strong></div>
@@ -5853,6 +5868,10 @@
             <label for="sim-movestop-pct">% of original position to close</label>
             <input type="number" step="1" min="1" max="100" id="sim-movestop-pct" value="100">
           </div>
+          <label class="sim-eod-stop-toggle" id="sim-movestop-stop-eod-wrap" style="display:none">
+            <input type="checkbox" id="sim-movestop-stop-eod">
+            <span>Trigger stop at end of day (closing price)</span>
+          </label>
           <div class="sim-readout" id="sim-movestop-summary">
             <div>Distance from current price: <strong>—</strong></div>
           </div>
@@ -5920,6 +5939,10 @@
             <input type="number" step="0.01" id="sim-newleg-stop">
             <div class="sim-stop-distance" id="sim-newleg-stop-distance"></div>
           </div>
+          <label class="sim-eod-stop-toggle" id="sim-newleg-stop-eod-wrap" style="display:none">
+            <input type="checkbox" id="sim-newleg-stop-eod">
+            <span>Trigger stop at end of day (closing price)</span>
+          </label>
           <div class="sim-readout" id="sim-newleg-summary">
             <div>Risk per share: <strong>—</strong></div>
             <div>Initial $ risk: <strong>—</strong></div>
@@ -11400,6 +11423,10 @@ const Sim = (function(){
   const rR = (n) => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
+  function normalizeStopTriggerMode(mode) {
+    return mode === 'close' ? 'close' : 'intraday';
+  }
+
   function _mintLegId(){
     return 'leg_' + Math.random().toString(36).slice(2, 10);
   }
@@ -11476,18 +11503,21 @@ const Sim = (function(){
       legId: legId,
       entry: {
         barIdx: entry.barIdx, date: entry.date || null, price: entry.price,
-        sizeMode: entry.sizeMode || 'shares', sizeValue: entry.sizeValue, stop: entry.stop
+        sizeMode: entry.sizeMode || 'shares', sizeValue: entry.sizeValue, stop: entry.stop,
+        stopTriggerMode: normalizeStopTriggerMode(entry.stopTriggerMode)
       },
       endBarIdx,
       shares0: shares, initialRisk,
       qty: shares, avgCost: entry.price,
       realizedPnL: 0,
       stopLevels: [{ id: 'stop_initial', price: entry.stop, pct: 1.0, fired: false, barIdx: entry.barIdx,
+                     triggerMode: normalizeStopTriggerMode(entry.stopTriggerMode),
                      trail: (entry.stopTrail && entry.stopTrail.type === 'ema') ? { type: 'ema', period: +entry.stopTrail.period || 10, k: +entry.stopTrail.k || 0 } : null }],
       playIdx: entry.barIdx, stoppedOut: false, closed: false,
       pendingActions: [],
       eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price, direction: direction, legId: legId,
-                    note: 'entry ' + shares + '@' + r2(entry.price) + ' stop ' + r2(entry.stop) }],
+                    triggerMode: normalizeStopTriggerMode(entry.stopTriggerMode),
+                    note: 'entry ' + shares + '@' + r2(entry.price) + ' ' + (normalizeStopTriggerMode(entry.stopTriggerMode) === 'close' ? 'EOD ' : '') + 'stop ' + r2(entry.stop) }],
       peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
       legs: [], between: false, simStartBarIdx: entry.barIdx,
       pnlSeries: [],
@@ -11543,7 +11573,8 @@ const Sim = (function(){
         const ev = {
           barIdx: idx, date: bar.time || null, type: 'movestop',
           stopId: s.id, newStop: s.price, pct: s.pct,
-          note: 'auto-trail EMA' + period + (kRaw ? ' ' + arrow + kRaw + '%' : '')
+          triggerMode: normalizeStopTriggerMode(s.triggerMode),
+          note: (normalizeStopTriggerMode(s.triggerMode) === 'close' ? 'EOD ' : '') + 'auto-trail EMA' + period + (kRaw ? ' ' + arrow + kRaw + '%' : '')
                 + ': ' + (oldPrice != null ? oldPrice.toFixed(2) + ' → ' : '')
                 + s.price.toFixed(2)
         };
@@ -11598,14 +11629,21 @@ const Sim = (function(){
     let anyFired = false;
     for (const stop of active) {
       if (sim.qty <= 0) break;
+      const triggerMode = normalizeStopTriggerMode(stop.triggerMode);
+      stop.triggerMode = triggerMode;
       // Fires when bar adverse extreme reaches stop:
       //   long: bar.low <= stop.price
       //   short: bar.high >= stop.price
-      if (!Sim.Direction.stopFires(d, bar, stop.price)) continue;
+      const fires = triggerMode === 'close'
+        ? (d === 'short' ? Number(bar.close) >= stop.price : Number(bar.close) <= stop.price)
+        : Sim.Direction.stopFires(d, bar, stop.price);
+      if (!fires) continue;
       // Fill price:
       //   long: min(open, stop) — gap-down fills at open
       //   short: max(open, stop) — gap-up fills at open
-      const fillPx = Sim.Direction.fillAtStop(d, bar, stop.price);
+      const fillPx = triggerMode === 'close'
+        ? Number(bar.close)
+        : Sim.Direction.fillAtStop(d, bar, stop.price);
       // pct=100% means "close all" — use current qty so adds get liquidated too.
       // Partial pcts retain shares0-based semantic (fraction of original size).
       const PCT_FULL = stop.pct >= 0.9999;
@@ -11618,7 +11656,8 @@ const Sim = (function(){
       stop.fired = true;
       const pctLbl = Math.round(stop.pct * 100);
       const ev = { barIdx, date: bar.time, type: 'stop', qty: sellQty, price: r2(fillPx), direction: d, legId: sim.legId || null,
-        note: 'stop ' + r2(stop.price) + ' hit (' + pctLbl + '%), filled ' + r2(fillPx) + ' qty ' + sellQty };
+        stopId: stop.id, triggerMode,
+        note: (triggerMode === 'close' ? 'EOD stop ' : 'stop ') + r2(stop.price) + ' hit (' + pctLbl + '%), filled ' + r2(fillPx) + ' qty ' + sellQty };
       sim.eventsLog.push(ev); fired.push(ev);
       anyFired = true;
       if (sim.qty === 0) {
@@ -11671,11 +11710,12 @@ const Sim = (function(){
         const trail = (a.stopTrail && a.stopTrail.type === 'ema')
           ? { type: 'ema', period: +a.stopTrail.period || 10, k: +a.stopTrail.k || 0 }
           : null;
-        sim.stopLevels.push({ id: stopId, price: ns, pct, fired: false, barIdx, trail });
+        const triggerMode = normalizeStopTriggerMode(a.triggerMode || a.stopTriggerMode);
+        sim.stopLevels.push({ id: stopId, price: ns, pct, fired: false, barIdx, trail, triggerMode });
         const pctLbl = Math.round(pct * 100);
         const trailLbl = trail ? ' · trail EMA' + trail.period + (trail.k ? ' −' + trail.k + '%' : '') : '';
-        const ev = { barIdx, date: bar.time, type: 'movestop', qty: sim.qty, price: null, newStop: r2(ns), pct, stopId,
-          note: 'stop ' + r2(ns) + ' added (' + pctLbl + '%)' + trailLbl };
+        const ev = { barIdx, date: bar.time, type: 'movestop', qty: sim.qty, price: null, newStop: r2(ns), pct, stopId, triggerMode,
+          note: (triggerMode === 'close' ? 'EOD stop ' : 'stop ') + r2(ns) + ' added (' + pctLbl + '%)' + trailLbl };
         sim.eventsLog.push(ev); fired.push(ev);
       }
     }
@@ -11747,7 +11787,7 @@ const Sim = (function(){
         const active = Sim.Direction.sortStopsForFire(d, (sim.stopLevels || []).filter(s => !s.fired));
         return active.length ? active[0].price : sim.entry.stop;
       })()),
-      stopLevels: (sim.stopLevels || []).map(s => ({ id: s.id, price: r2(s.price), pct: s.pct, fired: s.fired, barIdx: s.barIdx })),
+      stopLevels: (sim.stopLevels || []).map(s => ({ id: s.id, price: r2(s.price), pct: s.pct, fired: s.fired, barIdx: s.barIdx, triggerMode: normalizeStopTriggerMode(s.triggerMode) })),
       eventsLog: sim.eventsLog.slice(),
       endBarIdx: sim.endBarIdx,
       between: !!sim.between,
@@ -11863,7 +11903,8 @@ const Sim = (function(){
     sim.legId = _mintLegId();
     sim.entry = {
       barIdx: params.barIdx, date: params.date || null, price: params.price,
-      sizeMode: params.sizeMode || 'shares', sizeValue: params.sizeValue, stop: params.stop
+      sizeMode: params.sizeMode || 'shares', sizeValue: params.sizeValue, stop: params.stop,
+      stopTriggerMode: normalizeStopTriggerMode(params.stopTriggerMode)
     };
     sim.shares0 = shares;
     sim.initialRisk = initialRisk;
@@ -11876,7 +11917,8 @@ const Sim = (function(){
     const _newLegTrail = (params.stopTrail && params.stopTrail.type === 'ema')
       ? { type: 'ema', period: +params.stopTrail.period || 10, k: +params.stopTrail.k || 0 }
       : null;
-    sim.stopLevels = [{ id: 'stop_initial_l' + legNum, price: params.stop, pct: 1.0, fired: false, barIdx: params.barIdx, trail: _newLegTrail }];
+    sim.stopLevels = [{ id: 'stop_initial_l' + legNum, price: params.stop, pct: 1.0, fired: false, barIdx: params.barIdx, trail: _newLegTrail,
+      triggerMode: normalizeStopTriggerMode(params.stopTriggerMode) }];
     sim.pendingActions = [];
     sim.between = false;
     sim.peakTotal = 0;
@@ -11893,7 +11935,8 @@ const Sim = (function(){
     sim.eventsLog.push({
       barIdx: params.barIdx, date: params.date || null, type: 'entry',
       qty: shares, price: params.price, direction: direction, legId: sim.legId,
-      note: 'leg ' + legNum + ' entry ' + shares + '@' + r2(params.price) + ' stop ' + r2(params.stop)
+      triggerMode: normalizeStopTriggerMode(params.stopTriggerMode),
+      note: 'leg ' + legNum + ' entry ' + shares + '@' + r2(params.price) + ' ' + (normalizeStopTriggerMode(params.stopTriggerMode) === 'close' ? 'EOD ' : '') + 'stop ' + r2(params.stop)
     });
     return sim;
   }
@@ -11914,7 +11957,7 @@ const Sim = (function(){
     return true;
   }
 
-  return { createSim, queueAction, advanceTo, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg };
+  return { createSim, queueAction, advanceTo, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode };
 })();
 
 // Expose the Sim core on window so cross-module code (PortSim.Ctrl, Track J,
@@ -12279,7 +12322,7 @@ window.Sim = Sim;
               entry: 'entry', add: '+ add', sell: '− sell', stop: '✕ stop',
               close: '● close', movestop: '↑ stop'
             })[ev.type] || ev.type;
-            typeEl.textContent = typeLabel + (ev.qty ? ' ' + ev.qty : '');
+            typeEl.textContent = typeLabel + (ev.triggerMode === 'close' && (ev.type === 'stop' || ev.type === 'movestop') ? ' EOD' : '') + (ev.qty ? ' ' + ev.qty : '');
             evRow.appendChild(typeEl);
 
             const pxEl = document.createElement('span');
@@ -13054,6 +13097,10 @@ window.Sim = Sim;
     const pickEndBtn = document.getElementById('sim-pick-end-btn');
     const equityEl = document.getElementById('sim-initial-equity');
     const dirHiddenEl = document.getElementById('sim-direction-value');
+    const stopEodEl = document.getElementById('sim-setup-stop-eod');
+    const stopEodWrap = document.getElementById('sim-setup-stop-eod-wrap');
+    if (stopEodWrap) stopEodWrap.style.display = ctx.portMode ? 'flex' : 'none';
+    if (stopEodEl) stopEodEl.checked = ctx.restoreFrom?.stopTriggerMode === 'close';
 
     // Default direction: respect ctx.defaultDirection, else metadata.direction
     // (read-once at modal open; does NOT cascade to existing legs after).
@@ -13240,7 +13287,8 @@ window.Sim = Sim;
       const equityRaw = equityEl ? _parseNum(equityEl.value, NaN) : NaN;
       const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
-      try { onSubmit && onSubmit({ direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail }); _closeModal('sim-setup-modal'); }
+      const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
+      try { onSubmit && onSubmit({ direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail, stopTriggerMode }); _closeModal('sim-setup-modal'); }
       catch (err) { _setStatus('sim-setup-status', err && err.message ? err.message : 'Failed to start sim', true); }
     };
     _openModal('sim-setup-modal');
@@ -13311,6 +13359,10 @@ window.Sim = Sim;
     const numEl = document.getElementById('sim-newleg-num');
     const dirHiddenEl = document.getElementById('sim-newleg-direction-value');
     const barClose = _parseNum(ctx.barClose, NaN);
+    const stopEodEl = document.getElementById('sim-newleg-stop-eod');
+    const stopEodWrap = document.getElementById('sim-newleg-stop-eod-wrap');
+    if (stopEodWrap) stopEodWrap.style.display = ctx.portMode ? 'flex' : 'none';
+    if (stopEodEl) stopEodEl.checked = false;
 
     if (numEl) numEl.textContent = String(ctx.legNum || 2);
     if (dateEl) {
@@ -13430,7 +13482,8 @@ window.Sim = Sim;
       // trail wiring and the stop behaved as a snapshot instead of trailing.
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
       try {
-        onSubmit && onSubmit({ direction, sizeMode: mode, sizeValue: size, price, stop, stopTrail });
+        const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
+        onSubmit && onSubmit({ direction, sizeMode: mode, sizeValue: size, price, stop, stopTrail, stopTriggerMode });
         _closeModal('sim-newleg-modal');
       } catch (err) { _setStatus('sim-newleg-status', err && err.message ? err.message : 'Could not start leg', true); }
     };
@@ -13449,6 +13502,10 @@ window.Sim = Sim;
     const currentQty = _parseNum(ctx.currentQty, 0);
     const avgCost = _parseNum(ctx.avgCost, 0);
     const currentPrice = _parseNum(ctx.currentPrice, 0);
+    const stopEodEl = document.getElementById('sim-add-stop-eod');
+    const stopEodWrap = document.getElementById('sim-add-stop-eod-wrap');
+    if (stopEodWrap) stopEodWrap.style.display = ctx.portMode ? 'flex' : 'none';
+    if (stopEodEl) stopEodEl.checked = false;
 
     sizeEl.value = '';
     priceEl.value = isFinite(currentPrice) && currentPrice > 0 ? currentPrice.toFixed(2) : '';
@@ -13505,7 +13562,10 @@ window.Sim = Sim;
       }
       try {
         const payload = { sizeMode: mode, sizeValue: size, price };
-        if (newStop !== null) payload.newStop = newStop;
+        if (newStop !== null) {
+          payload.newStop = newStop;
+          payload.stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
+        }
         onSubmit && onSubmit(payload); _closeModal('sim-add-modal');
       } catch (err) { _setStatus('sim-add-status', err && err.message ? err.message : 'Add failed', true); }
     };
@@ -13522,6 +13582,10 @@ window.Sim = Sim;
     const currentStop = _parseNum(ctx.currentStop, NaN);
     const shares0 = _parseNum(ctx.shares0, NaN);
     const direction = (ctx.direction === 'short' || ctx.direction === 'long') ? ctx.direction : 'long';
+    const stopEodEl = document.getElementById('sim-movestop-stop-eod');
+    const stopEodWrap = document.getElementById('sim-movestop-stop-eod-wrap');
+    if (stopEodWrap) stopEodWrap.style.display = ctx.portMode ? 'flex' : 'none';
+    if (stopEodEl) stopEodEl.checked = ctx.currentStopTriggerMode === 'close';
     priceEl.value = isFinite(currentStop) ? currentStop.toFixed(2) : '';
     pctEl.value = 100;
     _clearStatus('sim-movestop-status');
@@ -13605,7 +13669,8 @@ window.Sim = Sim;
       }
       if (!isFinite(pct) || pct <= 0 || pct > 100) return _setStatus('sim-movestop-status', '% must be between 1 and 100', true);
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
-      try { onSubmit && onSubmit({ newStop, pct: pct / 100, stopTrail }); _closeModal('sim-movestop-modal'); }
+      const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
+      try { onSubmit && onSubmit({ newStop, pct: pct / 100, stopTrail, stopTriggerMode }); _closeModal('sim-movestop-modal'); }
       catch (err) { _setStatus('sim-movestop-status', err && err.message ? err.message : 'Add failed', true); }
     };
     _openModal('sim-movestop-modal');
@@ -18700,7 +18765,7 @@ Sim.Ctrl = (function(){
   // Add a new active stop at sim.playIdx. Mirrors the "movestop" branch in
   // Sim core's _processActionsOnBar (Big_movers.html:8113-8121). Returns
   // the new stop id on success, false otherwise.
-  window.PortSim.Util.applyMoveStopNow = function(sim, bars, newStop, pct, stopTrail){
+  window.PortSim.Util.applyMoveStopNow = function(sim, bars, newStop, pct, stopTrail, stopTriggerMode){
     if (!sim || sim.closed || sim.stoppedOut) return false;
     var ns = +newStop;
     if (!isFinite(ns) || ns <= 0) return false;
@@ -18727,15 +18792,16 @@ Sim.Ctrl = (function(){
     var trail = (stopTrail && stopTrail.type === 'ema')
       ? { type: 'ema', period: +stopTrail.period || 10, k: +stopTrail.k || 0 }
       : null;
-    sim.stopLevels.push({ id: stopId, price: ns, pct: p, fired: false, barIdx: sim.playIdx, trail: trail });
+    var triggerMode = stopTriggerMode === 'close' ? 'close' : 'intraday';
+    sim.stopLevels.push({ id: stopId, price: ns, pct: p, fired: false, barIdx: sim.playIdx, trail: trail, triggerMode: triggerMode });
     var rounded = _r2(ns);
     var trailLbl = trail ? ' · trail EMA' + trail.period + (trail.k ? ' −' + trail.k + '%' : '') : '';
     var verb = replaced > 0 ? 'set' : 'added';
     var replacedLbl = replaced > 1 ? ' (replaced ' + replaced + ' prior)' : '';
     sim.eventsLog.push({
       barIdx: sim.playIdx, date: bar.time, type: 'movestop',
-      qty: sim.qty, price: null, newStop: rounded, pct: p, stopId: stopId,
-      note: 'stop ' + rounded + ' ' + verb + ' (' + Math.round(p * 100) + '%)' + trailLbl + replacedLbl
+      qty: sim.qty, price: null, newStop: rounded, pct: p, stopId: stopId, triggerMode: triggerMode,
+      note: (triggerMode === 'close' ? 'EOD stop ' : 'stop ') + rounded + ' ' + verb + ' (' + Math.round(p * 100) + '%)' + trailLbl + replacedLbl
     });
     return stopId;
   };
@@ -19762,6 +19828,7 @@ Sim.Ctrl = (function(){
       avgCost: sim.avgCost || 0,
       shares0: sim.shares0 || 0,
       currentStop: activeStop ? activeStop.price : (sim.entry ? sim.entry.stop : NaN),
+      currentStopTriggerMode: activeStop && activeStop.triggerMode === 'close' ? 'close' : 'intraday',
       riskPerShare: riskPerShare
     };
   }
@@ -19805,6 +19872,7 @@ Sim.Ctrl = (function(){
       portMode: true,
       currentPrice: bar.close != null ? bar.close : NaN,
       currentStop: s.currentStop,
+      currentStopTriggerMode: s.currentStopTriggerMode,
       shares0: s.shares0 || s.qty,
       barDate: bar.time || null,
       direction: (sim && sim.direction) || 'long',
@@ -19882,6 +19950,7 @@ Sim.Ctrl = (function(){
       hasPreEntry: false,
       entryPrice: '',
       stopPrice: '',
+      stopTriggerMode: 'intraday',
       sizeMode: 'shares',
       sizeValue: ''
     };
@@ -19918,6 +19987,7 @@ Sim.Ctrl = (function(){
             hasPreEntry: !!t.hasPreEntry,
             entryPrice: t.entryPrice != null ? t.entryPrice : null,
             stopPrice: t.stopPrice != null ? t.stopPrice : null,
+            stopTriggerMode: t.stopTriggerMode === 'close' ? 'close' : 'intraday',
             sizeMode: t.sizeMode || 'shares',
             sizeValue: t.sizeValue != null ? t.sizeValue : null
           };
@@ -20188,6 +20258,7 @@ Sim.Ctrl = (function(){
       var pre = $('.portsim-row-pre-cb', rowEl).checked;
       var entryPx = $('.portsim-row-price', rowEl).value;
       var stopPx = $('.portsim-row-stop', rowEl).value;
+      var stopEod = $('.portsim-row-stop-eod', rowEl).checked;
       var sizeVal = $('.portsim-row-size', rowEl).value;
       var modeBtn = $('.portsim-row-size-pill.active', rowEl);
       var sizeMode = (modeBtn && modeBtn.getAttribute('data-mode')) || 'shares';
@@ -20196,6 +20267,7 @@ Sim.Ctrl = (function(){
         hasPreEntry: pre,
         entryPrice: entryPx === '' ? '' : safeNum(entryPx),
         stopPrice: stopPx === '' ? '' : safeNum(stopPx),
+        stopTriggerMode: stopEod ? 'close' : 'intraday',
         sizeMode: sizeMode,
         sizeValue: sizeVal === '' ? '' : safeNum(sizeVal)
       };
@@ -20231,6 +20303,7 @@ Sim.Ctrl = (function(){
           if (r.hasPreEntry) {
             t.entryPrice = safeNum(r.entryPrice);
             t.stopPrice = safeNum(r.stopPrice);
+            t.stopTriggerMode = r.stopTriggerMode === 'close' ? 'close' : 'intraday';
             t.sizeMode = r.sizeMode || 'shares';
             t.sizeValue = safeNum(r.sizeValue);
           }
@@ -20261,6 +20334,7 @@ Sim.Ctrl = (function(){
         if (r.hasPreEntry) {
           t.entryPrice = safeNum(r.entryPrice);
           t.stopPrice = safeNum(r.stopPrice);
+          t.stopTriggerMode = r.stopTriggerMode === 'close' ? 'close' : 'intraday';
           t.sizeMode = r.sizeMode || 'shares';
           t.sizeValue = safeNum(r.sizeValue);
         }
@@ -20278,6 +20352,7 @@ Sim.Ctrl = (function(){
     var preCb = $('.portsim-row-pre-cb', node);
     var priceEl = $('.portsim-row-price', node);
     var stopEl = $('.portsim-row-stop', node);
+    var stopEodEl = $('.portsim-row-stop-eod', node);
     var sizeEl = $('.portsim-row-size', node);
     var pillBtns = $$('.portsim-row-size-pill', node);
     var removeBtn = $('.portsim-row-remove', node);
@@ -20289,6 +20364,7 @@ Sim.Ctrl = (function(){
       if (rowState.hasPreEntry) {
         priceEl.value = (rowState.entryPrice != null && rowState.entryPrice !== '') ? rowState.entryPrice : '';
         stopEl.value = (rowState.stopPrice != null && rowState.stopPrice !== '') ? rowState.stopPrice : '';
+        stopEodEl.checked = rowState.stopTriggerMode === 'close';
         sizeEl.value = (rowState.sizeValue != null && rowState.sizeValue !== '') ? rowState.sizeValue : '';
         var mode = rowState.sizeMode || 'shares';
         pillBtns.forEach(function (b) {
@@ -20847,9 +20923,10 @@ Sim.Ctrl = (function(){
       return {
         symbol: String(row.symbol || '').trim().toUpperCase(),
         hasPreEntry: false,
-        entryPrice: '',
-        stopPrice: '',
-        sizeMode: 'shares',
+          entryPrice: '',
+          stopPrice: '',
+          stopTriggerMode: 'intraday',
+          sizeMode: 'shares',
         sizeValue: ''
       };
     });
@@ -20975,6 +21052,7 @@ Sim.Ctrl = (function(){
           hasPreEntry: !!t.hasPreEntry,
           entryPrice: t.entryPrice != null ? t.entryPrice : '',
           stopPrice: t.stopPrice != null ? t.stopPrice : '',
+          stopTriggerMode: t.stopTriggerMode === 'close' ? 'close' : 'intraday',
           sizeMode: t.sizeMode || 'shares',
           sizeValue: t.sizeValue != null ? t.sizeValue : ''
         };
@@ -22055,6 +22133,7 @@ Sim.Ctrl = (function(){
           entry: entry,
           entryPrice: +tCfg.entryPrice,
           stopPrice: +tCfg.stopPrice,
+          stopTriggerMode: tCfg.stopTriggerMode === 'close' ? 'close' : 'intraday',
           sizeMode: tCfg.sizeMode || 'shares',
           sizeValue: +tCfg.sizeValue
         });
@@ -22214,6 +22293,7 @@ Sim.Ctrl = (function(){
           date: bars[entryBarIdx].time,
           price: req.entryPrice,
           stop: req.stopPrice,
+          stopTriggerMode: req.stopTriggerMode,
           sizeMode: req.sizeMode,
           sizeValue: req.sizeValue
         }
@@ -22348,7 +22428,8 @@ Sim.Ctrl = (function(){
             // (incl. ema_trail). Without this, picking an auto-trail option
             // here placed the stop at the EMA value but never ratcheted —
             // it behaved as a snapshot.
-            stopTrail: form.stopTrail || null
+            stopTrail: form.stopTrail || null,
+            stopTriggerMode: form.stopTriggerMode
           }
         });
         entry.sim = sim;
@@ -22410,7 +22491,8 @@ Sim.Ctrl = (function(){
           sizeMode: form.sizeMode,
           sizeValue: +form.sizeValue,
           direction: newDir,
-          stopTrail: form.stopTrail || null
+          stopTrail: form.stopTrail || null,
+          stopTriggerMode: form.stopTriggerMode
         });
         // Long leg → debit cash. Short leg → lock proceeds (no cash debit).
         if (entry.sim.direction === 'short'){
@@ -22457,10 +22539,10 @@ Sim.Ctrl = (function(){
         if (form.newStop != null && isFinite(+form.newStop)){
           const ns = +form.newStop;
           const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-            ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, 1.0)
+            ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, 1.0, null, form.stopTriggerMode)
             : false;
           if (!ok){
-            window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: 1.0 });
+            window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: 1.0, triggerMode: form.stopTriggerMode });
           }
         }
         // Note: cash debit for the add itself folds on next tick when the
@@ -22487,11 +22569,11 @@ Sim.Ctrl = (function(){
         // when the user picks an auto-trail strategy in the modal — without
         // this, the trail was silently dropped and the stop never ratcheted.
         const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null)
+          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null, form.stopTriggerMode)
           : false;
         if (!ok){
           // Fallback: queue + advance like the single-ticker sim does.
-          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null });
+          window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null, triggerMode: form.stopTriggerMode });
         }
         _renderAll();
       });
@@ -24391,6 +24473,13 @@ Sim.Ctrl = (function(){
             badge.textContent = ' init';
             dayCell.appendChild(badge);
           }
+          var effectiveMode = (simStop && simStop.triggerMode === 'close') || s.triggerMode === 'close' ? 'close' : 'intraday';
+          if (effectiveMode === 'close'){
+            var eodBadge = document.createElement('span');
+            eodBadge.className = 'init-badge';
+            eodBadge.textContent = ' EOD';
+            dayCell.appendChild(eodBadge);
+          }
           row.appendChild(dayCell);
 
           // Price input
@@ -25083,6 +25172,7 @@ Sim.Ctrl = (function(){
             id: s.id, price: s.price, day: idx - entryBarIdx,
             type: isInit ? 'initial' : 'moved', fired: !!s.fired,
             pct: s.pct != null ? s.pct : 1.0,
+            triggerMode: s.triggerMode === 'close' ? 'close' : 'intraday',
           };
         });
       }
@@ -25112,6 +25202,7 @@ Sim.Ctrl = (function(){
       if (s.fired){ tag.classList.add('is-fired'); tag.textContent = 'fired'; }
       else if (s.type === 'initial'){ tag.classList.add('is-init'); tag.textContent = 'init'; }
       else { tag.textContent = 'active'; }
+      if (s.triggerMode === 'close') tag.textContent += ' · EOD';
       row.appendChild(tag);
       el.appendChild(row);
     });
@@ -26097,6 +26188,7 @@ Sim.Ctrl = (function(){
         barIdx: stopBarIdx,
         day: stopBarIdx - entryBarIdx,
         pct: (s.pct != null ? s.pct : 1.0),
+        triggerMode: s.triggerMode === 'close' ? 'close' : 'intraday',
         type: isInitial ? 'initial' : 'moved',
         fired: !!s.fired
       };
@@ -26220,7 +26312,7 @@ Sim.Ctrl = (function(){
     // ---- Event log (existing) ----
     rows.push('');
     rows.push('# === event log ===');
-    rows.push(['leg','day','barIdx','date','type','qty','price','newStop','pct','note'].join(','));
+    rows.push(['leg','day','barIdx','date','type','qty','price','newStop','pct','triggerMode','note'].join(','));
 
     // Past legs first.
     (sim.legs || []).forEach(function(leg, i){
@@ -26238,6 +26330,7 @@ Sim.Ctrl = (function(){
           ev.price != null ? ev.price : '',
           ev.newStop != null ? ev.newStop : '',
           ev.pct != null ? ev.pct : '',
+          _csvEscape(ev.triggerMode === 'close' ? 'close' : (ev.triggerMode ? 'intraday' : '')),
           _csvEscape(ev.note || '')
         ].join(','));
       });
@@ -26256,6 +26349,7 @@ Sim.Ctrl = (function(){
         ev.price != null ? ev.price : '',
         ev.newStop != null ? ev.newStop : '',
         ev.pct != null ? ev.pct : '',
+        _csvEscape(ev.triggerMode === 'close' ? 'close' : (ev.triggerMode ? 'intraday' : '')),
         _csvEscape(ev.note || '')
       ].join(','));
     });
@@ -27429,10 +27523,10 @@ Sim.Ctrl = (function(){
               // queueAction would defer until the next advanceTo() and the
               // change wouldn't show up on a paused chart.
               var ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null)
+                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null, form.stopTriggerMode)
                 : false;
               if (!ok){
-                window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null });
+                window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null, triggerMode: form.stopTriggerMode });
               }
             } catch(e){ console.error('[PortSim.Positions] movestop:', e); }
             // Track J's 120ms watcher will pick up the new stopLevels entry
@@ -28087,7 +28181,7 @@ Sim.Ctrl = (function(){
     // ---- 5. Combined event log ----
     rows.push('');
     rows.push('# === Event Log ===');
-    rows.push(['Symbol','Leg','Day','BarIdx','Date','Type','Qty','Price','NewStop','Pct','Note'].join(','));
+    rows.push(['Symbol','Leg','Day','BarIdx','Date','Type','Qty','Price','NewStop','Pct','TriggerMode','Note'].join(','));
     var allEvents = [];
     basket.forEach(function(e){
       var sim = e && e.sim;
@@ -28133,6 +28227,7 @@ Sim.Ctrl = (function(){
         ev.price != null ? _r2(ev.price) : '',
         ev.newStop != null ? _r2(ev.newStop) : '',
         ev.pct != null ? ev.pct : '',
+        _csvEscape(ev.triggerMode === 'close' ? 'close' : (ev.triggerMode ? 'intraday' : '')),
         _csvEscape(ev.note || '')
       ].join(','));
     });
@@ -28552,7 +28647,7 @@ Sim.Ctrl = (function(){
             text: (isCover ? 'COVER ' : 'S ') + ev.qty + '@' + _r2(ev.price) });
         } else if (ev.type === 'stop'){
           mks.push({ time: ev.date, position: 'aboveBar', color: '#fb7185', shape: 'arrowDown',
-            text: 'STOP ' + ev.qty + '@' + _r2(ev.price) });
+            text: (ev.triggerMode === 'close' ? 'EOD STOP ' : 'STOP ') + ev.qty + '@' + _r2(ev.price) });
         } else if (ev.type === 'close' && ev.qty > 0){
           mks.push({ time: ev.date, position: 'aboveBar', color: '#a78bfa', shape: 'arrowDown',
             text: 'CLOSE ' + ev.qty + '@' + _r2(ev.price) });
@@ -31046,6 +31141,10 @@ Sim.Ctrl = (function(){
           <button type="button" class="portsim-row-size-pill" data-mode="dollars">$</button>
         </div>
       </div>
+      <label class="portsim-row-eod-toggle">
+        <input type="checkbox" class="portsim-row-stop-eod">
+        <span>EOD stop</span>
+      </label>
     </div>
     <div class="portsim-row-error"></div>
     <div class="portsim-row-warn"></div>
