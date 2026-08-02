@@ -2681,6 +2681,31 @@
   .portsim-grid.cols-8,
   .portsim-grid.cols-9,
   .portsim-grid.cols-10{grid-template-columns:repeat(2,1fr);}
+  .is-tab-hidden{display:none;}
+  .portsim-card-tabs{
+    display:flex;
+    flex:0 0 auto;
+    flex-wrap:wrap;
+    gap:6px;
+    padding:8px 8px 0;
+    background:var(--bg);
+    border-top:1px solid var(--border);
+  }
+  .portsim-card-tab{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    background:var(--bg2);
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:5px 10px;
+    cursor:pointer;
+  }
+  .portsim-card-tab:hover,
+  .portsim-card-tab:focus-visible{border-color:var(--accent);color:var(--text);outline:none;}
+  .portsim-card-tab.is-active{background:var(--accent);border-color:var(--accent);color:var(--bg);}
   /* "Active Only" toggle: hide cards without an open position. Visible cards
      reflow into the existing grid columns automatically (CSS grid skips
      display:none items but keeps the column count fixed). */
@@ -3910,7 +3935,7 @@
   .portsim-pos-pnl-neg{ color:var(--red); font-weight:600; }
 
   /* ----- Grid host (Track G fills with .portcard nodes) ----- */
-  #portsim-shell #portsim-grid{
+  #portsim-shell .portsim-grid{
     flex:1 1 auto;
     min-height:0;
     overflow:auto;
@@ -22076,6 +22101,8 @@ Sim.Ctrl = (function(){
     _state.notes = [];
     _state.retiredEntries = [];
 
+    _setCardTab('stocks');
+
     // Clear and prepare the grid.
     const grid = _byId('portsim-grid');
     if (!grid) throw new Error('#portsim-grid not in DOM');
@@ -22683,6 +22710,7 @@ Sim.Ctrl = (function(){
 
   function _hardExit(){
     _pause();
+    _setCardTab('stocks');
     if (PortSim.Header && PortSim.Header.hide) PortSim.Header.hide();
     _state.basket.forEach(function(e){
       try { e.card.destroy(); } catch(err){}
@@ -23394,7 +23422,34 @@ Sim.Ctrl = (function(){
   // =====================================================================
   // Wiring: topbar button + Setup subscription + global keys
   // =====================================================================
+  function _setCardTab(name){
+    const indicesActive = name === 'indices';
+    const stocksTab = _byId('portsim-card-tab-stocks');
+    const indicesTab = _byId('portsim-card-tab-indices');
+    const stocksGrid = _byId('portsim-grid');
+    const indicesGrid = _byId('portsim-index-grid');
+    [[stocksTab, !indicesActive], [indicesTab, indicesActive]].forEach(function(pair){
+      const tab = pair[0];
+      const active = pair[1];
+      if (!tab) return;
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    if (stocksGrid) stocksGrid.classList.toggle('is-tab-hidden', indicesActive);
+    if (indicesGrid) indicesGrid.classList.toggle('is-tab-hidden', !indicesActive);
+  }
+
+  function _wireCardTabs(){
+    [['portsim-card-tab-stocks', 'stocks'], ['portsim-card-tab-indices', 'indices']].forEach(function(pair){
+      const tab = _byId(pair[0]);
+      if (!tab || tab._portsimCardTabBound) return;
+      tab._portsimCardTabBound = true;
+      tab.addEventListener('click', function(){ _setCardTab(pair[1]); });
+    });
+  }
+
   function _wireOnce(){
+    _wireCardTabs();
     const startBtn = _byId('portsim-start-btn');
     if (startBtn && !startBtn._portsimBound){
       startBtn._portsimBound = true;
@@ -31282,7 +31337,12 @@ Sim.Ctrl = (function(){
     <div id="portsim-positions-table"><div class="portsim-positions-empty">No open positions</div></div>
   </div>
   <div class="portsim-resize-h" data-resize="positions" title="Drag to resize the positions panel"></div>
-  <div id="portsim-grid" class="portsim-grid"></div>
+  <div class="portsim-card-tabs" role="tablist" aria-label="Portfolio cards">
+    <button id="portsim-card-tab-stocks" class="portsim-card-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="portsim-grid">Stocks</button>
+    <button id="portsim-card-tab-indices" class="portsim-card-tab" type="button" role="tab" aria-selected="false" aria-controls="portsim-index-grid">Indices</button>
+  </div>
+  <div id="portsim-grid" class="portsim-grid" role="tabpanel" aria-labelledby="portsim-card-tab-stocks"></div>
+  <div id="portsim-index-grid" class="portsim-grid cols-2 is-tab-hidden" role="tabpanel" aria-labelledby="portsim-card-tab-indices"></div>
 </div>
 <!-- ============ PORTSIM TRACK E: Header & Index Strip — END ============ -->
 </body>
