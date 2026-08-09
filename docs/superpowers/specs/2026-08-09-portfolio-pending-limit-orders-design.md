@@ -83,9 +83,9 @@ For a pending add, an optional replacement stop is stored with the order and is 
 
 Limit-order submission validates:
 
-- Positive finite limit and stop prices.
+- A positive finite limit price. Initial entries and re-entries require a positive finite protective stop; adds validate a replacement stop only when one is supplied.
 - Positive whole-share quantity after sizing.
-- A directionally valid protective stop relative to the limit: below for long and above for short.
+- A directionally valid supplied protective stop relative to the limit: below for long and above for short.
 - Enough unreserved buying power for `qty * limitPrice`.
 - No existing pending order on the card.
 - An eligible card state: idle/between for entry or active for add.
