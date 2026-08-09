@@ -15781,20 +15781,20 @@ window.Sim = Sim;
     return source.filter(isValidEvent).map(function(event){ return clone(event, {}); });
   }
   function entryMaps(entries){
-    var maps = { instance: {}, entry: {}, display: {} };
+    var maps = { instance: new Map(), entry: new Map(), display: new Map() };
     (Array.isArray(entries) ? entries : []).forEach(function(entry){
       if (!isObject(entry)) return;
-      if (nonEmpty(entry.entryInstanceKey)) maps.instance[entry.entryInstanceKey] = entry;
-      if (nonEmpty(entry.entryKey)) maps.entry[entry.entryKey] = entry;
+      if (nonEmpty(entry.entryInstanceKey)) maps.instance.set(String(entry.entryInstanceKey), entry);
+      if (nonEmpty(entry.entryKey)) maps.entry.set(String(entry.entryKey), entry);
       var display = String(entry.displaySymbol || entry.symbol || '').trim().toUpperCase();
-      if (display && !maps.display[display]) maps.display[display] = entry;
+      if (display && !maps.display.has(display)) maps.display.set(display, entry);
     });
     return maps;
   }
   function matchingEntry(event, maps){
-    return (event.entryInstanceKey && maps.instance[event.entryInstanceKey])
-      || (event.entryKey && maps.entry[event.entryKey])
-      || maps.display[String(event.displaySymbol || event.symbol || '').trim().toUpperCase()]
+    return (nonEmpty(event.entryInstanceKey) && maps.instance.get(String(event.entryInstanceKey)))
+      || (nonEmpty(event.entryKey) && maps.entry.get(String(event.entryKey)))
+      || maps.display.get(String(event.displaySymbol || event.symbol || '').trim().toUpperCase())
       || null;
   }
   function enrich(event, entry, fallbackYear){
@@ -15825,22 +15825,49 @@ window.Sim = Sim;
     });
     return out;
   }
-  // A top-level activity list is authoritative only when it contains at
-  // least one valid event. Otherwise fall back to compatibility copies on
-  // basket entries. This prevents malformed primitives from becoming report
-  // rows while preserving older per-entry-only review/session records.
-  function collect(source, entries, fallbackYear){
-    var top = validEvents(source);
-    if (!top.length) return fromEntries(entries, fallbackYear);
-    var maps = entryMaps(entries);
-    return top.map(function(event){
-      return enrich(event, matchingEntry(event, maps), fallbackYear);
-    }).filter(Boolean);
-  }
   function finite(value){
     if (value == null || (typeof value === 'string' && value.trim() === '')) return null;
     var n = Number(value);
     return Number.isFinite(n) ? n : null;
+  }
+  function lifecycleKey(event){
+    var requested = finite(event.requestedLimit);
+    if (requested == null) requested = finite(event.limitPrice);
+    if (requested == null && event.type === 'placed') requested = finite(event.price);
+    var actual = finite(event.fillPrice);
+    if (actual == null && (event.type === 'filled' || event.type === 'gap_stop')) actual = finite(event.price);
+    return JSON.stringify([
+      event.orderId == null ? '' : String(event.orderId),
+      event.entryInstanceKey == null ? '' : String(event.entryInstanceKey),
+      event.entryKey == null ? '' : String(event.entryKey),
+      event.assetType == null ? '' : String(event.assetType),
+      event.displaySymbol == null ? '' : String(event.displaySymbol),
+      event.symbol == null ? '' : String(event.symbol),
+      event.dataSymbol == null ? '' : String(event.dataSymbol),
+      String(event.type || ''), String(event.status || ''),
+      String(event.date || ''), event.barIdx == null ? String(event.bar == null ? '' : event.bar) : String(event.barIdx),
+      event.qty == null ? '' : String(event.qty),
+      requested, actual,
+      String(event.kind || ''), String(event.direction || ''), String(event.reason || '')
+    ]);
+  }
+  // Keep both persisted representations for compatibility. Sanitized
+  // top-level events are considered first, then any lifecycle events only
+  // recoverable from basket entries are appended. Exact lifecycle duplicates
+  // collapse with the top-level copy winning.
+  function collect(source, entries, fallbackYear){
+    var maps = entryMaps(entries);
+    var top = validEvents(source).map(function(event){
+      return enrich(event, matchingEntry(event, maps), fallbackYear);
+    }).filter(Boolean);
+    var perEntry = fromEntries(entries, fallbackYear);
+    var seen = new Set();
+    return top.concat(perEntry).filter(function(event){
+      var key = lifecycleKey(event);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
   function titleCase(value){
     return String(value == null ? '' : value).replace(/[_-]+/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
@@ -15862,19 +15889,20 @@ window.Sim = Sim;
   // price only for filled/gap-stop events; explicit fields win when present.
   function normalize(source, entries, fallbackYear){
     var events = collect(source, entries, fallbackYear);
-    var requestedByOrder = {};
+    var requestedByOrder = new Map();
     events.forEach(function(event){
-      if (event.type !== 'placed' || !event.orderId) return;
+      if (event.type !== 'placed' || !nonEmpty(event.orderId)) return;
       var requested = finite(event.requestedLimit);
       if (requested == null) requested = finite(event.limitPrice);
       if (requested == null) requested = finite(event.price);
-      if (requested != null) requestedByOrder[event.orderId] = requested;
+      if (requested != null) requestedByOrder.set(String(event.orderId), requested);
     });
     return events.map(function(event, index){
       var requested = finite(event.requestedLimit);
       if (requested == null) requested = finite(event.limitPrice);
-      if (requested == null && event.orderId && requestedByOrder[event.orderId] != null){
-        requested = requestedByOrder[event.orderId];
+      var orderKey = nonEmpty(event.orderId) ? String(event.orderId) : null;
+      if (requested == null && orderKey != null && requestedByOrder.has(orderKey)){
+        requested = requestedByOrder.get(orderKey);
       }
       if (requested == null && event.type === 'placed') requested = finite(event.price);
       var actual = finite(event.fillPrice);
@@ -31953,32 +31981,40 @@ Sim.Ctrl = (function(){
   // - missing meta.shortLocks reads as {}
   // Verifies the saved equity matches the recomputed equity (byte-for-byte
   // self-check) and logs a warning if not.
+  function _savedBasketRecords(value){
+    var source;
+    if (Array.isArray(value)) source = value;
+    else if (value && typeof value === 'object'){
+      source = Object.keys(value).map(function(key){ return value[key]; });
+    } else source = [];
+    return source.filter(function(entry){
+      return !!entry && typeof entry === 'object' && !Array.isArray(entry);
+    });
+  }
   function _migrateLoadedReviewV1(loaded){
     if (!loaded || !loaded.meta) return loaded;
     var meta = loaded.meta;
+    meta.basket = _savedBasketRecords(meta.basket);
     if (!meta.shortLocks) meta.shortLocks = {};
-    if (Array.isArray(meta.basket)){
-      meta.basket.forEach(function(e){
-        if (!e) return;
-        var display = String(e.displaySymbol || e.symbol || 'POS').trim().toUpperCase();
-        var isIndex = e.assetType === 'index' || e.role === 'index' || /^index:/.test(String(e.entryKey || ''))
-          || display === 'SPX' || display === 'NDQ';
-        e.assetType = isIndex ? 'index' : 'stock';
-        e.displaySymbol = display;
-        e.symbol = String(e.symbol || display).trim().toUpperCase();
-        e.entryKey = e.entryKey || (e.assetType + ':' + e.symbol);
-        e.dataSymbol = e.dataSymbol || (isIndex && display === 'SPX' ? 'SPY' : e.symbol);
-        e.cacheSymbol = e.cacheSymbol || (isIndex ? display : null);
-        if (isIndex) e.role = 'index';
-        if (!Array.isArray(e.legs)) e.legs = [];
-        e.orderEvents = window.PortSimOrderActivity
-          ? PortSimOrderActivity.collect(null, [e], (meta.startDate || '').slice(0, 4) || null)
-          : [];
-        e.legs.forEach(function(l){
-          if (l && l.direction == null) l.direction = 'long';
-        });
+    meta.basket.forEach(function(e){
+      var display = String(e.displaySymbol || e.symbol || 'POS').trim().toUpperCase();
+      var isIndex = e.assetType === 'index' || e.role === 'index' || /^index:/.test(String(e.entryKey || ''))
+        || display === 'SPX' || display === 'NDQ';
+      e.assetType = isIndex ? 'index' : 'stock';
+      e.displaySymbol = display;
+      e.symbol = String(e.symbol || display).trim().toUpperCase();
+      e.entryKey = e.entryKey || (e.assetType + ':' + e.symbol);
+      e.dataSymbol = e.dataSymbol || (isIndex && display === 'SPX' ? 'SPY' : e.symbol);
+      e.cacheSymbol = e.cacheSymbol || (isIndex ? display : null);
+      if (isIndex) e.role = 'index';
+      if (!Array.isArray(e.legs)) e.legs = [];
+      e.orderEvents = window.PortSimOrderActivity
+        ? PortSimOrderActivity.collect(null, [e], (meta.startDate || '').slice(0, 4) || null)
+        : [];
+      e.legs.forEach(function(l){
+        if (l && l.direction == null) l.direction = 'long';
       });
-    }
+    });
     meta.orderEvents = window.PortSimOrderActivity
       ? PortSimOrderActivity.collect(
           meta.orderEvents,
