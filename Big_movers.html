@@ -4847,6 +4847,17 @@
     box-sizing:border-box;
   }
   .portsim-review-notes textarea:focus{border-color:var(--accent);}
+  .portsim-review-order-activity{
+    margin-top:18px;
+    background:var(--bg3);border:1px solid var(--border);
+    border-radius:6px;padding:10px 12px;
+  }
+  .portsim-review-order-activity > label{
+    display:block;
+    font-family:var(--mono);font-size:9px;
+    color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;
+    margin-bottom:6px;
+  }
   .portsim-review-status{
     flex-shrink:0;
     padding:6px 16px;
@@ -5210,6 +5221,20 @@
       resize:none !important;
       overflow:visible !important;
       white-space:pre-wrap !important;
+    }
+    body.portsim-printing .portsim-review-order-activity{
+      background:#fff !important;
+      border:none !important;
+      border-radius:0 !important;
+      color:#111 !important;
+      padding:0 !important;
+      margin:14px 0 0 !important;
+      page-break-inside:auto;
+    }
+    body.portsim-printing .portsim-review-order-activity > label{
+      color:#222 !important;
+      font-size:10px !important;
+      font-weight:700;
     }
 
     /* ----- Charts (replaced with <img> by _convertChartsToImages) ----- */
@@ -15767,6 +15792,41 @@ window.Sim = Sim;
   function _loadTrades(){ return _loadJson(TRADES_KEY); }
   function _storeSessions(arr){ _storeJson(SESSIONS_KEY, arr, MAX_SESSIONS); }
   function _storeTrades(arr){ _storeJson(TRADES_KEY, arr, MAX_TRADES); }
+  function _cloneJson(value, fallback){
+    try { return JSON.parse(JSON.stringify(value)); }
+    catch(e){ return fallback; }
+  }
+
+  // Order activity is session-level evidence, not a trade source.  Keep it
+  // as a separate flat snapshot so zero-fill sessions can be reviewed while
+  // every P&L metric continues to consume only _extractTradesFromSim rows.
+  function _portfolioOrderActivity(payload){
+    payload = payload || {};
+    if (Array.isArray(payload.orderEvents) && payload.orderEvents.length){
+      return _cloneJson(payload.orderEvents, []);
+    }
+    const out = [];
+    (payload.basket || []).forEach(function(entry){
+      if (!entry || !Array.isArray(entry.orderEvents)) return;
+      const fallbackYear = entry.year || ((payload.firstDate || '').slice(0, 4) || null);
+      entry.orderEvents.forEach(function(raw){
+        if (!raw || typeof raw !== 'object') return;
+        const event = _cloneJson(raw, {});
+        event.entryKey = event.entryKey || entry.entryKey || null;
+        event.entryInstanceKey = event.entryInstanceKey || entry.entryInstanceKey || null;
+        event.assetType = event.assetType || entry.assetType || 'stock';
+        event.symbol = event.symbol || entry.symbol || null;
+        event.displaySymbol = event.displaySymbol || entry.displaySymbol || entry.symbol || null;
+        event.dataSymbol = event.dataSymbol || entry.dataSymbol || entry.symbol || null;
+        event.cacheSymbol = event.cacheSymbol || entry.cacheSymbol || null;
+        event.role = event.assetType === 'index' ? 'index'
+          : (/^(mover|anchor|noise)$/.test(entry.role) ? entry.role : event.role || entry.role || null);
+        event.year = event.year || fallbackYear;
+        out.push(event);
+      });
+    });
+    return out;
+  }
 
   // Migrate v1 records (one-record-per-sim) into v2 (session + 1 stub trade).
   // Stub trade has aggregate fields only — leg-level detail wasn't recorded
@@ -16131,8 +16191,9 @@ window.Sim = Sim;
     });
     const portfolioMetrics = payload.portfolioMetrics || _computePortfolioMetrics(payload);
     const allTrades = portfolioMetrics.tradeRows;
-    if (!allTrades.length){
-      alert('No trades to record (no entries taken in this sim).');
+    const orderEvents = _portfolioOrderActivity(payload);
+    if (!allTrades.length && !orderEvents.length){
+      alert('No trades or order activity to record in this sim.');
       return;
     }
     // Stamp a runInstanceId on the portfolio state if one wasn't already
@@ -16153,6 +16214,8 @@ window.Sim = Sim;
         cacheSymbol: entry.cacheSymbol || null,
         symbol: entry.symbol || 'POS',
         role: entry.role || null,
+        year: entry.year || (payload.firstDate ? +payload.firstDate.slice(0, 4) : null),
+        orderEvents: _portfolioOrderActivity({ basket: [entry], firstDate: payload.firstDate }),
         retired: !!entry._retired
       };
     });
@@ -16198,6 +16261,7 @@ window.Sim = Sim;
       basketGeneration: basketGeneration
         ? JSON.parse(JSON.stringify(basketGeneration))
         : null,
+      orderEvents: _cloneJson(orderEvents, []),
       // Phase 2 review skeleton — populated by the guided review modal
       // (Phase 3). reviewSkipped defaults to true; flips to false when the
       // user completes the structured review. legs is keyed by tradeId.
@@ -16225,7 +16289,8 @@ window.Sim = Sim;
     });
     _storeSessions(sessions);
     _storeTrades(trades);
-    alert('✓ Logged portfolio session: ' + symbols.length + ' tickers, ' + allTrades.length + ' trades. Total sessions: ' + sessions.length);
+    alert('✓ Logged portfolio session: ' + symbols.length + ' tickers, ' + allTrades.length + ' trades, '
+      + orderEvents.length + ' order event' + (orderEvents.length === 1 ? '' : 's') + '. Total sessions: ' + sessions.length);
     // Open the merged Trade Review modal for this session — replaces the
     // former SimReviewGuided post-session prompt.
     if (window.PortSim && PortSim.Review && typeof PortSim.Review.openForSession === 'function'){
@@ -23528,6 +23593,33 @@ Sim.Ctrl = (function(){
       return fallback;
     }
   }
+  // Persist order lifecycle independently from Sim legs.  In particular, a
+  // placed-then-cancelled order has no sim at all but is still reviewable
+  // activity.  Identity is copied onto every event so flattened session and
+  // review records remain self-describing after cards are retired/rebuilt.
+  function _snapshotOrderActivity(entries){
+    const out = [];
+    (Array.isArray(entries) ? entries : []).forEach(function(entry){
+      if (!entry || !Array.isArray(entry.orderEvents)) return;
+      const fallbackYear = entry.year || ((_state.startDate || '').slice(0, 4) || null);
+      entry.orderEvents.forEach(function(raw){
+        if (!raw || typeof raw !== 'object') return;
+        const event = _cloneSnapshotValue(raw, {});
+        event.entryKey = event.entryKey || entry.entryKey || null;
+        event.entryInstanceKey = event.entryInstanceKey || entry.entryInstanceKey || null;
+        event.assetType = event.assetType || entry.assetType || 'stock';
+        event.symbol = event.symbol || entry.symbol || null;
+        event.displaySymbol = event.displaySymbol || entry.displaySymbol || entry.symbol || null;
+        event.dataSymbol = event.dataSymbol || entry.dataSymbol || entry.symbol || null;
+        event.cacheSymbol = event.cacheSymbol || entry.cacheSymbol || null;
+        event.role = event.assetType === 'index' ? 'index'
+          : (/^(mover|anchor|noise)$/.test(entry.role) ? entry.role : event.role || entry.role || null);
+        event.year = event.year || fallbackYear;
+        out.push(event);
+      });
+    });
+    return out;
+  }
   function _pushSnapshot(){
     // Deep-clone shortLocks so step-back restores fenced short proceeds correctly.
     let shortLocksClone = {};
@@ -24207,6 +24299,7 @@ Sim.Ctrl = (function(){
     const _portfolioMetrics = (window.SimStats && typeof window.SimStats.computePortfolioMetrics === 'function')
       ? window.SimStats.computePortfolioMetrics({ basket: _allBasketForStats })
       : null;
+    const _orderActivity = _snapshotOrderActivity(_allBasketForStats);
     const rows = _allBasketForStats.map(function(e){
       let realized = 0;
       let stops = 0;
@@ -24445,6 +24538,7 @@ Sim.Ctrl = (function(){
             // count toward win-rate, profit factor, EV, etc. Same union
             // _showSummary uses for the summary table.
             basket: _allBasketForStats,
+            orderEvents: _orderActivity,
             rows: rows,
             indexName: _state.index || null,
             portfolioMetrics: _portfolioMetrics
@@ -24710,28 +24804,32 @@ Sim.Ctrl = (function(){
   // Snapshot a basket entry that's about to be destroyed (replaced via swap).
   // Keeps just the bits needed for stats — symbol, bars, sim, dateToBarIdx —
   // so SimStats / Trade Review / summary rows can still surface its trades.
-  // No card/chart refs are kept (those are getting destroyed). Only entries
-  // that actually traded (have legs or an open entry) get archived; idle
-  // swaps with no fills are silently dropped to keep the retired list clean.
+  // No card/chart refs are kept (those are getting destroyed). Entries with
+  // either executed trades OR order lifecycle are archived; cancelled or
+  // otherwise unfilled-only activity must remain available to Review.
   function _archiveEntry(prev){
-    if (!prev || !prev.sim) return;
+    if (!prev) return;
     var sim = prev.sim;
-    var hasLegs = (sim.legs && sim.legs.length) || sim.entry;
-    if (!hasLegs) return;
+    var hasLegs = !!(sim && ((sim.legs && sim.legs.length) || sim.entry));
+    var hasOrderActivity = Array.isArray(prev.orderEvents) && prev.orderEvents.length > 0;
+    if (!hasLegs && !hasOrderActivity) return;
     if (!Array.isArray(_state.retiredEntries)) _state.retiredEntries = [];
     _state.retiredEntries.push({
       symbol: prev.symbol,
       displaySymbol: prev.displaySymbol || prev.symbol,
       role: /^(mover|anchor|noise)$/.test(prev.role) ? prev.role : 'unknown',
-      year: prev.year || null,
+      year: prev.year || ((_state.startDate || '').slice(0, 4) || null),
       bars: prev.bars,
       dateToBarIdx: prev.dateToBarIdx,
       lastCloseSeen: prev.lastCloseSeen,
-      sim: sim,
+      sim: _cloneSim(sim),
+      pendingOrder: _cloneSnapshotValue(prev.pendingOrder, null),
+      orderEvents: _snapshotOrderActivity([prev]),
       assetType: prev.assetType || 'stock',
       entryKey: prev.entryKey || PortSimAssets.stockKey(prev.symbol),
       entryInstanceKey: prev.entryInstanceKey || _newEntryInstanceKey(prev.entryKey || PortSimAssets.stockKey(prev.symbol)),
       dataSymbol: prev.dataSymbol || prev.symbol,
+      cacheSymbol: prev.cacheSymbol || null,
       _retired: true,
       _retiredAt: (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.startDate || null,
       _lastRealized: prev._lastRealized || 0
@@ -29824,6 +29922,82 @@ Sim.Ctrl = (function(){
       ].join(','));
     });
 
+    // ---- 6. Limit-order lifecycle (kept separate from executed Sim events) ----
+    // Placed and filled are intentionally separate rows.  This section is
+    // descriptive only and never participates in the P&L/trade calculations
+    // above.
+    var allOrderEvents = [];
+    basket.forEach(function(entry){
+      if (!entry || !Array.isArray(entry.orderEvents)) return;
+      entry.orderEvents.forEach(function(event){
+        if (!event || typeof event !== 'object') return;
+        allOrderEvents.push({ entry: entry, event: event, seq: allOrderEvents.length });
+      });
+    });
+    allOrderEvents.sort(function(a, b){
+      var da = a.event.date || '', db = b.event.date || '';
+      if (da < db) return -1;
+      if (da > db) return 1;
+      return a.seq - b.seq;
+    });
+    var requestedByOrder = {};
+    allOrderEvents.forEach(function(rec){
+      var event = rec.event;
+      if (event.type === 'placed' && event.orderId && event.price != null && isFinite(event.price)){
+        requestedByOrder[event.orderId] = +event.price;
+      }
+    });
+    function orderActivityLabel(event){
+      var reason = String(event.reason || '');
+      if (event.type === 'placed') return 'Placed';
+      if (event.type === 'filled') return 'Filled';
+      if (event.type === 'cancelled' && /manual/i.test(reason)) return 'Manually Cancelled';
+      if (event.type === 'cancelled' && /(unfilled|simulation.*ended|simulation exited)/i.test(reason)) return 'Cancelled Unfilled';
+      if (event.type === 'cancelled') return 'Cancelled';
+      if (event.type === 'invalidated') return 'Invalidated';
+      if (event.type === 'expired') return 'Cancelled Unfilled at End';
+      if (event.type === 'gap_stop') return 'Gap Through Stop';
+      return String(event.type || 'Activity').replace(/[_-]+/g, ' ');
+    }
+    rows.push('');
+    rows.push('# === Order Activity ===');
+    rows.push([
+      'Date','Card','Symbol','Data Symbol','Cache / Proxy Symbol','Asset Type','Role','Year','Entry Key','Entry Instance Key',
+      'Kind','Direction','Qty','Requested Limit','Actual Price','Activity','Reason'
+    ].join(','));
+    allOrderEvents.forEach(function(rec){
+      var entry = rec.entry;
+      var event = rec.event;
+      var displaySymbol = event.displaySymbol || entry.displaySymbol || event.symbol || entry.symbol || 'POS';
+      var dataSymbol = event.dataSymbol || entry.dataSymbol || event.symbol || entry.symbol || '';
+      var requested = event.orderId && requestedByOrder[event.orderId] != null
+        ? requestedByOrder[event.orderId]
+        : (event.type === 'placed' && event.price != null ? +event.price : '');
+      var actual = (event.type === 'filled' || event.type === 'gap_stop') && event.price != null
+        ? +event.price
+        : '';
+      rows.push([
+        _csvEscape(event.date || ''),
+        _csvEscape(displaySymbol + (dataSymbol && dataSymbol !== displaySymbol ? ' (data: ' + dataSymbol + ')' : '')),
+        _csvEscape(event.symbol || entry.symbol || ''),
+        _csvEscape(dataSymbol),
+        _csvEscape(event.cacheSymbol || entry.cacheSymbol || ''),
+        _csvEscape(event.assetType || entry.assetType || 'stock'),
+        _csvEscape((event.assetType || entry.assetType) === 'index' ? 'index'
+          : (/^(mover|anchor|noise)$/.test(entry.role) ? entry.role : event.role || entry.role || '')),
+        _csvEscape(event.year || entry.year || ((st.startDate || '').slice(0, 4))),
+        _csvEscape(event.entryKey || entry.entryKey || ''),
+        _csvEscape(event.entryInstanceKey || entry.entryInstanceKey || ''),
+        _csvEscape(event.kind === 'add' ? 'Add' : (event.kind === 'entry' ? 'Entry' : event.kind || 'Order')),
+        _csvEscape(event.direction || ''),
+        event.qty != null ? event.qty : '',
+        requested === '' ? '' : _r2(requested),
+        actual === '' ? '' : _r2(actual),
+        _csvEscape(orderActivityLabel(event)),
+        _csvEscape(event.reason || '')
+      ].join(','));
+    });
+
     var ts = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
     var dateTag = (st.startDate || '').replace(/-/g, '') || 'sim';
     var fname = 'portfolio_sim_' + dateTag + '_' + ts + '.csv';
@@ -29923,6 +30097,113 @@ Sim.Ctrl = (function(){
       ? PortSimBasket.resolveRole(generation, entry.symbol, entry.role)
       : (/^(mover|anchor|noise)$/.test(entry && entry.role) ? entry.role : 'unknown');
   }
+  function _cloneJson(value, fallback){
+    try { return JSON.parse(JSON.stringify(value)); }
+    catch(e){ return fallback; }
+  }
+  function _snapshotEntryOrderEvents(entries, fallbackYear){
+    var out = [];
+    (Array.isArray(entries) ? entries : []).forEach(function(entry){
+      if (!entry || !Array.isArray(entry.orderEvents)) return;
+      entry.orderEvents.forEach(function(raw){
+        if (!raw || typeof raw !== 'object') return;
+        var event = _cloneJson(raw, {});
+        event.entryKey = event.entryKey || entry.entryKey || null;
+        event.entryInstanceKey = event.entryInstanceKey || entry.entryInstanceKey || null;
+        event.assetType = event.assetType || entry.assetType || 'stock';
+        event.symbol = event.symbol || entry.symbol || null;
+        event.displaySymbol = event.displaySymbol || entry.displaySymbol || entry.symbol || null;
+        event.dataSymbol = event.dataSymbol || entry.dataSymbol || entry.symbol || null;
+        event.cacheSymbol = event.cacheSymbol || entry.cacheSymbol || null;
+        event.role = event.assetType === 'index' ? 'index'
+          : (/^(mover|anchor|noise)$/.test(entry.role) ? entry.role : event.role || entry.role || null);
+        event.year = event.year || entry.year || fallbackYear || null;
+        out.push(event);
+      });
+    });
+    return out;
+  }
+  function _titleCase(value){
+    return String(value == null ? '' : value).replace(/[_-]+/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+  }
+  function _orderActivityRows(ctx){
+    ctx = ctx || {};
+    var basket = Array.isArray(ctx.basket) ? ctx.basket : [];
+    var byInstance = {}, byEntry = {}, byDisplay = {};
+    basket.forEach(function(entry){
+      if (!entry) return;
+      if (entry.entryInstanceKey) byInstance[entry.entryInstanceKey] = entry;
+      if (entry.entryKey) byEntry[entry.entryKey] = entry;
+      var display = _entryDisplaySymbol(entry);
+      if (!byDisplay[display]) byDisplay[display] = entry;
+    });
+    var rawEvents = Array.isArray(ctx.orderEvents)
+      ? _cloneJson(ctx.orderEvents, [])
+      : _snapshotEntryOrderEvents(basket, (ctx.startDate || '').slice(0, 4));
+    var requestedByOrder = {};
+    rawEvents.forEach(function(event){
+      if (!event || event.type !== 'placed' || !event.orderId) return;
+      var requested = event.requestedLimit != null ? event.requestedLimit
+        : (event.limitPrice != null ? event.limitPrice : event.price);
+      if (requested != null && isFinite(requested)) requestedByOrder[event.orderId] = +requested;
+    });
+    return rawEvents.map(function(event, index){
+      event = event || {};
+      var entry = (event.entryInstanceKey && byInstance[event.entryInstanceKey])
+        || (event.entryKey && byEntry[event.entryKey])
+        || byDisplay[String(event.displaySymbol || event.symbol || '').trim().toUpperCase()]
+        || {};
+      var assetType = event.assetType || entry.assetType || 'stock';
+      var display = String(event.displaySymbol || entry.displaySymbol || event.symbol || entry.symbol || 'POS').trim().toUpperCase();
+      var dataSymbol = String(event.dataSymbol || entry.dataSymbol || event.symbol || entry.symbol || '').trim().toUpperCase();
+      var cacheSymbol = String(event.cacheSymbol || entry.cacheSymbol || '').trim().toUpperCase();
+      var year = event.year || entry.year || ((ctx.startDate || '').slice(0, 4) || null);
+      var card = display + (dataSymbol && dataSymbol !== display ? ' (data: ' + dataSymbol + ')' : '')
+        + (cacheSymbol && cacheSymbol !== display && cacheSymbol !== dataSymbol ? ' (proxy: ' + cacheSymbol + ')' : '')
+        + (year ? ' · ' + year : '');
+      var role = assetType === 'index' ? 'index' : _entryRole(ctx.basketGeneration, {
+        assetType: assetType,
+        symbol: event.symbol || entry.symbol || display,
+        role: /^(mover|anchor|noise)$/.test(entry.role) ? entry.role : (event.role || entry.role)
+      });
+      var requested = event.orderId && requestedByOrder[event.orderId] != null
+        ? requestedByOrder[event.orderId]
+        : (event.requestedLimit != null ? +event.requestedLimit
+          : (event.limitPrice != null ? +event.limitPrice
+            : (event.type === 'placed' && event.price != null ? +event.price : null)));
+      var actual = (event.type === 'filled' || event.type === 'gap_stop')
+        ? +(event.fillPrice != null ? event.fillPrice : event.price)
+        : null;
+      var reason = event.reason || '';
+      var status;
+      if (event.type === 'placed') status = 'Placed';
+      else if (event.type === 'filled') status = 'Filled';
+      else if (event.type === 'cancelled' && /manual/i.test(reason)) status = 'Manually Cancelled';
+      else if (event.type === 'cancelled' && /(unfilled|simulation.*ended|simulation exited)/i.test(reason)) status = 'Cancelled Unfilled';
+      else if (event.type === 'cancelled') status = 'Cancelled';
+      else if (event.type === 'invalidated') status = 'Invalidated';
+      else if (event.type === 'expired') status = 'Cancelled Unfilled at End';
+      else if (event.type === 'gap_stop') status = 'Gap Through Stop';
+      else status = _titleCase(event.type || 'Activity');
+      return {
+        seq: index,
+        date: event.date || '',
+        card: card,
+        assetRole: _titleCase(assetType) + (role ? ' · ' + _titleCase(role) : ''),
+        kind: event.kind === 'add' ? 'Add' : (event.kind === 'entry' ? 'Entry' : _titleCase(event.kind || 'Order')),
+        direction: _titleCase(event.direction || ''),
+        qty: event.qty != null && isFinite(event.qty) ? +event.qty : null,
+        requestedLimit: requested != null && isFinite(requested) ? requested : null,
+        actualPrice: actual != null && isFinite(actual) ? actual : null,
+        status: status,
+        reason: reason
+      };
+    }).sort(function(a, b){
+      if (a.date < b.date) return -1;
+      if (a.date > b.date) return 1;
+      return a.seq - b.seq;
+    });
+  }
   function _domToken(value){
     var raw = String(value == null ? '' : value);
     var hash = 2166136261;
@@ -29939,7 +30220,9 @@ Sim.Ctrl = (function(){
       // The fixed index cards are always present. Only add an index trade tab
       // when it actually contains a trade; the benchmark tab already covers
       // an untouched index chart.
-      return _entryAssetType(entry) !== 'index' || (entry.legs || []).length > 0;
+      return _entryAssetType(entry) !== 'index'
+        || (entry.legs || []).length > 0
+        || (entry.orderEvents || []).length > 0;
     });
     var displayTotals = {};
     var retiredTotals = {};
@@ -30330,6 +30613,7 @@ Sim.Ctrl = (function(){
       +       '<button type="button" id="portsim-review-save"  class="portsim-review-btn">💾 Save Review</button>'
       +       '<button type="button" id="portsim-review-load"  class="portsim-review-btn">📂 Load</button>'
       +       '<button type="button" id="portsim-review-rerun" class="portsim-review-btn" style="display:none">🔄 Rerun</button>'
+      +       '<button type="button" id="portsim-review-md"    class="portsim-review-btn">📄 Export MD</button>'
       +       '<button type="button" id="portsim-review-pdf"   class="portsim-review-btn">🖨 Export PDF</button>'
       +       '<button type="button" id="portsim-review-close" class="portsim-review-btn portsim-review-close">✕</button>'
       +     '</div>'
@@ -30344,6 +30628,7 @@ Sim.Ctrl = (function(){
     document.getElementById('portsim-review-save').addEventListener('click', _onSave);
     document.getElementById('portsim-review-load').addEventListener('click', _onLoad);
     document.getElementById('portsim-review-rerun').addEventListener('click', _onRerun);
+    document.getElementById('portsim-review-md').addEventListener('click', _onExportMD);
     document.getElementById('portsim-review-pdf').addEventListener('click', _onPrint);
     _modal.addEventListener('click', function(ev){ if (ev.target === _modal) close(); });
     document.addEventListener('keydown', function(ev){
@@ -30527,6 +30812,7 @@ Sim.Ctrl = (function(){
         }, { mover: 0, anchor: 0, noise: 0, unknown: 0 });
     var originLabel = originMode + (generation && generation.modified ? ' · modified' : '');
     var portfolioMetrics = _portfolioMetricDisplay(ctx);
+    var orderActivity = _orderActivityRows(ctx);
 
     var originHTML = revealBasketOrigin
       ? ('<div class="portsim-review-origin">'
@@ -30540,6 +30826,30 @@ Sim.Ctrl = (function(){
         + '</div>')
       : '';
     var roleHeader = revealBasketOrigin ? '<th>ROLE</th>' : '';
+    var orderActivityHTML = ''
+      + '<div class="portsim-review-order-activity">'
+      +   '<label>ORDER ACTIVITY</label>'
+      +   (orderActivity.length
+        ? ('<div style="overflow-x:auto">'
+          + '<table class="portsim-review-table">'
+          +   '<thead><tr><th>DATE</th><th>CARD</th><th>ASSET / ROLE</th><th>KIND</th><th>DIR</th><th>QTY</th><th>LIMIT</th><th>ACTUAL</th><th>ACTIVITY</th><th>REASON</th></tr></thead>'
+          +   '<tbody>' + orderActivity.map(function(row){
+                return '<tr>'
+                  + '<td>' + _esc(row.date || '—') + '</td>'
+                  + '<td>' + _esc(row.card) + '</td>'
+                  + '<td>' + _esc(row.assetRole) + '</td>'
+                  + '<td>' + _esc(row.kind) + '</td>'
+                  + '<td>' + _esc(row.direction || '—') + '</td>'
+                  + '<td>' + (row.qty == null ? '—' : _esc(row.qty)) + '</td>'
+                  + '<td>' + (row.requestedLimit == null ? '—' : _money(row.requestedLimit)) + '</td>'
+                  + '<td>' + (row.actualPrice == null ? '—' : _money(row.actualPrice)) + '</td>'
+                  + '<td>' + _esc(row.status) + '</td>'
+                  + '<td>' + _esc(row.reason || '—') + '</td>'
+                  + '</tr>';
+              }).join('') + '</tbody>'
+          + '</table></div>')
+        : '<div class="portsim-review-empty">No limit-order activity was recorded for this run.</div>')
+      + '</div>';
 
     body.innerHTML = ''
       + '<div class="portsim-review-stats">'
@@ -30573,6 +30883,7 @@ Sim.Ctrl = (function(){
             }).join('')
       +   '</tbody>'
       + '</table>'
+      + orderActivityHTML
       + '<div class="portsim-review-notes">'
       +   '<label for="portsim-review-portfolio-note">PORTFOLIO REVIEW NOTES</label>'
       +   '<textarea id="portsim-review-portfolio-note" rows="6" placeholder="Overall review of this run — what went well, what didn&apos;t, lessons learned, sizing/timing observations…"></textarea>'
@@ -31264,6 +31575,8 @@ Sim.Ctrl = (function(){
       if (e.entryInstanceKey) return e.entryInstanceKey;
       return persistedEntryKey(e) + '#legacy-' + Math.max(0, basket.indexOf(e));
     }
+    var fallbackYear = (st.startDate || '').slice(0, 4) || null;
+    var orderEvents = _snapshotEntryOrderEvents(basket, fallbackYear);
     return {
       startDate: st.startDate || '',
       endDate: st.endDate || '',
@@ -31281,6 +31594,7 @@ Sim.Ctrl = (function(){
       winRate: portfolioMetrics ? _finiteReviewMetric(portfolioMetrics.winRate) : null,
       profitFactor: profitFactor,
       profitFactorInfinite: !!(portfolioMetrics && tradeCount > 0 && portfolioMetrics.profitFactor === Infinity),
+      orderEvents: orderEvents,
       // P7 backward-compat: emit shortLocks snapshot in saved-review payload.
       shortLocks: st.shortLocks ? JSON.parse(JSON.stringify(st.shortLocks)) : {},
       notes: Array.isArray(st.notes) ? st.notes.slice() : [],
@@ -31295,7 +31609,9 @@ Sim.Ctrl = (function(){
           dataSymbol: e.dataSymbol || e.symbol,
           cacheSymbol: e.cacheSymbol || null,
           role: _entryRole(basketGeneration, e),
+          year: e.year || fallbackYear,
           retired: !!e._retired,
+          orderEvents: _snapshotEntryOrderEvents([e], fallbackYear),
           legs: legs,
           totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
           stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
@@ -31609,10 +31925,14 @@ Sim.Ctrl = (function(){
         e.cacheSymbol = e.cacheSymbol || (isIndex ? display : null);
         if (isIndex) e.role = 'index';
         if (!Array.isArray(e.legs)) e.legs = [];
+        if (!Array.isArray(e.orderEvents)) e.orderEvents = [];
         e.legs.forEach(function(l){
           if (l && l.direction == null) l.direction = 'long';
         });
       });
+    }
+    if (!Array.isArray(meta.orderEvents)){
+      meta.orderEvents = _snapshotEntryOrderEvents(meta.basket || [], (meta.startDate || '').slice(0, 4));
     }
     // Self-check: with all-long, no shortLocks, equity should match.
     if (typeof meta.equity === 'number' && typeof meta.cash === 'number'){
@@ -31676,6 +31996,7 @@ Sim.Ctrl = (function(){
     var ctx = _resolveCtx() || {};
     var basket = ctx.basket || [];
     var reviewRows = _reviewEntryRows(ctx);
+    var orderActivity = _orderActivityRows(ctx);
     var initial = +ctx.initialEquity || 0;
     var equity = +ctx.equity || 0;
     var realized = +ctx.realized || 0;
@@ -31687,6 +32008,12 @@ Sim.Ctrl = (function(){
     var maxDDDol = +ctx.maxDDDol || 0;
     var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
     var portfolioMetrics = _portfolioMetricDisplay(ctx);
+    function mdCell(value){
+      return String(value == null ? '' : value)
+        .replace(/\\/g, '\\\\')
+        .replace(/\|/g, '\\|')
+        .replace(/\r?\n/g, '<br>');
+    }
 
     var L = [];
     L.push('# Portfolio Simulation — Trade Review');
@@ -31714,6 +32041,27 @@ Sim.Ctrl = (function(){
     L.push('| Profit Factor | ' + portfolioMetrics.profitFactorText + ' |');
     L.push('| Win Rate | ' + portfolioMetrics.winRateText
       + (portfolioMetrics.winRateSubtext ? ' (' + portfolioMetrics.winRateSubtext + ')' : '') + ' |');
+    L.push('');
+    L.push('## Order Activity');
+    L.push('');
+    if (orderActivity.length){
+      L.push('| Date | Card | Asset / Role | Kind | Direction | Qty | Requested Limit | Actual / Price | Activity | Reason |');
+      L.push('|---|---|---|---|---|---:|---:|---:|---|---|');
+      orderActivity.forEach(function(row){
+        L.push('| ' + mdCell(row.date || '—')
+          + ' | ' + mdCell(row.card)
+          + ' | ' + mdCell(row.assetRole)
+          + ' | ' + mdCell(row.kind)
+          + ' | ' + mdCell(row.direction || '—')
+          + ' | ' + mdCell(row.qty == null ? '—' : row.qty)
+          + ' | ' + mdCell(row.requestedLimit == null ? '—' : _money(row.requestedLimit))
+          + ' | ' + mdCell(row.actualPrice == null ? '—' : _money(row.actualPrice))
+          + ' | ' + mdCell(row.status)
+          + ' | ' + mdCell(row.reason || '—') + ' |');
+      });
+    } else {
+      L.push('_No limit-order activity was recorded for this run._');
+    }
     L.push('');
     if (_data.portfolio && _data.portfolio.trim()){
       L.push('## Portfolio Review Notes');
@@ -31957,6 +32305,10 @@ Sim.Ctrl = (function(){
     var basketAssets = session.basketAssets && typeof session.basketAssets === 'object'
       ? session.basketAssets
       : {};
+    var sessionOrderEvents = Array.isArray(session.orderEvents)
+      ? _cloneJson(session.orderEvents, [])
+      : [];
+    var assetOrderEvents = [];
     var activeEntryInstanceKeys = Array.isArray(session.activeEntryInstanceKeys)
       ? session.activeEntryInstanceKeys.map(function(key){ return String(key || ''); }).filter(Boolean)
       : null;
@@ -31981,6 +32333,7 @@ Sim.Ctrl = (function(){
         dataSymbol: seed.dataSymbol || (assetType === 'index' && displaySymbol === 'SPX' ? 'SPY' : symbol),
         cacheSymbol: seed.cacheSymbol || (assetType === 'index' ? displaySymbol : null),
         role: assetType === 'index' ? 'index' : (seed.role || null),
+        year: seed.year || session.year || null,
         retired: Object.prototype.hasOwnProperty.call(seed, 'retired') ? !!seed.retired : null
       };
     }
@@ -32012,6 +32365,11 @@ Sim.Ctrl = (function(){
         storageKey.indexOf('#') >= 0 || (activeEntryInstanceKeys && activeEntryInstanceKeys.indexOf(storageKey) >= 0)
       )) seed.entryInstanceKey = storageKey;
       ensureGroup(seed);
+      if (Array.isArray(raw.orderEvents)){
+        raw.orderEvents.forEach(function(event){
+          if (event && typeof event === 'object') assetOrderEvents.push(_cloneJson(event, {}));
+        });
+      }
     });
 
     // Legacy sessions may only carry activeSymbols. Seed those current stock
@@ -32071,6 +32429,13 @@ Sim.Ctrl = (function(){
         active: false
       });
     });
+    if (!sessionOrderEvents.length) sessionOrderEvents = assetOrderEvents;
+    // Order-only entries may be absent from legacy basketAssets/trades. Seed
+    // them from the self-describing event identity so their report rows and
+    // fixed-index identities survive retroactive review reconstruction.
+    sessionOrderEvents.forEach(function(event){
+      if (event && typeof event === 'object') ensureGroup(event);
+    });
     order.forEach(function(key){
       groups[key].legs.sort(function(a, b){ return (a.idx || 0) - (b.idx || 0); });
     });
@@ -32100,6 +32465,13 @@ Sim.Ctrl = (function(){
       } else {
         retired = !!group.retired;
       }
+      var groupOrderEvents = sessionOrderEvents.filter(function(event){
+        if (!event) return false;
+        if (event.entryInstanceKey && group.entryInstanceKey) return event.entryInstanceKey === group.entryInstanceKey;
+        if (event.entryKey && group.entryKey) return event.entryKey === group.entryKey;
+        var eventDisplay = String(event.displaySymbol || event.symbol || '').trim().toUpperCase();
+        return (event.assetType || 'stock') === group.assetType && eventDisplay === group.displaySymbol;
+      });
       return {
         symbol: group.symbol,
         assetType: group.assetType,
@@ -32109,7 +32481,9 @@ Sim.Ctrl = (function(){
         dataSymbol: group.dataSymbol,
         cacheSymbol: group.cacheSymbol,
         role: role,
+        year: group.year || session.year || null,
         retired: retired,
+        orderEvents: _cloneJson(groupOrderEvents, []),
         legs: legs,
         totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
         stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
@@ -32119,6 +32493,7 @@ Sim.Ctrl = (function(){
     var initial = +session.initialEquity || 0;
     var equity = +session.finalEquity || (initial + (+session.sessionPnL || 0));
     var totalPnL = equity - initial;
+    var persistedOrderEvents = _snapshotEntryOrderEvents(basket, session.year || null);
     var meta = {
       startDate: session.simStartDate || '',
       endDate: session.simEndDate || '',
@@ -32132,6 +32507,7 @@ Sim.Ctrl = (function(){
       unreal: 0,
       totalPnL: totalPnL,
       peak: equity, maxDDDol: 0, openCount: 0,
+      orderEvents: persistedOrderEvents,
       shortLocks: {}, notes: [],
       basket: basket
     };
