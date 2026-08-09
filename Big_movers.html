@@ -2824,6 +2824,7 @@
   .portcard-badge.is-between{background:rgba(245,200,66,0.12);color:var(--yellow);border-color:rgba(245,200,66,0.35);}
   .portcard-badge.is-active{background:rgba(110,231,183,0.12);color:var(--green);border-color:rgba(110,231,183,0.35);}
   .portcard-badge.is-idle{background:var(--bg3);color:var(--muted);border-color:var(--border);}
+  .portcard-badge.is-order-pending{background:rgba(96,165,250,0.12);color:#60a5fa;border-color:rgba(96,165,250,0.45);}
 
   .portcard-mini-panel{
     display:flex;
@@ -4041,6 +4042,50 @@
   .portcard-stat-chip.is-muted > .stat-value{color:var(--muted);}
   .portcard-stat-chip.is-accent > .stat-value{color:var(--accent);}
 
+  /* Working limit order — separate from position state so active adds retain
+     the card's active badge, position stats, and trade controls. */
+  .portcard-order-panel{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:5px 8px;
+    border-bottom:1px solid rgba(96,165,250,0.32);
+    background:rgba(96,165,250,0.07);
+    color:var(--text-2);
+    font-family:var(--mono);
+    font-size:9px;
+    line-height:1.35;
+    flex:0 0 auto;
+  }
+  .portcard-order-panel[hidden]{display:none !important;}
+  .portcard-order-pill{
+    color:#60a5fa;
+    border:1px solid rgba(96,165,250,0.45);
+    border-radius:999px;
+    padding:2px 7px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    white-space:nowrap;
+  }
+  .portcard-order-detail{white-space:nowrap;color:var(--text);}
+  .portcard-order-detail.is-reserved{color:var(--muted);}
+  .portcard-order-cancel{
+    margin-left:auto;
+    background:transparent;
+    color:var(--red);
+    border:1px solid rgba(251,113,133,0.45);
+    border-radius:4px;
+    padding:3px 7px;
+    font-family:var(--mono);
+    font-size:9px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .portcard-order-cancel:hover{background:var(--red);color:var(--bg);border-color:var(--red);}
+  .portcard-action-btn[hidden]{display:none !important;}
+
   /* Popover container — absolute within .portcard. */
   .portcard-popover{
     position:absolute;
@@ -4351,6 +4396,7 @@
   .portcard-expand-status.is-active{color:var(--green);border-color:rgba(110,231,183,0.4);background:rgba(110,231,183,0.10);}
   .portcard-expand-status.is-stopped{color:var(--red);border-color:rgba(251,113,133,0.4);background:rgba(251,113,133,0.10);}
   .portcard-expand-status.is-idle{color:var(--muted);}
+  .portcard-expand-status.is-order-pending{color:#60a5fa;border-color:rgba(96,165,250,0.45);background:rgba(96,165,250,0.10);}
   .portcard-expand-actions{
     display:flex;align-items:center;gap:6px;
     flex-wrap:wrap;
@@ -4379,6 +4425,8 @@
   .portcard-expand-action-btn.is-danger:hover{background:var(--red);color:var(--bg);border-color:var(--red);}
   .portcard-expand-action-btn.is-stop{color:var(--accent);border-color:rgba(212,165,116,0.45);}
   .portcard-expand-action-btn.is-stop:hover{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+  .portcard-expand-action-btn.is-cancel-order{color:#60a5fa;border-color:rgba(96,165,250,0.45);}
+  .portcard-expand-action-btn.is-cancel-order:hover{background:#60a5fa;color:var(--bg);border-color:#60a5fa;}
   .portcard-expand-spacer{flex:1;}
   .portcard-expand-close{
     background:var(--bg3);
@@ -4434,6 +4482,20 @@
     font-size:10px;text-transform:uppercase;letter-spacing:0.08em;
     color:var(--muted);
   }
+  .portcard-expand-order-section[hidden]{display:none !important;}
+  .portcard-expand-order{
+    display:flex;flex-direction:column;gap:6px;
+    padding:8px 10px;
+    background:rgba(96,165,250,0.07);
+    border:1px dashed rgba(96,165,250,0.50);
+    border-radius:5px;
+    font-family:var(--mono);font-size:10px;color:var(--text-2);
+  }
+  .portcard-expand-order-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .portcard-expand-order-head strong{color:#60a5fa;text-transform:uppercase;letter-spacing:0.07em;}
+  .portcard-expand-order-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;}
+  .portcard-expand-order-grid span{white-space:nowrap;}
+  .portcard-expand-order-grid b{color:var(--text);font-weight:600;}
   .portcard-expand-stats{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -6124,6 +6186,7 @@
               <button class="portcard-expand-action-btn"            data-action="sell"    type="button" hidden>– Sell</button>
               <button class="portcard-expand-action-btn is-stop"    data-action="movestop" type="button" hidden>↕ Stop</button>
               <button class="portcard-expand-action-btn is-danger"  data-action="close"   type="button" hidden>✕ Close</button>
+              <button class="portcard-expand-action-btn is-cancel-order" data-action="cancel" type="button" title="Cancel this working limit order" aria-label="Cancel working limit order" hidden>Cancel Order</button>
             </div>
             <div class="portcard-expand-analysis">
               <div class="portcard-expand-timeframe" id="portcard-expand-timeframe" aria-label="Expanded chart timeframe">
@@ -6146,6 +6209,10 @@
               <div class="portcard-expand-chart-host" id="portcard-expand-chart-host"></div>
             </div>
             <div class="portcard-expand-side">
+              <div class="portcard-expand-section portcard-expand-order-section" id="portcard-expand-order-section" hidden>
+                <div class="portcard-expand-section-title">Working order</div>
+                <div class="portcard-expand-order" id="portcard-expand-order"></div>
+              </div>
               <div class="portcard-expand-section">
                 <div class="portcard-expand-section-title">Position</div>
                 <div class="portcard-expand-stats" id="portcard-expand-stats"></div>
@@ -19867,7 +19934,7 @@ Sim.Ctrl = (function(){
     }
     function setBadge(text, cls, opts){
       // Wipe known modifier classes, then re-apply caller's class (if any).
-      dom.badgeEl.classList.remove('is-stale','is-between','is-active','is-idle','is-clickable');
+      dom.badgeEl.classList.remove('is-stale','is-between','is-active','is-idle','is-clickable','is-order-pending');
       dom.badgeEl.textContent = text || '';
       // Reset tooltip + click handler from any prior state.
       dom.badgeEl.removeAttribute('title');
@@ -19981,13 +20048,25 @@ Sim.Ctrl = (function(){
       _disposed = true;
       if (ro){ try { ro.disconnect(); } catch(e){} ro = null; }
       else { window.removeEventListener('resize', _resize); }
+      // Remove sibling-module price-line handles before disposing the series.
+      // Runtime replacement and hard exit both come through this path.
+      try {
+        if (window.PortSim && PortSim.CardChart){
+          if (PortSim.CardChart.clearStopLines) PortSim.CardChart.clearStopLines(api);
+          if (PortSim.CardChart.clearLimitOrderLine) PortSim.CardChart.clearLimitOrderLine(api);
+          if (PortSim.CardChart.clearAllMarkers) PortSim.CardChart.clearAllMarkers(api);
+        }
+      } catch(e){}
       try { chart.remove(); } catch(e){}
+      api._portsimStopLines = null;
+      api._portsimOrderLines = null;
+      api._portsimMarkers = null;
       if (dom.root && dom.root.parentNode){
         dom.root.parentNode.removeChild(dom.root);
       }
     }
 
-    return {
+    const api = {
       cardEl: dom.root,
       chart: chart,
       candleSeries: candleSeries,
@@ -20003,6 +20082,7 @@ Sim.Ctrl = (function(){
       _dom: dom,
       _resize: _resize,
     };
+    return api;
   };
 })();
 // ============ PORTSIM TRACK B: Card Chart Factory — END ============
@@ -22518,6 +22598,14 @@ Sim.Ctrl = (function(){
 
   function _destroyEntryCards(entries){
     if (!Array.isArray(entries)) return;
+    try {
+      if (window.PortSim && PortSim.ExpandModal && typeof PortSim.ExpandModal.entry === 'function'){
+        const expandedEntry = PortSim.ExpandModal.entry();
+        if (expandedEntry && entries.indexOf(expandedEntry) >= 0 && typeof PortSim.ExpandModal.close === 'function'){
+          PortSim.ExpandModal.close();
+        }
+      }
+    } catch(e){}
     entries.forEach(function(entry){
       if (entry && entry.card && typeof entry.card.destroy === 'function'){
         try { entry.card.destroy(); } catch (e){ /* ignore */ }
@@ -23429,6 +23517,14 @@ Sim.Ctrl = (function(){
     try { return JSON.parse(JSON.stringify(sim)); }
     catch(e){ console.warn('[PortSim.Ctrl] _cloneSim failed:', e); return null; }
   }
+  function _cloneSnapshotValue(value, fallback){
+    if (value == null) return value;
+    try { return JSON.parse(JSON.stringify(value)); }
+    catch(e){
+      console.warn('[PortSim.Ctrl] snapshot clone failed:', e);
+      return fallback;
+    }
+  }
   function _pushSnapshot(){
     // Deep-clone shortLocks so step-back restores fenced short proceeds correctly.
     let shortLocksClone = {};
@@ -23437,6 +23533,8 @@ Sim.Ctrl = (function(){
     const snap = {
       playIdx: _state.playIdx,
       cash: _state.cash,
+      reservedBuyingPower: _state.reservedBuyingPower,
+      _orderReservationCents: _cloneSnapshotValue(_state._orderReservationCents, {}),
       realizedPnL: _state.realizedPnL,
       shortLocks: shortLocksClone,
       prevEquity: _state.prevEquity,
@@ -23448,6 +23546,8 @@ Sim.Ctrl = (function(){
         return {
           entryInstanceKey: e.entryInstanceKey,
           sim: _cloneSim(e.sim),
+          pendingOrder: _cloneSnapshotValue(e.pendingOrder, null),
+          orderEvents: _cloneSnapshotValue(e.orderEvents || [], []),
           lastCloseSeen: e.lastCloseSeen,
           _lastRealized: e._lastRealized
         };
@@ -23466,6 +23566,8 @@ Sim.Ctrl = (function(){
     // Restore primitives.
     _state.playIdx     = snap.playIdx;
     _state.cash        = snap.cash;
+    _state.reservedBuyingPower = snap.reservedBuyingPower;
+    _state._orderReservationCents = _cloneSnapshotValue(snap._orderReservationCents, {});
     _state.realizedPnL = snap.realizedPnL;
     // Restore shortLocks (deep-cloned at push time).
     _state.shortLocks  = snap.shortLocks ? JSON.parse(JSON.stringify(snap.shortLocks)) : {};
@@ -23481,7 +23583,9 @@ Sim.Ctrl = (function(){
       const snapEntry = snap.entries.find(function(x){ return x.entryInstanceKey === e.entryInstanceKey; });
       if (!snapEntry) return;
       // Replace sim ref so Track J detects the change and rebuilds markers/stop lines.
-      e.sim = snapEntry.sim;
+      e.sim = _cloneSnapshotValue(snapEntry.sim, null);
+      e.pendingOrder = _cloneSnapshotValue(snapEntry.pendingOrder, null);
+      e.orderEvents = _cloneSnapshotValue(snapEntry.orderEvents || [], []);
       e.lastCloseSeen = snapEntry.lastCloseSeen;
       e._lastRealized = snapEntry._lastRealized;
       // Force Track J to rebuild its shadow on next render.
@@ -23492,6 +23596,7 @@ Sim.Ctrl = (function(){
         if (window.PortSim && PortSim.CardChart){
           if (PortSim.CardChart.clearAllMarkers) PortSim.CardChart.clearAllMarkers(e.card);
           if (PortSim.CardChart.clearStopLines) PortSim.CardChart.clearStopLines(e.card);
+          if (PortSim.CardChart.clearLimitOrderLine) PortSim.CardChart.clearLimitOrderLine(e.card);
           if (e.card && e.card._portsimMarkers && Array.isArray(e.card._portsimMarkers.rStars)){
             e.card._portsimMarkers.rStars.length = 0;
           }
@@ -23532,6 +23637,11 @@ Sim.Ctrl = (function(){
         if (e._newLegBtn) e._newLegBtn.style.display = 'none';
       }
     });
+
+    // Rebuild authoritative reservation ownership from the restored working
+    // orders across both stock and fixed-index cards. This also repairs an
+    // older snapshot whose cached aggregate/ledger was incomplete.
+    _reconcileOrders();
 
     // Rebuild index chart up to the restored date.
     try {
@@ -24009,6 +24119,14 @@ Sim.Ctrl = (function(){
       day: _state.playIdx,
       date: _state.unifiedDates[_state.playIdx] || '—'
     });
+
+    // Internal controller calls bypass Track J's public alias wrapper. Kick
+    // its presentation pass synchronously so create/cancel/fill/rewind updates
+    // both standard and expanded cards without waiting for the poll interval.
+    if (window.PortSim && PortSim.TrackJ && typeof PortSim.TrackJ.afterRender === 'function'){
+      try { PortSim.TrackJ.afterRender(); }
+      catch(e){ console.warn('[PortSim.Ctrl] Track J render refresh:', e); }
+    }
   }
 
   // =====================================================================
@@ -24705,6 +24823,10 @@ Sim.Ctrl = (function(){
           prev.cardEl.parentNode.insertBefore(entry.cardEl, prev.cardEl);
         }
         try {
+          if (window.PortSim && PortSim.ExpandModal && typeof PortSim.ExpandModal.entry === 'function' &&
+              PortSim.ExpandModal.entry() === prev && typeof PortSim.ExpandModal.close === 'function'){
+            PortSim.ExpandModal.close();
+          }
           if (prev && prev.card && typeof prev.card.destroy === 'function') prev.card.destroy();
         } catch(e){ /* ignore */ }
       }
@@ -24816,6 +24938,7 @@ Sim.Ctrl = (function(){
   const R_STAR_COLOR       = '#fbbf24'; // gold ★ above bar
   const ACTIVE_STOP_COLOR  = '#fecdd3'; // light coral dashed line
   const INITIAL_STOP_COLOR = '#6b7280'; // gray dotted line
+  const LIMIT_ORDER_COLOR  = '#60a5fa'; // blue dashed working-limit line
   const HIGHLIGHT_COLOR    = '#a7f3d0'; // entry-bar candle tint
 
   // LWC v3.8 LineStyle: 0 Solid, 1 Dotted, 2 Dashed, 3 LargeDashed, 4 SparseDotted
@@ -24830,6 +24953,9 @@ Sim.Ctrl = (function(){
     }
     if (!card._portsimStopLines) {
       card._portsimStopLines = { active: null, initial: null };
+    }
+    if (!card._portsimOrderLines) {
+      card._portsimOrderLines = { limit: null, orderId: null };
     }
     return card._portsimMarkers;
   }
@@ -25009,6 +25135,63 @@ Sim.Ctrl = (function(){
     if (slot.initial) {
       try { card.candleSeries.removePriceLine(slot.initial); } catch(e) {}
       slot.initial = null;
+    }
+  };
+
+  // ---- Working limit-order price line (separate lifecycle from stops) ----
+  CardChart.setLimitOrderLine = function(card, order) {
+    if (!_hasSeries(card) || !order || order.status !== 'working') return;
+    if (!Number.isFinite(+order.limitPrice) || +order.limitPrice <= 0) return;
+    _getStore(card);
+    const slot = card._portsimOrderLines;
+    const direction = order.direction === 'short' ? 'SHORT' : 'LONG';
+    const kind = order.kind === 'add' ? 'ADD' : 'ENTRY';
+    const title = direction + ' ' + kind + ' LIMIT ' + _fmtPrice(order.limitPrice);
+    if (slot.limit && slot.orderId === order.id) {
+      try {
+        slot.limit.applyOptions({
+          price: +order.limitPrice,
+          color: LIMIT_ORDER_COLOR,
+          lineStyle: STYLE_DASHED,
+          title: title
+        });
+        return;
+      } catch(e) {
+        try { card.candleSeries.removePriceLine(slot.limit); } catch(e2) {}
+        slot.limit = null;
+        slot.orderId = null;
+      }
+    } else if (slot.limit) {
+      try { card.candleSeries.removePriceLine(slot.limit); } catch(e) {}
+      slot.limit = null;
+      slot.orderId = null;
+    }
+    try {
+      slot.limit = card.candleSeries.createPriceLine({
+        price: +order.limitPrice,
+        color: LIMIT_ORDER_COLOR,
+        lineWidth: 1,
+        lineStyle: STYLE_DASHED,
+        axisLabelVisible: true,
+        title: title
+      });
+      slot.orderId = order.id || null;
+    } catch(e) {
+      slot.limit = null;
+      slot.orderId = null;
+    }
+  };
+
+  CardChart.clearLimitOrderLine = function(card) {
+    if (!card) return;
+    _getStore(card);
+    const slot = card._portsimOrderLines;
+    if (slot && slot.limit && _hasSeries(card)) {
+      try { card.candleSeries.removePriceLine(slot.limit); } catch(e) {}
+    }
+    if (slot) {
+      slot.limit = null;
+      slot.orderId = null;
     }
   };
 
@@ -25330,6 +25513,73 @@ Sim.Ctrl = (function(){
 
       // Hide chrome if nothing to show.
       ext.style.display = addAny ? '' : 'none';
+    } catch(e){}
+  }
+
+  // ---------- Working limit order ----------
+  // Rendered as its own row so an active position can simultaneously retain
+  // its normal state/stats while advertising a pending add.
+  function setPendingOrder(card, order, onCancel){
+    if (!_isCardOk(card)) return;
+    try {
+      var panel = card.cardEl.querySelector('.portcard-order-panel');
+      var working = order && order.status === 'working';
+      if (!working){
+        if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
+        return;
+      }
+      if (!panel){
+        panel = document.createElement('div');
+        panel.className = 'portcard-order-panel';
+        var mini = card.cardEl.querySelector('.portcard-mini-panel');
+        if (mini && mini.nextSibling) mini.parentNode.insertBefore(panel, mini.nextSibling);
+        else if (mini) mini.parentNode.appendChild(panel);
+        else card.cardEl.appendChild(panel);
+      }
+      _clearChildren(panel);
+
+      var pill = document.createElement('span');
+      pill.className = 'portcard-order-pill';
+      pill.textContent = 'Pending limit';
+      panel.appendChild(pill);
+
+      var identity = document.createElement('span');
+      identity.className = 'portcard-order-detail';
+      identity.textContent = (order.direction === 'short' ? 'Short' : 'Long') + ' · ' +
+        (order.kind === 'add' ? 'Add' : 'Entry');
+      panel.appendChild(identity);
+
+      var qty = document.createElement('span');
+      qty.className = 'portcard-order-detail';
+      qty.textContent = String(Math.floor(+order.qty || 0)) + ' shares';
+      panel.appendChild(qty);
+
+      var price = document.createElement('span');
+      price.className = 'portcard-order-detail';
+      price.textContent = '@ ' + _fmtPrice(order.limitPrice);
+      panel.appendChild(price);
+
+      var reserved = document.createElement('span');
+      reserved.className = 'portcard-order-detail is-reserved';
+      reserved.textContent = 'Reserved $' + Number(order.reservedBuyingPower || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      panel.appendChild(reserved);
+
+      var cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'portcard-order-cancel';
+      cancel.textContent = 'Cancel Order';
+      cancel.title = 'Cancel this working limit order';
+      var cardSymbol = card.cardEl.getAttribute('data-symbol') || 'this card';
+      cancel.setAttribute('aria-label', 'Cancel ' + cardSymbol + ' working limit order');
+      cancel.onclick = function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (typeof onCancel === 'function') onCancel();
+      };
+      panel.appendChild(cancel);
     } catch(e){}
   }
 
@@ -25698,6 +25948,7 @@ Sim.Ctrl = (function(){
   // ---------- Public API ----------
   window.PortSim.CardPanel = {
     setExtendedStats: setExtendedStats,
+    setPendingOrder: setPendingOrder,
     openLegsPopover: openLegsPopover,
     closeLegsPopover: closeLegsPopover,
     openManageStopsPopover: openManageStopsPopover,
@@ -25709,10 +25960,10 @@ Sim.Ctrl = (function(){
 
 // ============ PORTSIM TRACK Q: Expand Modal — START ============
 // Pop-out modal that re-renders a card's bars at near-fullscreen with the
-// same EMA / marker / stop-line stack as the per-card chart, plus inline
-// Position / Legs / Stops panels. Read-only snapshot at open time — no live
-// refresh; user closes and re-opens to see updated state. The chart instance
-// is destroyed on close to avoid memory leaks (LWC v3.8 requires explicit
+// same EMA / marker / stop/order-line stack as the per-card chart, plus inline
+// Position / Working Order / Legs / Stops panels. State annotations refresh
+// while open. The chart instance is destroyed on close to avoid memory leaks
+// (LWC v3.8 requires explicit
 // chart.remove() — letting it sit just keeps the canvas + observers alive).
 //
 // Track J wires this in via _onExpandClick(entry) → PortSim.ExpandModal.open(entry).
@@ -25728,6 +25979,7 @@ Sim.Ctrl = (function(){
   var R_STAR_COLOR       = '#fbbf24';
   var ACTIVE_STOP_COLOR  = '#fecdd3';
   var INITIAL_STOP_COLOR = '#6b7280';
+  var LIMIT_ORDER_COLOR  = '#60a5fa';
   var STYLE_DASHED = 2;
   var STYLE_DOTTED = 3;
 
@@ -25751,6 +26003,8 @@ Sim.Ctrl = (function(){
       chartHost:  document.getElementById('portcard-expand-chart-host'),
       chartHint:  document.getElementById('portcard-expand-chart-hint'),
       statsEl:    document.getElementById('portcard-expand-stats'),
+      orderSectionEl: document.getElementById('portcard-expand-order-section'),
+      orderEl:    document.getElementById('portcard-expand-order'),
       cumEl:      document.getElementById('portcard-expand-cum'),
       legsEl:     document.getElementById('portcard-expand-legs'),
       stopsEl:    document.getElementById('portcard-expand-stops'),
@@ -25767,7 +26021,7 @@ Sim.Ctrl = (function(){
     candleSeries: null,
     volSeries: null,
     emaSeries: [],
-    priceLines: [],          // active + initial stop lines (for cleanup)
+    priceLines: [],          // active/initial stops + working limit (cleanup)
     ro: null,
     escHandler: null,
     overlayHandler: null,
@@ -25808,6 +26062,13 @@ Sim.Ctrl = (function(){
   function _fmtPx(v){
     if (v == null || !isFinite(v)) return '—';
     return '$' + Number(v).toFixed(2);
+  }
+  function _fmtMoneyExact(v){
+    if (v == null || !isFinite(v)) return '—';
+    return '$' + Number(v).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   }
   function _fmtR(v){
     if (v == null || !isFinite(v)) return '0.00R';
@@ -26124,6 +26385,50 @@ Sim.Ctrl = (function(){
     }
   }
 
+  function _workingOrder(entry){
+    var order = entry && entry.pendingOrder;
+    return order && order.status === 'working' ? order : null;
+  }
+
+  function _renderOrder(entry){
+    var d = _dom();
+    if (!d.orderSectionEl || !d.orderEl) return;
+    var order = _workingOrder(entry);
+    _clearChildren(d.orderEl);
+    if (!order){
+      d.orderSectionEl.setAttribute('hidden', '');
+      return;
+    }
+    d.orderSectionEl.removeAttribute('hidden');
+
+    var head = document.createElement('div');
+    head.className = 'portcard-expand-order-head';
+    var status = document.createElement('strong');
+    status.textContent = 'Pending limit';
+    var identity = document.createElement('span');
+    identity.textContent = (order.direction === 'short' ? 'Short' : 'Long') + ' · ' +
+      (order.kind === 'add' ? 'Add' : 'Entry');
+    head.appendChild(status);
+    head.appendChild(identity);
+    d.orderEl.appendChild(head);
+
+    var grid = document.createElement('div');
+    grid.className = 'portcard-expand-order-grid';
+    function detail(label, value){
+      var cell = document.createElement('span');
+      cell.appendChild(document.createTextNode(label + ' '));
+      var strong = document.createElement('b');
+      strong.textContent = value;
+      cell.appendChild(strong);
+      grid.appendChild(cell);
+    }
+    detail('Quantity', String(Math.floor(+order.qty || 0)) + ' shares');
+    detail('Limit', _fmtPx(order.limitPrice));
+    detail('Reserved', _fmtMoneyExact(order.reservedBuyingPower));
+    detail('Submitted', order.submittedDate || '—');
+    d.orderEl.appendChild(grid);
+  }
+
   function _renderLegs(entry){
     var d = _dom();
     var listEl = d.legsEl, cumEl = d.cumEl;
@@ -26277,11 +26582,16 @@ Sim.Ctrl = (function(){
     if (d.dateEl) d.dateEl.textContent = headDate || '';
     if (d.statusEl){
       var sim = entry.sim;
+      var order = _workingOrder(entry);
+      var activePosition = !!(sim && sim.qty > 0 && !sim.stoppedOut && !sim.closed && !sim.between);
       var label = 'idle';
-      d.statusEl.classList.remove('is-active','is-stopped','is-idle');
-      if (!sim){ label = 'idle'; d.statusEl.classList.add('is-idle'); }
+      d.statusEl.classList.remove('is-active','is-stopped','is-idle','is-order-pending');
+      if (order && !activePosition){ label = 'pending limit'; d.statusEl.classList.add('is-order-pending'); }
+      else if (!sim){ label = 'idle'; d.statusEl.classList.add('is-idle'); }
       else if (sim.stoppedOut){ label = 'stopped'; d.statusEl.classList.add('is-stopped'); }
       else if (sim.closed){ label = 'closed'; d.statusEl.classList.add('is-idle'); }
+      else if (sim.between){ label = 'between'; d.statusEl.classList.add('is-idle'); }
+      else if (order){ label = 'active · pending add'; d.statusEl.classList.add('is-active','is-order-pending'); }
       else { label = 'active'; d.statusEl.classList.add('is-active'); }
       d.statusEl.textContent = label;
     }
@@ -26297,18 +26607,20 @@ Sim.Ctrl = (function(){
     var d = _dom();
     if (!d.actionsEl) return;
     var sim = entry && entry.sim;
+    var order = _workingOrder(entry);
     var isActive = !!(sim && !sim.stoppedOut && !sim.closed && !sim.between);
     var isOver   = !!(sim && (sim.stoppedOut || sim.closed || sim.between));
     var states = {
-      setup:    !sim,
-      newleg:   isOver,
-      add:      isActive,
+      setup:    !sim && !order,
+      newleg:   isOver && !order,
+      add:      isActive && !order,
       sell:     isActive,
       movestop: isActive,
-      close:    isActive
+      close:    isActive,
+      cancel:   !!order
     };
     var btns = d.actionsEl.querySelectorAll('button[data-action]');
-    var dir = (sim && sim.direction === 'short') ? 'short' : 'long';
+    var dir = ((sim && sim.direction === 'short') || (order && order.direction === 'short')) ? 'short' : 'long';
     btns.forEach(function(btn){
       var k = btn.getAttribute('data-action');
       if (states[k]) btn.removeAttribute('hidden');
@@ -26325,6 +26637,8 @@ Sim.Ctrl = (function(){
       if (!sim)          hint = 'Click chart to set entry & stop';
       else if (isOver)   hint = 'Click chart to start a new entry';
       else if (isActive) hint = 'Click ↕ Stop to move stop · ✕ Close to exit';
+      if (order && !isActive) hint = 'Limit order working @ ' + _fmtPx(order.limitPrice) + ' · use Cancel Order to withdraw';
+      else if (order && isActive) hint = 'Pending add @ ' + _fmtPx(order.limitPrice) + ' · position controls remain available';
       d.chartHint.textContent = hint;
     }
   }
@@ -26368,6 +26682,8 @@ Sim.Ctrl = (function(){
         if (typeof Ctrl.cardSetupClick === 'function') Ctrl.cardSetupClick(entry);
       } else if (kind === 'newleg'){
         if (typeof Ctrl.newLegClick === 'function') Ctrl.newLegClick(entry);
+      } else if (kind === 'cancel'){
+        if (typeof Ctrl.cancelPendingOrder === 'function') Ctrl.cancelPendingOrder(entry);
       } else if (kind === 'add' || kind === 'sell' || kind === 'movestop' || kind === 'close'){
         if (typeof Ctrl.cardAction === 'function') Ctrl.cardAction(entry, kind);
       }
@@ -26387,8 +26703,11 @@ Sim.Ctrl = (function(){
     var Ctrl = window.PortSim && window.PortSim.Ctrl;
     if (!Ctrl) return;
     var sim = entry.sim;
+    var order = _workingOrder(entry);
     try {
-      if (!sim){
+      if (order && (!sim || sim.stoppedOut || sim.closed || sim.between)){
+        return;
+      } else if (!sim){
         if (typeof Ctrl.cardSetupClick === 'function') Ctrl.cardSetupClick(entry);
       } else if (sim.stoppedOut || sim.closed || sim.between){
         if (typeof Ctrl.newLegClick === 'function') Ctrl.newLegClick(entry);
@@ -26444,6 +26763,20 @@ Sim.Ctrl = (function(){
         }));
       } catch(e){}
     }
+    var order = _workingOrder(entry);
+    if (order && Number.isFinite(+order.limitPrice)){
+      try {
+        state.priceLines.push(state.candleSeries.createPriceLine({
+          price: +order.limitPrice,
+          color: LIMIT_ORDER_COLOR,
+          lineWidth: 1,
+          lineStyle: STYLE_DASHED,
+          axisLabelVisible: true,
+          title: (order.direction === 'short' ? 'SHORT ' : 'LONG ') +
+            (order.kind === 'add' ? 'ADD LIMIT ' : 'ENTRY LIMIT ') + _fmtPx(order.limitPrice)
+        }));
+      } catch(e){}
+    }
   }
 
   // ---------- Public refresh ----------
@@ -26455,6 +26788,7 @@ Sim.Ctrl = (function(){
     _renderHeader(entry);
     _renderActions(entry);
     _renderStats(entry);
+    _renderOrder(entry);
     _renderLegs(entry);
     _renderStops(entry);
     _paintAnnotations(entry);
@@ -26578,6 +26912,7 @@ Sim.Ctrl = (function(){
     _renderHeader(entry);
     _renderActions(entry);
     _renderStats(entry);
+    _renderOrder(entry);
     _renderLegs(entry);
     _renderStops(entry);
     _renderAnalysisControls(entry);
@@ -26933,7 +27268,9 @@ Sim.Ctrl = (function(){
         lastSeenStoppedOut: false,
         lastSeenClosed: false,
         initialStopPlaced: false,
-        toolbarReady: false
+        toolbarReady: false,
+        pendingEntryBadge: false,
+        prePendingBadge: null
       };
     }
     return entry._trkj;
@@ -27208,6 +27545,104 @@ Sim.Ctrl = (function(){
     _safe('setExtendedStats', function(){
       window.PortSim.CardPanel.setExtendedStats(entry.card, stats);
     });
+  }
+
+  // ----------------------------------------------------------------
+  // Job 4b — Working order details + limit line + card action state
+  // ----------------------------------------------------------------
+  function _workingOrder(entry){
+    var order = entry && entry.pendingOrder;
+    return order && order.status === 'working' ? order : null;
+  }
+
+  function _restoreCardStateBadge(entry){
+    if (!entry || !entry.card || typeof entry.card.setBadge !== 'function') return;
+    var sim = entry.sim;
+    if (entry._fixedIndex && entry._indexLoadState !== 'ready'){
+      entry.card.setBadge(entry._indexLoadState === 'unavailable' ? 'unavailable' : 'loading', 'idle');
+    } else if (!sim){
+      entry.card.setBadge('idle', 'idle');
+    } else if (sim.between || sim.stoppedOut || sim.closed){
+      entry.card.setBadge(sim.closed ? 'closed' : 'between', 'between');
+    } else if (sim.qty > 0){
+      entry.card.setBadge('active', 'active');
+    } else {
+      entry.card.setBadge('idle', 'idle');
+    }
+  }
+
+  function _captureBadge(card){
+    var el = card && card._dom && card._dom.badgeEl;
+    if (!el) return null;
+    return {
+      className: el.className,
+      text: el.textContent,
+      title: el.getAttribute('title'),
+      cursor: el.style.cursor,
+      click: el._badgeClick || null
+    };
+  }
+
+  function _restoreCapturedBadge(card, saved){
+    var el = card && card._dom && card._dom.badgeEl;
+    if (!el || !saved) return false;
+    if (el._badgeClick){
+      try { el.removeEventListener('click', el._badgeClick); } catch(e){}
+    }
+    el.className = saved.className || 'portcard-badge';
+    el.textContent = saved.text || '';
+    if (saved.title != null) el.setAttribute('title', saved.title);
+    else el.removeAttribute('title');
+    el.style.cursor = saved.cursor || '';
+    el._badgeClick = saved.click || null;
+    if (el._badgeClick) el.addEventListener('click', el._badgeClick);
+    return true;
+  }
+
+  function _refreshPendingOrder(entry){
+    var sh = _ensureShadow(entry);
+    var order = _workingOrder(entry);
+    _safe('setPendingOrder', function(){
+      window.PortSim.CardPanel.setPendingOrder(entry.card, order, function(){
+        var Ctrl = window.PortSim && window.PortSim.Ctrl;
+        if (Ctrl && typeof Ctrl.cancelPendingOrder === 'function') Ctrl.cancelPendingOrder(entry);
+      });
+    });
+    if (order){
+      _safe('setLimitOrderLine', function(){
+        window.PortSim.CardChart.setLimitOrderLine(entry.card, order);
+      });
+    } else {
+      _safe('clearLimitOrderLine', function(){
+        window.PortSim.CardChart.clearLimitOrderLine(entry.card);
+      });
+    }
+
+    var activePosition = !!(entry.sim && entry.sim.qty > 0 && !entry.sim.between && !entry.sim.closed && !entry.sim.stoppedOut);
+    if (order && order.kind === 'entry' && !activePosition){
+      if (!sh.pendingEntryBadge) sh.prePendingBadge = _captureBadge(entry.card);
+      entry.card.setBadge('pending limit', 'is-order-pending', {
+        title: (order.direction === 'short' ? 'Short ' : 'Long ') +
+          (order.kind === 'add' ? 'add' : 'entry') + ' limit at $' + Number(order.limitPrice).toFixed(2)
+      });
+      sh.pendingEntryBadge = true;
+    } else if (!order && sh.pendingEntryBadge){
+      // A fill changed the underlying position state, while a cancellation
+      // should reveal the exact prior badge (including a stale-data action).
+      if (activePosition || !_restoreCapturedBadge(entry.card, sh.prePendingBadge)){
+        _restoreCardStateBadge(entry);
+      }
+      sh.pendingEntryBadge = false;
+      sh.prePendingBadge = null;
+    }
+
+    // A pending add does not take away the position's sell/stop/close tools;
+    // only a second add is unavailable until this order is resolved.
+    if (entry._actionBar){
+      var addBtn = entry._actionBar.querySelector('button[data-action="add"]');
+      if (addBtn) addBtn.hidden = !!order;
+    }
+    if (entry._newLegBtn && order) entry._newLegBtn.style.display = 'none';
   }
 
   // ----------------------------------------------------------------
@@ -27503,6 +27938,7 @@ Sim.Ctrl = (function(){
       // Stop lines + extended stats are pure-state reads — refresh on every render.
       _safe('refreshStopLines', function(){ _refreshStopLines(entry); });
       _safe('refreshExtendedStats', function(){ _refreshExtendedStats(entry); });
+      _safe('refreshPendingOrder', function(){ _refreshPendingOrder(entry); });
     }
     // Refresh any open popover content so it doesn't go stale as bars advance
     // or stops are edited from elsewhere (codex review finding #2).
@@ -27542,12 +27978,22 @@ Sim.Ctrl = (function(){
     // Build a compact signature: playIdx + per-entry sim ref id + eventsLog
     // length + qty + stopLevels length. Sim ref id is approximated via a
     // monotonic stamp we attach the first time we see a sim instance.
-    var parts = [String(st.runSequence || 0), String(st.playIdx)];
+    var parts = [String(st.runSequence || 0), String(st.playIdx), String(st.reservedBuyingPower || 0)];
     for (var i = 0; i < basket.length; i++){
       var e = basket[i];
       if (!e) { parts.push('-'); continue; }
+      var order = e.pendingOrder || null;
+      var orderSig = order
+        ? [order.id, order.status, order.kind, order.direction, order.qty, order.limitPrice, order.reservedBuyingPower].join(':')
+        : '-';
+      var orderEventsSig = '';
+      try { orderEventsSig = JSON.stringify(e.orderEvents || []); }
+      catch(err){ orderEventsSig = String((e.orderEvents && e.orderEvents.length) || 0); }
       var sim = e.sim;
-      if (!sim){ parts.push((e.entryInstanceKey || e.symbol || '-') + ':0:' + (e._indexLoadState || '')); continue; }
+      if (!sim){
+        parts.push((e.entryInstanceKey || e.symbol || '-') + ':0:' + (e._indexLoadState || '') + ':O:' + orderSig + ':E:' + orderEventsSig);
+        continue;
+      }
       if (sim._trkjId == null){
         _simIdCounter = (_simIdCounter || 0) + 1;
         sim._trkjId = _simIdCounter;
@@ -27557,7 +28003,7 @@ Sim.Ctrl = (function(){
       var firedCount = (sim.stopLevels || []).reduce(function(acc, s){ return acc + (s.fired ? 1 : 0); }, 0);
       var entryBar = (sim.entry && sim.entry.barIdx != null) ? sim.entry.barIdx : -1;
       parts.push((e.entryInstanceKey || e.symbol || '-') + ':' + sim._trkjId + ':' + evLen + ':' + stopLen + ':' + firedCount + ':' + sim.qty + ':' + entryBar +
-                 ':' + (sim.between?'B':'-') + (sim.closed?'C':'-') + (sim.stoppedOut?'S':'-'));
+                 ':' + (sim.between?'B':'-') + (sim.closed?'C':'-') + (sim.stoppedOut?'S':'-') + ':O:' + orderSig + ':E:' + orderEventsSig);
     }
     return parts.join('|');
   }
