@@ -20056,6 +20056,9 @@ Sim.Ctrl = (function(){
           if (PortSim.CardChart.clearLimitOrderLine) PortSim.CardChart.clearLimitOrderLine(api);
           if (PortSim.CardChart.clearAllMarkers) PortSim.CardChart.clearAllMarkers(api);
         }
+        if (window.PortSim && PortSim.CardPanel && PortSim.CardPanel.setPendingOrder){
+          PortSim.CardPanel.setPendingOrder(api, null);
+        }
       } catch(e){}
       try { chart.remove(); } catch(e){}
       api._portsimStopLines = null;
@@ -25519,13 +25522,23 @@ Sim.Ctrl = (function(){
   // ---------- Working limit order ----------
   // Rendered as its own row so an active position can simultaneously retain
   // its normal state/stats while advertising a pending add.
+  function _removePendingOrderPanel(panel){
+    if (!panel) return;
+    var ui = panel._portsimOrderUi;
+    if (ui && ui.cancel && ui.cancelHandler){
+      try { ui.cancel.removeEventListener('click', ui.cancelHandler); } catch(e){}
+    }
+    panel._portsimOrderUi = null;
+    if (panel.parentNode) panel.parentNode.removeChild(panel);
+  }
+
   function setPendingOrder(card, order, onCancel){
     if (!_isCardOk(card)) return;
     try {
       var panel = card.cardEl.querySelector('.portcard-order-panel');
       var working = order && order.status === 'working';
       if (!working){
-        if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
+        _removePendingOrderPanel(panel);
         return;
       }
       if (!panel){
@@ -25536,50 +25549,71 @@ Sim.Ctrl = (function(){
         else if (mini) mini.parentNode.appendChild(panel);
         else card.cardEl.appendChild(panel);
       }
-      _clearChildren(panel);
+      var orderKey = String(order.id || '');
+      var ui = panel._portsimOrderUi;
+      if (!ui || ui.orderId !== orderKey){
+        if (ui && ui.cancel && ui.cancelHandler){
+          try { ui.cancel.removeEventListener('click', ui.cancelHandler); } catch(e){}
+        }
+        _clearChildren(panel);
 
-      var pill = document.createElement('span');
-      pill.className = 'portcard-order-pill';
-      pill.textContent = 'Pending limit';
-      panel.appendChild(pill);
+        var pill = document.createElement('span');
+        pill.className = 'portcard-order-pill';
+        pill.textContent = 'Pending limit';
+        panel.appendChild(pill);
 
-      var identity = document.createElement('span');
-      identity.className = 'portcard-order-detail';
-      identity.textContent = (order.direction === 'short' ? 'Short' : 'Long') + ' · ' +
+        var identity = document.createElement('span');
+        identity.className = 'portcard-order-detail';
+        panel.appendChild(identity);
+
+        var qty = document.createElement('span');
+        qty.className = 'portcard-order-detail';
+        panel.appendChild(qty);
+
+        var price = document.createElement('span');
+        price.className = 'portcard-order-detail';
+        panel.appendChild(price);
+
+        var reserved = document.createElement('span');
+        reserved.className = 'portcard-order-detail is-reserved';
+        panel.appendChild(reserved);
+
+        var cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'portcard-order-cancel';
+        cancel.textContent = 'Cancel Order';
+        cancel.title = 'Cancel this working limit order';
+        var cancelHandler = function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (typeof onCancel === 'function') onCancel();
+        };
+        cancel.addEventListener('click', cancelHandler);
+        panel.appendChild(cancel);
+        ui = panel._portsimOrderUi = {
+          orderId: orderKey,
+          identity: identity,
+          qty: qty,
+          price: price,
+          reserved: reserved,
+          cancel: cancel,
+          cancelHandler: cancelHandler
+        };
+        panel.setAttribute('data-order-id', orderKey);
+      }
+
+      // Update values in place. Keeping the keyed nodes and button alive
+      // preserves focus and click reliability during playback renders.
+      ui.identity.textContent = (order.direction === 'short' ? 'Short' : 'Long') + ' · ' +
         (order.kind === 'add' ? 'Add' : 'Entry');
-      panel.appendChild(identity);
-
-      var qty = document.createElement('span');
-      qty.className = 'portcard-order-detail';
-      qty.textContent = String(Math.floor(+order.qty || 0)) + ' shares';
-      panel.appendChild(qty);
-
-      var price = document.createElement('span');
-      price.className = 'portcard-order-detail';
-      price.textContent = '@ ' + _fmtPrice(order.limitPrice);
-      panel.appendChild(price);
-
-      var reserved = document.createElement('span');
-      reserved.className = 'portcard-order-detail is-reserved';
-      reserved.textContent = 'Reserved $' + Number(order.reservedBuyingPower || 0).toLocaleString('en-US', {
+      ui.qty.textContent = String(Math.floor(+order.qty || 0)) + ' shares';
+      ui.price.textContent = '@ ' + _fmtPrice(order.limitPrice);
+      ui.reserved.textContent = 'Reserved $' + Number(order.reservedBuyingPower || 0).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       });
-      panel.appendChild(reserved);
-
-      var cancel = document.createElement('button');
-      cancel.type = 'button';
-      cancel.className = 'portcard-order-cancel';
-      cancel.textContent = 'Cancel Order';
-      cancel.title = 'Cancel this working limit order';
       var cardSymbol = card.cardEl.getAttribute('data-symbol') || 'this card';
-      cancel.setAttribute('aria-label', 'Cancel ' + cardSymbol + ' working limit order');
-      cancel.onclick = function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-        if (typeof onCancel === 'function') onCancel();
-      };
-      panel.appendChild(cancel);
+      ui.cancel.setAttribute('aria-label', 'Cancel ' + cardSymbol + ' working limit order');
     } catch(e){}
   }
 
@@ -27268,9 +27302,7 @@ Sim.Ctrl = (function(){
         lastSeenStoppedOut: false,
         lastSeenClosed: false,
         initialStopPlaced: false,
-        toolbarReady: false,
-        pendingEntryBadge: false,
-        prePendingBadge: null
+        toolbarReady: false
       };
     }
     return entry._trkj;
@@ -27555,52 +27587,7 @@ Sim.Ctrl = (function(){
     return order && order.status === 'working' ? order : null;
   }
 
-  function _restoreCardStateBadge(entry){
-    if (!entry || !entry.card || typeof entry.card.setBadge !== 'function') return;
-    var sim = entry.sim;
-    if (entry._fixedIndex && entry._indexLoadState !== 'ready'){
-      entry.card.setBadge(entry._indexLoadState === 'unavailable' ? 'unavailable' : 'loading', 'idle');
-    } else if (!sim){
-      entry.card.setBadge('idle', 'idle');
-    } else if (sim.between || sim.stoppedOut || sim.closed){
-      entry.card.setBadge(sim.closed ? 'closed' : 'between', 'between');
-    } else if (sim.qty > 0){
-      entry.card.setBadge('active', 'active');
-    } else {
-      entry.card.setBadge('idle', 'idle');
-    }
-  }
-
-  function _captureBadge(card){
-    var el = card && card._dom && card._dom.badgeEl;
-    if (!el) return null;
-    return {
-      className: el.className,
-      text: el.textContent,
-      title: el.getAttribute('title'),
-      cursor: el.style.cursor,
-      click: el._badgeClick || null
-    };
-  }
-
-  function _restoreCapturedBadge(card, saved){
-    var el = card && card._dom && card._dom.badgeEl;
-    if (!el || !saved) return false;
-    if (el._badgeClick){
-      try { el.removeEventListener('click', el._badgeClick); } catch(e){}
-    }
-    el.className = saved.className || 'portcard-badge';
-    el.textContent = saved.text || '';
-    if (saved.title != null) el.setAttribute('title', saved.title);
-    else el.removeAttribute('title');
-    el.style.cursor = saved.cursor || '';
-    el._badgeClick = saved.click || null;
-    if (el._badgeClick) el.addEventListener('click', el._badgeClick);
-    return true;
-  }
-
   function _refreshPendingOrder(entry){
-    var sh = _ensureShadow(entry);
     var order = _workingOrder(entry);
     _safe('setPendingOrder', function(){
       window.PortSim.CardPanel.setPendingOrder(entry.card, order, function(){
@@ -27616,24 +27603,6 @@ Sim.Ctrl = (function(){
       _safe('clearLimitOrderLine', function(){
         window.PortSim.CardChart.clearLimitOrderLine(entry.card);
       });
-    }
-
-    var activePosition = !!(entry.sim && entry.sim.qty > 0 && !entry.sim.between && !entry.sim.closed && !entry.sim.stoppedOut);
-    if (order && order.kind === 'entry' && !activePosition){
-      if (!sh.pendingEntryBadge) sh.prePendingBadge = _captureBadge(entry.card);
-      entry.card.setBadge('pending limit', 'is-order-pending', {
-        title: (order.direction === 'short' ? 'Short ' : 'Long ') +
-          (order.kind === 'add' ? 'add' : 'entry') + ' limit at $' + Number(order.limitPrice).toFixed(2)
-      });
-      sh.pendingEntryBadge = true;
-    } else if (!order && sh.pendingEntryBadge){
-      // A fill changed the underlying position state, while a cancellation
-      // should reveal the exact prior badge (including a stale-data action).
-      if (activePosition || !_restoreCapturedBadge(entry.card, sh.prePendingBadge)){
-        _restoreCardStateBadge(entry);
-      }
-      sh.pendingEntryBadge = false;
-      sh.prePendingBadge = null;
     }
 
     // A pending add does not take away the position's sell/stop/close tools;
@@ -27990,9 +27959,17 @@ Sim.Ctrl = (function(){
       var orderSig = order
         ? [order.id, order.status, order.kind, order.direction, order.qty, order.limitPrice, order.reservedBuyingPower].join(':')
         : '-';
-      var orderEventsSig = '';
-      try { orderEventsSig = JSON.stringify(e.orderEvents || []); }
-      catch(err){ orderEventsSig = String((e.orderEvents && e.orderEvents.length) || 0); }
+      var orderEvents = Array.isArray(e.orderEvents) ? e.orderEvents : [];
+      var lastOrderEvent = orderEvents.length ? orderEvents[orderEvents.length - 1] : null;
+      var orderEventsSig = [
+        orderEvents.length,
+        lastOrderEvent && lastOrderEvent.type,
+        lastOrderEvent && lastOrderEvent.orderId,
+        lastOrderEvent && lastOrderEvent.date,
+        lastOrderEvent && lastOrderEvent.barIdx,
+        lastOrderEvent && lastOrderEvent.price,
+        lastOrderEvent && lastOrderEvent.reason
+      ].join(':');
       var sim = e.sim;
       if (!sim){
         parts.push((e.entryInstanceKey || e.symbol || '-') + ':0:' + (e._indexLoadState || '') + ':O:' + orderSig + ':E:' + orderEventsSig);
