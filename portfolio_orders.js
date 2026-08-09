@@ -73,21 +73,6 @@
     return order && order.status === 'working' ? order : null;
   }
 
-  function eligibilityFor(kind, context) {
-    if (!context || typeof context !== 'object') return false;
-    if (typeof context.eligible === 'boolean') return context.eligible;
-    if (kind === 'entry' && typeof context.entryEligible === 'boolean') {
-      return context.entryEligible;
-    }
-    if (kind === 'add' && typeof context.addEligible === 'boolean') {
-      return context.addEligible;
-    }
-    if (context.eligibility && typeof context.eligibility[kind] === 'boolean') {
-      return context.eligibility[kind];
-    }
-    return false;
-  }
-
   function firstDefined() {
     for (var i = 0; i < arguments.length; i++) {
       if (arguments[i] != null) return arguments[i];
@@ -97,8 +82,7 @@
 
   function create(draft, context) {
     // Context supplies controller-owned facts that this domain module cannot
-    // derive: { state, entry, eligible, barIdx, date }.  entryEligible /
-    // addEligible or eligibility[kind] may be used instead of eligible.
+    // derive: { state, entry, eligible, submittedBarIdx, submittedDate }.
     draft = draft && typeof draft === 'object' ? draft : {};
     context = context && typeof context === 'object' ? context : {};
 
@@ -106,7 +90,7 @@
     if (kind !== 'entry' && kind !== 'add') {
       return error('Order kind must be entry or add.');
     }
-    if (!eligibilityFor(kind, context)) {
+    if (context.eligible !== true) {
       return error(kind === 'add'
         ? 'This position is not eligible for an add order.'
         : 'This card is not eligible for an entry order.');
@@ -114,19 +98,16 @@
 
     var entry = context.entry || null;
     var entryOrder = entry && entry.pendingOrder;
-    var contextOrder = context.pendingOrder;
-    if (context.hasWorkingOrder === true ||
-        (entryOrder && entryOrder.status === 'working') ||
-        (contextOrder && contextOrder.status === 'working')) {
+    if (entryOrder && entryOrder.status === 'working') {
       return error('This card already has a working order.');
     }
 
-    var direction = firstDefined(draft.direction, context.direction);
+    var direction = draft.direction;
     if (direction !== 'long' && direction !== 'short') {
       return error('Order direction must be long or short.');
     }
 
-    var limitPrice = finiteNumber(firstDefined(draft.limitPrice, draft.price));
+    var limitPrice = finiteNumber(draft.limitPrice);
     if (limitPrice == null || limitPrice <= 0) {
       return error('Limit price must be a positive finite number.');
     }
@@ -135,14 +116,11 @@
       return error('Limit price must be at least $0.01.');
     }
 
-    var sizeMode = draft.sizeMode === 'dollars' ? 'dollars' : 'shares';
-    var rawSizeValue = firstDefined(
-      draft.sizeValue,
-      draft.value,
-      sizeMode === 'shares' ? draft.shares : null,
-      draft.qty
-    );
-    var sizeValue = finiteNumber(rawSizeValue);
+    var sizeMode = draft.sizeMode == null ? 'shares' : draft.sizeMode;
+    if (sizeMode !== 'shares' && sizeMode !== 'dollars') {
+      return error('Order size mode must be shares or dollars.');
+    }
+    var sizeValue = finiteNumber(draft.sizeValue);
     if (sizeValue == null || sizeValue <= 0) {
       return error('Order size must be a positive finite number.');
     }
@@ -153,7 +131,7 @@
       return error('Order size resolves to zero whole shares.');
     }
 
-    var rawStop = firstDefined(draft.stopPrice, draft.stop, draft.newStop);
+    var rawStop = draft.stopPrice;
     var stopPrice = rawStop == null ? null : finiteNumber(rawStop);
     if (kind === 'entry' && (stopPrice == null || stopPrice <= 0)) {
       return error('Entry orders require a positive finite protective stop.');
@@ -163,6 +141,9 @@
     }
     if (stopPrice != null) {
       stopPrice = money(stopPrice);
+      if (stopPrice <= 0) {
+        return error('Stop price must be at least $0.01.');
+      }
       if (direction === 'long' && stopPrice >= limitPrice) {
         return error('A long protective stop must be below the limit price.');
       }
@@ -171,20 +152,13 @@
       }
     }
 
-    var submittedBarIdx = finiteNumber(firstDefined(
-      draft.submittedBarIdx,
-      context.submittedBarIdx,
-      context.barIdx
-    ));
+    var submittedBarIdx = context.submittedBarIdx == null
+      ? null
+      : finiteNumber(context.submittedBarIdx);
     if (submittedBarIdx == null || submittedBarIdx < 0 || Math.floor(submittedBarIdx) !== submittedBarIdx) {
       return error('Submission bar index must be a non-negative integer.');
     }
-    var submittedDate = firstDefined(
-      draft.submittedDate,
-      context.submittedDate,
-      context.date,
-      context.bar && context.bar.time
-    );
+    var submittedDate = context.submittedDate;
     if (submittedDate == null || String(submittedDate).trim() === '') {
       return error('Submission date is required.');
     }
@@ -193,8 +167,16 @@
     if (reservedBuyingPower <= 0) {
       return error('Reserved buying power must be positive.');
     }
-    if (!context.state || availableBuyingPower(context.state) + 0.000001 < reservedBuyingPower) {
+    if (!context.state ||
+        toCents(availableBuyingPower(context.state)) < toCents(reservedBuyingPower)) {
       return error('Not enough available buying power for this order.');
+    }
+
+    var stopTriggerMode = draft.stopTriggerMode == null
+      ? 'intraday'
+      : draft.stopTriggerMode;
+    if (stopTriggerMode !== 'intraday' && stopTriggerMode !== 'close') {
+      return error('Stop trigger mode must be intraday or close.');
     }
 
     var order = {
@@ -209,7 +191,7 @@
       submittedBarIdx: submittedBarIdx,
       submittedDate: submittedDate,
       stopTrail: draft.stopTrail ? deepClone(draft.stopTrail) : null,
-      stopTriggerMode: draft.stopTriggerMode === 'close' ? 'close' : 'intraday',
+      stopTriggerMode: stopTriggerMode,
       allowFillBarStop: draft.allowFillBarStop === true,
       status: 'working'
     };
@@ -251,16 +233,20 @@
   }
 
   function canSettle(state, order, fillPrice) {
-    if (!state || !order || order.status !== 'working') return false;
+    if (!state || typeof state !== 'object' ||
+        !order || typeof order !== 'object' || order.status !== 'working') {
+      return false;
+    }
     if (order.direction !== 'long' && order.direction !== 'short') return false;
     var price = finiteNumber(fillPrice);
     var qty = finiteNumber(order.qty);
     if (price == null || price <= 0 || qty == null || qty <= 0) return false;
 
     var cashCents = toCents(state.cash);
-    var totalReservedCents = Math.max(0, toCents(state.reservedBuyingPower));
+    var totalReservedCents = toCents(state.reservedBuyingPower);
     var orderReservedCents = Math.max(0, toCents(order.reservedBuyingPower));
-    var otherReservedCents = Math.max(0, totalReservedCents - orderReservedCents);
+    if (orderReservedCents <= 0 || totalReservedCents < orderReservedCents) return false;
+    var otherReservedCents = totalReservedCents - orderReservedCents;
     var uncommittedCents = cashCents - otherReservedCents;
     var requiredCents = order.direction === 'short'
       ? orderReservedCents
@@ -337,8 +323,15 @@
       return existing.id === order.id ? existing : null;
     }
 
-    var reservedCents = toCents(order.reservedBuyingPower);
+    var qty = finiteNumber(order.qty);
+    var limitPrice = finiteNumber(order.limitPrice);
+    if (qty == null || qty <= 0 || Math.floor(qty) !== qty ||
+        limitPrice == null || limitPrice <= 0) {
+      return null;
+    }
+    var reservedCents = toCents(qty * limitPrice);
     if (reservedCents <= 0) return null;
+    if (toCents(availableBuyingPower(state)) < reservedCents) return null;
     order.reservedBuyingPower = fromCents(reservedCents);
     entry.pendingOrder = order;
     state.reservedBuyingPower = fromCents(
@@ -362,8 +355,9 @@
     if (!order) return null;
 
     var reservedCents = Math.max(0, toCents(order.reservedBuyingPower));
-    var aggregateCents = Math.max(0, toCents(state.reservedBuyingPower));
-    state.reservedBuyingPower = fromCents(Math.max(0, aggregateCents - reservedCents));
+    var aggregateCents = toCents(state.reservedBuyingPower);
+    if (reservedCents <= 0 || aggregateCents < reservedCents) return null;
+    state.reservedBuyingPower = fromCents(aggregateCents - reservedCents);
     order.status = status;
     order.completedDate = firstDefined(
       details && details.date,
