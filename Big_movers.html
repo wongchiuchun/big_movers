@@ -22966,6 +22966,7 @@ Sim.Ctrl = (function(){
 
   function _onCardSetupClick(entry){
     if (!_tradeActionsAvailable(entry)) return;
+    _pause();
     if (_workingOrder(entry)){
       alert(entry.symbol + ' already has a working limit order. Cancel it before submitting another.');
       return;
@@ -22978,8 +22979,7 @@ Sim.Ctrl = (function(){
     PortSim.Modal.openSetupForCard(entry, openedCtx.bar, function(card, form){
       // form: { date, price, sizeMode, sizeValue, stop, endDate }
       try {
-        const ctx = _entryBarContext(entry);
-        if (!ctx) throw new Error('no current card bar');
+        const ctx = openedCtx;
         const dir = form.direction || 'long';
         if (form.orderType === 'limit'){
           const placed = _submitLimitOrder(entry, {
