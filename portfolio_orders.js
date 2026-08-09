@@ -12,7 +12,9 @@
     expired: true
   };
   // Plain state owned by the module and safe to include in JSON snapshots.
-  // Controllers initialize or repair it with reconcile(state, liveEntries).
+  // Controllers repair it with reconcile(state, entries), where entries MUST
+  // be the complete live-entry universe (stocks + indices), normally from
+  // PortSimAssets.liveEntries(state).  Passing a partial list drops ownership.
   var RESERVATION_LEDGER_KEY = '_orderReservationCents';
   var orderSequence = 0;
 
@@ -79,7 +81,11 @@
     if (!state || typeof state !== 'object') return null;
     var aggregateCents = toCents(state.reservedBuyingPower);
     var ledger = state[RESERVATION_LEDGER_KEY];
-    if (ledger == null) return null;
+    if (ledger == null) {
+      return aggregateCents === 0
+        ? { ledger: null, totalCents: 0, aggregateCents: 0 }
+        : null;
+    }
     if (typeof ledger !== 'object' || Array.isArray(ledger)) return null;
 
     var totalCents = 0;
