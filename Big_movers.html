@@ -27642,7 +27642,11 @@ Sim.Ctrl = (function(){
       var addBtn = entry._actionBar.querySelector('button[data-action="add"]');
       if (addBtn) addBtn.hidden = !!order;
     }
-    if (entry._newLegBtn && order) entry._newLegBtn.style.display = 'none';
+    if (entry._newLegBtn){
+      var canStartNewLeg = !!(!order && entry.sim &&
+        (entry.sim.between || entry.sim.stoppedOut || entry.sim.closed));
+      entry._newLegBtn.style.display = canStartNewLeg ? '' : 'none';
+    }
   }
 
   // ----------------------------------------------------------------
