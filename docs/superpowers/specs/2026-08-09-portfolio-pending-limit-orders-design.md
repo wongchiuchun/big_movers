@@ -90,7 +90,7 @@ Limit-order submission validates:
 - No existing pending order on the card.
 - An eligible card state: idle/between for entry or active for add.
 
-The controller reserves `qty * limitPrice` when the order is accepted. Long and short orders both reserve notional buying power so concurrent pending orders cannot overcommit the same cash. Existing short-proceeds locking begins only when a short actually fills.
+The controller reserves `qty * limitPrice` when the order is accepted. Long and short orders both reserve notional buying power so concurrent pending orders cannot overcommit the same cash. Existing short-proceeds locking begins only when a short actually fills. For shorts, this reservation is a concurrency guard consistent with the simulator's existing preflight model, not a full margin calculation.
 
 A submitted order is never evaluated against its submission candle. Its first eligible bar is the next portfolio playback candle with data for that card.
 
@@ -110,7 +110,7 @@ For each eligible daily candle:
 - Otherwise, if `high >= limitPrice`, fill at the limit price.
 - Otherwise remain pending.
 
-The fill price can improve but can never be worse than the limit. At fill, release the full reservation and apply the actual fill through the existing long cash-debit or short-lock mechanism. The difference between reserved notional and actual notional becomes available buying power again.
+The fill price can improve but can never be worse than the limit. At fill, release the full reservation and apply the actual fill through the existing long cash-debit or short-lock mechanism. A better long fill costs less than the reservation, so the unused amount becomes available buying power. A better short fill may create proceeds greater than the reserved notional; those proceeds go into the existing short lock, the reservation is fully released, and no incremental cash preflight is required. This deliberately preserves the portfolio simulator's current short-collateral model rather than introducing margin accounting in this feature.
 
 For a pending initial entry, fill creates the `Sim` leg using the actual price and fill candle. For a re-entry, fill starts the next leg. For an add, fill adds the fixed quantity to the still-active leg using the actual price.
 
@@ -123,7 +123,7 @@ The default behavior acknowledges that daily OHLC data does not identify the exa
 
 For an active position with a pending add, the position's already-active stop is processed first. If it closes the position, the add is invalidated, its reservation is released, and it is not filled on that candle. If the position survives, the controller evaluates the add. When a fill-bar stop is enabled, only the newly activated or replacement stop receives the additional post-fill check; already-active stops are not processed twice.
 
-There is one mandatory safety exception. If a long gaps open at or below its proposed stop, or a short gaps open at or above it, the entry fills at the improved opening price and immediately closes at that opening price. This prevents an invalid-risk position whose protective stop is already through the market, even when fill-candle stops were otherwise disabled. The review labels this as a gap-through-stop event.
+There is one mandatory safety exception. If a long gaps open at or below its proposed stop, or a short gaps open at or above it, the entry fills at the improved opening price and immediately closes at that opening price. This prevents an invalid-risk position whose protective stop is already through the market, even when fill-candle stops were otherwise disabled. The rule also applies to a pending add that carries a replacement stop: after the add fills, a gap through that replacement stop closes the entire resulting position, matching the existing full-position replacement-stop behavior. A pending add without a replacement stop has no new gap-through check; its already-active stop was processed before the add. The review labels the safety exception as a gap-through-stop event.
 
 ## Cancellation and Invalidations
 
@@ -152,7 +152,7 @@ Executed trades use the actual fill date and price. Never-filled orders do not c
 
 ## Error Handling and Invariants
 
-- Reserved buying power cannot be negative and cannot exceed the sum of live working-order reservations.
+- Aggregate reserved buying power equals the sum of live working-order reservations within one-cent rounding tolerance and can never be negative.
 - A pending order can transition to a terminal state only once.
 - A fill cannot both debit cash and retain its reservation.
 - A card cannot have two working pending orders.
