@@ -22424,8 +22424,9 @@ Sim.Ctrl = (function(){
     if (!entry || !_workingOrder(entry)) return false;
     if (_state.active) _pause();
     const ctx = _entryBarContext(entry);
+    const currentDate = ((_state.unifiedDates || [])[_state.playIdx] || null);
     const event = _transitionPendingOrder(entry, 'cancelled', {
-      date: ctx ? ctx.date : ((_state.unifiedDates || [])[_state.playIdx] || null),
+      date: currentDate,
       barIdx: ctx ? ctx.barIdx : null,
       reason: 'Manually cancelled.'
     });
