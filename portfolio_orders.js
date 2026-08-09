@@ -11,6 +11,9 @@
     invalidated: true,
     expired: true
   };
+  // Plain state owned by the module and safe to include in JSON snapshots.
+  // Controllers initialize or repair it with reconcile(state, liveEntries).
+  var RESERVATION_LEDGER_KEY = '_orderReservationCents';
   var orderSequence = 0;
 
   function finiteNumber(value) {
@@ -61,11 +64,45 @@
     return { ok: false, error: message };
   }
 
+  function hasOwn(object, key) {
+    return Object.prototype.hasOwnProperty.call(object, key);
+  }
+
+  function validOrderId(order) {
+    var id = order && order.id;
+    if (typeof id !== 'string' || !id.trim()) return null;
+    if (id === '__proto__' || id === 'prototype' || id === 'constructor') return null;
+    return id;
+  }
+
+  function readReservationLedger(state) {
+    if (!state || typeof state !== 'object') return null;
+    var aggregateCents = toCents(state.reservedBuyingPower);
+    var ledger = state[RESERVATION_LEDGER_KEY];
+    if (ledger == null) return null;
+    if (typeof ledger !== 'object' || Array.isArray(ledger)) return null;
+
+    var totalCents = 0;
+    var keys = Object.keys(ledger);
+    for (var i = 0; i < keys.length; i++) {
+      var cents = finiteNumber(ledger[keys[i]]);
+      if (cents == null || cents <= 0 || Math.floor(cents) !== cents) return null;
+      totalCents += cents;
+      if (!Number.isSafeInteger(totalCents)) return null;
+    }
+    // An aggregate below the owned total is merely an understated cache and
+    // the ledger remains conservative.  An aggregate above it implies that
+    // ownership is missing, so callers must fail closed until reconcile().
+    if (aggregateCents > totalCents) return null;
+    return { ledger: ledger, totalCents: totalCents, aggregateCents: aggregateCents };
+  }
+
   function availableBuyingPower(state) {
     if (!state || typeof state !== 'object') return 0;
     var cash = finiteNumber(state.cash);
-    var reservedCents = Math.max(0, toCents(state.reservedBuyingPower));
-    return fromCents(toCents(cash == null ? 0 : cash) - reservedCents);
+    var ownership = readReservationLedger(state);
+    if (!ownership) return 0;
+    return fromCents(toCents(cash == null ? 0 : cash) - ownership.totalCents);
   }
 
   function workingOrderFrom(entry) {
@@ -242,11 +279,17 @@
     var qty = finiteNumber(order.qty);
     if (price == null || price <= 0 || qty == null || qty <= 0) return false;
 
+    var ownership = readReservationLedger(state);
+    var orderId = validOrderId(order);
+    if (!ownership || !ownership.ledger || !orderId ||
+        !hasOwn(ownership.ledger, orderId)) {
+      return false;
+    }
     var cashCents = toCents(state.cash);
-    var totalReservedCents = toCents(state.reservedBuyingPower);
     var orderReservedCents = Math.max(0, toCents(order.reservedBuyingPower));
-    if (orderReservedCents <= 0 || totalReservedCents < orderReservedCents) return false;
-    var otherReservedCents = totalReservedCents - orderReservedCents;
+    var ownedCents = ownership.ledger[orderId];
+    if (orderReservedCents <= 0 || ownedCents !== orderReservedCents) return false;
+    var otherReservedCents = ownership.totalCents - ownedCents;
     var uncommittedCents = cashCents - otherReservedCents;
     var requiredCents = order.direction === 'short'
       ? orderReservedCents
@@ -320,9 +363,24 @@
     }
     var existing = entry.pendingOrder;
     if (existing && existing.status === 'working') {
-      return existing.id === order.id ? existing : null;
+      if (existing.id !== order.id) return null;
+      var existingOwnership = readReservationLedger(state);
+      var existingId = validOrderId(existing);
+      var existingCents = Math.max(0, toCents(existing.reservedBuyingPower));
+      if (!existingOwnership || !existingOwnership.ledger || !existingId ||
+          !hasOwn(existingOwnership.ledger, existingId) ||
+          existingOwnership.ledger[existingId] !== existingCents) {
+        return null;
+      }
+      state.reservedBuyingPower = fromCents(existingOwnership.totalCents);
+      return existing;
     }
 
+    var ownership = readReservationLedger(state);
+    var orderId = validOrderId(order);
+    if (!ownership || !orderId) return null;
+    var ledger = ownership.ledger || {};
+    if (hasOwn(ledger, orderId)) return null;
     var qty = finiteNumber(order.qty);
     var limitPrice = finiteNumber(order.limitPrice);
     if (qty == null || qty <= 0 || Math.floor(qty) !== qty ||
@@ -331,12 +389,13 @@
     }
     var reservedCents = toCents(qty * limitPrice);
     if (reservedCents <= 0) return null;
-    if (toCents(availableBuyingPower(state)) < reservedCents) return null;
+    var cashCents = toCents(state.cash);
+    if (cashCents - ownership.totalCents < reservedCents) return null;
     order.reservedBuyingPower = fromCents(reservedCents);
+    ledger[orderId] = reservedCents;
+    state[RESERVATION_LEDGER_KEY] = ledger;
+    state.reservedBuyingPower = fromCents(ownership.totalCents + reservedCents);
     entry.pendingOrder = order;
-    state.reservedBuyingPower = fromCents(
-      Math.max(0, toCents(state.reservedBuyingPower)) + reservedCents
-    );
 
     var alreadyPlaced = Array.isArray(entry.orderEvents) && entry.orderEvents.some(function (event) {
       return event && event.type === 'placed' && event.orderId === order.id;
@@ -354,10 +413,17 @@
     var order = workingOrderFrom(entry);
     if (!order) return null;
 
+    var ownership = readReservationLedger(state);
+    var orderId = validOrderId(order);
     var reservedCents = Math.max(0, toCents(order.reservedBuyingPower));
-    var aggregateCents = toCents(state.reservedBuyingPower);
-    if (reservedCents <= 0 || aggregateCents < reservedCents) return null;
-    state.reservedBuyingPower = fromCents(aggregateCents - reservedCents);
+    if (!ownership || !ownership.ledger || !orderId || reservedCents <= 0 ||
+        !hasOwn(ownership.ledger, orderId) ||
+        ownership.ledger[orderId] !== reservedCents) {
+      return null;
+    }
+    delete ownership.ledger[orderId];
+    state[RESERVATION_LEDGER_KEY] = ownership.ledger;
+    state.reservedBuyingPower = fromCents(ownership.totalCents - reservedCents);
     order.status = status;
     order.completedDate = firstDefined(
       details && details.date,
@@ -382,14 +448,33 @@
   function reconcile(state, entries) {
     if (!state || typeof state !== 'object') return 0;
     var totalCents = 0;
+    var ledger = {};
+    var valid = true;
     var list = Array.isArray(entries) ? entries : [];
     list.forEach(function (entry) {
       var order = workingOrderFrom(entry);
       if (!order) return;
-      var reservedCents = Math.max(0, toCents(order.reservedBuyingPower));
+      var orderId = validOrderId(order);
+      var qty = finiteNumber(order.qty);
+      var limitPrice = finiteNumber(order.limitPrice);
+      var reservedCents = qty != null && qty > 0 && Math.floor(qty) === qty &&
+          limitPrice != null && limitPrice > 0
+        ? toCents(qty * limitPrice)
+        : 0;
+      if (!orderId || reservedCents <= 0 || hasOwn(ledger, orderId)) {
+        valid = false;
+        return;
+      }
       order.reservedBuyingPower = fromCents(reservedCents);
+      ledger[orderId] = reservedCents;
       totalCents += reservedCents;
     });
+    if (!valid || !Number.isSafeInteger(totalCents)) {
+      state[RESERVATION_LEDGER_KEY] = null;
+      state.reservedBuyingPower = fromCents(Math.max(1, toCents(state.reservedBuyingPower)));
+      return state.reservedBuyingPower;
+    }
+    state[RESERVATION_LEDGER_KEY] = ledger;
     state.reservedBuyingPower = fromCents(totalCents);
     return state.reservedBuyingPower;
   }
