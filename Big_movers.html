@@ -22264,6 +22264,7 @@ Sim.Ctrl = (function(){
     endDate: null,
     initialEquity: 0,
     cash: 0,
+    reservedBuyingPower: 0,
     realizedPnL: 0,
     basket: [],         // [{ symbol, year, bars, dateToBarIdx, lastCloseSeen, sim, card }]
     indexEntries: [],   // fixed SPX / NDQ trade-card entries (hydrated independently)
@@ -22325,6 +22326,138 @@ Sim.Ctrl = (function(){
     return PortSimAssets.allTradeEntries(_state);
   }
 
+  function _ordersApi(){
+    return (typeof window !== 'undefined' && window.PortSimOrders) ? window.PortSimOrders : null;
+  }
+
+  function _workingOrder(entry){
+    const order = entry && entry.pendingOrder;
+    return order && order.status === 'working' ? order : null;
+  }
+
+  // Reservation ownership must always span every live stock and index card.
+  // Never reconcile against only the visible tab or the stock basket.
+  function _reconcileOrders(){
+    const api = _ordersApi();
+    if (!api || typeof api.reconcile !== 'function') return 0;
+    return api.reconcile(_state, PortSimAssets.liveEntries(_state));
+  }
+
+  function _availableBuyingPower(){
+    const api = _ordersApi();
+    return api && typeof api.availableBuyingPower === 'function'
+      ? api.availableBuyingPower(_state)
+      : (+_state.cash || 0);
+  }
+
+  function _hasAvailableBuyingPower(qty, price){
+    const cost = Number(qty) * Number(price);
+    return Number.isFinite(cost) && cost >= 0 && _availableBuyingPower() >= cost - 1e-9;
+  }
+
+  function _entryBarContext(entry){
+    if (!entry || !Array.isArray(entry.bars) || !entry.dateToBarIdx) return null;
+    const unifiedDate = _state.unifiedDates[_state.playIdx];
+    let barIdx = entry.dateToBarIdx.get(unifiedDate);
+    if (barIdx == null) barIdx = _findBarIdxAtOrBefore(entry.bars, unifiedDate);
+    if (!(barIdx >= 0) || !entry.bars[barIdx]) return null;
+    return { bar: entry.bars[barIdx], barIdx: barIdx, date: entry.bars[barIdx].time };
+  }
+
+  function _resolveLiveEntry(identity){
+    const entries = PortSimAssets.liveEntries(_state);
+    if (entries.indexOf(identity) >= 0) return identity;
+    const source = identity && typeof identity === 'object' ? identity : null;
+    const token = source
+      ? (source.entryInstanceKey || source.entryKey || source.cardId || source.symbol)
+      : identity;
+    if (token == null) return null;
+    return entries.find(function(entry){
+      return entry && (
+        entry.entryInstanceKey === token ||
+        entry.entryKey === token ||
+        entry.symbol === token ||
+        entry.displaySymbol === token
+      );
+    }) || null;
+  }
+
+  // A failed terminal transition usually means the cached reservation ledger
+  // drifted (for example after a restored state). Repair from every live card
+  // before retrying exactly once.
+  function _transitionPendingOrder(entry, status, details){
+    const api = _ordersApi();
+    if (!api || !entry || !_workingOrder(entry)) return null;
+    let event = api.transition(_state, entry, status, details || {});
+    if (event) return event;
+    _reconcileOrders();
+    return api.transition(_state, entry, status, details || {});
+  }
+
+  function _cleanupWorkingOrders(status, reason, entries){
+    const list = Array.isArray(entries) ? entries : PortSimAssets.liveEntries(_state);
+    const date = (_state.unifiedDates && _state.unifiedDates[_state.playIdx]) || _state.endDate || null;
+    list.forEach(function(entry){
+      const order = _workingOrder(entry);
+      if (!order) return;
+      _transitionPendingOrder(entry, status, {
+        date: date,
+        barIdx: entry && entry.dateToBarIdx ? entry.dateToBarIdx.get(date) : null,
+        reason: reason
+      });
+    });
+    _reconcileOrders();
+  }
+
+  function _invalidatePendingAdd(entry, reason, date, barIdx){
+    const order = _workingOrder(entry);
+    if (!order || order.kind !== 'add') return null;
+    return _transitionPendingOrder(entry, 'invalidated', {
+      date: date || ((_state.unifiedDates || [])[_state.playIdx] || null),
+      barIdx: barIdx,
+      reason: reason || 'Parent position is no longer active.'
+    });
+  }
+
+  function _cancelPendingOrder(identity){
+    const entry = _resolveLiveEntry(identity);
+    if (!entry || !_workingOrder(entry)) return false;
+    if (_state.active) _pause();
+    const ctx = _entryBarContext(entry);
+    const event = _transitionPendingOrder(entry, 'cancelled', {
+      date: ctx ? ctx.date : ((_state.unifiedDates || [])[_state.playIdx] || null),
+      barIdx: ctx ? ctx.barIdx : null,
+      reason: 'Manually cancelled.'
+    });
+    if (!event) return false;
+    _reconcileOrders();
+    _renderAll();
+    return true;
+  }
+
+  function _submitLimitOrder(entry, draft, eligible, ctx){
+    const api = _ordersApi();
+    if (!api) return { ok: false, error: 'Pending-order module is unavailable.' };
+    if (_workingOrder(entry)) return { ok: false, error: 'This card already has a working limit order.' };
+    _reconcileOrders();
+    const created = api.create(draft, {
+      state: _state,
+      entry: entry,
+      eligible: eligible === true,
+      submittedBarIdx: ctx.barIdx,
+      submittedDate: ctx.date
+    });
+    if (!created || !created.ok) return created || { ok: false, error: 'Could not create limit order.' };
+    let reserved = api.reserve(_state, entry, created.order);
+    if (!reserved){
+      _reconcileOrders();
+      reserved = api.reserve(_state, entry, created.order);
+    }
+    return reserved
+      ? { ok: true, order: reserved }
+      : { ok: false, error: 'Could not reserve buying power for this order. Please try again.' };
+  }
+
   function _tradeActionsAvailable(entry){
     return !(entry && entry._fixedIndex && entry._indexLoadState !== 'ready');
   }
@@ -22354,6 +22487,8 @@ Sim.Ctrl = (function(){
       dateToBarIdx: dateToBarIdx,
       lastCloseSeen: initialBars.length ? +initialBars[initialBars.length - 1].close : null,
       sim: null,
+      pendingOrder: null,
+      orderEvents: [],
       card: card,
       cardEl: card.cardEl,
       chart: card.chart,
@@ -22453,6 +22588,9 @@ Sim.Ctrl = (function(){
     if (!cfg || !Array.isArray(cfg.tickers) || !cfg.tickers.length){
       throw new Error('config missing tickers');
     }
+    if (_state.active){
+      _cleanupWorkingOrders('cancelled', 'Portfolio run was replaced.');
+    }
     const fetched = cfg.fetchedBars || {};
     const basketGeneration = cfg.basketGeneration
       ? JSON.parse(JSON.stringify(cfg.basketGeneration))
@@ -22474,6 +22612,8 @@ Sim.Ctrl = (function(){
     _state.endDate = cfg.endDate;
     _state.initialEquity = +cfg.initialCash || 0;
     _state.cash = _state.initialEquity;
+    _state.reservedBuyingPower = 0;
+    _state._orderReservationCents = {};
     _state.realizedPnL = 0;
     _state.basketGeneration = basketGeneration;
     _state.reviewFinalized = false;
@@ -22794,8 +22934,12 @@ Sim.Ctrl = (function(){
     if (!_tradeActionsAvailable(entry)) return;
     // Auto-pause.
     _pause();
-    // No sim → setup. Sim closed/stoppedOut/between → newleg. Otherwise: toggle action row.
     const sim = entry.sim;
+    if (_workingOrder(entry) && (!sim || sim.between || sim.stoppedOut || sim.closed)){
+      alert(entry.symbol + ' already has a working limit order. Cancel it before submitting another.');
+      return;
+    }
+    // No sim → setup. Sim closed/stoppedOut/between → newleg. Otherwise: toggle action row.
     if (!sim){
       _onCardSetupClick(entry);
       return;
@@ -22816,44 +22960,60 @@ Sim.Ctrl = (function(){
   }
 
   function _currentBarForEntry(entry){
-    const date = _state.unifiedDates[_state.playIdx];
-    const idx = entry.dateToBarIdx.get(date);
-    if (idx != null) return entry.bars[idx];
-    // Fallback: the most recent bar ≤ date.
-    const fbIdx = _findBarIdxAtOrBefore(entry.bars, date);
-    return fbIdx >= 0 ? entry.bars[fbIdx] : null;
+    const ctx = _entryBarContext(entry);
+    return ctx ? ctx.bar : null;
   }
 
   function _onCardSetupClick(entry){
     if (!_tradeActionsAvailable(entry)) return;
-    const bar = _currentBarForEntry(entry);
-    if (!bar){
+    if (_workingOrder(entry)){
+      alert(entry.symbol + ' already has a working limit order. Cancel it before submitting another.');
+      return;
+    }
+    const openedCtx = _entryBarContext(entry);
+    if (!openedCtx){
       alert('No bar available for ' + entry.symbol + ' at the current date.');
       return;
     }
-    PortSim.Modal.openSetupForCard(entry, bar, function(card, form){
+    PortSim.Modal.openSetupForCard(entry, openedCtx.bar, function(card, form){
       // form: { date, price, sizeMode, sizeValue, stop, endDate }
       try {
-        const barIdx = entry.dateToBarIdx.get(form.date) != null
-          ? entry.dateToBarIdx.get(form.date)
-          : _findBarIdxAtOrBefore(entry.bars, form.date);
-        if (barIdx < 0) throw new Error('no bar at ' + form.date);
-        const shares = (form.sizeMode === 'shares')
-          ? Math.floor(+form.sizeValue)
-          : Math.floor((+form.sizeValue) / (+form.price));
-        if (!(shares > 0)) throw new Error('size resolves to 0 shares');
-        if (!PortSim.Cash.preflight(_state, shares, form.price)){
-          alert('Not enough cash for this entry. Need $' + (shares * form.price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
+        const ctx = _entryBarContext(entry);
+        if (!ctx) throw new Error('no current card bar');
+        const dir = form.direction || 'long';
+        if (form.orderType === 'limit'){
+          const placed = _submitLimitOrder(entry, {
+            kind: 'entry',
+            direction: dir,
+            limitPrice: +form.price,
+            sizeMode: form.sizeMode,
+            sizeValue: +form.sizeValue,
+            stopPrice: +form.stop,
+            stopTrail: form.stopTrail || null,
+            stopTriggerMode: form.stopTriggerMode,
+            allowFillBarStop: form.allowFillBarStop === true
+          }, !entry.sim, ctx);
+          if (!placed.ok){ alert('Limit order failed: ' + placed.error); return; }
+          _renderAll();
           return;
         }
-        const dir = form.direction || 'long';
+        // Portfolio market orders always use the paused card candle close.
+        const price = +ctx.bar.close;
+        const shares = (form.sizeMode === 'shares')
+          ? Math.floor(+form.sizeValue)
+          : Math.floor((+form.sizeValue) / price);
+        if (!(shares > 0)) throw new Error('size resolves to 0 shares');
+        if (!_hasAvailableBuyingPower(shares, price)){
+          alert('Not enough available buying power for this entry. Need $' + (shares * price).toFixed(2) + ', have $' + _availableBuyingPower().toFixed(2));
+          return;
+        }
         const sim = window.Sim.createSim({
           moveKey: entry.symbol,
           direction: dir,
           entry: {
-            barIdx: barIdx,
-            date: entry.bars[barIdx].time,
-            price: +form.price,
+            barIdx: ctx.barIdx,
+            date: ctx.date,
+            price: price,
             stop: +form.stop,
             sizeMode: form.sizeMode,
             sizeValue: +form.sizeValue,
@@ -22873,9 +23033,9 @@ Sim.Ctrl = (function(){
           PortSim.Cash.debitInitialEntry(_state, sim.shares0, sim.entry.price);
         }
         // Make sure the card's chart has data through the entry bar.
-        const upTo = entry.bars.slice(0, barIdx + 1);
+        const upTo = entry.bars.slice(0, ctx.barIdx + 1);
         entry.card.setData(upTo);
-        entry.lastCloseSeen = +entry.bars[barIdx].close;
+        entry.lastCloseSeen = +ctx.bar.close;
         entry.card.setActive(true);
         entry.card.setBadge('active', 'active');
         if (entry._newLegBtn) entry._newLegBtn.style.display = 'none';
@@ -22890,8 +23050,12 @@ Sim.Ctrl = (function(){
   function _onNewLegClick(entry){
     if (!_tradeActionsAvailable(entry)) return;
     _pause();
-    const bar = _currentBarForEntry(entry);
-    if (!bar) return;
+    if (_workingOrder(entry)){
+      alert(entry.symbol + ' already has a working limit order. Cancel it before submitting another.');
+      return;
+    }
+    const openedCtx = _entryBarContext(entry);
+    if (!openedCtx) return;
     if (!entry.sim){ _onCardSetupClick(entry); return; }
     // Promote stopped/closed to between if not already.
     if ((entry.sim.stoppedOut || entry.sim.closed) && !entry.sim.between){
@@ -22901,27 +23065,41 @@ Sim.Ctrl = (function(){
     // Pass priorDirection so re-entry modal defaults to opposite of the
     // just-closed leg's direction.
     const opts = { legNum: legNum, priorDirection: entry.sim.direction || 'long' };
-    PortSim.Modal.openNewLegForCard(entry, bar, function(card, form){
+    PortSim.Modal.openNewLegForCard(entry, openedCtx.bar, function(card, form){
       try {
         // form: { date, price, sizeMode, sizeValue, stop }
-        const fdate = form.date || bar.time;
-        const barIdx = entry.dateToBarIdx.get(fdate) != null
-          ? entry.dateToBarIdx.get(fdate)
-          : _findBarIdxAtOrBefore(entry.bars, fdate);
-        if (barIdx < 0) throw new Error('no bar at ' + fdate);
-        const shares = (form.sizeMode === 'shares')
-          ? Math.floor(+form.sizeValue)
-          : Math.floor((+form.sizeValue) / (+form.price));
-        if (!(shares > 0)) throw new Error('size resolves to 0 shares');
-        if (!PortSim.Cash.preflight(_state, shares, form.price)){
-          alert('Not enough cash for new leg. Need $' + (shares * form.price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
+        const ctx = _entryBarContext(entry);
+        if (!ctx) throw new Error('no current card bar');
+        const newDir = form.direction || entry.sim.direction || 'long';
+        if (form.orderType === 'limit'){
+          const placed = _submitLimitOrder(entry, {
+            kind: 'entry',
+            direction: newDir,
+            limitPrice: +form.price,
+            sizeMode: form.sizeMode,
+            sizeValue: +form.sizeValue,
+            stopPrice: +form.stop,
+            stopTrail: form.stopTrail || null,
+            stopTriggerMode: form.stopTriggerMode,
+            allowFillBarStop: form.allowFillBarStop === true
+          }, !!(entry.sim && entry.sim.between && entry.sim.qty === 0), ctx);
+          if (!placed.ok){ alert('Limit order failed: ' + placed.error); return; }
+          _renderAll();
           return;
         }
-        const newDir = form.direction || entry.sim.direction || 'long';
+        const price = +ctx.bar.close;
+        const shares = (form.sizeMode === 'shares')
+          ? Math.floor(+form.sizeValue)
+          : Math.floor((+form.sizeValue) / price);
+        if (!(shares > 0)) throw new Error('size resolves to 0 shares');
+        if (!_hasAvailableBuyingPower(shares, price)){
+          alert('Not enough available buying power for new leg. Need $' + (shares * price).toFixed(2) + ', have $' + _availableBuyingPower().toFixed(2));
+          return;
+        }
         window.Sim.startNewLeg(entry.sim, {
-          barIdx: barIdx,
-          date: entry.bars[barIdx].time,
-          price: +form.price,
+          barIdx: ctx.barIdx,
+          date: ctx.date,
+          price: price,
           stop: +form.stop,
           sizeMode: form.sizeMode,
           sizeValue: +form.sizeValue,
@@ -22935,7 +23113,7 @@ Sim.Ctrl = (function(){
         } else {
           PortSim.Cash.debitInitialEntry(_state, entry.sim.shares0, entry.sim.entry.price);
         }
-        entry.lastCloseSeen = +entry.bars[barIdx].close;
+        entry.lastCloseSeen = +ctx.bar.close;
         entry.card.setActive(true);
         entry.card.setBadge('active', 'active');
         if (entry._newLegBtn) entry._newLegBtn.style.display = 'none';
@@ -22947,6 +23125,83 @@ Sim.Ctrl = (function(){
     }, opts);
   }
 
+  function _applyReplacementStopNow(sim, bars, newStop, stopTrail, stopTriggerMode){
+    if (!sim || !Number.isFinite(+newStop) || +newStop <= 0) return null;
+    let stopId = null;
+    if (window.PortSim.Util && typeof window.PortSim.Util.applyMoveStopNow === 'function'){
+      stopId = window.PortSim.Util.applyMoveStopNow(
+        sim, bars, +newStop, 1.0, stopTrail || null, stopTriggerMode
+      );
+    }
+    if (!stopId){
+      const bar = bars && bars[sim.playIdx];
+      if (!bar) return null;
+      stopId = 'stop_' + Math.random().toString(36).slice(2, 8);
+      const triggerMode = stopTriggerMode === 'close' ? 'close' : 'intraday';
+      const trail = stopTrail && stopTrail.type === 'ema'
+        ? { type: 'ema', period: +stopTrail.period || 10, k: +stopTrail.k || 0 }
+        : null;
+      const stop = {
+        id: stopId,
+        price: +newStop,
+        pct: 1.0,
+        fired: false,
+        barIdx: sim.playIdx,
+        trail: trail,
+        triggerMode: triggerMode
+      };
+      sim.stopLevels = (sim.stopLevels || []).filter(function(existing){ return existing && existing.fired; });
+      sim.stopLevels.push(stop);
+      sim.eventsLog.push({
+        barIdx: sim.playIdx,
+        date: bar.time,
+        type: 'movestop',
+        qty: sim.qty,
+        price: null,
+        newStop: _r2(+newStop),
+        pct: 1.0,
+        stopId: stopId,
+        triggerMode: triggerMode,
+        note: 'stop ' + _r2(+newStop) + ' set (100%)'
+      });
+    }
+    return (sim.stopLevels || []).find(function(stop){ return stop && stop.id === stopId; }) || null;
+  }
+
+  function _applyAddNow(entry, qty, price, ctx, replacement){
+    const sim = entry && entry.sim;
+    if (!sim || sim.closed || sim.stoppedOut || sim.between || !(sim.qty > 0)) return null;
+    const addQty = Math.floor(+qty || 0);
+    const fillPrice = +price;
+    if (!(addQty > 0) || !Number.isFinite(fillPrice) || fillPrice <= 0) return null;
+    const oldQty = sim.qty;
+    sim.avgCost = ((oldQty * sim.avgCost) + (addQty * fillPrice)) / (oldQty + addQty);
+    sim.qty = oldQty + addQty;
+    const event = {
+      barIdx: ctx.barIdx,
+      date: ctx.date,
+      type: 'add',
+      qty: addQty,
+      price: _r2(fillPrice),
+      direction: sim.direction || 'long',
+      legId: sim.legId || null,
+      note: 'add ' + addQty + '@' + _r2(fillPrice)
+    };
+    sim.eventsLog.push(event);
+    PortSim.Cash.fold(_state, event);
+    let newStop = null;
+    if (replacement && replacement.stopPrice != null){
+      newStop = _applyReplacementStopNow(
+        sim,
+        entry.bars,
+        replacement.stopPrice,
+        replacement.stopTrail || null,
+        replacement.stopTriggerMode
+      );
+    }
+    return { event: event, stop: newStop };
+  }
+
   function _onCardAction(entry, action){
     if (!_tradeActionsAvailable(entry)) return;
     if (!entry.sim) return;
@@ -22954,35 +23209,47 @@ Sim.Ctrl = (function(){
     if (!bar) return;
     _pause();
     if (action === 'add'){
+      if (_workingOrder(entry)){
+        alert(entry.symbol + ' already has a working limit order. Cancel it before submitting another add.');
+        return;
+      }
       PortSim.Modal.openAddForCard(entry, entry.sim, bar, function(card, form){
         // form: { sizeMode: 'shares'|'dollars', sizeValue, price, newStop? }
-        const price = +form.price;
+        const ctx = _entryBarContext(entry);
+        if (!ctx){ alert('No current card bar is available for this add.'); return; }
+        const price = form.orderType === 'limit' ? +form.price : +ctx.bar.close;
         if (!isFinite(price) || price <= 0) return;
         const sv = +form.sizeValue;
         if (!isFinite(sv) || sv <= 0) return;
         const qty = (form.sizeMode === 'dollars') ? Math.floor(sv / price) : Math.floor(sv);
         if (!(qty > 0)) return;
-        if (!PortSim.Cash.preflight(_state, qty, price)){
-          alert('Not enough cash to add. Need $' + (qty * price).toFixed(2) + ', have $' + _state.cash.toFixed(2));
+        if (form.orderType === 'limit'){
+          const placed = _submitLimitOrder(entry, {
+            kind: 'add',
+            direction: entry.sim.direction || 'long',
+            limitPrice: price,
+            sizeMode: form.sizeMode,
+            sizeValue: sv,
+            stopPrice: form.newStop != null ? +form.newStop : null,
+            stopTrail: form.stopTrail || null,
+            stopTriggerMode: form.stopTriggerMode,
+            allowFillBarStop: form.allowFillBarStop === true
+          }, !!(entry.sim && entry.sim.qty > 0 && !entry.sim.closed && !entry.sim.stoppedOut && !entry.sim.between), ctx);
+          if (!placed.ok){ alert('Limit order failed: ' + placed.error); return; }
+          _renderAll();
           return;
         }
-        window.Sim.queueAction(entry.sim, { type: 'add', qty: qty, price: price });
-        // Apply any new stop immediately — same path as the standalone
-        // movestop action, so the stop line on the chart and the STOP
-        // cell in the mini-panel/positions table update without waiting
-        // for the next tick. Queueing it through pendingActions left the
-        // visual "stuck" until the user advanced.
-        if (form.newStop != null && isFinite(+form.newStop)){
-          const ns = +form.newStop;
-          const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-            ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, 1.0, null, form.stopTriggerMode)
-            : false;
-          if (!ok){
-            window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: 1.0, triggerMode: form.stopTriggerMode });
-          }
+        if (!_hasAvailableBuyingPower(qty, price)){
+          alert('Not enough available buying power to add. Need $' + (qty * price).toFixed(2) + ', have $' + _availableBuyingPower().toFixed(2));
+          return;
         }
-        // Note: cash debit for the add itself folds on next tick when the
-        // queued add action fires; the stop level above is already live.
+        const applied = _applyAddNow(entry, qty, price, ctx, form.newStop != null ? {
+          stopPrice: +form.newStop,
+          stopTrail: form.stopTrail || null,
+          stopTriggerMode: form.stopTriggerMode
+        } : null);
+        if (!applied){ alert('Add failed because the position is no longer active.'); return; }
+        _recomputeRealizedFromCash();
         _renderAll();
       });
     } else if (action === 'sell'){
@@ -23027,6 +23294,7 @@ Sim.Ctrl = (function(){
         // so cash stays continuous through the close. The plain
         // creditManualClose was double-crediting cover cost on shorts.
         PortSim.Cash.closePosition(_state, entry.sim, qty, px);
+        _invalidatePendingAdd(entry, 'Parent position was manually closed.', bar.time, entry.sim.playIdx);
         _accumulateRealizedFromSim(entry);
       } catch (e){
         console.error('[PortSim.Ctrl] closeAt failed:', e);
@@ -23129,6 +23397,7 @@ Sim.Ctrl = (function(){
 
   function _hardExit(){
     _pause();
+    _cleanupWorkingOrders('cancelled', 'Portfolio simulation exited.');
     _setCardTab('stocks');
     if (PortSim.Header && PortSim.Header.hide) PortSim.Header.hide();
     _state._activeRunToken = null;
@@ -23136,6 +23405,7 @@ Sim.Ctrl = (function(){
     _destroyEntryCards(_state.indexEntries);
     _state.basket = [];
     _state.indexEntries = [];
+    _reconcileOrders();
     _clearCardGrid(_byId('portsim-grid'));
     _clearCardGrid(_byId('portsim-index-grid'));
     _state.active = false;
@@ -23273,11 +23543,236 @@ Sim.Ctrl = (function(){
     _renderAll();
   }
 
+  function _gapThroughProposedStop(order, bar){
+    if (!order || order.stopPrice == null || !bar || !Number.isFinite(+bar.open)) return false;
+    return order.direction === 'short'
+      ? +bar.open >= +order.stopPrice
+      : +bar.open <= +order.stopPrice;
+  }
+
+  function _clonePlain(value){
+    return value == null ? value : JSON.parse(JSON.stringify(value));
+  }
+
+  // Sim.createSim/startNewLeg correctly reject an entry whose fill is already
+  // through its stop. For the mandatory gap safety path we construct with a
+  // temporary valid stop, then restore the submitted stop and planned limit
+  // risk before synchronously liquidating at the same opening price.
+  function _prepareFilledEntrySim(entry, order, bar, barIdx, fillPrice, gapThrough){
+    const actualStop = +order.stopPrice;
+    const safeStop = gapThrough
+      ? (order.direction === 'short'
+          ? Math.max(actualStop, fillPrice * 2, fillPrice + 0.01)
+          : Math.max(0.000001, Math.min(actualStop, fillPrice * 0.5)))
+      : actualStop;
+    const params = {
+      barIdx: barIdx,
+      date: bar.time,
+      price: fillPrice,
+      stop: safeStop,
+      sizeMode: 'shares',
+      sizeValue: order.qty,
+      direction: order.direction,
+      stopTrail: order.stopTrail || null,
+      stopTriggerMode: order.stopTriggerMode
+    };
+    let sim;
+    if (entry.sim){
+      sim = _clonePlain(entry.sim);
+      window.Sim.startNewLeg(sim, params);
+    } else {
+      sim = window.Sim.createSim({
+        moveKey: entry.symbol,
+        direction: order.direction,
+        entry: params
+      });
+    }
+    if (gapThrough){
+      sim.entry.stop = actualStop;
+      const newStop = (sim.stopLevels || []).find(function(stop){ return stop && !stop.fired; });
+      if (newStop) newStop.price = actualStop;
+      const plannedRiskPerShare = window.Sim.Direction.initialRiskPerShare(
+        order.direction, +order.limitPrice, actualStop
+      );
+      sim.initialRisk = order.qty * plannedRiskPerShare;
+      const entryEvent = sim.eventsLog && sim.eventsLog[sim.eventsLog.length - 1];
+      if (entryEvent && entryEvent.type === 'entry'){
+        entryEvent.price = _r2(fillPrice);
+        entryEvent.date = bar.time;
+        entryEvent.barIdx = barIdx;
+        entryEvent.note = 'entry ' + order.qty + '@' + _r2(fillPrice) + ' stop ' + _r2(actualStop);
+      }
+    }
+    return sim;
+  }
+
+  function _processOnlyNewStopOnFillBar(entry, stop, bar, barIdx, forceGap, order){
+    const sim = entry && entry.sim;
+    if (!sim || !stop || stop.fired || sim.closed || sim.stoppedOut || !(sim.qty > 0)) return null;
+    const direction = sim.direction || 'long';
+    const triggerMode = stop.triggerMode === 'close' ? 'close' : 'intraday';
+    const fires = forceGap || (triggerMode === 'close'
+      ? (direction === 'short' ? +bar.close >= +stop.price : +bar.close <= +stop.price)
+      : window.Sim.Direction.stopFires(direction, bar, +stop.price));
+    if (!fires) return null;
+    const fillPrice = forceGap
+      ? +bar.open
+      : (triggerMode === 'close'
+          ? +bar.close
+          : window.Sim.Direction.fillAtStop(direction, bar, +stop.price));
+    const qty = sim.qty;
+    sim.realizedPnL += window.Sim.Direction.pnlPerShare(direction, fillPrice, sim.avgCost) * qty;
+    sim.qty = 0;
+    sim.closed = true;
+    sim.stoppedOut = true;
+    sim.pendingActions = [];
+    stop.fired = true;
+    const event = {
+      barIdx: barIdx,
+      date: bar.time,
+      type: 'stop',
+      qty: qty,
+      price: _r2(fillPrice),
+      direction: direction,
+      legId: sim.legId || null,
+      stopId: stop.id,
+      triggerMode: triggerMode,
+      note: (forceGap ? 'gap-through ' : '') + 'stop ' + _r2(stop.price) + ' filled ' + _r2(fillPrice) + ' qty ' + qty
+    };
+    sim.eventsLog.push(event);
+    PortSim.Cash.fold(_state, event);
+    if (forceGap && _ordersApi()){
+      _ordersApi().recordEvent(entry, 'gap_stop', {
+        order: order,
+        date: bar.time,
+        barIdx: barIdx,
+        price: _r2(fillPrice),
+        reason: 'Opening gap through the newly attached stop.'
+      });
+    }
+    return event;
+  }
+
+  function _canSettlePendingOrder(entry, order, fillPrice, date, barIdx){
+    const api = _ordersApi();
+    if (!api) return false;
+    let canSettle = api.canSettle(_state, order, fillPrice);
+    if (!canSettle){
+      _reconcileOrders();
+      canSettle = api.canSettle(_state, order, fillPrice);
+    }
+    if (canSettle) return true;
+    _transitionPendingOrder(entry, 'invalidated', {
+      date: date,
+      barIdx: barIdx,
+      price: fillPrice,
+      reason: 'Available buying power changed before the order could settle.'
+    });
+    return false;
+  }
+
+  function _fillPendingOrder(entry, bar, barIdx){
+    const api = _ordersApi();
+    const order = _workingOrder(entry);
+    if (!api || !order) return null;
+    const fill = api.evaluateFill(order, bar, barIdx);
+    if (!fill) return null;
+
+    if (order.kind === 'entry'){
+      const sim = entry.sim;
+      if (sim && (!sim.between || sim.qty > 0)){
+        _transitionPendingOrder(entry, 'invalidated', {
+          date: bar.time,
+          barIdx: barIdx,
+          reason: 'Card was no longer idle or between entries when the order tried to fill.'
+        });
+        return null;
+      }
+    } else if (order.kind === 'add'){
+      const sim = entry.sim;
+      if (!sim || sim.closed || sim.stoppedOut || sim.between || !(sim.qty > 0)){
+        _invalidatePendingAdd(entry, 'Parent position closed before the add could fill.', bar.time, barIdx);
+        return null;
+      }
+      if (order.direction === 'short' && !(_state.shortLocks && _state.shortLocks[sim.legId])){
+        _transitionPendingOrder(entry, 'invalidated', {
+          date: bar.time,
+          barIdx: barIdx,
+          reason: 'Short-position lock was unavailable when the add tried to settle.'
+        });
+        return null;
+      }
+    }
+
+    if (!_canSettlePendingOrder(entry, order, fill.price, bar.time, barIdx)) return null;
+    const gapThrough = _gapThroughProposedStop(order, bar);
+    let preparedSim = null;
+    if (order.kind === 'entry'){
+      try {
+        preparedSim = _prepareFilledEntrySim(entry, order, bar, barIdx, fill.price, gapThrough);
+      } catch (error){
+        _transitionPendingOrder(entry, 'invalidated', {
+          date: bar.time,
+          barIdx: barIdx,
+          price: fill.price,
+          reason: 'Entry construction failed: ' + (error && error.message ? error.message : error)
+        });
+        return null;
+      }
+    }
+
+    const filledEvent = _transitionPendingOrder(entry, 'filled', {
+      date: bar.time,
+      barIdx: barIdx,
+      price: fill.price,
+      fillPrice: fill.price,
+      gapImproved: fill.gapImproved === true
+    });
+    if (!filledEvent) return null;
+
+    if (order.kind === 'entry'){
+      entry.sim = preparedSim;
+      PortSim.Cash.openPosition(_state, entry.sim);
+      if (!entry.sim.legs || !entry.sim.legs.length) entry._lastRealized = 0;
+      const newStop = (entry.sim.stopLevels || []).find(function(stop){ return stop && !stop.fired; });
+      if (newStop && (gapThrough || order.allowFillBarStop)){
+        _processOnlyNewStopOnFillBar(entry, newStop, bar, barIdx, gapThrough, order);
+      }
+    } else {
+      const added = _applyAddNow(entry, order.qty, fill.price, {
+        bar: bar,
+        barIdx: barIdx,
+        date: bar.time
+      }, order.stopPrice != null ? {
+        stopPrice: order.stopPrice,
+        stopTrail: order.stopTrail || null,
+        stopTriggerMode: order.stopTriggerMode
+      } : null);
+      if (!added) return null;
+      added.event.orderId = order.id;
+      if (added.stop && (gapThrough || order.allowFillBarStop)){
+        _processOnlyNewStopOnFillBar(entry, added.stop, bar, barIdx, gapThrough, order);
+      }
+    }
+    entry.lastCloseSeen = +bar.close;
+    if (entry.sim && entry.sim.qty > 0 && !entry.sim.closed && !entry.sim.stoppedOut){
+      entry.card.setActive(true);
+      entry.card.setBadge('active', 'active');
+      if (entry._newLegBtn) entry._newLegBtn.style.display = 'none';
+    } else if (entry.sim && (entry.sim.closed || entry.sim.stoppedOut)){
+      entry.card.setActive(false);
+      entry.card.setBadge('between', 'between');
+      if (entry._newLegBtn) entry._newLegBtn.style.display = '';
+    }
+    return filledEvent;
+  }
+
   function _advanceAll(steps){
     steps = Math.max(1, steps|0);
     for (let s = 0; s < steps; s++){
       if (_state.playIdx >= _state.unifiedDates.length - 1){
         _pause();
+        _cleanupWorkingOrders('expired', 'Cancelled unfilled at simulation end.');
         _showSummary();
         return;
       }
@@ -23286,8 +23781,10 @@ Sim.Ctrl = (function(){
       _state.playIdx += 1;
       const date = _state.unifiedDates[_state.playIdx];
 
-      // ---- Pass 1: collect engine events per live trade entry ----
+      // ---- Pass 1: advance existing positions and collect their events ----
+      // Existing stops/actions always resolve before pending adds are considered.
       const allEvents = [];
+      const entriesWithBar = [];
       const liveEntries = _liveTradeEntries();
       for (let i = 0; i < liveEntries.length; i++){
         const entry = liveEntries[i];
@@ -23314,6 +23811,7 @@ Sim.Ctrl = (function(){
           continue;
         }
         const bar = entry.bars[barIdx];
+        entriesWithBar.push({ entry: entry, bar: bar, barIdx: barIdx });
         if (entry.sim){
           let result = null;
           try { result = window.Sim.advanceTo(entry.sim, entry.bars, barIdx); }
@@ -23326,7 +23824,7 @@ Sim.Ctrl = (function(){
         entry.card.appendBar(bar);
       }
 
-      // ---- Pass 2: bucket events by type, fold cash in priority order ----
+      // ---- Pass 2: settle existing events before evaluating reservations ----
       const buckets = { stop: [], sell: [], close: [], entry: [], add: [] };
       allEvents.forEach(function(rec){
         rec.events.forEach(function(ev){
@@ -23337,6 +23835,27 @@ Sim.Ctrl = (function(){
       ['stop','sell','close','entry','add'].forEach(function(t){
         buckets[t].sort(function(a, b){ return a.sym < b.sym ? -1 : (a.sym > b.sym ? 1 : 0); });
         buckets[t].forEach(function(rec){ PortSim.Cash.fold(_state, rec.ev); });
+      });
+
+      _recomputeRealizedFromCash();
+
+      // ---- Pass 3: invalidate dead-parent adds, then evaluate live orders ----
+      // Missing card data never reaches this pass, so its order stays working.
+      entriesWithBar.forEach(function(rec){
+        const order = _workingOrder(rec.entry);
+        if (!order || order.kind !== 'add') return;
+        const sim = rec.entry.sim;
+        if (!sim || sim.closed || sim.stoppedOut || sim.between || !(sim.qty > 0)){
+          _invalidatePendingAdd(
+            rec.entry,
+            'Parent position closed before the add could fill.',
+            rec.bar.time,
+            rec.barIdx
+          );
+        }
+      });
+      entriesWithBar.forEach(function(rec){
+        if (_workingOrder(rec.entry)) _fillPendingOrder(rec.entry, rec.bar, rec.barIdx);
       });
 
       _recomputeRealizedFromCash();
@@ -23365,6 +23884,7 @@ Sim.Ctrl = (function(){
       // rate / profit factor / avg R) reflects every dollar — no leftover
       // unrealized P&L masquerading as "open" through to the summary.
       if (_state.playIdx === _state.unifiedDates.length - 1){
+        _cleanupWorkingOrders('expired', 'Cancelled unfilled at simulation end.');
         _liveTradeEntries().forEach(function(e){
           if (!e || !e.sim) return;
           const sim = e.sim;
@@ -23497,6 +24017,13 @@ Sim.Ctrl = (function(){
     opts = opts || {};
     const viewOnly = !!opts.viewOnly;
     _state.reviewFinalized = !viewOnly;
+    if (!viewOnly){
+      const atEnd = _state.playIdx >= _state.unifiedDates.length - 1;
+      _cleanupWorkingOrders(
+        atEnd ? 'expired' : 'cancelled',
+        atEnd ? 'Cancelled unfilled at simulation end.' : 'Cancelled when the simulation was ended.'
+      );
+    }
     // Defensive: if this is the final summary (not a viewOnly peek) AND
     // we're at the end of the unified timeline, sweep up any positions
     // still open. Normally _advanceAll's end-of-sim hook already closed
@@ -24158,6 +24685,14 @@ Sim.Ctrl = (function(){
 
       if (opts.replaceIndex != null){
         var prev = _state.basket[opts.replaceIndex];
+        if (_workingOrder(prev)){
+          _transitionPendingOrder(prev, 'invalidated', {
+            date: currentDate,
+            barIdx: prev && prev.dateToBarIdx ? prev.dateToBarIdx.get(currentDate) : null,
+            reason: 'Runtime card was replaced.'
+          });
+          _reconcileOrders();
+        }
         // Archive the swapped-out entry so its trades still count toward
         // session stats (win rate, P&L, leg history). We only keep the
         // data needed by Trade Review + SimStats — chart/series get
@@ -24237,6 +24772,12 @@ Sim.Ctrl = (function(){
     cardSetupClick: _onCardSetupClick,
     newLegClick:    _onNewLegClick,
     cardAction:     _onCardAction,
+    cancelPendingOrder: _cancelPendingOrder,
+    pendingOrderFor: function(identity){
+      const entry = _resolveLiveEntry(identity);
+      return entry ? _workingOrder(entry) : null;
+    },
+    availableBuyingPower: _availableBuyingPower,
     // Runtime ticker management — add a new ticker or replace an existing one
     // while the simulation is in flight.
     addTicker: function(sym){ return _addOrReplaceTicker(sym, {}); },
