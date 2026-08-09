@@ -5609,10 +5609,21 @@
               <button type="button" class="sim-pick-btn" id="sim-pick-entry-btn" title="Click a bar on the chart">📍 Pick</button>
             </div>
           </div>
-          <div class="fetch-field">
-            <label for="sim-entry-price">Entry price</label>
+          <div class="fetch-field" id="sim-setup-order-controls" style="display:none" aria-hidden="true">
+            <label>Order type</label>
+            <div class="sim-pill-row" id="sim-setup-order-type" role="group" aria-label="Order type">
+              <button type="button" class="sim-pill sim-pill-active" data-order-type="market_close" aria-pressed="true">Market at close</button>
+              <button type="button" class="sim-pill" data-order-type="limit" aria-pressed="false">Limit</button>
+            </div>
+          </div>
+          <div class="fetch-field" id="sim-setup-price-field">
+            <label id="sim-setup-price-label" for="sim-entry-price">Entry price</label>
             <input type="number" step="0.01" id="sim-entry-price">
           </div>
+          <label class="sim-eod-stop-toggle" id="sim-setup-fill-bar-stop-wrap" style="display:none">
+            <input type="checkbox" id="sim-setup-fill-bar-stop">
+            <span>Activate protective stop on fill candle</span>
+          </label>
           <div class="fetch-field">
             <label id="sim-setup-size-label" for="sim-size-value">Shares</label>
             <div class="sim-pill-row" id="sim-setup-pills">
@@ -5836,6 +5847,13 @@
       <div class="fetch-modal-overlay" id="sim-add-modal">
         <div class="fetch-modal">
           <h3>Add to Position</h3>
+          <div class="fetch-field" id="sim-add-order-controls" style="display:none" aria-hidden="true">
+            <label>Order type</label>
+            <div class="sim-pill-row" id="sim-add-order-type" role="group" aria-label="Order type">
+              <button type="button" class="sim-pill sim-pill-active" data-order-type="market_close" aria-pressed="true">Market at close</button>
+              <button type="button" class="sim-pill" data-order-type="limit" aria-pressed="false">Limit</button>
+            </div>
+          </div>
           <div class="fetch-field">
             <label id="sim-add-size-label" for="sim-add-size-value">Shares</label>
             <div class="sim-pill-row" id="sim-add-pills">
@@ -5845,10 +5863,14 @@
             <input type="hidden" id="sim-add-size-mode" value="shares">
             <input type="number" id="sim-add-size-value" style="margin-top:6px;">
           </div>
-          <div class="fetch-field">
-            <label for="sim-add-price">Price</label>
+          <div class="fetch-field" id="sim-add-price-field">
+            <label id="sim-add-price-label" for="sim-add-price">Price</label>
             <input type="number" step="0.01" id="sim-add-price">
           </div>
+          <label class="sim-eod-stop-toggle" id="sim-add-fill-bar-stop-wrap" style="display:none">
+            <input type="checkbox" id="sim-add-fill-bar-stop">
+            <span>Activate protective stop on fill candle</span>
+          </label>
           <div class="fetch-field">
             <label for="sim-add-newstop">New stop (optional)</label>
             <input type="number" step="0.01" id="sim-add-newstop" placeholder="leave blank to keep current">
@@ -5857,7 +5879,7 @@
             <input type="checkbox" id="sim-add-stop-eod">
             <span>Trigger replacement stop at end of day</span>
           </label>
-          <div class="sim-note">Fills at next bar open</div>
+          <div class="sim-note" id="sim-add-timing-note">Fills at next bar open</div>
           <div class="sim-readout" id="sim-add-summary">
             <div>New avg cost: <strong>—</strong></div>
             <div>New qty: <strong>—</strong></div>
@@ -5935,6 +5957,13 @@
             </div>
             <input type="hidden" id="sim-newleg-direction-value" value="long">
           </div>
+          <div class="fetch-field" id="sim-newleg-order-controls" style="display:none" aria-hidden="true">
+            <label>Order type</label>
+            <div class="sim-pill-row" id="sim-newleg-order-type" role="group" aria-label="Order type">
+              <button type="button" class="sim-pill sim-pill-active" data-order-type="market_close" aria-pressed="true">Market at close</button>
+              <button type="button" class="sim-pill" data-order-type="limit" aria-pressed="false">Limit</button>
+            </div>
+          </div>
           <div class="fetch-field">
             <label>Size</label>
             <div class="sim-pills" id="sim-newleg-pills">
@@ -5945,10 +5974,14 @@
             <input type="number" step="any" id="sim-newleg-size-value" placeholder="1000">
             <div class="sim-field-hint" id="sim-newleg-size-label">Shares</div>
           </div>
-          <div class="fetch-field">
-            <label for="sim-newleg-price">Entry price (defaults to bar close · editable for fills)</label>
+          <div class="fetch-field" id="sim-newleg-price-field">
+            <label id="sim-newleg-price-label" for="sim-newleg-price">Entry price (defaults to bar close · editable for fills)</label>
             <input type="number" step="0.01" id="sim-newleg-price">
           </div>
+          <label class="sim-eod-stop-toggle" id="sim-newleg-fill-bar-stop-wrap" style="display:none">
+            <input type="checkbox" id="sim-newleg-fill-bar-stop">
+            <span>Activate protective stop on fill candle</span>
+          </label>
           <div class="fetch-field">
             <label for="sim-newleg-stop-strategy">Stop strategy</label>
             <div class="sim-stop-strategy-row">
@@ -5983,7 +6016,7 @@
             <div>Risk per share: <strong>—</strong></div>
             <div>Initial $ risk: <strong>—</strong></div>
           </div>
-          <div class="sim-note">Entry is locked to the current paused bar — no time travel, no hindsight bias.</div>
+          <div class="sim-note" id="sim-newleg-timing-note">Entry is locked to the current paused bar — no time travel, no hindsight bias.</div>
           <div class="fetch-actions">
             <button class="fetch-btn-cancel" id="sim-newleg-cancel">Cancel</button>
             <button class="fetch-btn-primary" id="sim-newleg-submit">Start Leg</button>
@@ -13118,6 +13151,90 @@ window.Sim = Sim;
     container.querySelectorAll('.sim-pill').forEach(p => p.classList.toggle('sim-pill-active', p.getAttribute('data-direction') === dir));
   }
 
+  // Portfolio entry/add modals share the same order controls while standalone
+  // simulation keeps its original editable-price behavior. A fresh portfolio
+  // open always starts at Market at close and never restores the prior order.
+  function _setupPortfolioOrderControls(opts) {
+    opts = opts || {};
+    const portMode = !!opts.portMode;
+    const root = document.getElementById(opts.rootId);
+    const pillsRoot = document.getElementById(opts.pillsId);
+    const priceEl = opts.priceEl;
+    const priceLabelEl = document.getElementById(opts.priceLabelId);
+    const fillWrap = document.getElementById(opts.fillWrapId);
+    const fillEl = document.getElementById(opts.fillId);
+    const timingNoteEl = opts.timingNoteId ? document.getElementById(opts.timingNoteId) : null;
+    const pills = pillsRoot ? Array.from(pillsRoot.querySelectorAll('[data-order-type]')) : [];
+    const marketClose = _parseNum(opts.marketClose, NaN);
+    let orderType = 'market_close';
+
+    if (root) {
+      root.style.display = portMode ? '' : 'none';
+      root.setAttribute('aria-hidden', portMode ? 'false' : 'true');
+    }
+    pills.forEach(function(pill) { pill.disabled = !portMode; });
+    if (fillEl) {
+      fillEl.checked = false;
+      fillEl.disabled = true;
+    }
+    if (fillWrap) fillWrap.style.display = 'none';
+
+    // Undo any portfolio-only price locking when a shared modal is next opened
+    // by the single-ticker simulator.
+    if (!portMode) {
+      if (priceEl) priceEl.disabled = false;
+      if (priceLabelEl) priceLabelEl.textContent = opts.standalonePriceLabel || 'Price';
+      if (timingNoteEl && opts.standaloneTimingNote) timingNoteEl.textContent = opts.standaloneTimingNote;
+      return { read: function() { return null; } };
+    }
+
+    function setOrderType(nextType, notify) {
+      orderType = nextType === 'limit' ? 'limit' : 'market_close';
+      const isLimit = orderType === 'limit';
+      pills.forEach(function(pill) {
+        const active = pill.getAttribute('data-order-type') === orderType;
+        pill.classList.toggle('sim-pill-active', active);
+        pill.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      if (priceEl) {
+        priceEl.disabled = !isLimit;
+        if (!isLimit) priceEl.value = isFinite(marketClose) ? String(marketClose) : '';
+      }
+      if (priceLabelEl) {
+        priceLabelEl.textContent = isLimit ? 'Exact limit price' : 'Market price (paused close)';
+      }
+      if (fillWrap) fillWrap.style.display = isLimit ? 'flex' : 'none';
+      if (fillEl) {
+        fillEl.disabled = !isLimit;
+        if (!isLimit) fillEl.checked = false;
+      }
+      if (timingNoteEl) {
+        timingNoteEl.textContent = isLimit
+          ? 'Limit order remains pending for a later fill.'
+          : 'Market order uses the current paused candle close.';
+      }
+      if (notify && typeof opts.onChange === 'function') opts.onChange(orderType);
+    }
+
+    pills.forEach(function(pill) {
+      pill.onclick = function() {
+        setOrderType(pill.getAttribute('data-order-type'), true);
+      };
+    });
+    setOrderType('market_close', false);
+
+    return {
+      read: function() {
+        const isLimit = orderType === 'limit';
+        return {
+          orderType: orderType,
+          price: isLimit ? _parseNum(priceEl && priceEl.value, NaN) : marketClose,
+          allowFillBarStop: isLimit && !!(fillEl && fillEl.checked)
+        };
+      }
+    };
+  }
+
   Sim.UI.showSetupModal = function(ctx, onSubmit) {
     ctx = ctx || {};
     const dateEl = document.getElementById('sim-entry-date');
@@ -13223,6 +13340,22 @@ window.Sim = Sim;
         barcountEl.style.display = 'none';
       }
     }
+    let _stopWire = null;
+    const _setupOrderControls = _setupPortfolioOrderControls({
+      portMode: ctx.portMode,
+      rootId: 'sim-setup-order-controls',
+      pillsId: 'sim-setup-order-type',
+      priceEl: priceEl,
+      priceLabelId: 'sim-setup-price-label',
+      fillWrapId: 'sim-setup-fill-bar-stop-wrap',
+      fillId: 'sim-setup-fill-bar-stop',
+      marketClose: ctx.marketClose,
+      standalonePriceLabel: 'Entry price',
+      onChange: function() {
+        recompute();
+        if (_stopWire && typeof _stopWire.reapply === 'function') _stopWire.reapply();
+      }
+    });
     [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
     _setupPills('sim-setup-pills', 'sim-size-mode', 'sim-setup-size-label', recompute);
     // direction pills wired below after _wireStopStrategy returns its handle.
@@ -13234,7 +13367,7 @@ window.Sim = Sim;
     const stratSuffixEl = document.getElementById('sim-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-stop-distance');
     const emaPeriodEl = document.getElementById('sim-stop-strategy-ema-period');
-    const _stopWire = _wireStopStrategy({
+    _stopWire = _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl, dateEl,
       emaPeriodEl,
       lsKey: 'bm_sim_stop_strategy',
@@ -13300,7 +13433,8 @@ window.Sim = Sim;
     document.getElementById('sim-setup-submit').onclick = function() {
       _clearStatus('sim-setup-status');
       const date = dateEl.value;
-      const price = _parseNum(priceEl.value, NaN);
+      const orderValues = _setupOrderControls.read();
+      const price = orderValues ? orderValues.price : _parseNum(priceEl.value, NaN);
       const size = _parseNum(sizeEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
       const mode = modeEl.value;
@@ -13324,11 +13458,16 @@ window.Sim = Sim;
       const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
       const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
-      try { onSubmit && onSubmit({ direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail, stopTriggerMode }); _closeModal('sim-setup-modal'); }
+      const payload = { direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail, stopTriggerMode };
+      if (orderValues) {
+        payload.orderType = orderValues.orderType;
+        payload.allowFillBarStop = orderValues.allowFillBarStop;
+      }
+      try { onSubmit && onSubmit(payload); _closeModal('sim-setup-modal'); }
       catch (err) { _setStatus('sim-setup-status', err && err.message ? err.message : 'Failed to start sim', true); }
     };
     _openModal('sim-setup-modal');
-    setTimeout(() => priceEl.focus(), 30);
+    setTimeout(() => (ctx.portMode ? sizeEl : priceEl).focus(), 30);
   };
 
   Sim.UI.showSellModal = function(ctx, onSubmit) {
@@ -13452,6 +13591,24 @@ window.Sim = Sim;
         { label: 'Shares', value: isFinite(shares) ? _fmtInt(shares) : '—' }
       ]);
     }
+    let _newlegStopWire = null;
+    const _newlegOrderControls = _setupPortfolioOrderControls({
+      portMode: ctx.portMode,
+      rootId: 'sim-newleg-order-controls',
+      pillsId: 'sim-newleg-order-type',
+      priceEl: priceEl,
+      priceLabelId: 'sim-newleg-price-label',
+      fillWrapId: 'sim-newleg-fill-bar-stop-wrap',
+      fillId: 'sim-newleg-fill-bar-stop',
+      marketClose: ctx.marketClose,
+      standalonePriceLabel: 'Entry price (defaults to bar close · editable for fills)',
+      timingNoteId: 'sim-newleg-timing-note',
+      standaloneTimingNote: 'Entry is locked to the current paused bar — no time travel, no hindsight bias.',
+      onChange: function() {
+        recompute();
+        if (_newlegStopWire && typeof _newlegStopWire.reapply === 'function') _newlegStopWire.reapply();
+      }
+    });
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
     _setupPills('sim-newleg-pills', 'sim-newleg-size-mode', 'sim-newleg-size-label', recompute);
     // direction pills wired after _wireStopStrategy returns its handle.
@@ -13464,7 +13621,7 @@ window.Sim = Sim;
     const stratSuffixEl = document.getElementById('sim-newleg-stop-strategy-suffix');
     const stopDistEl = document.getElementById('sim-newleg-stop-distance');
     const emaPeriodEl = document.getElementById('sim-newleg-stop-strategy-ema-period');
-    const _newlegStopWire = _wireStopStrategy({
+    _newlegStopWire = _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl,
       emaPeriodEl,
       dateEl: null,
@@ -13499,7 +13656,8 @@ window.Sim = Sim;
       _clearStatus('sim-newleg-status');
       const mode = modeEl.value;
       const size = _parseNum(sizeEl.value, NaN);
-      const price = _parseNum(priceEl.value, NaN);
+      const orderValues = _newlegOrderControls.read();
+      const price = orderValues ? orderValues.price : _parseNum(priceEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
       const direction = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
       if (!isFinite(size) || size <= 0) return _setStatus('sim-newleg-status', 'Size must be > 0', true);
@@ -13519,7 +13677,12 @@ window.Sim = Sim;
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
       try {
         const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
-        onSubmit && onSubmit({ direction, sizeMode: mode, sizeValue: size, price, stop, stopTrail, stopTriggerMode });
+        const payload = { direction, sizeMode: mode, sizeValue: size, price, stop, stopTrail, stopTriggerMode };
+        if (orderValues) {
+          payload.orderType = orderValues.orderType;
+          payload.allowFillBarStop = orderValues.allowFillBarStop;
+        }
+        onSubmit && onSubmit(payload);
         _closeModal('sim-newleg-modal');
       } catch (err) { _setStatus('sim-newleg-status', err && err.message ? err.message : 'Could not start leg', true); }
     };
@@ -13568,6 +13731,20 @@ window.Sim = Sim;
         { label: 'New qty', value: isFinite(newQty) ? _fmtInt(newQty) : '—' }
       ]);
     }
+    const _addOrderControls = _setupPortfolioOrderControls({
+      portMode: ctx.portMode,
+      rootId: 'sim-add-order-controls',
+      pillsId: 'sim-add-order-type',
+      priceEl: priceEl,
+      priceLabelId: 'sim-add-price-label',
+      fillWrapId: 'sim-add-fill-bar-stop-wrap',
+      fillId: 'sim-add-fill-bar-stop',
+      marketClose: ctx.marketClose,
+      standalonePriceLabel: 'Price',
+      timingNoteId: 'sim-add-timing-note',
+      standaloneTimingNote: 'Fills at next bar open',
+      onChange: recompute
+    });
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
     _setupPills('sim-add-pills', 'sim-add-size-mode', 'sim-add-size-label', recompute);
     recompute();
@@ -13578,7 +13755,8 @@ window.Sim = Sim;
       _clearStatus('sim-add-status');
       const mode = modeEl.value;
       const size = _parseNum(sizeEl.value, NaN);
-      const price = _parseNum(priceEl.value, NaN);
+      const orderValues = _addOrderControls.read();
+      const price = orderValues ? orderValues.price : _parseNum(priceEl.value, NaN);
       const newStopRaw = stopEl.value.trim();
       const newStop = newStopRaw === '' ? null : _parseNum(newStopRaw, NaN);
       if (!isFinite(size) || size <= 0) return _setStatus('sim-add-status', 'Size must be > 0', true);
@@ -13598,6 +13776,10 @@ window.Sim = Sim;
       }
       try {
         const payload = { sizeMode: mode, sizeValue: size, price };
+        if (orderValues) {
+          payload.orderType = orderValues.orderType;
+          payload.allowFillBarStop = orderValues.allowFillBarStop;
+        }
         if (newStop !== null) {
           payload.newStop = newStop;
           payload.stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
@@ -19865,6 +20047,7 @@ Sim.Ctrl = (function(){
       portMode: true,
       defaultDate: bar.time || null,
       defaultPrice: bar.close != null ? bar.close : null,
+      marketClose: bar.close != null ? bar.close : NaN,
       defaultDirection: opts.defaultDirection || defaultDir,
       suggestedSize: opts.suggestedSize != null ? opts.suggestedSize : null,
       // Pass through any additional context the controller wants in the modal.
@@ -19889,6 +20072,7 @@ Sim.Ctrl = (function(){
       portMode: true,
       barDate: bar.time || '—',
       barClose: bar.close != null ? bar.close : NaN,
+      marketClose: bar.close != null ? bar.close : NaN,
       legNum: opts.legNum != null ? opts.legNum : 2,
       suggestedSize: opts.suggestedSize != null ? opts.suggestedSize : null,
       // Stop-out re-entry: default opposite of just-closed leg's direction.
@@ -19932,7 +20116,9 @@ Sim.Ctrl = (function(){
       portMode: true,
       currentQty: s.qty,
       avgCost: s.avgCost,
-      currentPrice: bar.close != null ? bar.close : 0
+      currentPrice: bar.close != null ? bar.close : 0,
+      marketClose: bar.close != null ? bar.close : NaN,
+      direction: (sim && sim.direction) || 'long'
     };
     if (window.Sim && Sim.UI && typeof Sim.UI.showAddModal === 'function') {
       Sim.UI.showAddModal(ctx, _wrap(card, onSubmit));
