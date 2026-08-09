@@ -12874,7 +12874,7 @@ window.Sim = Sim;
     const { stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl,
             priceEl, dateEl, lsKey, defaultK, includeBase,
             emaPeriodEl,
-            barsProvider, moveKeyProvider, directionProvider } = opts || {};
+            barsProvider, moveKeyProvider, directionProvider, onApplied } = opts || {};
     if (!stratEl || !stopEl) return;
     function _dir(){
       if (typeof directionProvider === 'function'){
@@ -12915,6 +12915,10 @@ window.Sim = Sim;
           emaPeriod: emaPeriodEl ? emaPeriodEl.value : null
         }));
       } catch(_){}
+    }
+
+    function _notifyApplied(){
+      if (typeof onApplied === 'function') onApplied();
     }
 
     function _kForType(t){
@@ -13044,6 +13048,7 @@ window.Sim = Sim;
           _updateKVisibility();
           _renderDistance();
           _persist();
+          _notifyApplied();
           return;
         }
       }
@@ -13055,6 +13060,7 @@ window.Sim = Sim;
       }
       _renderDistance();
       _persist();
+      _notifyApplied();
     }
 
     stratEl.onchange = _applyStrategy;
@@ -13352,8 +13358,8 @@ window.Sim = Sim;
       marketClose: ctx.marketClose,
       standalonePriceLabel: 'Entry price',
       onChange: function() {
-        recompute();
         if (_stopWire && typeof _stopWire.reapply === 'function') _stopWire.reapply();
+        else recompute();
       }
     });
     [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
@@ -13387,7 +13393,8 @@ window.Sim = Sim;
         if (ctx.cardMoveKey) return ctx.cardMoveKey;
         const r = window.currentMoveRow;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
-      }
+      },
+      onApplied: ctx.portMode ? recompute : null
     });
     // Re-run strategy when direction toggles (label flip + recompute).
     _setupDirectionPills('sim-setup-direction', 'sim-direction-value', function(){
@@ -13605,8 +13612,8 @@ window.Sim = Sim;
       timingNoteId: 'sim-newleg-timing-note',
       standaloneTimingNote: 'Entry is locked to the current paused bar — no time travel, no hindsight bias.',
       onChange: function() {
-        recompute();
         if (_newlegStopWire && typeof _newlegStopWire.reapply === 'function') _newlegStopWire.reapply();
+        else recompute();
       }
     });
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
@@ -13643,7 +13650,8 @@ window.Sim = Sim;
         if (ctx.cardMoveKey) return ctx.cardMoveKey;
         const r = window.currentMoveRow;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
-      }
+      },
+      onApplied: ctx.portMode ? recompute : null
     });
     _setupDirectionPills('sim-newleg-direction', 'sim-newleg-direction-value', function(){
       recompute();
@@ -22881,6 +22889,7 @@ Sim.Ctrl = (function(){
 
   function _onNewLegClick(entry){
     if (!_tradeActionsAvailable(entry)) return;
+    _pause();
     const bar = _currentBarForEntry(entry);
     if (!bar) return;
     if (!entry.sim){ _onCardSetupClick(entry); return; }
