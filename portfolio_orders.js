@@ -19,8 +19,12 @@
   var orderSequence = 0;
 
   function finiteNumber(value) {
-    var number = Number(value);
-    return Number.isFinite(number) ? number : null;
+    try {
+      var number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    } catch (error) {
+      return null;
+    }
   }
 
   function toCents(value) {
@@ -71,6 +75,17 @@
     if (typeof id !== 'string' || !id.trim()) return null;
     if (id === '__proto__' || id === 'prototype' || id === 'constructor') return null;
     return id;
+  }
+
+  function reservationCents(order) {
+    var qty = finiteNumber(order && order.qty);
+    var limitPrice = finiteNumber(order && order.limitPrice);
+    if (qty == null || qty <= 0 || !Number.isSafeInteger(qty) ||
+        limitPrice == null || limitPrice <= 0) {
+      return null;
+    }
+    var cents = toCents(qty * limitPrice);
+    return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
   }
 
   function readReservationLedger(state) {
@@ -307,7 +322,7 @@
     });
 
     event.type = type;
-    event.orderId = order && order.id ? order.id : firstDefined(details.orderId, null);
+    event.orderId = validOrderId(order) || firstDefined(details.orderId, null);
     event.kind = order && order.kind ? order.kind : firstDefined(details.kind, null);
     event.entryKey = entry && entry.entryKey != null ? entry.entryKey : null;
     event.entryInstanceKey = entry && entry.entryInstanceKey != null
@@ -383,14 +398,8 @@
     if (!ownership || !orderId) return null;
     var ledger = ownership.ledger || {};
     if (hasOwn(ledger, orderId)) return null;
-    var qty = finiteNumber(order.qty);
-    var limitPrice = finiteNumber(order.limitPrice);
-    if (qty == null || qty <= 0 || Math.floor(qty) !== qty ||
-        limitPrice == null || limitPrice <= 0) {
-      return null;
-    }
-    var reservedCents = toCents(qty * limitPrice);
-    if (reservedCents <= 0) return null;
+    var reservedCents = reservationCents(order);
+    if (reservedCents == null) return null;
     var cashCents = toCents(state.cash);
     if (cashCents - ownership.totalCents < reservedCents) return null;
     order.reservedBuyingPower = fromCents(reservedCents);
@@ -447,35 +456,76 @@
     return recordEvent(entry, status, Object.assign({}, details || {}, { order: order }));
   }
 
-  function reconcile(state, entries) {
+  function reconcile(state, entries, context) {
     if (!state || typeof state !== 'object') return 0;
-    var totalCents = 0;
-    var ledger = {};
-    var valid = true;
+    context = context && typeof context === 'object' ? context : {};
     var list = Array.isArray(entries) ? entries : [];
+    var candidates = [];
+    var byId = Object.create(null);
     list.forEach(function (entry) {
       var order = workingOrderFrom(entry);
       if (!order) return;
       var orderId = validOrderId(order);
-      var qty = finiteNumber(order.qty);
-      var limitPrice = finiteNumber(order.limitPrice);
-      var reservedCents = qty != null && qty > 0 && Math.floor(qty) === qty &&
-          limitPrice != null && limitPrice > 0
-        ? toCents(qty * limitPrice)
-        : 0;
-      if (!orderId || reservedCents <= 0 || hasOwn(ledger, orderId)) {
-        valid = false;
-        return;
+      var candidate = {
+        entry: entry,
+        order: order,
+        orderId: orderId,
+        reservedCents: reservationCents(order),
+        conflicted: !orderId
+      };
+      candidates.push(candidate);
+      if (orderId) {
+        if (!byId[orderId]) byId[orderId] = [];
+        byId[orderId].push(candidate);
       }
-      order.reservedBuyingPower = fromCents(reservedCents);
-      ledger[orderId] = reservedCents;
-      totalCents += reservedCents;
     });
-    if (!valid || !Number.isSafeInteger(totalCents)) {
-      state[RESERVATION_LEDGER_KEY] = null;
-      state.reservedBuyingPower = fromCents(Math.max(1, toCents(state.reservedBuyingPower)));
-      return state.reservedBuyingPower;
+
+    candidates.forEach(function (candidate) {
+      if (candidate.reservedCents == null) candidate.conflicted = true;
+    });
+    Object.keys(byId).forEach(function (orderId) {
+      if (byId[orderId].length < 2) return;
+      byId[orderId].forEach(function (candidate) {
+        candidate.conflicted = true;
+      });
+    });
+
+    var totalCents = 0;
+    var survivors = candidates.filter(function (candidate) {
+      return !candidate.conflicted;
+    });
+    var unsafeTotal = survivors.some(function (candidate) {
+      totalCents += candidate.reservedCents;
+      return !Number.isSafeInteger(totalCents);
+    });
+    if (unsafeTotal) {
+      survivors.forEach(function (candidate) {
+        candidate.conflicted = true;
+      });
+      survivors = [];
+      totalCents = 0;
     }
+
+    var reason = context.reason || 'Restored reservation conflict.';
+    candidates.forEach(function (candidate) {
+      if (!candidate.conflicted) return;
+      var order = candidate.order;
+      order.status = 'invalidated';
+      order.completedDate = firstDefined(context.date, order.submittedDate);
+      order.completedBarIdx = firstDefined(context.barIdx, null);
+      recordEvent(candidate.entry, 'invalidated', {
+        order: order,
+        date: order.completedDate,
+        barIdx: order.completedBarIdx,
+        reason: reason
+      });
+    });
+
+    var ledger = {};
+    survivors.forEach(function (candidate) {
+      candidate.order.reservedBuyingPower = fromCents(candidate.reservedCents);
+      ledger[candidate.orderId] = candidate.reservedCents;
+    });
     state[RESERVATION_LEDGER_KEY] = ledger;
     state.reservedBuyingPower = fromCents(totalCents);
     return state.reservedBuyingPower;

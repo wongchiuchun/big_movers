@@ -17390,6 +17390,35 @@ window.Sim = Sim;
     }
   }
 
+  function _pushOrderLifecycleCsvRows(lines, columns, sessions, extraValue){
+    (Array.isArray(sessions) ? sessions : []).forEach(function(session){
+      _normalizedSessionOrderActivity(session).forEach(function(normalized){
+        const event = normalized.event || {};
+        lines.push(columns.map(function(column){
+          let value;
+          if (column === 'sessionId') value = session.id;
+          else if (column === 'simType') value = session.simType;
+          else if (column === 'symbol') value = event.displaySymbol || event.symbol;
+          else if (column === 'year') value = event.year || session.year;
+          else if (column === 'direction') value = event.direction;
+          else if (column === 'qty') value = event.qty;
+          else {
+            value = typeof extraValue === 'function'
+              ? extraValue(session, normalized, column)
+              : undefined;
+            if (value === undefined){
+              const sessionValue = _sessionExportValue(session, column);
+              value = sessionValue === undefined
+                ? _orderLifecycleValue(normalized, column)
+                : sessionValue;
+            }
+          }
+          return _statsCsvCell(value);
+        }).join(','));
+      });
+    });
+  }
+
   function _sessionExportValue(session, column){
     const s = session || {};
     const hasTrades = +s.tradeCount > 0;
@@ -17500,25 +17529,7 @@ window.Sim = Sim;
         return _statsCsvCell(v);
       }).join(','));
     });
-    sessionDataset.forEach(function(s){
-      _normalizedSessionOrderActivity(s).forEach(function(normalized){
-        const event = normalized.event || {};
-        lines.push(cols.map(function(c){
-          let v = '';
-          if (c === 'sessionId') v = s.id;
-          else if (c === 'simType') v = s.simType;
-          else if (c === 'symbol') v = event.displaySymbol || event.symbol;
-          else if (c === 'year') v = event.year || s.year;
-          else if (c === 'direction') v = event.direction;
-          else if (c === 'qty') v = event.qty;
-          else {
-            const sessionValue = _sessionExportValue(s, c);
-            v = sessionValue === undefined ? _orderLifecycleValue(normalized, c) : sessionValue;
-          }
-          return _statsCsvCell(v);
-        }).join(','));
-      });
-    });
+    _pushOrderLifecycleCsvRows(lines, cols, sessionDataset);
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -17664,43 +17675,27 @@ window.Sim = Sim;
         return _statsCsvCell(v);
       }).join(','));
     });
-    sessionDataset.forEach(function(s){
+    _pushOrderLifecycleCsvRows(lines, cols, sessionDataset, function(s, normalized, c){
       const rev = s.review || null;
       const rsObj = rs(s);
-      _normalizedSessionOrderActivity(s).forEach(function(normalized){
-        const event = normalized.event || {};
-        lines.push(cols.map(function(c){
-          let v = '';
-          if (c === 'sessionId') v = s.id;
-          else if (c === 'simType') v = s.simType;
-          else if (c === 'symbol') v = event.displaySymbol || event.symbol;
-          else if (c === 'year') v = event.year || s.year;
-          else if (c === 'direction') v = event.direction;
-          else if (c === 'qty') v = event.qty;
-          else if (c === 'reviewSchemaVersion') v = rev ? rev.schemaVersion : null;
-          else if (c === 'reviewSkipped') v = rev ? rev.reviewSkipped : null;
-          else if (c === 'reviewRetroactive') v = rev ? rev.retroactive : null;
-          else if (c === 'reviewCompletedAt') v = rev ? rev.completedAt : null;
-          else if (c === 'sessionEmotionalScore') v = rsObj ? rsObj.emotionalScore : null;
-          else if (c === 'sessionRegimeFelt') v = rsObj ? rsObj.regimeFelt : null;
-          else if (c === 'sessionStreakBefore') v = rsObj ? rsObj.streakBefore : null;
-          else if (c === 'sessionGateOverridden') v = rsObj ? rsObj.gateOverridden : null;
-          else if (c === 'sessionPainNext24h') v = pc(rsObj, 'next24h');
-          else if (c === 'sessionPainNextDayAction') v = pc(rsObj, 'nextDayAction');
-          else if (c === 'sessionPainOutOfHowMany') v = pc(rsObj, 'outOfHowMany');
-          else if (c === 'sessionPortfolioNote') v = rsObj ? rsObj.portfolioNote : null;
-          else if (c === 'sessionDominantPattern') v = rsObj ? rsObj.dominantPattern : null;
-          else if (c === 'sessionOutcomeCarryover') v = rsObj ? rsObj.outcomeCarryover : null;
-          else if (c === 'sessionExecutedWell') v = rsObj ? rsObj.executedWell : null;
-          else if (c === 'sessionDisciplineChallenge') v = rsObj ? rsObj.disciplineChallenge : null;
-          else if (c === 'sessionNextRunRule') v = rsObj ? rsObj.nextRunRule : null;
-          else {
-            const sessionValue = _sessionExportValue(s, c);
-            v = sessionValue === undefined ? _orderLifecycleValue(normalized, c) : sessionValue;
-          }
-          return _statsCsvCell(v);
-        }).join(','));
-      });
+      if (c === 'reviewSchemaVersion') return rev ? rev.schemaVersion : null;
+      if (c === 'reviewSkipped') return rev ? rev.reviewSkipped : null;
+      if (c === 'reviewRetroactive') return rev ? rev.retroactive : null;
+      if (c === 'reviewCompletedAt') return rev ? rev.completedAt : null;
+      if (c === 'sessionEmotionalScore') return rsObj ? rsObj.emotionalScore : null;
+      if (c === 'sessionRegimeFelt') return rsObj ? rsObj.regimeFelt : null;
+      if (c === 'sessionStreakBefore') return rsObj ? rsObj.streakBefore : null;
+      if (c === 'sessionGateOverridden') return rsObj ? rsObj.gateOverridden : null;
+      if (c === 'sessionPainNext24h') return pc(rsObj, 'next24h');
+      if (c === 'sessionPainNextDayAction') return pc(rsObj, 'nextDayAction');
+      if (c === 'sessionPainOutOfHowMany') return pc(rsObj, 'outOfHowMany');
+      if (c === 'sessionPortfolioNote') return rsObj ? rsObj.portfolioNote : null;
+      if (c === 'sessionDominantPattern') return rsObj ? rsObj.dominantPattern : null;
+      if (c === 'sessionOutcomeCarryover') return rsObj ? rsObj.outcomeCarryover : null;
+      if (c === 'sessionExecutedWell') return rsObj ? rsObj.executedWell : null;
+      if (c === 'sessionDisciplineChallenge') return rsObj ? rsObj.disciplineChallenge : null;
+      if (c === 'sessionNextRunRule') return rsObj ? rsObj.nextRunRule : null;
+      return undefined;
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -22806,7 +22801,8 @@ Sim.Ctrl = (function(){
   function _reconcileOrders(){
     const api = _ordersApi();
     if (!api || typeof api.reconcile !== 'function') return 0;
-    return api.reconcile(_state, PortSimAssets.liveEntries(_state));
+    const date = ((_state.unifiedDates || [])[_state.playIdx] || null);
+    return api.reconcile(_state, PortSimAssets.liveEntries(_state), { date: date });
   }
 
   function _availableBuyingPower(){
