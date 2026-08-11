@@ -11780,13 +11780,15 @@ const Sim = (function(){
     _pushPnlPoint(sim, bar);
   }
 
-  function _processStopOnBar(sim, bar, barIdx, fired) {
+  function _processStopsOnBar(sim, bar, barIdx, fired, stops, forceGapStop) {
     if (sim.stoppedOut || sim.closed || sim.qty <= 0) return false;
     const d = sim.direction || 'long';
     // Sort by which fires first as price moves through stops:
     //   long: highest stop first (price falls past it first)
     //   short: lowest stop first (price rises past it first)
-    const active = Sim.Direction.sortStopsForFire(d, (sim.stopLevels || []).filter(s => !s.fired));
+    const active = Sim.Direction.sortStopsForFire(d, (stops || []).filter(function(stop){
+      return stop && !stop.fired && (sim.stopLevels || []).indexOf(stop) >= 0;
+    }));
     let anyFired = false;
     for (const stop of active) {
       if (sim.qty <= 0) break;
@@ -11795,14 +11797,17 @@ const Sim = (function(){
       // Fires when bar adverse extreme reaches stop:
       //   long: bar.low <= stop.price
       //   short: bar.high >= stop.price
-      const fires = triggerMode === 'close'
+      const forcedGap = forceGapStop === stop;
+      const fires = forcedGap || (triggerMode === 'close'
         ? (d === 'short' ? Number(bar.close) >= stop.price : Number(bar.close) <= stop.price)
-        : Sim.Direction.stopFires(d, bar, stop.price);
+        : Sim.Direction.stopFires(d, bar, stop.price));
       if (!fires) continue;
       // Fill price:
       //   long: min(open, stop) — gap-down fills at open
       //   short: max(open, stop) — gap-up fills at open
-      const fillPx = triggerMode === 'close'
+      const fillPx = forcedGap
+        ? Number(bar.open)
+        : triggerMode === 'close'
         ? Number(bar.close)
         : Sim.Direction.fillAtStop(d, bar, stop.price);
       // pct=100% means "close all" — use current qty so adds get liquidated too.
@@ -11829,6 +11834,28 @@ const Sim = (function(){
     }
     if (anyFired && sim.closed) sim.pendingActions = [];
     return anyFired;
+  }
+
+  function _processStopOnBar(sim, bar, barIdx, fired) {
+    return _processStopsOnBar(sim, bar, barIdx, fired, sim.stopLevels || []);
+  }
+
+  // Process exactly one newly attached stop on its fill candle.  This is
+  // deliberately narrower than advanceTo(): existing stops and queued
+  // actions are untouched, while fire/fill/event semantics stay identical
+  // to normal bar advancement.  Same-bar callers still need the canonical
+  // extrema and P&L point that advanceTo() records after stop processing.
+  function processAttachedStopOnBar(sim, bars, barIdx, stop, options) {
+    const fired = [];
+    const bar = Array.isArray(bars) ? bars[barIdx] : null;
+    const attached = sim && Array.isArray(sim.stopLevels) && sim.stopLevels.indexOf(stop) >= 0;
+    const attachedOnBar = stop && Number(stop.barIdx) === Number(barIdx);
+    if (!sim || !bar || !stop || !attached || !attachedOnBar) return { sim: sim, eventsFired: fired };
+    _processStopsOnBar(sim, bar, barIdx, fired, [stop], options && options.forceGap ? stop : null);
+    _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), barIdx);
+    _updateIntradayExtremes(sim, bar, barIdx);
+    _pushPnlPoint(sim, bar);
+    return { sim: sim, eventsFired: fired };
   }
 
   function _processActionsOnBar(sim, bar, barIdx, fired) {
@@ -12118,7 +12145,7 @@ const Sim = (function(){
     return true;
   }
 
-  return { createSim, queueAction, advanceTo, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode };
+  return { createSim, queueAction, advanceTo, processAttachedStopOnBar, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode };
 })();
 
 // Expose the Sim core on window so cross-module code (PortSim.Ctrl, Track J,
@@ -14211,13 +14238,13 @@ window.Sim = Sim;
     return MONTH_NAMES[p.mo].slice(0,3) + ' ' + p.d + ', ' + p.y;
   }
   function _fmt$Signed(v){
-    if (!isFinite(v)) return '$0';
+    if (v == null || !isFinite(v)) return '—';
     const sign = v >= 0 ? '+' : '−';
     return sign + '$' + Math.abs(Math.round(v)).toLocaleString();
   }
   // Compact formatter for cramped cells: $987 / $1.2k / $123k / $1.2M
   function _fmt$Compact(v){
-    if (!isFinite(v) || v === 0) return v === 0 ? '$0' : '';
+    if (v == null || !isFinite(v) || v === 0) return v === 0 ? '$0' : '—';
     const sign = v >= 0 ? '+' : '−';
     const a = Math.abs(v);
     let body;
@@ -14309,6 +14336,11 @@ window.Sim = Sim;
     var tradeEntries = window.PortSimAssets
       ? PortSimAssets.allTradeEntries(st)
       : (st.basket || []).concat(st.indexEntries || [], st.retiredEntries || []);
+    const hasTrades = tradeEntries.some(function(entry){
+      const sim = entry && entry.sim;
+      return !!(sim && ((sim.legs || []).length ||
+        (!sim.between && (sim.qty > 0 || sim.closed || sim.stoppedOut))));
+    });
     tradeEntries.forEach(function(entry){
       const sim = entry && entry.sim; if (!sim) return;
       _allEvents(sim).forEach(function(ev){
@@ -14321,7 +14353,7 @@ window.Sim = Sim;
     const initialEquity = st.initialEquity || 0;
     const days = curve.map(function(pt, i){
       const prev = i > 0 ? curve[i - 1] : null;
-      const dollarChange = pt.port - (prev ? prev.port : 0);
+      const dollarChange = hasTrades ? pt.port - (prev ? prev.port : 0) : null;
       const positions = {};
       const symbols = new Set(Object.keys(pt.positions || {}));
       if (prev) Object.keys(prev.positions || {}).forEach(function(s){ symbols.add(s); });
@@ -14329,12 +14361,12 @@ window.Sim = Sim;
         const cur = (pt.positions && pt.positions[sym]) || 0;
         const pre = (prev && prev.positions && prev.positions[sym]) || 0;
         const diff = cur - pre;
-        if (Math.abs(diff) > 0.005) positions[sym] = diff;
+        if (hasTrades && Math.abs(diff) > 0.005) positions[sym] = diff;
       });
       return {
         date: pt.date,
         dollarChange: dollarChange,
-        pctChange: initialEquity > 0 ? (dollarChange / initialEquity) * 100 : null,
+        pctChange: dollarChange != null && initialEquity > 0 ? (dollarChange / initialEquity) * 100 : null,
         equityClose: pt.equity,
         positions: positions,
         events: eventsByDate[pt.date] || [],
@@ -14470,10 +14502,11 @@ window.Sim = Sim;
           cell.classList.add('is-blank');
         } else if (dayData){
           const v = dayData.dollarChange;
-          if (v > 0) cell.classList.add('is-pos');
+          if (v == null || !isFinite(v)) cell.classList.add('is-nodata');
+          else if (v > 0) cell.classList.add('is-pos');
           else if (v < 0) cell.classList.add('is-neg');
           else cell.classList.add('is-flat');
-          if (maxAbs > 0){
+          if (v != null && isFinite(v) && maxAbs > 0){
             const heat = Math.max(0.15, Math.min(1.0, Math.abs(v) / maxAbs));
             cell.style.setProperty('--pnlcal-heat', heat.toFixed(2));
           }
@@ -14485,7 +14518,7 @@ window.Sim = Sim;
         cell.appendChild(_mk('span', 'pnlcal-day-num', String(d)));
         let valText = '';
         if (dayData){
-          valText = _fmt$Compact(dayData.dollarChange);
+          valText = dayData.dollarChange == null ? '—' : _fmt$Compact(dayData.dollarChange);
         } else if (inRange && wkdy < 5){
           valText = '—';
         }
@@ -16243,7 +16276,7 @@ window.Sim = Sim;
       lossCount: agg.lossCount,
       winRate: hasTrades ? agg.winRate : null,
       profitFactor: hasTrades ? agg.profitFactor : null,
-      sessionPnL: agg.sessionPnL,
+      sessionPnL: hasTrades ? agg.sessionPnL : null,
       avgPctDeployed: hasTrades ? dep.avg : null,
       peakPctDeployed: hasTrades ? dep.peak : null,
       idlePctOfTime: hasTrades ? dep.idlePct : null
@@ -16404,8 +16437,8 @@ window.Sim = Sim;
       direction: 'long',
       initialEquity: payload.initialEquity || null,
       finalEquity: payload.finalEquity != null ? +(+payload.finalEquity).toFixed(2) : null,
-      sessionPnL: +portfolioMetrics.sessionPnL.toFixed(2),
-      totalReturnPct: payload.totalReturnPct != null ? +(+payload.totalReturnPct).toFixed(2) : null,
+      sessionPnL: hasTrades && portfolioMetrics.sessionPnL != null ? +portfolioMetrics.sessionPnL.toFixed(2) : null,
+      totalReturnPct: hasTrades && payload.totalReturnPct != null ? +(+payload.totalReturnPct).toFixed(2) : null,
       avgPctDeployed: hasTrades ? portfolioMetrics.avgPctDeployed : null,
       peakPctDeployed: hasTrades ? portfolioMetrics.peakPctDeployed : null,
       idlePctOfTime: hasTrades ? portfolioMetrics.idlePctOfTime : null,
@@ -16416,7 +16449,7 @@ window.Sim = Sim;
       profitFactor: !hasTrades ? null : (portfolioMetrics.profitFactor === Infinity
         ? null
         : (isFinite(portfolioMetrics.profitFactor) ? +portfolioMetrics.profitFactor.toFixed(2) : null)),
-      indexReturnPct: payload.indexReturnPct != null ? +(+payload.indexReturnPct).toFixed(2) : null,
+      indexReturnPct: hasTrades && payload.indexReturnPct != null ? +(+payload.indexReturnPct).toFixed(2) : null,
       indexName: payload.indexName || null,
       simStartDate: payload.firstDate || null,
       simEndDate: payload.lastDate || null,
@@ -16518,11 +16551,14 @@ window.Sim = Sim;
   function _calcKeyMetrics(rawTrades, sessions){
     const trades = _excludeAggregates(rawTrades);
     const aggCount = (rawTrades || []).length - trades.length;
-    // Total P&L always sums across SESSIONS — that's the headline "what did
-    // I make?" number and includes aggregate sessions whose leg detail is
-    // unknown but whose total P&L is real.
-    const totalPnL = (sessions || []).reduce(function(s, x){ return s + (x.sessionPnL || 0); }, 0);
+    // Activity-only sessions remain visible, but do not contribute a
+    // synthetic zero to any aggregate performance metric.
+    const performanceSessions = (sessions || []).filter(function(session){ return +session.tradeCount > 0; });
+    const totalPnL = performanceSessions.length
+      ? performanceSessions.reduce(function(s, x){ return s + (+x.sessionPnL || 0); }, 0)
+      : null;
     const sessionCount = sessions ? sessions.length : 0;
+    const performanceSessionCount = performanceSessions.length;
     const daysSimulated = (sessions || []).reduce(function(a, s){
       return a + _tradingDaysBetween(s.simStartDate, s.simEndDate);
     }, 0);
@@ -16545,6 +16581,7 @@ window.Sim = Sim;
     const n = trades.length;
     if (!n){
       return { count: 0, aggCount: aggCount, sessionCount: sessionCount,
+               performanceSessionCount: performanceSessionCount,
                winRate: null, expectedValue: null, profitFactor: null,
                avgWin: null, avgLoss: null,
                totalPnL: totalPnL,
@@ -16570,6 +16607,7 @@ window.Sim = Sim;
     const avgReturnPct = rets.length ? rets.reduce(function(s, x){ return s + x; }, 0) / rets.length : null;
     return {
       count: n, aggCount: aggCount, sessionCount: sessionCount,
+      performanceSessionCount: performanceSessionCount,
       winCount: wins.length, lossCount: losses.length, breakEvenCount: breakEven,
       winRate: winRate,
       avgWin: avgWin, avgLoss: avgLoss,
@@ -16653,18 +16691,24 @@ window.Sim = Sim;
     sessions.forEach(function(s){
       const d = new Date(s.ts);
       const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      const e = byDate[date] || (byDate[date] = { date: date, dollarChange: 0, positions: {}, events: [], sessionIds: [], count: 0 });
-      const pnl = s.sessionPnL || 0;
-      e.dollarChange += pnl;
+      const e = byDate[date] || (byDate[date] = { date: date, dollarChange: 0, performanceCount: 0, positions: {}, events: [], sessionIds: [], count: 0 });
+      const hasTrades = +s.tradeCount > 0;
+      const pnl = hasTrades && s.sessionPnL != null && isFinite(s.sessionPnL) ? +s.sessionPnL : null;
+      if (pnl != null){
+        e.dollarChange += pnl;
+        e.performanceCount += 1;
+      }
       if (s.id) e.sessionIds.push(s.id);
       const sym = s.symbol || '?';
-      e.positions[sym] = (e.positions[sym] || 0) + pnl;
+      if (pnl != null) e.positions[sym] = (e.positions[sym] || 0) + pnl;
       const tag = (s.simType || 'individual') === 'portfolio' ? '[PORT] ' : '';
-      const wlrate = s.tradeCount ? '  ·  ' + s.winCount + 'W/' + s.lossCount + 'L' : '';
+      const wlrate = hasTrades ? '  ·  ' + s.winCount + 'W/' + s.lossCount + 'L' : '  ·  no fills';
       e.events.push({
-        type: pnl > 0 ? 'win' : (pnl < 0 ? 'loss' : 'flat'),
+        type: pnl == null ? 'activity' : (pnl > 0 ? 'win' : (pnl < 0 ? 'loss' : 'flat')),
         symbol: sym,
-        note: tag + (s.year ? s.year + ' · ' : '') + (pnl >= 0 ? '+' : '') + '$' + Math.round(Math.abs(pnl)).toLocaleString() + wlrate
+        note: tag + (s.year ? s.year + ' · ' : '')
+          + (pnl == null ? 'P&L —' : ((pnl >= 0 ? '+' : '') + '$' + Math.round(Math.abs(pnl)).toLocaleString()))
+          + wlrate
       });
       e.count += 1;
     });
@@ -16673,7 +16717,7 @@ window.Sim = Sim;
       const e = byDate[date];
       return {
         date: date,
-        dollarChange: e.dollarChange,
+        dollarChange: e.performanceCount ? e.dollarChange : null,
         pctChange: null,
         equityClose: null,
         positions: e.positions,
@@ -16697,7 +16741,7 @@ window.Sim = Sim;
     return el;
   }
   function _fmt$Signed(v){
-    if (!isFinite(v)) return '—';
+    if (v == null || !isFinite(v)) return '—';
     return (v >= 0 ? '+' : '−') + '$' + Math.abs(Math.round(v)).toLocaleString();
   }
   function _fmtPct(v, decimals){
@@ -16725,10 +16769,10 @@ window.Sim = Sim;
           ? (k.aggCount + ' aggregate session' + (k.aggCount === 1 ? '' : 's') + ' (no leg detail)')
           : ('in ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's')));
     grid.appendChild(tile('Trades', String(k.count), tradeSub));
-    // Total P&L always reflects ALL sessions (incl. aggregate stubs) — that's
-    // the headline "did I make money" answer, separate from per-trade WR/PF.
-    const pnlSub = (k.aggCount > 0 && k.sessionCount > 0)
-      ? ('across ' + k.sessionCount + ' session' + (k.sessionCount === 1 ? '' : 's')
+    // Activity-only sessions are counted as practice sessions but excluded
+    // from the P&L denominator and total.
+    const pnlSub = (k.aggCount > 0 && k.performanceSessionCount > 0)
+      ? ('across ' + k.performanceSessionCount + ' performance session' + (k.performanceSessionCount === 1 ? '' : 's')
          + ' (incl. ' + k.aggCount + ' aggregate)')
       : null;
     grid.appendChild(tile('Total P&L', _fmt$Signed(k.totalPnL), pnlSub, k.totalPnL > 0 ? 'is-pos' : (k.totalPnL < 0 ? 'is-neg' : '')));
@@ -16870,10 +16914,10 @@ window.Sim = Sim;
 
   function _sessionRunMetricItems(session){
     session = session || {};
-    const pnl = session.sessionPnL;
-    const ret = session.totalReturnPct;
     const trades = session.tradeCount;
     const hasTrades = +trades > 0;
+    const pnl = hasTrades ? session.sessionPnL : null;
+    const ret = hasTrades ? session.totalReturnPct : null;
     const winRate = hasTrades ? session.winRate : null;
     const pf = hasTrades ? session.profitFactor : null;
     const avgDeployed = hasTrades ? session.avgPctDeployed : null;
@@ -16882,7 +16926,7 @@ window.Sim = Sim;
     const winCount = session.winCount || 0;
     const lossCount = session.lossCount || 0;
     const usesIndex = session.simType === 'portfolio' || session.indexReturnPct != null;
-    const benchmark = usesIndex ? session.indexReturnPct : session.tickerBhPct;
+    const benchmark = hasTrades ? (usesIndex ? session.indexReturnPct : session.tickerBhPct) : null;
     const benchmarkName = usesIndex ? (session.indexName || 'Index') : 'B&H';
     const alpha = ret != null && benchmark != null ? ret - benchmark : null;
 
@@ -17133,9 +17177,9 @@ window.Sim = Sim;
       row.appendChild(_mk('td', null, hasTrades ? ((s.winCount || 0) + '/' + (s.lossCount || 0)) : '—'));
       row.appendChild(_mk('td', null, hasTrades && s.profitFactor != null ? s.profitFactor.toFixed(2) : '—'));
       row.appendChild(_mk('td', null, hasTrades && s.avgPctDeployed != null ? s.avgPctDeployed.toFixed(1) + '%' : '—'));
-      const pnlCls = (s.sessionPnL || 0) > 0 ? 'is-pos' : ((s.sessionPnL || 0) < 0 ? 'is-neg' : '');
-      row.appendChild(_mk('td', pnlCls, _fmt$Signed(s.sessionPnL)));
-      row.appendChild(_mk('td', pnlCls, _fmtPct(s.totalReturnPct, 1)));
+      const pnlCls = hasTrades && s.sessionPnL > 0 ? 'is-pos' : (hasTrades && s.sessionPnL < 0 ? 'is-neg' : '');
+      row.appendChild(_mk('td', pnlCls, hasTrades ? _fmt$Signed(s.sessionPnL) : '—'));
+      row.appendChild(_mk('td', pnlCls, hasTrades ? _fmtPct(s.totalReturnPct, 1) : '—'));
       // vs Bench — alpha vs the relevant benchmark for the sim type.
       // Portfolio sims compare to the chosen index (SPX/NDQ); individual
       // sims compare to the ticker's buy-and-hold over the sim window.
@@ -17143,7 +17187,7 @@ window.Sim = Sim;
       const isPort = s.simType === 'portfolio';
       const bench = isPort ? s.indexReturnPct : s.tickerBhPct;
       let alphaTxt = '—', alphaCls = '', alphaTitle = '';
-      if (s.totalReturnPct != null && bench != null && isFinite(bench)){
+      if (hasTrades && s.totalReturnPct != null && bench != null && isFinite(bench)){
         const alpha = s.totalReturnPct - bench;
         alphaCls = alpha > 0 ? 'is-pos' : (alpha < 0 ? 'is-neg' : '');
         const sign = alpha > 0 ? '+' : '';
@@ -17173,7 +17217,7 @@ window.Sim = Sim;
           when + '  ' + sym + '\n' +
           'Trades: ' + (s.tradeCount || 0) +
           (linkedCount ? ' (' + linkedCount + ' will be removed)' : '') + '\n' +
-          'P&L: ' + _fmt$Signed(s.sessionPnL) + '\n\n' +
+          'P&L: ' + (hasTrades ? _fmt$Signed(s.sessionPnL) : '—') + '\n\n' +
           'This cannot be undone.';
         if (!confirm(msg)) return;
         _storeSessions(allSessions.filter(function(x){ return x.id !== s.id; }));
@@ -17297,6 +17341,84 @@ window.Sim = Sim;
     if (sessHost) _renderSessions(sessHost, sessions);
   }
 
+  const _statsLifecycleCols = [
+    'recordType','sessionRunDate','sessionRunId','orderId','orderEventType','orderEventStatus','orderCardId',
+    'orderEntryKey','orderEntryInstanceKey','orderSymbol','orderDisplaySymbol',
+    'orderAssetType','orderRole','orderKind','orderDirection','orderQty',
+    'orderRequestedLimit','orderActualPrice','orderEventDate','orderEventBarIdx','orderReason'
+  ];
+
+  function _statsCsvCell(v){
+    if (v == null) return '';
+    if (typeof v === 'boolean') return v ? 'true' : 'false';
+    if (Array.isArray(v)) v = v.join('|');
+    const value = String(v);
+    return /[",\r\n]/.test(value) ? '"' + value.replace(/"/g, '""') + '"' : value;
+  }
+
+  function _normalizedSessionOrderActivity(session){
+    if (!session || !window.PortSimOrderActivity) return [];
+    const assets = session.basketAssets && typeof session.basketAssets === 'object'
+      ? Object.keys(session.basketAssets).map(function(key){ return session.basketAssets[key]; })
+      : [];
+    return PortSimOrderActivity.normalize(session.orderEvents, assets, session.year || null);
+  }
+
+  function _orderLifecycleValue(normalized, column){
+    const event = normalized && normalized.event ? normalized.event : {};
+    switch (column){
+      case 'recordType': return 'order_event';
+      case 'orderId': return event.orderId;
+      case 'orderEventType': return event.type;
+      case 'orderEventStatus': return normalized.status;
+      case 'orderCardId': return event.cardId || event.entryInstanceKey || event.entryKey;
+      case 'orderEntryKey': return event.entryKey;
+      case 'orderEntryInstanceKey': return event.entryInstanceKey;
+      case 'orderSymbol': return event.symbol;
+      case 'orderDisplaySymbol': return event.displaySymbol || event.symbol;
+      case 'orderAssetType': return event.assetType;
+      case 'orderRole': return event.role;
+      case 'orderKind': return normalized.kind;
+      case 'orderDirection': return normalized.direction;
+      case 'orderQty': return event.qty;
+      case 'orderRequestedLimit': return normalized.requestedLimit;
+      case 'orderActualPrice': return normalized.actualPrice;
+      case 'orderEventDate': return normalized.date;
+      case 'orderEventBarIdx': return event.barIdx != null ? event.barIdx : event.bar;
+      case 'orderReason': return event.reason;
+      default: return null;
+    }
+  }
+
+  function _sessionExportValue(session, column){
+    const s = session || {};
+    const hasTrades = +s.tradeCount > 0;
+    switch (column){
+      case 'sessionTs': return s.ts ? new Date(s.ts).toISOString() : '';
+      case 'sessionRunDate': return s.ts ? new Date(s.ts).toISOString() : '';
+      case 'sessionRunId': return s.runInstanceId || s.id;
+      case 'sessionInitialEquity': return s.initialEquity;
+      case 'sessionFinalEquity': return s.finalEquity;
+      case 'sessionPnL': return hasTrades ? s.sessionPnL : null;
+      case 'sessionTotalReturnPct': return hasTrades ? s.totalReturnPct : null;
+      case 'sessionAvgPctDeployed': return hasTrades ? s.avgPctDeployed : null;
+      case 'sessionPeakPctDeployed': return hasTrades ? s.peakPctDeployed : null;
+      case 'sessionIdlePctOfTime': return hasTrades ? s.idlePctOfTime : null;
+      case 'sessionTradeCount': return s.tradeCount;
+      case 'sessionWinCount': return s.winCount;
+      case 'sessionLossCount': return s.lossCount;
+      case 'sessionWinRate': return hasTrades ? s.winRate : null;
+      case 'sessionProfitFactor': return hasTrades ? s.profitFactor : null;
+      case 'sessionSymbols': return s.symbols;
+      case 'sessionSimStartDate': return s.simStartDate;
+      case 'sessionSimEndDate': return s.simEndDate;
+      case 'sessionIndexReturnPct': return hasTrades ? s.indexReturnPct : null;
+      case 'sessionIndexName': return s.indexName;
+      case 'sessionTickerBhPct': return hasTrades ? s.tickerBhPct : null;
+      default: return undefined;
+    }
+  }
+
   // Denormalized export — one row per trade with every relevant session
   // column repeated. Designed so an AI can ingest a single CSV without
   // joining tables. Schema details live in STATS_DATA_GUIDE.md.
@@ -17305,16 +17427,26 @@ window.Sim = Sim;
     const allSessions = _loadSessions();
     if (!allTrades.length && !allSessions.length){ alert('No stats to export.'); return; }
     const filteredTrades = _currentFilteredSet();
+    const filteredSessions = _currentFilteredSessions();
     let dataset = filteredTrades;
+    let sessionDataset = filteredSessions;
     let suffix = '_' + _currentRange + '_' + _currentType;
-    const filteredNarrows = filteredTrades.length < allTrades.length;
+    const filteredNarrows = filteredTrades.length < allTrades.length || filteredSessions.length < allSessions.length;
     if (filteredNarrows){
-      const choice = confirm('Export ' + filteredTrades.length + ' filtered trade' + (filteredTrades.length === 1 ? '' : 's') + '?\n\nOK = export filtered\nCancel = export all ' + allTrades.length);
-      if (!choice){ dataset = allTrades; suffix = '_all'; }
+      const filteredOrderCount = filteredSessions.reduce(function(total, session){
+        return total + _normalizedSessionOrderActivity(session).length;
+      }, 0);
+      const choice = confirm('Export ' + filteredTrades.length + ' filtered trade' + (filteredTrades.length === 1 ? '' : 's')
+        + ' and ' + filteredOrderCount + ' order event' + (filteredOrderCount === 1 ? '' : 's')
+        + '?\n\nOK = export filtered\nCancel = export all activity');
+      if (!choice){ dataset = allTrades; sessionDataset = allSessions; suffix = '_all'; }
     } else {
       suffix = '_all';
     }
-    if (!dataset.length){ alert('Nothing in the current filter to export.'); return; }
+    const lifecycleCount = sessionDataset.reduce(function(total, session){
+      return total + _normalizedSessionOrderActivity(session).length;
+    }, 0);
+    if (!dataset.length && !lifecycleCount){ alert('Nothing in the current filter to export.'); return; }
     // Build a session lookup so we can denormalize.
     const sessionById = {};
     allSessions.forEach(function(s){ sessionById[s.id] = s; });
@@ -17331,15 +17463,7 @@ window.Sim = Sim;
       'sessionTradeCount','sessionWinCount','sessionLossCount','sessionWinRate','sessionProfitFactor',
       'sessionSymbols','sessionSimStartDate','sessionSimEndDate',
       'sessionIndexReturnPct','sessionIndexName','sessionTickerBhPct'
-    ];
-    function csvCell(v){
-      if (v == null) return '';
-      if (Array.isArray(v)) v = v.join('|');
-      if (typeof v === 'string' && (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0)){
-        return '"' + v.replace(/"/g, '""') + '"';
-      }
-      return String(v);
-    }
+    ].concat(_statsLifecycleCols);
     const lines = [cols.join(',')];
     dataset.forEach(function(t){
       const s = sessionById[t.sessionId] || {};
@@ -17368,29 +17492,32 @@ window.Sim = Sim;
           case 'returnPctOfNotional': v = t.returnPctOfNotional; break;
           case 'mfe': v = t.mfe; break;
           case 'mae': v = t.mae; break;
-          case 'sessionTs': v = s.ts ? new Date(s.ts).toISOString() : ''; break;
-          case 'sessionInitialEquity': v = s.initialEquity; break;
-          case 'sessionFinalEquity': v = s.finalEquity; break;
-          case 'sessionPnL': v = s.sessionPnL; break;
-          case 'sessionTotalReturnPct': v = s.totalReturnPct; break;
-          case 'sessionAvgPctDeployed': v = s.avgPctDeployed; break;
-          case 'sessionPeakPctDeployed': v = s.peakPctDeployed; break;
-          case 'sessionIdlePctOfTime': v = s.idlePctOfTime; break;
-          case 'sessionTradeCount': v = s.tradeCount; break;
-          case 'sessionWinCount': v = s.winCount; break;
-          case 'sessionLossCount': v = s.lossCount; break;
-          case 'sessionWinRate': v = s.winRate; break;
-          case 'sessionProfitFactor': v = s.profitFactor; break;
-          case 'sessionSymbols': v = s.symbols; break;
-          case 'sessionSimStartDate': v = s.simStartDate; break;
-          case 'sessionSimEndDate': v = s.simEndDate; break;
-          case 'sessionIndexReturnPct': v = s.indexReturnPct; break;
-          case 'sessionIndexName': v = s.indexName; break;
-          case 'sessionTickerBhPct': v = s.tickerBhPct; break;
-          default: v = '';
+          case 'recordType': v = 'trade'; break;
+          default:
+            v = _sessionExportValue(s, c);
+            if (v === undefined) v = '';
         }
-        return csvCell(v);
+        return _statsCsvCell(v);
       }).join(','));
+    });
+    sessionDataset.forEach(function(s){
+      _normalizedSessionOrderActivity(s).forEach(function(normalized){
+        const event = normalized.event || {};
+        lines.push(cols.map(function(c){
+          let v = '';
+          if (c === 'sessionId') v = s.id;
+          else if (c === 'simType') v = s.simType;
+          else if (c === 'symbol') v = event.displaySymbol || event.symbol;
+          else if (c === 'year') v = event.year || s.year;
+          else if (c === 'direction') v = event.direction;
+          else if (c === 'qty') v = event.qty;
+          else {
+            const sessionValue = _sessionExportValue(s, c);
+            v = sessionValue === undefined ? _orderLifecycleValue(normalized, c) : sessionValue;
+          }
+          return _statsCsvCell(v);
+        }).join(','));
+      });
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -17410,16 +17537,26 @@ window.Sim = Sim;
     const allSessions = _loadSessions();
     if (!allTrades.length && !allSessions.length){ alert('No stats to export.'); return; }
     const filteredTrades = _currentFilteredSet();
+    const filteredSessions = _currentFilteredSessions();
     let dataset = filteredTrades;
+    let sessionDataset = filteredSessions;
     let suffix = '_' + _currentRange + '_' + _currentType;
-    const filteredNarrows = filteredTrades.length < allTrades.length;
+    const filteredNarrows = filteredTrades.length < allTrades.length || filteredSessions.length < allSessions.length;
     if (filteredNarrows){
-      const choice = confirm('Export ' + filteredTrades.length + ' filtered trade' + (filteredTrades.length === 1 ? '' : 's') + '?\n\nOK = export filtered\nCancel = export all ' + allTrades.length);
-      if (!choice){ dataset = allTrades; suffix = '_all'; }
+      const filteredOrderCount = filteredSessions.reduce(function(total, session){
+        return total + _normalizedSessionOrderActivity(session).length;
+      }, 0);
+      const choice = confirm('Export ' + filteredTrades.length + ' filtered trade' + (filteredTrades.length === 1 ? '' : 's')
+        + ' and ' + filteredOrderCount + ' order event' + (filteredOrderCount === 1 ? '' : 's')
+        + '?\n\nOK = export filtered\nCancel = export all activity');
+      if (!choice){ dataset = allTrades; sessionDataset = allSessions; suffix = '_all'; }
     } else {
       suffix = '_all';
     }
-    if (!dataset.length){ alert('Nothing in the current filter to export.'); return; }
+    const lifecycleCount = sessionDataset.reduce(function(total, session){
+      return total + _normalizedSessionOrderActivity(session).length;
+    }, 0);
+    if (!dataset.length && !lifecycleCount){ alert('Nothing in the current filter to export.'); return; }
     const sessionById = {};
     allSessions.forEach(function(s){ sessionById[s.id] = s; });
 
@@ -17446,17 +17583,7 @@ window.Sim = Sim;
       'legPlanFidelity','legWouldHoldReal','legAtHeatResponse','legThesis','legNote',
       'legSetupCustom','legDisciplineResult','legTechnicalLesson'
     ];
-    const cols = baseCols.concat(reviewCols);
-
-    function csvCell(v){
-      if (v == null) return '';
-      if (typeof v === 'boolean') return v ? 'true' : 'false';
-      if (Array.isArray(v)) v = v.join('|');
-      if (typeof v === 'string' && (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0)){
-        return '"' + v.replace(/"/g, '""') + '"';
-      }
-      return String(v);
-    }
+    const cols = baseCols.concat(reviewCols, _statsLifecycleCols);
     function rs(s){ return (s && s.review) ? s.review.session : null; }
     function rl(s, tradeId){
       return (s && s.review && s.review.legs && s.review.legs[tradeId]) || null;
@@ -17498,25 +17625,6 @@ window.Sim = Sim;
           case 'mfe': v = t.mfe; break;
           case 'mae': v = t.mae; break;
           // Session-level outcome (existing)
-          case 'sessionTs': v = s.ts ? new Date(s.ts).toISOString() : ''; break;
-          case 'sessionInitialEquity': v = s.initialEquity; break;
-          case 'sessionFinalEquity': v = s.finalEquity; break;
-          case 'sessionPnL': v = s.sessionPnL; break;
-          case 'sessionTotalReturnPct': v = s.totalReturnPct; break;
-          case 'sessionAvgPctDeployed': v = s.avgPctDeployed; break;
-          case 'sessionPeakPctDeployed': v = s.peakPctDeployed; break;
-          case 'sessionIdlePctOfTime': v = s.idlePctOfTime; break;
-          case 'sessionTradeCount': v = s.tradeCount; break;
-          case 'sessionWinCount': v = s.winCount; break;
-          case 'sessionLossCount': v = s.lossCount; break;
-          case 'sessionWinRate': v = s.winRate; break;
-          case 'sessionProfitFactor': v = s.profitFactor; break;
-          case 'sessionSymbols': v = s.symbols; break;
-          case 'sessionSimStartDate': v = s.simStartDate; break;
-          case 'sessionSimEndDate': v = s.simEndDate; break;
-          case 'sessionIndexReturnPct': v = s.indexReturnPct; break;
-          case 'sessionIndexName': v = s.indexName; break;
-          case 'sessionTickerBhPct': v = s.tickerBhPct; break;
           // Review session-level (denormalized)
           case 'reviewSchemaVersion': v = rev ? rev.schemaVersion : null; break;
           case 'reviewSkipped': v = rev ? rev.reviewSkipped : null; break;
@@ -17548,10 +17656,51 @@ window.Sim = Sim;
           case 'legSetupCustom': v = rlObj ? rlObj.setupCustom : null; break;
           case 'legDisciplineResult': v = rlObj ? rlObj.disciplineResult : null; break;
           case 'legTechnicalLesson': v = rlObj ? rlObj.technicalLesson : null; break;
-          default: v = '';
+          case 'recordType': v = 'trade'; break;
+          default:
+            v = _sessionExportValue(s, c);
+            if (v === undefined) v = '';
         }
-        return csvCell(v);
+        return _statsCsvCell(v);
       }).join(','));
+    });
+    sessionDataset.forEach(function(s){
+      const rev = s.review || null;
+      const rsObj = rs(s);
+      _normalizedSessionOrderActivity(s).forEach(function(normalized){
+        const event = normalized.event || {};
+        lines.push(cols.map(function(c){
+          let v = '';
+          if (c === 'sessionId') v = s.id;
+          else if (c === 'simType') v = s.simType;
+          else if (c === 'symbol') v = event.displaySymbol || event.symbol;
+          else if (c === 'year') v = event.year || s.year;
+          else if (c === 'direction') v = event.direction;
+          else if (c === 'qty') v = event.qty;
+          else if (c === 'reviewSchemaVersion') v = rev ? rev.schemaVersion : null;
+          else if (c === 'reviewSkipped') v = rev ? rev.reviewSkipped : null;
+          else if (c === 'reviewRetroactive') v = rev ? rev.retroactive : null;
+          else if (c === 'reviewCompletedAt') v = rev ? rev.completedAt : null;
+          else if (c === 'sessionEmotionalScore') v = rsObj ? rsObj.emotionalScore : null;
+          else if (c === 'sessionRegimeFelt') v = rsObj ? rsObj.regimeFelt : null;
+          else if (c === 'sessionStreakBefore') v = rsObj ? rsObj.streakBefore : null;
+          else if (c === 'sessionGateOverridden') v = rsObj ? rsObj.gateOverridden : null;
+          else if (c === 'sessionPainNext24h') v = pc(rsObj, 'next24h');
+          else if (c === 'sessionPainNextDayAction') v = pc(rsObj, 'nextDayAction');
+          else if (c === 'sessionPainOutOfHowMany') v = pc(rsObj, 'outOfHowMany');
+          else if (c === 'sessionPortfolioNote') v = rsObj ? rsObj.portfolioNote : null;
+          else if (c === 'sessionDominantPattern') v = rsObj ? rsObj.dominantPattern : null;
+          else if (c === 'sessionOutcomeCarryover') v = rsObj ? rsObj.outcomeCarryover : null;
+          else if (c === 'sessionExecutedWell') v = rsObj ? rsObj.executedWell : null;
+          else if (c === 'sessionDisciplineChallenge') v = rsObj ? rsObj.disciplineChallenge : null;
+          else if (c === 'sessionNextRunRule') v = rsObj ? rsObj.nextRunRule : null;
+          else {
+            const sessionValue = _sessionExportValue(s, c);
+            v = sessionValue === undefined ? _orderLifecycleValue(normalized, c) : sessionValue;
+          }
+          return _statsCsvCell(v);
+        }).join(','));
+      });
     });
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -21941,7 +22090,7 @@ Sim.Ctrl = (function(){
     return sign + '$' + a.toFixed(2);
   }
   function _fmtPnL(n){
-    if (n == null || !isFinite(n)) return '$0';
+    if (n == null || !isFinite(n)) return '—';
     const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
     const a = Math.abs(n);
     if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(2) + 'B';
@@ -22089,16 +22238,16 @@ Sim.Ctrl = (function(){
       if (cashEl   && stats.cash      != null) cashEl.textContent   = _fmtMoney(+stats.cash)   + _pctStr(+stats.cash);
       if (eqEl     && stats.equity    != null) eqEl.textContent     = _fmtMoney(+stats.equity) + _pctStr(+stats.equity);
 
-      if (dayPnLEl && stats.dayPnL    != null){
-        dayPnLEl.textContent = _fmtPnL(+stats.dayPnL);
+      if (dayPnLEl){
+        dayPnLEl.textContent = stats.dayPnL == null ? '—' : _fmtPnL(+stats.dayPnL);
         dayPnLEl.classList.remove('is-pos','is-neg');
-        const c = _signClass(+stats.dayPnL);
+        const c = stats.dayPnL == null ? '' : _signClass(+stats.dayPnL);
         if (c) dayPnLEl.classList.add(c);
       }
-      if (totPnLEl && stats.totalPnL  != null){
-        totPnLEl.textContent = _fmtPnL(+stats.totalPnL);
+      if (totPnLEl){
+        totPnLEl.textContent = stats.totalPnL == null ? '—' : _fmtPnL(+stats.totalPnL);
         totPnLEl.classList.remove('is-pos','is-neg');
-        const c = _signClass(+stats.totalPnL);
+        const c = stats.totalPnL == null ? '' : _signClass(+stats.totalPnL);
         if (c) totPnLEl.classList.add(c);
       }
       if (openEl   && stats.openCount != null) openEl.textContent   = String(stats.openCount|0);
@@ -22757,13 +22906,18 @@ Sim.Ctrl = (function(){
     const api = _ordersApi();
     if (!api) return { ok: false, error: 'Pending-order module is unavailable.' };
     if (_workingOrder(entry)) return { ok: false, error: 'This card already has a working limit order.' };
+    const submittedDate = (_state.unifiedDates || [])[_state.playIdx];
+    if (!submittedDate) return { ok: false, error: 'The current portfolio date is unavailable.' };
     _reconcileOrders();
     const created = api.create(draft, {
       state: _state,
       entry: entry,
       eligible: eligible === true,
       submittedBarIdx: ctx.barIdx,
-      submittedDate: ctx.date
+      // The bar index belongs to this card's sparse calendar, but order
+      // placement belongs to the portfolio clock.  When the card falls back
+      // to an earlier candle, do not backdate the lifecycle event.
+      submittedDate: submittedDate
     });
     if (!created || !created.ok) return created || { ok: false, error: 'Could not create limit order.' };
     let reserved = api.reserve(_state, entry, created.order);
@@ -23967,47 +24121,24 @@ Sim.Ctrl = (function(){
     return sim;
   }
 
-  function _processOnlyNewStopOnFillBar(entry, stop, bar, barIdx, forceGap, order){
+  function _processOnlyNewStopOnFillBar(entry, stop, bar, barIdx, gapThrough, order){
     const sim = entry && entry.sim;
-    if (!sim || !stop || stop.fired || sim.closed || sim.stoppedOut || !(sim.qty > 0)) return null;
-    const direction = sim.direction || 'long';
-    const triggerMode = stop.triggerMode === 'close' ? 'close' : 'intraday';
-    const fires = forceGap || (triggerMode === 'close'
-      ? (direction === 'short' ? +bar.close >= +stop.price : +bar.close <= +stop.price)
-      : window.Sim.Direction.stopFires(direction, bar, +stop.price));
-    if (!fires) return null;
-    const fillPrice = forceGap
-      ? +bar.open
-      : (triggerMode === 'close'
-          ? +bar.close
-          : window.Sim.Direction.fillAtStop(direction, bar, +stop.price));
-    const qty = sim.qty;
-    sim.realizedPnL += window.Sim.Direction.pnlPerShare(direction, fillPrice, sim.avgCost) * qty;
-    sim.qty = 0;
-    sim.closed = true;
-    sim.stoppedOut = true;
-    sim.pendingActions = [];
-    stop.fired = true;
-    const event = {
-      barIdx: barIdx,
-      date: bar.time,
-      type: 'stop',
-      qty: qty,
-      price: _r2(fillPrice),
-      direction: direction,
-      legId: sim.legId || null,
-      stopId: stop.id,
-      triggerMode: triggerMode,
-      note: (forceGap ? 'gap-through ' : '') + 'stop ' + _r2(stop.price) + ' filled ' + _r2(fillPrice) + ' qty ' + qty
-    };
-    sim.eventsLog.push(event);
-    PortSim.Cash.fold(_state, event);
-    if (forceGap && _ordersApi()){
+    if (!sim || !stop || stop.fired || sim.closed || sim.stoppedOut || !(sim.qty > 0) ||
+        !window.Sim || typeof window.Sim.processAttachedStopOnBar !== 'function') return null;
+    const processed = window.Sim.processAttachedStopOnBar(sim, entry.bars, barIdx, stop, {
+      forceGap: gapThrough === true
+    });
+    const events = processed && Array.isArray(processed.eventsFired)
+      ? processed.eventsFired
+      : [];
+    events.forEach(function(event){ PortSim.Cash.fold(_state, event); });
+    const event = events.find(function(item){ return item && item.type === 'stop' && item.stopId === stop.id; }) || null;
+    if (event && gapThrough && _ordersApi()){
       _ordersApi().recordEvent(entry, 'gap_stop', {
         order: order,
         date: bar.time,
         barIdx: barIdx,
-        price: _r2(fillPrice),
+        price: event.price,
         reason: 'Opening gap through the newly attached stop.'
       });
     }
@@ -24344,8 +24475,13 @@ Sim.Ctrl = (function(){
       console.error('[PortSim] equity invariant drifted:', { equity: equity, expected: expected, diff: _r2(equity - expected), cash: _state.cash, realizedPnL: _state.realizedPnL, unreal: _r2(unreal) });
     }
 
-    const totalPnL = _r2(equity - _state.initialEquity);
-    const dayPnL = _state.prevEquity != null ? _r2(equity - _state.prevEquity) : 0;
+    const hasTrades = _allTradeEntries().some(function(entry){
+      const sim = entry && entry.sim;
+      return !!(sim && ((sim.legs || []).length ||
+        (!sim.between && (sim.qty > 0 || sim.closed || sim.stoppedOut))));
+    });
+    const totalPnL = hasTrades ? _r2(equity - _state.initialEquity) : null;
+    const dayPnL = hasTrades && _state.prevEquity != null ? _r2(equity - _state.prevEquity) : null;
     _state.prevEquity = equity;
 
     if (equity > _state.eqPeak){
@@ -24454,6 +24590,7 @@ Sim.Ctrl = (function(){
     const _portfolioMetrics = (window.SimStats && typeof window.SimStats.computePortfolioMetrics === 'function')
       ? window.SimStats.computePortfolioMetrics({ basket: _allBasketForStats })
       : null;
+    const _hasTrades = !!(_portfolioMetrics && +_portfolioMetrics.tradeCount > 0);
     const _orderActivity = _snapshotOrderActivity(_allBasketForStats);
     const rows = _allBasketForStats.map(function(e){
       let realized = 0;
@@ -24484,13 +24621,15 @@ Sim.Ctrl = (function(){
           status = 'between';
         }
       }
-      const avgR = rs.length ? rs.reduce(function(s, x){ return s + x; }, 0) / rs.length : 0;
-      const bhPct = _bhPctOver(e.bars, _firstDate, _lastDate);
+      const hasTrades = legs > 0;
+      const avgR = rs.length ? rs.reduce(function(s, x){ return s + x; }, 0) / rs.length : null;
+      const bhPct = hasTrades ? _bhPctOver(e.bars, _firstDate, _lastDate) : null;
       return {
         symbol: e.symbol,
         legs: legs,
-        realized: _r2(realized),
-        avgR: Math.round(avgR * 100) / 100,
+        hasTrades: hasTrades,
+        realized: hasTrades ? _r2(realized) : null,
+        avgR: avgR == null ? null : Math.round(avgR * 100) / 100,
         stops: stops,
         status: e._retired ? (status + ' · retired') : status,
         retired: !!e._retired,
@@ -24511,9 +24650,9 @@ Sim.Ctrl = (function(){
           return s + e.sim.qty * mark;
         }, 0));
     const finalEquity = equity;
-    const totalReturn = _state.initialEquity > 0
+    const totalReturn = _hasTrades && _state.initialEquity > 0
       ? ((finalEquity - _state.initialEquity) / _state.initialEquity) * 100
-      : 0;
+      : null;
     const totalStops = rows.reduce(function(s, r){ return s + r.stops; }, 0);
 
     let host = document.getElementById('portsim-summary-modal');
@@ -24540,10 +24679,10 @@ Sim.Ctrl = (function(){
     _addLine(summary, 'Initial', '$' + _state.initialEquity.toLocaleString());
     _addLine(summary, 'Final equity', '$' + finalEquity.toLocaleString());
     _addLine(summary, 'Total return',
-      (totalReturn >= 0 ? '+' : '') + totalReturn.toFixed(2) + '%',
-      totalReturn >= 0 ? 'var(--green)' : 'var(--red)');
+      totalReturn == null ? '—' : (totalReturn >= 0 ? '+' : '') + totalReturn.toFixed(2) + '%',
+      totalReturn == null ? null : (totalReturn >= 0 ? 'var(--green)' : 'var(--red)'));
     // Benchmark: buy-and-hold return on the active index over the same window.
-    if (_indexReturnPct != null){
+    if (_hasTrades && _indexReturnPct != null){
       const idxLabel = (_state.index || 'Index') + ' B&H';
       const idxColor = _indexReturnPct >= 0 ? 'var(--green)' : 'var(--red)';
       _addLine(summary, idxLabel,
@@ -24555,8 +24694,8 @@ Sim.Ctrl = (function(){
         (alpha >= 0 ? '+' : '') + alpha.toFixed(2) + '%',
         alpha >= 0 ? 'var(--green)' : 'var(--red)');
     }
-    _addLine(summary, 'Realized P&L', '$' + _state.realizedPnL.toLocaleString());
-    _addLine(summary, 'Max drawdown', '$' + _state.eqMaxDD.toLocaleString(), 'var(--red)');
+    _addLine(summary, 'Realized P&L', _hasTrades ? '$' + _state.realizedPnL.toLocaleString() : '—');
+    _addLine(summary, 'Max drawdown', _hasTrades ? '$' + _state.eqMaxDD.toLocaleString() : '—', _hasTrades ? 'var(--red)' : null);
     _addLine(summary, 'Total stop-outs', String(totalStops));
     if (_portfolioMetrics){
       const metricTrades = _portfolioMetrics.tradeCount || 0;
@@ -24603,10 +24742,10 @@ Sim.Ctrl = (function(){
       _setStyle(tdSym, 'padding:4px 8px;font-weight:600;');
       const tdLegs = _mkEl('td', null, String(r.legs));
       _setStyle(tdLegs, 'padding:4px 8px;');
-      const tdReal = _mkEl('td', null, '$' + r.realized.toLocaleString());
-      const realColor = r.realized > 0 ? 'var(--green)' : (r.realized < 0 ? 'var(--red)' : 'var(--text)');
+      const tdReal = _mkEl('td', null, r.hasTrades ? '$' + r.realized.toLocaleString() : '—');
+      const realColor = !r.hasTrades ? 'var(--text-2)' : (r.realized > 0 ? 'var(--green)' : (r.realized < 0 ? 'var(--red)' : 'var(--text)'));
       _setStyle(tdReal, 'padding:4px 8px;color:' + realColor + ';');
-      const tdR = _mkEl('td', null, (r.avgR >= 0 ? '+' : '') + r.avgR + 'R');
+      const tdR = _mkEl('td', null, r.avgR == null ? '—' : (r.avgR >= 0 ? '+' : '') + r.avgR + 'R');
       _setStyle(tdR, 'padding:4px 8px;');
       const tdStops = _mkEl('td', null, String(r.stops));
       _setStyle(tdStops, 'padding:4px 8px;');
@@ -29037,7 +29176,6 @@ Sim.Ctrl = (function(){
           });
           return eq;
         })();
-    var totalPnL = equity - initial;
     var dayPnL = (st.prevEquity != null && isFinite(st.prevEquity)) ? (equity - st.prevEquity) : 0;
     // Drawdown from running peak — both as $ and %.
     var peak = +st.eqPeak || initial || 0;
@@ -29111,13 +29249,17 @@ Sim.Ctrl = (function(){
     var winRate      = trades > 0 ? (wins / trades) * 100 : 0;
     var profitFactor = (grossLoss > 0) ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
     var avgR         = rTrades > 0 ? (rSum / rTrades) : 0;
+    var hasTrades    = trades > 0 || openCount > 0;
+    var totalPnL     = hasTrades ? equity - initial : null;
 
     return {
       initial: initial, cash: cash, equity: equity,
-      dayPnL: dayPnL, totalPnL: totalPnL,
+      dayPnL: hasTrades ? dayPnL : null, totalPnL: totalPnL,
       openCount: openCount,
-      ddDollar: ddDollar, ddPct: ddPct,
-      maxDDDollar: maxDDDollar, maxDDPct: maxDDPct,
+      ddDollar: hasTrades ? ddDollar : null,
+      ddPct: hasTrades ? ddPct : null,
+      maxDDDollar: hasTrades ? maxDDDollar : null,
+      maxDDPct: hasTrades ? maxDDPct : null,
       ddDays: ddDays, maxDDDays: maxDDDays,
       openRiskDollar: openRiskDollar, openRiskPct: openRiskPct,
       trades: trades, wins: wins, winRate: winRate,
@@ -29144,8 +29286,8 @@ Sim.Ctrl = (function(){
              '<strong' + (cls ? ' class="' + cls + '"' : '') + '>' + value + '</strong>' +
              subHTML + '</div>';
     }
-    var totalPct = (p.initial > 0) ? (p.totalPnL / p.initial) * 100 : 0;
-    var totalPctSign = (totalPct > 0) ? '+' : '';
+    var totalPct = p.totalPnL != null && p.initial > 0 ? (p.totalPnL / p.initial) * 100 : null;
+    var totalPctSign = totalPct != null && totalPct > 0 ? '+' : '';
     var ddDays = p.ddDays || 0;
     var maxDDDays = p.maxDDDays || 0;
     var ddDayLbl = ddDays === 1 ? '1 day from peak' : ddDays + ' days from peak';
@@ -29200,10 +29342,10 @@ Sim.Ctrl = (function(){
       _cell('INITIAL',   _fmt$(p.initial)) +
       _cell('CASH',      _fmt$(p.cash),   '', '', cashPctSub) +
       _cell('EQUITY',    _fmt$(p.equity), '', '', eqPctSub) +
-      _cell('TOTAL P&L', _fmt$Signed(p.totalPnL) + ' (' + totalPctSign + totalPct.toFixed(2) + '%)', tpCls) +
+      _cell('TOTAL P&L', p.totalPnL == null ? '—' : _fmt$Signed(p.totalPnL) + ' (' + totalPctSign + totalPct.toFixed(2) + '%)', tpCls) +
       _cell('OPEN RISK', riskValue, riskCls, '', riskSub) +
-      _cell('DRAWDOWN',  _fmt$Signed(p.ddDollar) + ' (' + (p.ddPct).toFixed(2) + '%)', ddCls, 'is-hero', ddDayLbl) +
-      _cell('MAX DD',    _fmt$Signed(p.maxDDDollar) + ' (' + (p.maxDDPct).toFixed(2) + '%)', maxDDCls, 'is-hero', maxDDDayLbl) +
+      _cell('DRAWDOWN',  p.ddDollar == null ? '—' : _fmt$Signed(p.ddDollar) + ' (' + (p.ddPct).toFixed(2) + '%)', ddCls, 'is-hero', p.ddDollar == null ? 'no trades' : ddDayLbl) +
+      _cell('MAX DD',    p.maxDDDollar == null ? '—' : _fmt$Signed(p.maxDDDollar) + ' (' + (p.maxDDPct).toFixed(2) + '%)', maxDDCls, 'is-hero', p.maxDDDollar == null ? 'no trades' : maxDDDayLbl) +
       _cell('WIN RATE',  winRateValue, winRateCls, '', winRateSub) +
       _cell('PROFIT FACTOR', pfValue, pfCls, '', 'gross W / gross L') +
       _cell('AVG R',     avgRValue, avgRCls, '', 'per closed trade') +
@@ -29844,6 +29986,11 @@ Sim.Ctrl = (function(){
     var basket = window.PortSimAssets
       ? PortSimAssets.allTradeEntries(st)
       : liveEntries.concat(st.retiredEntries || []);
+    var hasTrades = basket.some(function(entry){
+      var sim = entry && entry.sim;
+      return !!(sim && ((sim.legs || []).length ||
+        (!sim.between && (sim.qty > 0 || sim.closed || sim.stoppedOut))));
+    });
     var rows = [];
 
     // ---- 1. Header ----
@@ -29861,7 +30008,7 @@ Sim.Ctrl = (function(){
     // ---- 2. Portfolio summary ----
     var initial = +st.initialEquity || 0;
     var cash = +st.cash || 0;
-    var realized = +st.realizedPnL || 0;
+    var realized = hasTrades ? (+st.realizedPnL || 0) : null;
     var unrealOpen = 0;
     var openCount = 0;
     // P6: equity via centralized helper.
@@ -29887,11 +30034,11 @@ Sim.Ctrl = (function(){
         openCount += 1;
       }
     });
-    var totalPnL = equity - initial;
-    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
+    var totalPnL = hasTrades ? equity - initial : null;
+    var totalPct = totalPnL != null && initial > 0 ? (totalPnL / initial) * 100 : null;
     var peak = +st.eqPeak || initial;
-    var maxDDDol = +st.eqMaxDD || 0;
-    var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
+    var maxDDDol = hasTrades ? (+st.eqMaxDD || 0) : null;
+    var maxDDPct = maxDDDol != null && peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : null;
 
     rows.push('');
     rows.push('# === Portfolio Summary ===');
@@ -29901,7 +30048,7 @@ Sim.Ctrl = (function(){
     rows.push('Total P&L,'        + _sgn(totalPnL));
     rows.push('Total Return %,'   + _sgnPct(totalPct));
     rows.push('Realized P&L,'     + _sgn(realized));
-    rows.push('Unrealized P&L,'   + _sgn(unrealOpen));
+    rows.push('Unrealized P&L,'   + _sgn(hasTrades ? unrealOpen : null));
     rows.push('Peak Equity,'      + _r2(peak));
     rows.push('Max Drawdown $,'   + _sgn(maxDDDol));
     rows.push('Max Drawdown %,'   + _sgnPct(maxDDPct));
@@ -30000,14 +30147,14 @@ Sim.Ctrl = (function(){
       curve.forEach(function(pt){
         var line = [
           _csvEscape(pt.date),
-          _r2(pt.port),
+          hasTrades ? _r2(pt.port) : '',
           _r2(pt.equity),
           _r2(pt.cash),
           pt.openCount | 0
         ];
         curveColumns.forEach(function(column){
           var source = column.perEntry ? pt.entryPositions : pt.positions;
-          line.push((source && source[column.key] != null) ? _r2(source[column.key]) : '');
+          line.push(hasTrades && source && source[column.key] != null ? _r2(source[column.key]) : '');
         });
         rows.push(line.join(','));
       });
@@ -30796,6 +30943,12 @@ Sim.Ctrl = (function(){
   function _portfolioMetricDisplay(ctx){
     ctx = ctx || {};
     var tradeCount = _finiteReviewMetric(ctx.tradeCount);
+    if (tradeCount == null){
+      var inferredTradeCount = (ctx.basket || []).reduce(function(total, entry){
+        return total + (entry && Array.isArray(entry.legs) ? entry.legs.length : 0);
+      }, 0);
+      if (inferredTradeCount > 0) tradeCount = inferredTradeCount;
+    }
     var winCount = _finiteReviewMetric(ctx.winCount);
     var winRate = _finiteReviewMetric(ctx.winRate);
     var profitFactor = _finiteReviewMetric(ctx.profitFactor);
@@ -30828,15 +30981,17 @@ Sim.Ctrl = (function(){
   function _renderOverview(body){
     var ctx = _resolveCtx();
     if (!ctx){ body.innerHTML = '<div class="portsim-review-empty">No data.</div>'; return; }
+    var portfolioMetrics = _portfolioMetricDisplay(ctx);
+    var hasTrades = portfolioMetrics.hasTrades;
     var initial = +ctx.initialEquity || 0;
     var equity = +ctx.equity || 0;
-    var totalPnL = +ctx.totalPnL || 0;
-    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
-    var realized = +ctx.realized || 0;
-    var unreal = +ctx.unreal || 0;
+    var totalPnL = hasTrades ? _finiteReviewMetric(ctx.totalPnL) : null;
+    var totalPct = totalPnL != null && initial > 0 ? (totalPnL / initial) * 100 : null;
+    var realized = hasTrades ? _finiteReviewMetric(ctx.realized) : null;
+    var unreal = hasTrades ? _finiteReviewMetric(ctx.unreal) : null;
     var peak = +ctx.peak || initial;
-    var maxDDDol = +ctx.maxDDDol || 0;
-    var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
+    var maxDDDol = hasTrades ? _finiteReviewMetric(ctx.maxDDDol) : null;
+    var maxDDPct = maxDDDol != null && peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : null;
     var openCount = +ctx.openCount || 0;
     var generation = ctx.basketGeneration || null;
     var originMode = generation && generation.mode
@@ -30856,13 +31011,14 @@ Sim.Ctrl = (function(){
     );
     var tickerRows = (ctx.basket || []).map(function(e){
       var role = _entryRole(generation, e);
+      var legs = (e.legs || []).length;
       return {
         sym: _entryDisplaySymbol(e),
         assetType: _entryAssetType(e),
         entryInstanceKey: e.entryInstanceKey || null,
         role: role,
-        legs: (e.legs || []).length,
-        realized: +e.totalRealized || 0,
+        legs: legs,
+        realized: legs ? _finiteReviewMetric(e.totalRealized) : null,
         stops: +e.stops || 0,
         status: e.retired ? 'retired' : (e.status || 'idle'),
         retired: !!e.retired
@@ -30885,7 +31041,6 @@ Sim.Ctrl = (function(){
           return counts;
         }, { mover: 0, anchor: 0, noise: 0, unknown: 0 });
     var originLabel = originMode + (generation && generation.modified ? ' · modified' : '');
-    var portfolioMetrics = _portfolioMetricDisplay(ctx);
     var orderActivity = _orderActivityRows(ctx);
 
     var originHTML = revealBasketOrigin
@@ -30929,11 +31084,11 @@ Sim.Ctrl = (function(){
       + '<div class="portsim-review-stats">'
       +   '<div><label>INITIAL</label><strong>' + _money(initial) + '</strong></div>'
       +   '<div><label>EQUITY</label><strong>'  + _money(equity)  + '</strong></div>'
-      +   '<div><label>TOTAL P&amp;L</label><strong class="' + (totalPnL>=0?'is-pos':'is-neg') + '">' + _moneyS(totalPnL) + ' (' + _pctSigned(totalPct) + ')</strong></div>'
+      +   '<div><label>TOTAL P&amp;L</label><strong class="' + (totalPnL == null ? '' : (totalPnL>=0?'is-pos':'is-neg')) + '">' + _moneyS(totalPnL) + (totalPct == null ? '' : ' (' + _pctSigned(totalPct) + ')') + '</strong></div>'
       +   '<div><label>REALIZED</label><strong>' + _moneyS(realized) + '</strong></div>'
       +   '<div><label>UNREALIZED</label><strong>' + _moneyS(unreal) + '</strong></div>'
       +   '<div><label>PEAK</label><strong>' + _money(peak) + '</strong></div>'
-      +   '<div><label>MAX DD</label><strong class="is-neg">' + _moneyS(maxDDDol) + ' (' + maxDDPct.toFixed(2) + '%)</strong></div>'
+      +   '<div><label>MAX DD</label><strong class="' + (maxDDDol == null ? '' : 'is-neg') + '">' + _moneyS(maxDDDol) + (maxDDPct == null ? '' : ' (' + maxDDPct.toFixed(2) + '%)') + '</strong></div>'
       +   '<div><label>OPEN</label><strong>' + openCount + '</strong></div>'
       +   '<div><label>AVG CAPITAL DEPLOYED</label><strong>' + portfolioMetrics.avgText + '</strong></div>'
       +   '<div><label>PROFIT FACTOR</label><strong class="' + portfolioMetrics.profitFactorClass + '">' + portfolioMetrics.profitFactorText + '</strong></div>'
@@ -30945,7 +31100,7 @@ Sim.Ctrl = (function(){
       +   '<thead><tr><th>SYMBOL</th>' + roleHeader + '<th>LEGS</th><th>REALIZED P&amp;L</th><th>STOPS</th><th>STATUS</th></tr></thead>'
       +   '<tbody>'
       +     tickerRows.map(function(r){
-            var cls = r.realized > 0 ? 'is-pos' : (r.realized < 0 ? 'is-neg' : '');
+            var cls = r.realized == null ? '' : (r.realized > 0 ? 'is-pos' : (r.realized < 0 ? 'is-neg' : ''));
             return '<tr><td>' + _esc(r.sym) + '</td>'
               + (revealBasketOrigin
                 ? '<td class="portsim-review-role">' + _esc(r.role) + '</td>'
@@ -31636,7 +31791,8 @@ Sim.Ctrl = (function(){
         openCount += 1;
       }
     });
-    var totalPnL = equity - initial;
+    var hasTrades = tradeCount > 0;
+    var totalPnL = hasTrades ? equity - initial : null;
     var peak = +st.eqPeak || initial;
     var maxDDDol = +st.eqMaxDD || 0;
     var basketGeneration = st.basketGeneration
@@ -31659,9 +31815,15 @@ Sim.Ctrl = (function(){
       activeSymbols: (st.basket || []).map(function(e){ return e && e.symbol; }).filter(Boolean),
       activeEntryInstanceKeys: liveEntries.map(function(e){ return e && persistedInstanceKey(e); }).filter(Boolean),
       initialEquity: initial,
-      cash: cash, equity: equity, realized: realized, unreal: unreal,
-      totalPnL: totalPnL, peak: peak, maxDDDol: maxDDDol, openCount: openCount,
+      cash: cash, equity: equity,
+      realized: hasTrades ? realized : null,
+      unreal: hasTrades ? unreal : null,
+      totalPnL: totalPnL, peak: peak,
+      maxDDDol: hasTrades ? maxDDDol : null,
+      openCount: openCount,
       avgPctDeployed: portfolioMetrics && tradeCount > 0 ? _finiteReviewMetric(portfolioMetrics.avgPctDeployed) : null,
+      peakPctDeployed: portfolioMetrics && tradeCount > 0 ? _finiteReviewMetric(portfolioMetrics.peakPctDeployed) : null,
+      idlePctOfTime: portfolioMetrics && tradeCount > 0 ? _finiteReviewMetric(portfolioMetrics.idlePctOfTime) : null,
       tradeCount: tradeCount,
       winCount: portfolioMetrics ? _finiteReviewMetric(portfolioMetrics.winCount) : null,
       lossCount: portfolioMetrics ? _finiteReviewMetric(portfolioMetrics.lossCount) : null,
@@ -31687,7 +31849,7 @@ Sim.Ctrl = (function(){
           retired: !!e._retired,
           orderEvents: _snapshotEntryOrderEvents([e], fallbackYear),
           legs: legs,
-          totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
+          totalRealized: legs.length ? legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0) : null,
           stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
           status: e._retired ? 'retired' : (legs.length ? legs[legs.length - 1].exitReason : 'idle')
         };
@@ -31751,7 +31913,7 @@ Sim.Ctrl = (function(){
       listHTML = entries.map(function(e){
         var ts = e.savedAt ? new Date(e.savedAt).toLocaleString() : '?';
         var pnlStr = '';
-        if (e.meta && isFinite(+e.meta.totalPnL)){
+        if (e.meta && e.meta.totalPnL != null && isFinite(+e.meta.totalPnL)){
           var p = +e.meta.totalPnL;
           var pcls = p > 0 ? 'is-pos' : (p < 0 ? 'is-neg' : '');
           pnlStr = '<span class="portsim-review-picker-pnl ' + pcls + '">' + _moneyS(p) + '</span>';
@@ -32023,12 +32185,19 @@ Sim.Ctrl = (function(){
         )
       : [];
     if (_finiteReviewMetric(meta.tradeCount) === 0){
+      meta.realized = null;
+      meta.unreal = null;
+      meta.totalPnL = null;
+      meta.maxDDDol = null;
       meta.avgPctDeployed = null;
       meta.peakPctDeployed = null;
       meta.idlePctOfTime = null;
       meta.winRate = null;
       meta.profitFactor = null;
       meta.profitFactorInfinite = false;
+      meta.basket.forEach(function(entry){
+        if (!entry || !Array.isArray(entry.legs) || entry.legs.length === 0) entry.totalRealized = null;
+      });
     }
     // Self-check: with all-long, no shortLocks, equity should match.
     if (typeof meta.equity === 'number' && typeof meta.cash === 'number'){
@@ -32095,15 +32264,16 @@ Sim.Ctrl = (function(){
     var orderActivity = _orderActivityRows(ctx);
     var initial = +ctx.initialEquity || 0;
     var equity = +ctx.equity || 0;
-    var realized = +ctx.realized || 0;
-    var unreal = +ctx.unreal || 0;
-    var openCount = +ctx.openCount || 0;
-    var totalPnL = +ctx.totalPnL || 0;
-    var totalPct = initial > 0 ? (totalPnL / initial) * 100 : 0;
-    var peak = +ctx.peak || initial;
-    var maxDDDol = +ctx.maxDDDol || 0;
-    var maxDDPct = peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : 0;
     var portfolioMetrics = _portfolioMetricDisplay(ctx);
+    var hasTrades = portfolioMetrics.hasTrades;
+    var realized = hasTrades ? _finiteReviewMetric(ctx.realized) : null;
+    var unreal = hasTrades ? _finiteReviewMetric(ctx.unreal) : null;
+    var openCount = +ctx.openCount || 0;
+    var totalPnL = hasTrades ? _finiteReviewMetric(ctx.totalPnL) : null;
+    var totalPct = totalPnL != null && initial > 0 ? (totalPnL / initial) * 100 : null;
+    var peak = +ctx.peak || initial;
+    var maxDDDol = hasTrades ? _finiteReviewMetric(ctx.maxDDDol) : null;
+    var maxDDPct = maxDDDol != null && peak > 0 ? (maxDDDol / Math.max(peak, initial)) * 100 : null;
     function mdCell(value){
       return String(value == null ? '' : value)
         .replace(/\\/g, '\\\\')
@@ -32127,11 +32297,11 @@ Sim.Ctrl = (function(){
     L.push('|---|---|');
     L.push('| Initial | ' + _money(initial) + ' |');
     L.push('| Equity | ' + _money(equity) + ' |');
-    L.push('| Total P&L | ' + _moneyS(totalPnL) + ' (' + _pctSigned(totalPct) + ') |');
+    L.push('| Total P&L | ' + _moneyS(totalPnL) + (totalPct == null ? '' : ' (' + _pctSigned(totalPct) + ')') + ' |');
     L.push('| Realized | ' + _moneyS(realized) + ' |');
     L.push('| Unrealized | ' + _moneyS(unreal) + ' |');
     L.push('| Peak Equity | ' + _money(peak) + ' |');
-    L.push('| Max Drawdown | ' + _moneyS(maxDDDol) + ' (' + maxDDPct.toFixed(2) + '%) |');
+    L.push('| Max Drawdown | ' + _moneyS(maxDDDol) + (maxDDPct == null ? '' : ' (' + maxDDPct.toFixed(2) + '%)') + ' |');
     L.push('| Open positions | ' + openCount + ' |');
     L.push('| Avg Capital Deployed | ' + portfolioMetrics.avgText + ' |');
     L.push('| Profit Factor | ' + portfolioMetrics.profitFactorText + ' |');
@@ -32169,7 +32339,9 @@ Sim.Ctrl = (function(){
     L.push('');
     basket.forEach(function(e){
       var legs = e.legs || [];
-      var totalRealized = legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0);
+      var totalRealized = legs.length
+        ? legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0)
+        : null;
       L.push('### ' + e.symbol);
       L.push('');
       L.push('- Legs: ' + legs.length);
@@ -32384,6 +32556,7 @@ Sim.Ctrl = (function(){
     if (idx < 0 || idx >= sessions.length - 1) return 0;
     var streak = 0;
     for (var i = idx + 1; i < sessions.length; i++){
+      if (!(+sessions[i].tradeCount > 0)) continue;
       if ((sessions[i].sessionPnL || 0) < 0) streak++;
       else break;
     }
@@ -32577,14 +32750,17 @@ Sim.Ctrl = (function(){
         retired: retired,
         orderEvents: _cloneJson(groupOrderEvents, []),
         legs: legs,
-        totalRealized: legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0),
+        totalRealized: legs.length ? legs.reduce(function(s, l){ return s + (l.rPnL || 0); }, 0) : null,
         stops: legs.filter(function(l){ return l.exitReason === 'stop'; }).length,
         status: retired ? 'retired' : (legs.length ? legs[legs.length - 1].exitReason : 'idle')
       };
     });
     var initial = +session.initialEquity || 0;
-    var equity = +session.finalEquity || (initial + (+session.sessionPnL || 0));
-    var totalPnL = equity - initial;
+    var equity = session.finalEquity != null
+      ? +session.finalEquity
+      : (initial + (+session.sessionPnL || 0));
+    var hasTrades = +session.tradeCount > 0;
+    var totalPnL = hasTrades && session.sessionPnL != null ? +session.sessionPnL : null;
     var persistedOrderEvents = _snapshotEntryOrderEvents(basket, session.year || null);
     var meta = {
       startDate: session.simStartDate || '',
@@ -32595,10 +32771,10 @@ Sim.Ctrl = (function(){
       activeSymbols: activeSymbols,
       initialEquity: initial,
       cash: equity, equity: equity,
-      realized: trades.reduce(function(s, t){ return s + (+t.realizedPnL || 0); }, 0),
-      unreal: 0,
+      realized: hasTrades ? trades.reduce(function(s, t){ return s + (+t.realizedPnL || 0); }, 0) : null,
+      unreal: hasTrades ? 0 : null,
       totalPnL: totalPnL,
-      peak: equity, maxDDDol: 0, openCount: 0,
+      peak: equity, maxDDDol: hasTrades ? 0 : null, openCount: 0,
       orderEvents: persistedOrderEvents,
       shortLocks: {}, notes: [],
       basket: basket

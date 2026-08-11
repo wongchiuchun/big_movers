@@ -1,6 +1,6 @@
 # Chart Studies — A Qullamaggie-Style Setup Research Platform
 
-A single-file web app for studying historical "big mover" stock setups in the Qullamaggie tradition. Loads precomputed gain data for 900+ US tickers, renders candlestick charts with drawing tools, and layers a full study workflow — tags, ratings, AI setup classification, per-leg reviews, and side-by-side AI-vs-human calibration — on top of every move.
+A browser-based web app for studying historical "big mover" stock setups in the Qullamaggie tradition. Loads precomputed gain data for 900+ US tickers, renders candlestick charts with drawing tools, and layers a full study workflow — tags, ratings, AI setup classification, per-leg reviews, and side-by-side AI-vs-human calibration — on top of every move.
 
 > Originally forked from [willhjw/big_movers](https://github.com/willhjw/big_movers). This fork significantly extends the foundation with the study system, AI classification, review workflow, and calibration tooling.
 
@@ -81,7 +81,7 @@ Each tool has independent color, width, and line style (solid/dashed/dotted). Dr
 
 - **Backend** — Python/Flask, Python stdlib only (no build dependencies beyond Flask itself)
 - **Charts** — Lightweight Charts v3.8 (TradingView open-source library, bundled locally)
-- **Frontend** — Single HTML file, all CSS/JS inline, ~5600 lines. No build step. Edit → refresh → done.
+- **Frontend** — `Big_movers.html` contains the layout, CSS, and most JavaScript; portfolio asset identity and pending-order logic live in `portfolio_assets.js` and `portfolio_orders.js`. No build step. Edit → refresh → done.
 - **Storage** — Browser localStorage for chart config, JSON files on server for drawings/metadata/reviews, CSV for OHLCV data
 - **Data** — Local daily CSV files in `collected_stocks/`; Twelve Data is used only when you explicitly Fetch or Extend
 
@@ -147,8 +147,10 @@ Synchronization uses a minimum nine-second request interval, respects provider l
 
 ```
 big_movers/
-├── Big_movers.html             # Single-file frontend
+├── Big_movers.html             # Main frontend document; layout, CSS, and most JS
 ├── Big_movers_server.py        # Flask backend, port 5051
+├── portfolio_assets.js         # Portfolio asset identity/entry helpers
+├── portfolio_orders.js         # Pending limit-order lifecycle and reservations
 ├── portfolio_basket.js         # Seeded balanced-basket selection engine
 ├── market_anchor_universe.json # Reviewed 50-name point-in-time anchor pool
 ├── market_anchor_sync.py       # Explicit audit/synchronization engine

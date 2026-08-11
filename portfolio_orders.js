@@ -51,10 +51,6 @@
     return value;
   }
 
-  function cloneOrder(order) {
-    return order && typeof order === 'object' ? deepClone(order) : null;
-  }
-
   function mintOrderId() {
     orderSequence += 1;
     var timestamp = Date.now().toString(36);
@@ -493,7 +489,6 @@
     reserve: reserve,
     transition: transition,
     recordEvent: recordEvent,
-    reconcile: reconcile,
-    cloneOrder: cloneOrder
+    reconcile: reconcile
   };
 });

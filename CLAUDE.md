@@ -4,13 +4,13 @@
 
 ## What This Is
 
-A single-file web app for studying historical "big mover" stock setups in the Qullamaggie style. Loads precomputed gain data from a CSV, fetches OHLCV bars per ticker, renders candlestick charts with drawing tools, and lets you tag/rate/annotate each setup for filtering and review.
+A browser-based web app for studying historical "big mover" stock setups in the Qullamaggie style. Loads precomputed gain data from a CSV, fetches OHLCV bars per ticker, renders candlestick charts with drawing tools, and lets you tag/rate/annotate each setup for filtering and review.
 
 On top of the study layer sit three **trading simulators sharing one engine** (`Sim.createSim/advanceTo/queueAction`): a single-ticker walk-through sim (stops, multi-leg, shorts, R-multiples, MFE/MAE), a blind replay mode (`SimBlind`), and a multi-position portfolio sim (`PortSim`, ~12k lines organized as tracks A–S) — plus a Python setup classifier (`classifier/`) and a structured review flywheel (SimStats v3).
 
 > **Note:** Parts of this file (line numbers, file structure) date from before the sim systems landed. For the current full map, see `doc/code_explore/broad-overview.md` (generated 2026-06-11). `Big_movers.html` is now ~29,300 lines, not ~3,900.
 
-**Stack**: Flask backend (Python stdlib only) + single-file HTML/CSS/JS frontend with Lightweight Charts v3.8.0 (TradingView's open-source library, loaded from CDN).
+**Stack**: Flask backend (Python stdlib only) + a mostly inline HTML/CSS/JS frontend with small external portfolio asset/order modules and Lightweight Charts v3.8.0 (TradingView's open-source library, loaded from CDN).
 
 **No build step.** Edit HTML, refresh browser. Edit Python, restart server.
 
@@ -30,7 +30,9 @@ To restart during development: `lsof -ti :5051 | xargs kill 2>/dev/null` then st
 
 ```
 big_movers/
-├── Big_movers.html               # Single-file frontend (~3900 lines, all CSS/JS inline)
+├── Big_movers.html               # Main frontend document (layout, CSS, and most JS inline)
+├── portfolio_assets.js           # Portfolio asset identities and live/retired entry helpers
+├── portfolio_orders.js           # Pending limit-order lifecycle and buying-power reservations
 ├── Big_movers_server.py          # Flask backend, port 5051
 ├── big_movers_result.csv         # Precomputed setups: year,symbol,gain_pct,low_date,high_date,low_price,high_price,avg_vol_b
 ├── SPY Historical Data.csv       # Benchmark data (separate format from collected_stocks)
