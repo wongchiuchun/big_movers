@@ -187,8 +187,7 @@
       status: 'pending',
       attempts: [],
       pendingOrder: null,
-      orderEvents: [],
-      order: { status:'none', activity:[] }
+      orderEvents: []
     };
   }
 
@@ -272,11 +271,13 @@
     const runtime = state.runtime;
     const barIdx = runtime && runtime.playbackState ? runtime.playbackState.playIdx : null;
     const bar = runtime && runtime.fullBars && Number.isInteger(barIdx) ? runtime.fullBars[barIdx] : null;
-    return api.reconcile(batch.orderState, batch.candidates, {
+    const reserved = api.reconcile(batch.orderState, batch.candidates, {
       date: bar && bar.time || null,
       barIdx: barIdx,
       reason: reason || 'Entry Trainer reservation state was reconciled.'
     });
+    syncOrderPresentation(batch);
+    return reserved;
   }
 
   function clearLimitLine(){
@@ -294,24 +295,47 @@
     });
   }
 
+  function syncOrderPresentation(batch){
+    if (!batch || batch !== state.batch) return;
+    const candidate = batch.candidates && batch.candidates[batch.activeIndex];
+    const order = workingOrder(candidate);
+    if (order && state.runtime && state.runtime.playbackState) showLimitLine(order);
+    else clearLimitLine();
+    updateStrip();
+  }
+
   function transitionOrder(candidate, status, details){
     const api = ordersApi();
     const batch = state.batch;
     if (!api || !batch || !candidate || !workingOrder(candidate)) return null;
+    const orderId = workingOrder(candidate).id;
+    const priorEventCount = Array.isArray(candidate.orderEvents) ? candidate.orderEvents.length : 0;
     let event = api.transition(batch.orderState, candidate, status, details || {});
     if (!event) {
       reconcileOrders(batch, 'Entry Trainer repaired a reservation before terminal transition.');
-      event = api.transition(batch.orderState, candidate, status, details || {});
+      if (workingOrder(candidate)) event = api.transition(batch.orderState, candidate, status, details || {});
     }
-    if (event) {
-      candidate.order = {
-        status: status,
-        orderId: event.orderId || null,
-        completedDate: event.date || null,
-        completedBarIdx: event.barIdx == null ? null : event.barIdx
-      };
-      clearLimitLine();
+    if (!event && !workingOrder(candidate)) {
+      event = (candidate.orderEvents || []).slice(priorEventCount).find(function(item){
+        return item && item.orderId === orderId && item.type === 'invalidated';
+      }) || null;
     }
+    if (!event && workingOrder(candidate)) {
+      const stranded = workingOrder(candidate);
+      stranded.status = 'invalidated';
+      stranded.completedDate = details && (details.date || details.fillDate) || stranded.submittedDate;
+      stranded.completedBarIdx = details && (details.barIdx != null ? details.barIdx : details.fillBarIdx);
+      event = api.recordEvent(candidate, 'invalidated', Object.assign({}, details || {}, {
+        order: stranded,
+        reason: 'Order lifecycle transition failed after reservation reconciliation.'
+      }));
+      api.reconcile(batch.orderState, batch.candidates, {
+        date: stranded.completedDate,
+        barIdx: stranded.completedBarIdx,
+        reason: 'Entry Trainer released a stranded terminal reservation.'
+      });
+    }
+    syncOrderPresentation(batch);
     return event;
   }
 
@@ -575,15 +599,7 @@
       reserved = api.reserve(batch.orderState, validated.candidate, created.order);
     }
     if (!reserved) throw new Error('Could not reserve buying power for the limit order.');
-    validated.candidate.order = {
-      status: 'working',
-      orderId: reserved.id,
-      qty: reserved.qty,
-      limitPrice: reserved.limitPrice,
-      reservedBuyingPower: reserved.reservedBuyingPower
-    };
-    showLimitLine(reserved);
-    updateStrip();
+    syncOrderPresentation(batch);
     return { handled:true };
   }
 
@@ -595,6 +611,23 @@
     updateStrip();
     byId('entry-trainer-enter')?.focus();
     return true;
+  }
+
+  function captureOrderTransaction(batch, candidate){
+    return {
+      pendingOrder: clone(candidate.pendingOrder),
+      orderEvents: clone(candidate.orderEvents || []),
+      orderState: clone(batch.orderState)
+    };
+  }
+
+  function restoreOrderTransaction(batch, candidate, snapshot){
+    if (!batch || !candidate || !snapshot) return false;
+    candidate.pendingOrder = clone(snapshot.pendingOrder);
+    candidate.orderEvents = clone(snapshot.orderEvents);
+    batch.orderState = clone(snapshot.orderState);
+    reconcileOrders(batch, 'Entry Trainer restored a working reservation after fill commit failure.');
+    return !!workingOrder(candidate);
   }
 
   function fillWorkingOrderOnBar(candidate, order, bar, barIdx, fill){
@@ -615,7 +648,7 @@
         reason: 'Reserved buying power was unavailable when the order tried to fill.'
       });
       updateStrip();
-      return false;
+      return null;
     }
 
     const openingFill = Number(bar.open) > 0 && Number(bar.open) <= Number(order.limitPrice);
@@ -627,24 +660,12 @@
       : (openingFill ? 'opening_limit_fill' : 'intraday_limit_touch');
     const extremaTiming = gapThroughStop
       ? 'opening_gap_safety'
-      : processFillBarStop
-        ? (recordIntradayExtremes ? 'fill_bar_full' : 'fill_bar_close_and_stop_only')
+      : openingFill
+        ? 'fill_bar_full'
+        : processFillBarStop
+          ? 'fill_bar_close_and_stop_only'
         : 'next_bar';
-    const filledEvent = transitionOrder(candidate, 'filled', {
-      date: bar.time,
-      barIdx: barIdx,
-      price: fill.price,
-      fillPrice: fill.price,
-      requestedPrice: order.limitPrice,
-      gapImproved: fill.gapImproved === true,
-      fillTiming: fillTiming,
-      executionTiming: 'limit_fill',
-      extremaTiming: extremaTiming,
-      extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx
-    });
-    if (!filledEvent) return false;
-
-    const started = window.Sim.Ctrl.fillFlatEntry({
+    const prepared = window.Sim.Ctrl.prepareFlatEntry({
       direction: 'long',
       price: fill.price,
       sizeMode: 'shares',
@@ -665,17 +686,46 @@
       recordIntradayExtremes: recordIntradayExtremes,
       forceGap: gapThroughStop
     });
-    if (!started || !started.ok) {
-      api.recordEvent(candidate, 'fill_error', {
-        order: order,
+    if (!prepared || !prepared.ok) {
+      transitionOrder(candidate, 'invalidated', {
         date: bar.time,
         barIdx: barIdx,
         price: fill.price,
-        reason: started && started.error || 'Flat-playback fill adapter rejected the fill.'
+        reason: 'Entry preparation failed: ' + (prepared && prepared.error || 'Flat-playback adapter rejected the fill.')
       });
-      window.alert('The limit order filled, but the attempt could not be started. Exit this batch to reset safely.');
-      updateStrip();
-      return false;
+      return null;
+    }
+
+    const orderSnapshot = captureOrderTransaction(batch, candidate);
+    const filledEvent = transitionOrder(candidate, 'filled', {
+      date: bar.time,
+      barIdx: barIdx,
+      price: fill.price,
+      fillPrice: fill.price,
+      requestedPrice: order.limitPrice,
+      gapImproved: fill.gapImproved === true,
+      fillTiming: fillTiming,
+      executionTiming: 'limit_fill',
+      extremaTiming: extremaTiming,
+      extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx
+    });
+    if (!filledEvent || filledEvent.type !== 'filled') {
+      window.Sim.Ctrl.discardFlatEntry(prepared);
+      if (candidate.pendingOrder && candidate.pendingOrder.id === order.id && candidate.pendingOrder.status === 'filled') {
+        restoreOrderTransaction(batch, candidate, orderSnapshot);
+        return { allow:false };
+      }
+      syncOrderPresentation(batch);
+      return null;
+    }
+
+    let started = null;
+    try { started = window.Sim.Ctrl.commitFlatEntry(prepared); }
+    catch (error) { started = { ok:false, error:error && error.message ? error.message : String(error) }; }
+    if (!started || !started.ok) {
+      try { window.Sim.Ctrl.discardFlatEntry(prepared); } catch (ignored) {}
+      restoreOrderTransaction(batch, candidate, orderSnapshot);
+      return { allow:false };
     }
     if (gapThroughStop && started.stopEvent) {
       api.recordEvent(candidate, 'gap_stop', {
@@ -688,8 +738,7 @@
       });
     }
     reconcileOrders(batch, 'Entry Trainer reconciled reservations after fill settlement.');
-    updateStrip();
-    return true;
+    return { handled:true };
   }
 
   function handleBeforeFlatStep(context){
@@ -705,12 +754,7 @@
     const api = ordersApi();
     const fill = api && api.evaluateFill(order, context.bar, context.barIdx);
     if (fill) {
-      fillWorkingOrderOnBar(candidate, order, context.bar, context.barIdx, fill);
-      // A committed fill owns this bar even if the downstream adapter reports
-      // an unexpected failure; never advance the now-terminal order twice.
-      if (order.status === 'filled') return { handled:true };
-      if (order.status === 'working') return { allow:false };
-      return null;
+      return fillWorkingOrderOnBar(candidate, order, context.bar, context.barIdx, fill);
     }
     return null;
   }
@@ -894,7 +938,10 @@
       return;
     }
     if (!window.MainChartSession || !window.SimDateMask || !ordersApi()
-        || !window.Sim || !window.Sim.Ctrl || typeof window.Sim.Ctrl.fillFlatEntry !== 'function') {
+        || !window.Sim || !window.Sim.Ctrl
+        || typeof window.Sim.Ctrl.prepareFlatEntry !== 'function'
+        || typeof window.Sim.Ctrl.commitFlatEntry !== 'function'
+        || typeof window.Sim.Ctrl.discardFlatEntry !== 'function') {
       setSetupStatus('The chart session is still loading. Try again in a moment.', true);
       return;
     }

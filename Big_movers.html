@@ -12862,6 +12862,19 @@ const Sim = (function(){
     return { sim: sim, eventsFired: fired };
   }
 
+  // Record a fill candle that is fully knowable from the open without making
+  // any protective stop eligible on that candle. Intrabar limit-touch fills
+  // must not call this because pre-fill high/low ordering is unknown.
+  function recordEntryBarExposure(sim, bars, barIdx) {
+    const bar = Array.isArray(bars) ? bars[barIdx] : null;
+    if (!sim || !bar || sim.closed || sim.stoppedOut || !(sim.qty > 0) ||
+        !sim.entry || Number(sim.entry.barIdx) !== Number(barIdx)) return false;
+    _updateIntradayExtremes(sim, bar, barIdx);
+    _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), barIdx);
+    _pushPnlPoint(sim, bar);
+    return true;
+  }
+
   function _processActionsOnBar(sim, bar, barIdx, fired) {
     if (sim.closed || sim.stoppedOut) { sim.pendingActions = []; return; }
     const d = sim.direction || 'long';
@@ -13167,7 +13180,7 @@ const Sim = (function(){
     return true;
   }
 
-  return { createSim, queueAction, validateStopReplacement, replaceStopNow, advanceTo, processAttachedStopOnBar, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode, normalizeExecutionTiming };
+  return { createSim, queueAction, validateStopReplacement, replaceStopNow, advanceTo, processAttachedStopOnBar, recordEntryBarExposure, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode, normalizeExecutionTiming };
 })();
 
 // Expose the Sim core on window so cross-module code (PortSim.Ctrl, Track J,
@@ -19114,6 +19127,7 @@ Sim.Ctrl = (function(){
     _flatAttemptPending: false,
     _flatExitReason: null,
     _flatHorizonNotified: false,
+    _flatPreparedEntry: null,
     _flatGuideLine: null,
     _policyUiSnapshot: null
   };
@@ -20158,7 +20172,15 @@ Sim.Ctrl = (function(){
     return (a && b) ? { from: a, to: b } : null;
   }
 
-  function _render(result) {
+  function _finalizePolicyRender(d) {
+    if (!state.policy) return;
+    if (d.stoppedOut || d.closed) _completePolicyAttempt(state._flatExitReason || (d.stoppedOut ? 'stop' : 'manual_close'));
+    if (state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx) _completePolicyHorizon();
+    _notifyFlatState('render');
+  }
+
+  function _render(result, options) {
+    options = options || {};
     if (!state.sim) return null;
     const d = result ? result.derived : Sim.computeDerived(state.sim, state.bars);
     Sim.UI.render(_deriveForUI(d));
@@ -20173,9 +20195,7 @@ Sim.Ctrl = (function(){
       });
     }
     if (state.policy) {
-      if (d.stoppedOut || d.closed) _completePolicyAttempt(state._flatExitReason || (d.stoppedOut ? 'stop' : 'manual_close'));
-      if (state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx) _completePolicyHorizon();
-      _notifyFlatState('render');
+      if (!options.deferPolicy) _finalizePolicyRender(d);
     }
     else if (d.stoppedOut || d.closed) { pause(); setTimeout(() => _showSummary(d), 400); }
     else if (state.sim.endBarIdx != null && state.sim.playIdx >= state.sim.endBarIdx) {
@@ -20244,7 +20264,7 @@ Sim.Ctrl = (function(){
     return true;
   }
 
-  function _startFlatEntryAtBar(form, options) {
+  function _prepareFlatEntryAtBar(form, options) {
     options = options || {};
     const current = _flatState('entry-commit');
     if (!current || !current.canEnter || !form) return { ok:false, error:'Entry is no longer available.' };
@@ -20276,9 +20296,10 @@ Sim.Ctrl = (function(){
     if (forceGap && (!Number.isFinite(plannedRiskPerShare) || plannedRiskPerShare <= 0)) {
       return { ok:false, error:'Gap-stop risk reference is invalid.' };
     }
-    _pushSnapshot();
+    let stagedSim = null;
     try {
-      Sim.startNewLeg(state.sim, {
+      stagedSim = JSON.parse(JSON.stringify(state.sim));
+      Sim.startNewLeg(stagedSim, {
         barIdx: barIdx,
         date: bar.time,
         price: fillPrice,
@@ -20291,11 +20312,10 @@ Sim.Ctrl = (function(){
         executionTiming: options.executionTiming || 'close'
       });
     } catch (error) {
-      state._history.pop();
       return { ok:false, error:error && error.message ? error.message : String(error) };
     }
 
-    const sim = state.sim;
+    const sim = stagedSim;
     const timing = options.executionTiming || 'close';
     sim.entry.requestedPrice = Number.isFinite(Number(options.requestedPrice)) ? Number(options.requestedPrice) : fillPrice;
     sim.entry.riskReferencePrice = forceGap ? riskReference : fillPrice;
@@ -20322,13 +20342,6 @@ Sim.Ctrl = (function(){
       entryEvent.extremaStartBarIdx = sim.entry.extremaStartBarIdx;
       entryEvent.executionTiming = timing;
     }
-    state._flatExitReason = null;
-    if (advancesPlayhead) _appendBar(barIdx);
-    _ensureInitialStopLine();
-    if (initialStop) _addStopLine(sim.entry.stop, barIdx, 1.0, 'initial', initialStop.id);
-    _buildRLevels();
-    _addLegEntryMarker((sim.legs || []).length + 1, barIdx);
-
     let result = { sim:sim, derived:Sim.computeDerived(sim, state.bars), eventsFired:[] };
     if (initialStop && options.processFillBarStop) {
       result = Sim.processAttachedStopOnBar(sim, state.bars, barIdx, initialStop, {
@@ -20336,9 +20349,13 @@ Sim.Ctrl = (function(){
         recordIntradayExtremes: options.recordIntradayExtremes !== false
       });
       result.derived = Sim.computeDerived(sim, state.bars);
+    } else if (options.recordIntradayExtremes === true) {
+      Sim.recordEntryBarExposure(sim, state.bars, barIdx);
+      result.derived = Sim.computeDerived(sim, state.bars);
     }
+    let exitReason = null;
     if (state._flatEndBarIdx != null && barIdx >= state._flatEndBarIdx && sim.qty > 0 && !sim.closed && !sim.stoppedOut) {
-      state._flatExitReason = 'horizon_end';
+      exitReason = 'horizon_end';
       const closed = Sim.closeAt(sim, state.bars, bar.close);
       const closeEvent = (sim.eventsLog || [])[sim.eventsLog.length - 1];
       if (closeEvent && closeEvent.type === 'close') {
@@ -20348,11 +20365,91 @@ Sim.Ctrl = (function(){
       }
       result.derived = closed.derived;
     }
-    _appendCurvePoint(barIdx);
-    _render(result);
-    _notifyFlatState('attempt-filled');
-    const stopEvent = (result.eventsFired || []).find(function(event){ return event && event.type === 'stop' && initialStop && event.stopId === initialStop.id; }) || null;
-    return { ok:true, stopEvent:stopEvent, forceGap:forceGap };
+    const preparation = {
+      baseSim: state.sim,
+      basePlayIdx: state.sim.playIdx,
+      sim: sim,
+      barIdx: barIdx,
+      advancesPlayhead: advancesPlayhead,
+      initialStopId: initialStop && initialStop.id || null,
+      result: result,
+      exitReason: exitReason,
+      forceGap: forceGap
+    };
+    state._flatPreparedEntry = preparation;
+    return { ok:true, preparation:preparation };
+  }
+
+  function _discardFlatEntry(prepared) {
+    const preparation = prepared && prepared.preparation ? prepared.preparation : prepared;
+    if (!preparation || state._flatPreparedEntry !== preparation) return false;
+    state._flatPreparedEntry = null;
+    return true;
+  }
+
+  function _commitFlatEntry(prepared) {
+    const preparation = prepared && prepared.preparation ? prepared.preparation : prepared;
+    if (!preparation || state._flatPreparedEntry !== preparation || state.sim !== preparation.baseSim ||
+        state.sim.playIdx !== preparation.basePlayIdx) {
+      return { ok:false, error:'Prepared entry is no longer current.' };
+    }
+    const prior = {
+      sim: state.sim,
+      historyLength: state._history.length,
+      flatExitReason: state._flatExitReason,
+      flatCompletedLegs: state._flatCompletedLegs ? Array.from(state._flatCompletedLegs) : [],
+      flatAttemptPending: state._flatAttemptPending,
+      flatHorizonNotified: state._flatHorizonNotified,
+      legMarkers: (state._legMarkers || []).slice(),
+      rMarkers: (state._rMarkers || []).slice(),
+      hitRLevels: state._hitRLevels ? Array.from(state._hitRLevels) : [],
+      rLevels: (state._rLevels || []).slice(),
+      curve: (state._curve || []).slice()
+    };
+    try {
+      _pushSnapshot();
+      state.sim = preparation.sim;
+      state._flatExitReason = preparation.exitReason;
+      if (preparation.advancesPlayhead) _appendBar(preparation.barIdx);
+      const initialStop = (state.sim.stopLevels || []).find(function(stop){ return stop && stop.id === preparation.initialStopId; });
+      _ensureInitialStopLine();
+      if (initialStop) _addStopLine(state.sim.entry.stop, preparation.barIdx, 1.0, 'initial', initialStop.id);
+      _buildRLevels();
+      _addLegEntryMarker((state.sim.legs || []).length + 1, preparation.barIdx);
+      _appendCurvePoint(preparation.barIdx);
+      const derived = _render(preparation.result, { deferPolicy:true });
+      _finalizePolicyRender(derived);
+      state._flatPreparedEntry = null;
+      const stopEvent = (preparation.result.eventsFired || []).find(function(event){
+        return event && event.type === 'stop' && preparation.initialStopId && event.stopId === preparation.initialStopId;
+      }) || null;
+      return { ok:true, stopEvent:stopEvent, forceGap:preparation.forceGap };
+    } catch (error) {
+      state.sim = prior.sim;
+      state._flatExitReason = prior.flatExitReason;
+      state._flatCompletedLegs = new Set(prior.flatCompletedLegs);
+      state._flatAttemptPending = prior.flatAttemptPending;
+      state._flatHorizonNotified = prior.flatHorizonNotified;
+      state._history.length = prior.historyLength;
+      try { _clearStopHistory(); } catch (ignored) {}
+      try { _clearInitialStopLine(); } catch (ignored) {}
+      try { _maskChart(prior.sim.playIdx); } catch (ignored) {}
+      state._legMarkers = prior.legMarkers;
+      state._rMarkers = prior.rMarkers;
+      state._hitRLevels = new Set(prior.hitRLevels);
+      state._rLevels = prior.rLevels;
+      state._curve = prior.curve;
+      try { _applyAllMarkers(); } catch (ignored) {}
+      try { _render(null, { deferPolicy:true }); } catch (ignored) {}
+      state._flatPreparedEntry = null;
+      return { ok:false, error:error && error.message ? error.message : String(error) };
+    }
+  }
+
+  function _startFlatEntryAtBar(form, options) {
+    const prepared = _prepareFlatEntryAtBar(form, options);
+    if (!prepared.ok) return prepared;
+    return _commitFlatEntry(prepared);
   }
 
   function _openFlatEntry() {
@@ -20505,6 +20602,7 @@ Sim.Ctrl = (function(){
     state._flatAttemptPending = false;
     state._flatExitReason = null;
     state._flatHorizonNotified = false;
+    state._flatPreparedEntry = null;
     _setFlatGuideLine(null);
     _applyPolicyUI();
     let barIdx = currentBars.findIndex(b => b.time === form.date);
@@ -20576,6 +20674,7 @@ Sim.Ctrl = (function(){
     state._flatAttemptPending = false;
     state._flatExitReason = null;
     state._flatHorizonNotified = false;
+    state._flatPreparedEntry = null;
     _applyPolicyUI();
     Sim.UI.setActive(false);
     _unbindKeys();
@@ -21044,6 +21143,7 @@ Sim.Ctrl = (function(){
     state._flatAttemptPending = false;
     state._flatExitReason = null;
     state._flatHorizonNotified = false;
+    state._flatPreparedEntry = null;
     _precomputeMAs();
     Sim.UI.setSpeed(1);
     Sim.UI.setActive(true);
@@ -21075,11 +21175,6 @@ Sim.Ctrl = (function(){
     return false;
   }
 
-  function _fillFlatEntry(form, options) {
-    if (!state.policy || !state.active || !state.sim) return { ok:false, error:'Flat playback is not active.' };
-    return _startFlatEntryAtBar(form, options || {});
-  }
-
   return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null), replay,
     // SimBlind dispatches into the same submit path the modal uses, so blind
     // mode can launch a sim without ever opening the setup form (which would
@@ -21093,7 +21188,12 @@ Sim.Ctrl = (function(){
       moveKey: 'BLIND', policy: null, _compatBlind: true
     })); },
     flatAction: _flatAction,
-    fillFlatEntry: _fillFlatEntry,
+    prepareFlatEntry: function(form, options){
+      if (!state.policy || !state.active || !state.sim) return { ok:false, error:'Flat playback is not active.' };
+      return _prepareFlatEntryAtBar(form, options || {});
+    },
+    commitFlatEntry: _commitFlatEntry,
+    discardFlatEntry: _discardFlatEntry,
     setFlatGuideLine: function(spec){ return _setFlatGuideLine(spec || null); },
     getFlatPlaybackState: function(){ return _flatState('read'); },
     stopFlatPlayback: function(){ if (!state.policy) return false; exit({ preserveChart:true }); return true; },
