@@ -8,6 +8,7 @@
 <script src="portfolio_basket.js"></script>
 <script src="portfolio_assets.js"></script>
 <script src="portfolio_orders.js"></script>
+<script src="entry_trainer.js" defer></script>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   :root{
@@ -2561,7 +2562,8 @@
 
   /* Start Sim / Port Sim buttons in topbar */
   #sim-start-btn,
-  #portsim-start-btn {
+  #portsim-start-btn,
+  #entry-trainer-btn {
     font-size: 10px;
     padding: 4px 12px;
     width: auto;
@@ -2576,7 +2578,48 @@
     margin-left: 6px;
   }
   #sim-start-btn:hover,
-  #portsim-start-btn:hover { background: var(--accent); color: var(--bg); }
+  #portsim-start-btn:hover,
+  #entry-trainer-btn:hover { background: var(--accent); color: var(--bg); }
+
+  /* ============ ENTRY TRAINER SHELL ============ */
+  #entry-trainer-btn[aria-pressed="true"]{background:var(--accent);color:var(--bg);}
+  .entry-trainer-setup{width:520px;max-width:94vw;}
+  .entry-trainer-rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0 0 16px;padding:0;list-style:none;}
+  .entry-trainer-rules li{padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg3);color:var(--text-2);font-family:var(--mono);font-size:10px;line-height:1.45;}
+  .entry-trainer-rules strong{color:var(--accent);font-weight:700;}
+  .entry-trainer-limit{margin:0 0 14px;padding:9px 11px;border-left:3px solid var(--yellow);background:rgba(245,200,66,0.08);color:var(--text-2);font-family:var(--mono);font-size:10px;line-height:1.5;}
+  #entry-trainer-strip{display:none;align-items:center;gap:10px;min-height:38px;padding:5px 10px;border-bottom:1px solid rgba(212,165,116,0.35);background:rgba(212,165,116,0.08);font-family:var(--mono);font-size:10px;}
+  #entry-trainer-strip.is-active{display:flex;}
+  .entry-trainer-progress{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+  .entry-trainer-progress strong{color:var(--accent);font-size:11px;}
+  #entry-trainer-shell-status{color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .entry-trainer-strip-spacer{flex:1 1 auto;}
+  .entry-trainer-actions{display:flex;align-items:center;gap:5px;}
+  .entry-trainer-action{padding:5px 9px;border:1px solid var(--border-bright);border-radius:5px;background:var(--bg3);color:var(--text-2);font-family:var(--mono);font-size:10px;cursor:pointer;}
+  .entry-trainer-action:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+  .entry-trainer-action:disabled{opacity:0.42;cursor:not-allowed;}
+  .entry-trainer-action.is-exit{border-color:rgba(251,113,133,0.45);color:var(--red);}
+  body.entry-trainer-active .table-panel{pointer-events:none;opacity:0.45;}
+  body.entry-trainer-active #study-toggle-btn,
+  body.entry-trainer-active #defs-btn,
+  body.entry-trainer-active #sim-start-btn,
+  body.entry-trainer-active #sim-random-btn,
+  body.entry-trainer-active #sim-blind-btn,
+  body.entry-trainer-active #sim-saved-btn,
+  body.entry-trainer-active #sim-stats-btn,
+  body.entry-trainer-active #quiz-btn,
+  body.entry-trainer-active #portsim-start-btn,
+  body.entry-trainer-active #portsim-saved-btn,
+  body.entry-trainer-active #add-ticker-btn,
+  body.entry-trainer-active .filters,
+  body.entry-trainer-active .chart-topbar button,
+  body.entry-trainer-active #draw-toolbar{pointer-events:none;opacity:0.35;}
+  @media (max-width:760px){
+    .entry-trainer-rules{grid-template-columns:1fr;}
+    #entry-trainer-strip{align-items:flex-start;flex-wrap:wrap;}
+    .entry-trainer-strip-spacer{display:none;}
+    .entry-trainer-actions{width:100%;flex-wrap:wrap;}
+  }
 
   /* Sim-related auxiliary topbar buttons (Random / Blind / Saved / Stats) — match
      the +Add button's text-with-icon shape rather than the 32×32 icon shell. */
@@ -5374,6 +5417,7 @@
     <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
     <button id="sim-random-btn" class="tb-btn" title="Pick a random big-mover from a chosen year and load a year-long sim window">🎲 Random</button>
     <button id="sim-blind-btn" class="tb-btn" title="Blind replay — random historical big mover with hidden symbol/year/dates. 4mo of context + open setup form to set size, stop, equity. Shift+Click to include current-year tickers (capped to ≥2mo forward data).">🕶 Blind</button>
+    <button id="entry-trainer-btn" class="tb-btn" type="button" aria-haspopup="dialog" aria-controls="entry-trainer-setup-modal" aria-pressed="false" title="Practice point-in-time entries on three masked tickers">🎯 Entry Trainer</button>
     <button type="button" id="quiz-btn" class="tb-btn" title="Top-or-Bottom Quiz: can you call the top/bottom?">🎯 Top/Bottom Quiz</button>
     <button id="sim-saved-btn" class="tb-btn" title="Browse saved Sim scenarios">📂 Saved Sim</button>
     <button id="sim-stats-btn" class="tb-btn" title="View lifetime sim statistics">📊 Sim Stats</button>
@@ -5497,6 +5541,22 @@
         <button id="quit-app-btn" class="tb-btn" type="button" aria-label="Quit Big Movers" title="Stop Big Movers and close the macOS app">⏻</button>
         <div class="tb-sep"></div>
         <div class="tb-sep"></div>
+      </div>
+
+      <div id="entry-trainer-strip" role="region" aria-label="Entry Trainer progress" aria-live="polite" tabindex="-1">
+        <div class="entry-trainer-progress">
+          <strong id="entry-trainer-ticker-progress">Ticker 1 of 3</strong>
+          <span aria-hidden="true">·</span>
+          <span id="entry-trainer-attempt-progress">Attempt 0 of 3</span>
+        </div>
+        <span id="entry-trainer-shell-status">Qualification day · decide whether to wait, enter, or skip.</span>
+        <span class="entry-trainer-strip-spacer"></span>
+        <div class="entry-trainer-actions" aria-label="Entry Trainer actions">
+          <button id="entry-trainer-wait" class="entry-trainer-action" type="button" disabled title="Playback is not available in this shell yet">Wait</button>
+          <button id="entry-trainer-enter" class="entry-trainer-action" type="button" disabled title="Trade entry is not available in this shell yet">Enter</button>
+          <button id="entry-trainer-skip" class="entry-trainer-action" type="button">Skip ticker</button>
+          <button id="entry-trainer-exit" class="entry-trainer-action is-exit" type="button">Exit batch</button>
+        </div>
       </div>
 
       <div class="ma-float" id="ma-panel" aria-hidden="true">
@@ -5674,6 +5734,29 @@
             <button class="fetch-btn-primary" id="fetch-submit-btn">Fetch</button>
           </div>
           <div class="fetch-status" id="fetch-status"></div>
+        </div>
+      </div>
+
+      <!-- Entry Trainer Setup Modal -->
+      <div class="fetch-modal-overlay" id="entry-trainer-setup-modal" role="dialog" aria-modal="true" aria-labelledby="entry-trainer-setup-title" aria-hidden="true">
+        <div class="fetch-modal entry-trainer-setup">
+          <h3 id="entry-trainer-setup-title">🎯 Entry Trainer</h3>
+          <ul class="entry-trainer-rules" aria-label="Fixed trainer rules">
+            <li><strong>≥50% gain</strong><br>over the prior 63 sessions</li>
+            <li><strong>Above EMA10 + EMA20</strong><br>on the qualification close</li>
+            <li><strong>Exactly 3 masked tickers</strong><br>with 90 forward bars each</li>
+            <li><strong>Long-only</strong><br>maximum 3 filled attempts per ticker</li>
+          </ul>
+          <p class="entry-trainer-limit"><strong>Daily OHLC limitation:</strong> entries and stops use daily candles, so intraday price order is unknown. Conservative fill rules are required when trading is enabled.</p>
+          <div class="fetch-field">
+            <label for="entry-trainer-equity">Starting equity ($)</label>
+            <input id="entry-trainer-equity" type="number" min="1" step="100" value="300000" required inputmode="decimal" autocomplete="off">
+          </div>
+          <div class="fetch-actions">
+            <button class="fetch-btn-cancel" id="entry-trainer-cancel" type="button">Cancel</button>
+            <button class="fetch-btn-primary" id="entry-trainer-start" type="button">Start 3-ticker batch</button>
+          </div>
+          <div class="fetch-status" id="entry-trainer-setup-status" role="alert" aria-live="assertive"></div>
         </div>
       </div>
 
@@ -6688,6 +6771,82 @@
 <div class="save-flash" id="save-flash"></div>
 
 <script>
+// Neutral relative-date seam used by blind playback and Entry Trainer. An
+// adapter returns a replacement label, or null to keep the ordinary date.
+window.SimDateMask = (function(){
+  let owner = null;
+  let adapter = null;
+  let refreshChart = null;
+
+  function install(nextOwner, nextAdapter){
+    if (!nextOwner || !nextAdapter || typeof nextAdapter !== 'object') {
+      throw new Error('SimDateMask.install requires an owner and adapter');
+    }
+    if (owner && owner !== String(nextOwner)) {
+      throw new Error('SimDateMask already has an active owner');
+    }
+    owner = String(nextOwner);
+    adapter = nextAdapter;
+    refresh();
+  }
+  function remove(removeOwner){
+    if (removeOwner && owner !== String(removeOwner)) return false;
+    owner = null;
+    adapter = null;
+    refresh();
+    return true;
+  }
+  function call(name, value, surface){
+    if (!adapter || typeof adapter[name] !== 'function') return null;
+    const result = adapter[name](value, surface || 'default');
+    return result == null || result === '' ? null : String(result);
+  }
+  function refresh(){
+    if (typeof refreshChart === 'function') {
+      try { refreshChart(); } catch (error) { console.warn('[SimDateMask] refresh failed:', error); }
+    }
+  }
+  return {
+    install,
+    remove,
+    isActive: function(){ return !!adapter; },
+    formatDate: function(date, surface){ return call('formatDate', date, surface); },
+    formatBarIdx: function(index, surface){ return call('formatBarIdx', index, surface); },
+    formatTime: function(time, surface){
+      const date = mainChartTimeToISO(time);
+      return date ? call('formatDate', date, surface) : null;
+    },
+    setRefresh: function(callback){ refreshChart = typeof callback === 'function' ? callback : null; },
+    refresh
+  };
+})();
+
+function mainChartTimeToISO(time){
+  if (time == null) return null;
+  if (typeof time === 'string') return time.length >= 10 ? time.slice(0, 10) : time;
+  if (typeof time === 'number') {
+    try { return new Date(time * 1000).toISOString().slice(0, 10); } catch (error) { return null; }
+  }
+  if (typeof time === 'object' && time.year != null) {
+    return time.year + '-' + String(time.month).padStart(2, '0') + '-' + String(time.day).padStart(2, '0');
+  }
+  return null;
+}
+
+function mainChartTimeFormatter(time){
+  const masked = window.SimDateMask && window.SimDateMask.formatTime(time, 'time-formatter');
+  return masked || mainChartTimeToISO(time) || '';
+}
+
+function mainChartTickFormatter(time){
+  const masked = window.SimDateMask && window.SimDateMask.formatTime(time, 'axis-tick');
+  if (masked) return masked;
+  const value = mainChartTimeToISO(time);
+  if (!value) return '';
+  const parts = value.split('-');
+  return parts.length === 3 ? parts[1] + '/' + parts[2] + '/' + parts[0].slice(2) : value;
+}
+
 // ==============================================
 // STATE
 // ==============================================
@@ -6728,6 +6887,25 @@ let activeDrawingVersions={}; // session-only, keyed by move key
 let manualLegPick=null; // {moveKey, moveRow, start}
 let manualLegClickConsumed=false;
 let manualLegSaveTimers={};
+let mainChartSessionDetached=false;
+
+function refreshMainChartDateFormatters(){
+  const localization = { locale:'en-US', timeFormatter:mainChartTimeFormatter };
+  const timeScale = { tickMarkFormatter:mainChartTickFormatter };
+  try {
+    if (chart) {
+      chart.applyOptions({ localization });
+      chart.timeScale().applyOptions(timeScale);
+    }
+  } catch (error) { console.warn('[MainChartSession] chart date formatter failed:', error); }
+  try {
+    if (volChart) {
+      volChart.applyOptions({ localization });
+      volChart.timeScale().applyOptions(timeScale);
+    }
+  } catch (error) { console.warn('[MainChartSession] volume date formatter failed:', error); }
+}
+window.SimDateMask.setRefresh(refreshMainChartDateFormatters);
 
 function drawingVersionOf(d){
   const value=Number(d&&d.version);
@@ -7831,9 +8009,8 @@ function updateCrosshairInfo(param) {
   if (!bar) { clear(); return; }
 
   // ── 6. Render ──
-  // Blind replay: replace the calendar date with "Day +N / Day −N" relative to entry.
-  const _blindBarLabel = (window.SimBlind && typeof window.SimBlind.formatDate === 'function') ? window.SimBlind.formatDate(bar.time || timeStr) : null;
-  infoDate.textContent = _blindBarLabel || (bar.time || timeStr);
+  const maskedDate = window.SimDateMask && window.SimDateMask.formatDate(bar.time || timeStr, 'crosshair-info');
+  infoDate.textContent = maskedDate || (bar.time || timeStr);
 
   const barIdx = resampledBars.findIndex(b => b.time === bar.time);
   const prevBar = barIdx > 0 ? resampledBars[barIdx - 1] : bar;
@@ -8260,6 +8437,7 @@ function time2p(t){
 
 function redrawAll(){
   ctx2.clearRect(0,0,canvas.width,canvas.height);
+  if(mainChartSessionDetached)return;
   const dk=drawKey();
   if(dk&&activeDrawings(dk).length){
     // While a sim is active, skip drawings whose anchor is beyond the current
@@ -8776,6 +8954,8 @@ function setupChartEvents(){
 
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const formatOverlayTimeLabel = (t) => {
+    const masked = window.SimDateMask && window.SimDateMask.formatTime(t, 'crosshair-overlay');
+    if (masked) return masked;
     try{
       if (typeof t === 'string') {
         const iso = t.length >= 10 ? t.slice(0, 10) : t;
@@ -9395,6 +9575,7 @@ function showTextInput(px,py,price,time,initialText='',onConfirm,initialBoxWidth
 // KEYBOARD
 // ==============================================
 document.addEventListener('keydown',e=>{
+  if(document.body.classList.contains('entry-trainer-active'))return;
   const inInput=document.activeElement===document.getElementById('txt-input')
     ||document.activeElement.tagName==='INPUT'
     ||document.activeElement.tagName==='SELECT'
@@ -9754,9 +9935,9 @@ function initChart(){
               return;
             }
             try{
-              let label = '';
+              let label = (window.SimDateMask && window.SimDateMask.formatTime(param.time, 'crosshair-overlay')) || '';
               const t = param.time;
-              if(typeof t === 'string'){
+              if(!label && typeof t === 'string'){
                 const iso = t.length >= 10 ? t.slice(0,10) : t;
                 const yy = iso.slice(0,4);
                 const mm = iso.slice(5,7);
@@ -9764,13 +9945,13 @@ function initChart(){
                 const mi = Math.max(0, Math.min(11, parseInt(mm,10)-1));
                 const mon = monthNames2[mi] || 'Jan';
                 label = `${parseInt(dd,10)} ${mon} '${yy.slice(2)}`;
-              } else if(typeof t === 'number'){
+              } else if(!label && typeof t === 'number'){
                 const d = new Date(t*1000);
                 const day = d.getUTCDate();
                 const mon = monthNames2[d.getUTCMonth()] || 'Jan';
                 const yy2 = String(d.getUTCFullYear()).slice(2);
                 label = `${day} ${mon} '${yy2}`;
-              } else if(t && typeof t === 'object' && t.year){
+              } else if(!label && t && typeof t === 'object' && t.year){
                 const mi = Math.max(0, Math.min(11, parseInt(String(t.month),10)-1));
                 const mon = monthNames2[mi] || 'Jan';
                 const dd = t.day || 1;
@@ -10385,6 +10566,288 @@ async function selectRow(i){
     document.getElementById('loading').classList.add('hidden');
   }
 }
+
+// ============ DETACHED MAIN-CHART SESSION ============
+// Loads local OHLCV without relying on a big_movers_result.csv row. The first
+// successful load snapshots the ordinary chart; later loads reuse that same
+// snapshot so restore() always returns to the pre-session screen.
+window.MainChartSession = (function(){
+  let snapshot = null;
+
+  function textSnapshot(){
+    const ids = ['ct-sym','ct-cond','ct-gain','ct-range','ct-vol'];
+    const values = {};
+    ids.forEach(function(id){
+      const node = document.getElementById(id);
+      values[id] = node ? node.textContent : '';
+    });
+    return values;
+  }
+
+  function capture(){
+    let visibleRange = null;
+    const transientPanelIds = ['ma-panel','st-panel','ct-pop','notes-popup','compare-popup','defs-modal'];
+    try { visibleRange = chart && chart.timeScale().getVisibleRange(); } catch (error) {}
+    return {
+      bars: Array.isArray(currentBars) ? currentBars.slice() : [],
+      symbol: currentSymbol,
+      moveRow: currentMoveRow,
+      activeIndex: activeIdx,
+      timeframe: currentTF,
+      chartType,
+      drawTool,
+      pendingPoint: pendingP1,
+      selectedDrawingId: selectedId,
+      aiIndicators,
+      extraMarkers: Array.isArray(extraCandleMarkers) ? extraCandleMarkers.slice() : [],
+      title: textSnapshot(),
+      visibleRange,
+      studyOpen: !!document.getElementById('study-panel')?.classList.contains('open'),
+      placeholderHidden: !!document.getElementById('placeholder')?.classList.contains('hidden'),
+      loadingHidden: !!document.getElementById('loading')?.classList.contains('hidden'),
+      blindRevealDisplay: document.getElementById('ct-blind-reveal')?.style.display || '',
+      indexSpActive: !!document.getElementById('idx-spx-btn')?.classList.contains('is-active'),
+      indexNqActive: !!document.getElementById('idx-ndq-btn')?.classList.contains('is-active'),
+      openPanelIds: transientPanelIds.filter(function(id){ return document.getElementById(id)?.classList.contains('open'); })
+    };
+  }
+
+  function setTitle(values){
+    Object.keys(values || {}).forEach(function(id){
+      const node = document.getElementById(id);
+      if (node) node.textContent = values[id] == null ? '' : String(values[id]);
+    });
+  }
+
+  function setDailyToggle(){
+    ['D','W','M'].forEach(function(tf){
+      document.getElementById('tf-' + tf)?.classList.toggle('active', tf === 'D');
+    });
+  }
+
+  function clearDetachedChrome(){
+    try { clearIndicatorOverlays(); } catch (error) {}
+    try { clearStSeries(); } catch (error) {}
+    aiIndicators = null;
+    extraCandleMarkers = [];
+    maList.forEach(function(ma){ try { ma.series?.setData([]); } catch (error) {} });
+    [spyLineSeries, spyCandleSeries, spyBarSeries].forEach(function(series){
+      try { series?.setData([]); } catch (error) {}
+    });
+    try { (priceSeries || candleSeries)?.setMarkers([]); } catch (error) {}
+    try { candleSeries?.setMarkers([]); } catch (error) {}
+    const study = document.getElementById('study-panel');
+    if (study) {
+      study.classList.remove('open');
+      study.setAttribute('aria-hidden', 'true');
+    }
+    ['ma-panel','st-panel','ct-pop','notes-popup','compare-popup','defs-modal'].forEach(function(id){
+      const node = document.getElementById(id);
+      if (node) {
+        node.classList.remove('open');
+        if (node.hasAttribute('aria-hidden')) node.setAttribute('aria-hidden', 'true');
+      }
+    });
+    document.getElementById('ct-menu-btn')?.setAttribute('aria-expanded', 'false');
+    ['study-rating','study-direction','study-notes'].forEach(function(id){
+      const node = document.getElementById(id);
+      if (node) node.value = '';
+    });
+    ['study-tags-grid','manual-leg-list','review-box','ai-suggested-box','study-extend-status'].forEach(function(id){
+      const node = document.getElementById(id);
+      if (node) node.textContent = '';
+    });
+    const count = document.getElementById('study-notes-count');
+    if (count) count.textContent = '0';
+    try { window._setCrosshairX?.(null); } catch (error) {}
+    try { updateCrosshairInfo(null); } catch (error) {}
+  }
+
+  function normalizeBars(payload){
+    if (!Array.isArray(payload)) throw new Error('OHLCV response was not an array');
+    const bars = payload.map(function(bar){
+      const normalized = {
+        time: String(bar && bar.time || '').slice(0, 10),
+        open: Number(bar && bar.open),
+        high: Number(bar && bar.high),
+        low: Number(bar && bar.low),
+        close: Number(bar && bar.close),
+        volume: Number(bar && bar.volume || 0)
+      };
+      if (!normalized.time || !Number.isFinite(normalized.open) || !Number.isFinite(normalized.high)
+          || !Number.isFinite(normalized.low) || !Number.isFinite(normalized.close)) {
+        throw new Error('OHLCV response contains an invalid daily bar');
+      }
+      return normalized;
+    });
+    bars.sort(function(a,b){ return a.time.localeCompare(b.time); });
+    if (!bars.length) throw new Error('No daily bars are available');
+    return bars;
+  }
+
+  async function loadSymbol(symbol, options){
+    options = options || {};
+    const requested = String(symbol || '').trim().toUpperCase();
+    if (!requested) throw new Error('A symbol is required');
+
+    // Fetch and caller validation happen before any visible/session mutation.
+    const response = await fetch('/api/ohlcv?symbol=' + encodeURIComponent(requested) + '&_=' + Date.now());
+    if (!response.ok) throw new Error('OHLCV request failed (' + response.status + ')');
+    const payload = await response.json();
+    if (payload && payload.error) throw new Error(String(payload.error));
+    const bars = normalizeBars(payload);
+    if (typeof options.validateBars === 'function') options.validateBars(bars);
+
+    const displayFrom = options.displayFrom ? String(options.displayFrom) : null;
+    const displayThrough = options.displayThrough ? String(options.displayThrough) : null;
+    const displayBars = bars.filter(function(bar){
+      return (!displayFrom || bar.time >= displayFrom) && (!displayThrough || bar.time <= displayThrough);
+    });
+    if (!displayBars.length) throw new Error('The requested chart window has no daily bars');
+
+    let mutated = false;
+    try {
+      if (!snapshot) snapshot = capture();
+      mutated = true;
+      if (activeOhlcvController) {
+        try { activeOhlcvController.abort(); } catch (error) {}
+        activeOhlcvController = null;
+      }
+      if (manualLegPick) cancelManualLegPick();
+      setTool('pan');
+      selectedId = null;
+      mainChartSessionDetached = true;
+      activeIdx = -1;
+      currentTF = 'D';
+      currentBars = displayBars.slice();
+      currentMoveRow = null;
+      currentSymbol = requested;
+      _syncWindowBars();
+      setDailyToggle();
+      renderTable();
+      document.getElementById('idx-spx-btn')?.classList.remove('is-active');
+      document.getElementById('idx-ndq-btn')?.classList.remove('is-active');
+
+      chartType = 'candle';
+      priceSeries = candleSeries;
+      clearDetachedChrome();
+      const candles = displayBars.map(function(bar){
+        return {time:bar.time,open:bar.open,high:bar.high,low:bar.low,close:bar.close};
+      });
+      candleSeries.setData(candles);
+      ohlcSeries?.setData([]);
+      volSeries?.setData(displayBars.map(function(bar){
+        return {
+          time:bar.time,
+          value:bar.volume,
+          color:bar.close >= bar.open ? (priceColors?.up || '#26a69a') : (priceColors?.down || '#ef5350')
+        };
+      }));
+      setupChartMenu();
+      const placeholder = document.getElementById('placeholder');
+      if (placeholder) placeholder.classList.add('hidden');
+      const loading = document.getElementById('loading');
+      if (loading) loading.classList.add('hidden');
+      maskIdentity(options.mask || {});
+      try {
+        chart.timeScale().setVisibleRange({from:displayBars[0].time,to:displayBars[displayBars.length - 1].time});
+      } catch (error) { try { chart.timeScale().fitContent(); } catch (ignored) {} }
+      redrawAll();
+      refreshMainChartDateFormatters();
+      return bars.slice();
+    } catch (error) {
+      if (mutated) restore();
+      throw error;
+    }
+  }
+
+  function maskIdentity(mask){
+    mask = mask || {};
+    setTitle({
+      'ct-sym': mask.symbolLabel || '🎯 MASKED TICKER',
+      'ct-cond': mask.conditionLabel || '',
+      'ct-gain': '',
+      'ct-range': mask.rangeLabel || 'Day −85 → Day 0',
+      'ct-vol': mask.volumeLabel || ''
+    });
+    document.getElementById('ct-blind-reveal')?.style.setProperty('display','none');
+    refreshMainChartDateFormatters();
+  }
+
+  function revealIdentity(meta){
+    meta = meta || {};
+    setTitle({
+      'ct-sym': meta.symbol || '—',
+      'ct-cond': meta.condition || '',
+      'ct-gain': meta.gain || '',
+      'ct-range': meta.range || '',
+      'ct-vol': meta.volume || ''
+    });
+    refreshMainChartDateFormatters();
+  }
+
+  function restore(){
+    if (!snapshot) {
+      mainChartSessionDetached = false;
+      return false;
+    }
+    const prior = snapshot;
+    snapshot = null;
+    try { clearDetachedChrome(); } catch (error) {}
+    currentBars = prior.bars.slice();
+    currentSymbol = prior.symbol;
+    currentMoveRow = prior.moveRow;
+    activeIdx = prior.activeIndex;
+    currentTF = prior.timeframe;
+    chartType = prior.chartType;
+    drawTool = prior.drawTool;
+    pendingP1 = prior.pendingPoint;
+    selectedId = prior.selectedDrawingId;
+    aiIndicators = prior.aiIndicators;
+    extraCandleMarkers = prior.extraMarkers.slice();
+    priceSeries = chartType === 'ohlc' ? ohlcSeries : candleSeries;
+    mainChartSessionDetached = false;
+    _syncWindowBars();
+    ['D','W','M'].forEach(function(tf){
+      document.getElementById('tf-' + tf)?.classList.toggle('active', tf === currentTF);
+    });
+    TOOLS.forEach(function(tool){ document.getElementById('tool-' + tool)?.classList.toggle('active', tool === drawTool); });
+    syncDrawVars();
+    try { applyTimeframe(); } catch (error) { console.warn('[MainChartSession] restore data failed:', error); }
+    try { applyIndicatorOverlays(); } catch (error) {}
+    setTitle(prior.title);
+    document.getElementById('placeholder')?.classList.toggle('hidden', prior.placeholderHidden);
+    document.getElementById('loading')?.classList.toggle('hidden', prior.loadingHidden);
+    const reveal = document.getElementById('ct-blind-reveal');
+    if (reveal) reveal.style.display = prior.blindRevealDisplay;
+    document.getElementById('idx-spx-btn')?.classList.toggle('is-active', prior.indexSpActive);
+    document.getElementById('idx-ndq-btn')?.classList.toggle('is-active', prior.indexNqActive);
+    (prior.openPanelIds || []).forEach(function(id){
+      const node = document.getElementById(id);
+      if (node) {
+        node.classList.add('open');
+        if (node.hasAttribute('aria-hidden')) node.setAttribute('aria-hidden', 'false');
+      }
+    });
+    if ((prior.openPanelIds || []).includes('ct-pop')) document.getElementById('ct-menu-btn')?.setAttribute('aria-expanded', 'true');
+    setupChartMenu();
+    renderTable();
+    const study = document.getElementById('study-panel');
+    if (study) {
+      study.classList.toggle('open', prior.studyOpen);
+      study.setAttribute('aria-hidden', prior.studyOpen ? 'false' : 'true');
+      if (prior.studyOpen && currentMoveRow) try { updateStudyPanel(); } catch (error) {}
+    }
+    if (prior.visibleRange) {
+      try { chart.timeScale().setVisibleRange(prior.visibleRange); } catch (error) {}
+    }
+    try { updateCrosshairInfo(null); } catch (error) {}
+    refreshMainChartDateFormatters();
+    return true;
+  }
+
+  return { loadSymbol, maskIdentity, revealIdentity, restore };
+})();
 
 // ============ STUDY PANEL ============
 function toggleStudyPanel() {
@@ -12355,9 +12818,8 @@ window.Sim = Sim;
              r != null ? (r >= 0 ? 'sim-pos' : 'sim-neg') : null);
     _setChip('sim-statsrow', 'days', days != null ? String(days) : '—');
 
-    // Blind replay: hide the absolute calendar date, show "Day +N / Day −N" relative to the entry.
-    const _blindLabel = (window.SimBlind && typeof window.SimBlind.formatBarIdx === 'function') ? window.SimBlind.formatBarIdx(barIndex || 0) : null;
-    _setText('sim-date-readout', _blindLabel || ('Day ' + (barIndex || 0) + ' · ' + (dateISO || '—')));
+    const maskedDate = window.SimDateMask && window.SimDateMask.formatBarIdx(barIndex || 0, 'current-day');
+    _setText('sim-date-readout', maskedDate || ('Day ' + (barIndex || 0) + ' · ' + (dateISO || '—')));
 
     const panel = document.getElementById('sim-panel');
     if (panel) {
@@ -13667,9 +14129,8 @@ window.Sim = Sim;
 
     if (numEl) numEl.textContent = String(ctx.legNum || 2);
     if (dateEl) {
-      // Blind replay: swap the calendar date for "Day +N" so we don't leak it.
-      const _blindLeg = (window.SimBlind && typeof window.SimBlind.formatDate === 'function') ? window.SimBlind.formatDate(ctx.barDate) : null;
-      dateEl.textContent = _blindLeg || ctx.barDate || '—';
+      const maskedDate = window.SimDateMask && window.SimDateMask.formatDate(ctx.barDate, 'entry-label');
+      dateEl.textContent = maskedDate || ctx.barDate || '—';
     }
     if (barpriceEl) barpriceEl.textContent = isFinite(barClose) ? _fmt$(barClose) : '—';
 
@@ -14767,24 +15228,24 @@ window.Sim = Sim;
     if (changed && typeof applyFilters === 'function') applyFilters();
   }
 
-  function _findBarIdx(dateStr) {
-    if (typeof currentBars === 'undefined' || !currentBars.length) return -1;
-    let idx = currentBars.findIndex(function(b){ return b.time === dateStr; });
-    if (idx >= 0) return idx;
-    // Roll forward to next available bar (handles weekends/holidays).
-    idx = currentBars.findIndex(function(b){ return b.time >= dateStr; });
-    return idx;
+  function _formatBlindBarIdx(barIdx, surface) {
+    if (!_state || !_state.active || _state.revealed || typeof barIdx !== 'number') return null;
+    const rel = barIdx - _state.dayZeroIdx;
+    if (surface === 'axis-tick') return rel >= 0 ? '+' + rel : String(rel);
+    return (rel >= 0 ? 'Day +' : 'Day ') + rel;
   }
 
-  function _lwcTimeToStr(t) {
-    if (t == null) return null;
-    if (typeof t === 'string') return t;
-    if (typeof t === 'number') { try { return new Date(t * 1000).toISOString().slice(0, 10); } catch(e) { return null; } }
-    if (typeof t === 'object' && t.year != null) {
-      return t.year + '-' + String(t.month).padStart(2, '0') + '-' + String(t.day).padStart(2, '0');
-    }
-    return null;
+  function _formatBlindDate(dateStr, surface) {
+    if (!_state || !_state.active || _state.revealed) return null;
+    if (typeof currentBars === 'undefined' || !currentBars.length) return null;
+    const idx = currentBars.findIndex(function(b){ return b.time === dateStr; });
+    return idx < 0 ? null : _formatBlindBarIdx(idx, surface);
   }
+
+  const _dateMaskAdapter = {
+    formatDate: _formatBlindDate,
+    formatBarIdx: _formatBlindBarIdx
+  };
 
   function _applyMask() {
     if (!_state || !_state.active) return;
@@ -14804,6 +15265,7 @@ window.Sim = Sim;
       range.textContent = 'Day −' + _state.contextBars + ' → Day +' + remain;
     }
     if (vol && _state.row) vol.textContent = '$' + _state.row.avg_vol_b + 'B/mo';
+    if (window.SimDateMask) window.SimDateMask.install('sim-blind', _dateMaskAdapter);
     _applyChartFormatters(true);
     _showRevealBtn(true);
   }
@@ -14821,66 +15283,14 @@ window.Sim = Sim;
     if (gain && row) gain.textContent = '+' + parseFloat(row.gain_pct).toFixed(2) + '%';
     if (range && row) range.textContent = row.low_date + ' → ' + row.high_date;
     if (vol && row) vol.textContent = '$' + row.avg_vol_b + 'B/mo';
+    if (window.SimDateMask) window.SimDateMask.remove('sim-blind');
     _applyChartFormatters(false);
     _showRevealBtn(false);
     _state.revealed = true;
   }
 
   function _applyChartFormatters(blindOn) {
-    if (typeof chart === 'undefined' || !chart) return;
-    if (blindOn) {
-      try {
-        chart.applyOptions({
-          localization: {
-            locale: 'en-US',
-            timeFormatter: function(time){
-              const dateStr = _lwcTimeToStr(time);
-              if (!dateStr) return '';
-              const idx = _findBarIdx(dateStr);
-              if (idx < 0) return '';
-              const rel = idx - _state.dayZeroIdx;
-              return rel >= 0 ? 'Day +' + rel : 'Day ' + rel;
-            }
-          }
-        });
-        chart.timeScale().applyOptions({
-          tickMarkFormatter: function(time){
-            const dateStr = _lwcTimeToStr(time);
-            if (!dateStr) return '';
-            const idx = _findBarIdx(dateStr);
-            if (idx < 0) return '';
-            const rel = idx - _state.dayZeroIdx;
-            return rel >= 0 ? '+' + rel : String(rel);
-          }
-        });
-      } catch(e) { console.warn('[SimBlind] applyOptions failed:', e); }
-    } else {
-      // LWC v3 applyOptions treats `undefined` as "leave alone" so we can't
-      // remove the override that way. Returning undefined from a formatter
-      // also breaks v3 — the literal string "undefined" appears on ticks.
-      // Install real formatters that produce a sensible YYYY-MM-DD / MM/DD.
-      try {
-        chart.applyOptions({
-          localization: {
-            locale: 'en-US',
-            timeFormatter: function(time){
-              const s = _lwcTimeToStr(time);
-              return s || '';
-            }
-          }
-        });
-        chart.timeScale().applyOptions({
-          tickMarkFormatter: function(time){
-            const s = _lwcTimeToStr(time);
-            if (!s) return '';
-            // Compact MM/DD/YY for axis ticks, matching LWC's default-ish look.
-            const parts = s.split('-');
-            if (parts.length === 3) return parts[1] + '/' + parts[2] + '/' + parts[0].slice(2);
-            return s;
-          }
-        });
-      } catch(e) { console.warn('[SimBlind] restore failed:', e); }
-    }
+    if (window.SimDateMask) window.SimDateMask.refresh();
   }
 
   function _showRevealBtn(visible) {
@@ -15123,20 +15533,8 @@ window.Sim = Sim;
     // Used by the bottom Day-readout and the crosshair info-date setter to swap
     // calendar dates for "Day +N / Day −N" relative to the entry bar. Returns
     // null when blind is not active so the caller falls back to default text.
-    formatBarIdx: function(barIdx) {
-      if (!_state || !_state.active || _state.revealed) return null;
-      if (typeof barIdx !== 'number') return null;
-      const rel = barIdx - _state.dayZeroIdx;
-      return (rel >= 0 ? 'Day +' : 'Day ') + rel;
-    },
-    formatDate: function(dateStr) {
-      if (!_state || !_state.active || _state.revealed) return null;
-      if (typeof currentBars === 'undefined' || !currentBars.length) return null;
-      const idx = currentBars.findIndex(function(b){ return b.time === dateStr; });
-      if (idx < 0) return null;
-      const rel = idx - _state.dayZeroIdx;
-      return (rel >= 0 ? 'Day +' : 'Day ') + rel;
-    }
+    formatBarIdx: function(barIdx) { return _formatBlindBarIdx(barIdx, 'compatibility'); },
+    formatDate: function(dateStr) { return _formatBlindDate(dateStr, 'compatibility'); }
   };
 })();
 </script>
