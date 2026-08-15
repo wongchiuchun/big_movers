@@ -10587,6 +10587,8 @@ window.MainChartSession = (function(){
   function capture(){
     let visibleRange = null;
     const transientPanelIds = ['ma-panel','st-panel','ct-pop','notes-popup','compare-popup','defs-modal'];
+    const manualLegButton = document.getElementById('manual-leg-add');
+    const legHighlight = document.getElementById('leg-highlight');
     try { visibleRange = chart && chart.timeScale().getVisibleRange(); } catch (error) {}
     return {
       bars: Array.isArray(currentBars) ? currentBars.slice() : [],
@@ -10598,6 +10600,14 @@ window.MainChartSession = (function(){
       drawTool,
       pendingPoint: pendingP1,
       selectedDrawingId: selectedId,
+      manualLegPick: manualLegPick ? {
+        moveKey: manualLegPick.moveKey,
+        moveRow: manualLegPick.moveRow,
+        start: manualLegPick.start
+      } : null,
+      manualLegButtonActive: !!manualLegButton?.classList.contains('active'),
+      manualLegButtonText: manualLegButton?.textContent || '',
+      legHighlightStyle: legHighlight?.style.cssText || '',
       aiIndicators,
       extraMarkers: Array.isArray(extraCandleMarkers) ? extraCandleMarkers.slice() : [],
       title: textSnapshot(),
@@ -10691,7 +10701,9 @@ window.MainChartSession = (function(){
     if (!requested) throw new Error('A symbol is required');
 
     // Fetch and caller validation happen before any visible/session mutation.
-    const response = await fetch('/api/ohlcv?symbol=' + encodeURIComponent(requested) + '&_=' + Date.now());
+    const response = await fetch('/api/ohlcv?symbol=' + encodeURIComponent(requested) + '&_=' + Date.now(), {
+      signal: options.signal
+    });
     if (!response.ok) throw new Error('OHLCV request failed (' + response.status + ')');
     const payload = await response.json();
     if (payload && payload.error) throw new Error(String(payload.error));
@@ -10841,6 +10853,24 @@ window.MainChartSession = (function(){
     if (prior.visibleRange) {
       try { chart.timeScale().setVisibleRange(prior.visibleRange); } catch (error) {}
     }
+    // loadSymbol suspends an in-progress manual leg pick while the detached
+    // chart is active. Resume the exact picker and overlay after the original
+    // data and visible range are back in place.
+    manualLegPick = prior.manualLegPick ? {
+      moveKey: prior.manualLegPick.moveKey,
+      moveRow: prior.manualLegPick.moveRow,
+      start: prior.manualLegPick.start
+    } : null;
+    manualLegClickConsumed = false;
+    const manualLegButton = document.getElementById('manual-leg-add');
+    if (manualLegButton) {
+      manualLegButton.classList.toggle('active', prior.manualLegButtonActive);
+      manualLegButton.textContent = prior.manualLegButtonText != null
+        ? prior.manualLegButtonText
+        : '+ Add manual leg';
+    }
+    const legHighlight = document.getElementById('leg-highlight');
+    if (legHighlight) legHighlight.style.cssText = prior.legHighlightStyle || '';
     try { updateCrosshairInfo(null); } catch (error) {}
     refreshMainChartDateFormatters();
     return true;
@@ -18281,6 +18311,11 @@ window.Sim = Sim;
     var s = n > 0 ? '+' : '';
     return s + Number(n).toFixed(2) + '%';
   }
+  function _visibleDate(value, surface){
+    var mask = window.SimDateMask;
+    if (mask && mask.isActive()) return mask.formatDate(value, surface) || 'Day —';
+    return value || '?';
+  }
 
   // Per-attempt run identifier. Lazy-stamped onto the sim so subsequent
   // saves in the same attempt reuse the key. A re-run of the same setup
@@ -18440,7 +18475,7 @@ window.Sim = Sim;
       var sym = summary.symbol || 'POS';
       var dir = (summary.sim && summary.sim.direction) || 'long';
       var entry = (summary.sim && summary.sim.entry) || {};
-      var meta = sym + (dir === 'short' ? ' (SHORT)' : '') + ' · entry ' + (entry.date || '?') + ' @ ' + _r2(entry.price);
+      var meta = sym + (dir === 'short' ? ' (SHORT)' : '') + ' · entry ' + _visibleDate(entry.date, 'review-entry') + ' @ ' + _r2(entry.price);
       if (loaded.savedAt) meta += ' · last saved ' + String(loaded.savedAt).replace('T', ' ').slice(0, 19);
       metaEl.textContent = meta;
     }
@@ -18460,7 +18495,7 @@ window.Sim = Sim;
         var sym = summary.symbol || 'POS';
         var dir = (summary.sim && summary.sim.direction) || 'long';
         var entry = (summary.sim && summary.sim.entry) || {};
-        metaEl.textContent = sym + (dir === 'short' ? ' (SHORT)' : '') + ' · entry ' + (entry.date || '?') + ' @ ' + _r2(entry.price)
+        metaEl.textContent = sym + (dir === 'short' ? ' (SHORT)' : '') + ' · entry ' + _visibleDate(entry.date, 'review-entry') + ' @ ' + _r2(entry.price)
           + ' · last saved ' + data.savedAt.replace('T', ' ').slice(0, 19);
       }
       setTimeout(function(){ saveEl.classList.remove('is-saved'); }, 1500);
@@ -18614,10 +18649,15 @@ Sim.Ctrl = (function(){
       if (bar && bar.time) {
         const dateLine = document.createElement('span');
         dateLine.className = 'sim-stop-date';
-        const d = new Date(bar.time);
-        dateLine.textContent = isNaN(d.getTime())
-          ? bar.time
-          : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const dateMask = window.SimDateMask;
+        if (dateMask && dateMask.isActive()) {
+          dateLine.textContent = dateMask.formatDate(bar.time, 'stop-history') || 'Day —';
+        } else {
+          const d = new Date(bar.time);
+          dateLine.textContent = isNaN(d.getTime())
+            ? bar.time
+            : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
         dayCell.appendChild(dateLine);
       }
       row.appendChild(dayCell);

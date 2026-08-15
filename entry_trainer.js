@@ -21,6 +21,52 @@
     lastBatch: null,
     runtime: null
   };
+  let operationGeneration = 0;
+  let activeOperation = null;
+
+  function beginOperation(){
+    if (activeOperation) {
+      try { activeOperation.controller.abort(); } catch (error) {}
+    }
+    const operation = {
+      generation: ++operationGeneration,
+      controller: new AbortController()
+    };
+    activeOperation = operation;
+    return operation;
+  }
+
+  function isCurrentOperation(operation){
+    return !!operation && activeOperation === operation && operation.generation === operationGeneration;
+  }
+
+  function staleOperationError(){
+    const error = new Error('Entry Trainer operation is no longer current');
+    error.code = 'ENTRY_TRAINER_STALE_OPERATION';
+    return error;
+  }
+
+  function assertCurrentOperation(operation){
+    if (!isCurrentOperation(operation) || operation.controller.signal.aborted) throw staleOperationError();
+  }
+
+  function isStaleOperation(error, operation){
+    return !isCurrentOperation(operation)
+      || !!(error && error.code === 'ENTRY_TRAINER_STALE_OPERATION')
+      || !!(error && error.name === 'AbortError' && operation && operation.controller.signal.aborted);
+  }
+
+  function finishOperation(operation){
+    if (activeOperation === operation) activeOperation = null;
+  }
+
+  function cancelOperations(){
+    operationGeneration += 1;
+    if (activeOperation) {
+      try { activeOperation.controller.abort(); } catch (error) {}
+    }
+    activeOperation = null;
+  }
 
   function byId(id){ return document.getElementById(id); }
 
@@ -118,8 +164,12 @@
     return { rules:validateRules(payload.rules), candidates };
   }
 
-  async function fetchBatchDescriptors(){
-    const response = await fetch('/api/entry-trainer/candidates?count=3', { headers:{Accept:'application/json'} });
+  async function fetchBatchDescriptors(operation){
+    const response = await fetch('/api/entry-trainer/candidates?count=3', {
+      headers:{Accept:'application/json'},
+      signal: operation.controller.signal
+    });
+    assertCurrentOperation(operation);
     let payload = null;
     try { payload = await response.json(); } catch (error) {}
     if (!response.ok || !payload || payload.error) {
@@ -225,10 +275,12 @@
     if (runtime) runtime.lockedControls = [];
   }
 
-  async function loadCandidate(batch, runtime, index){
+  async function loadCandidate(batch, runtime, index, operation){
+    assertCurrentOperation(operation);
     const candidate = batch.candidates[index];
     let validated = null;
     const fullBars = await runtime.chartSession.loadSymbol(candidate.symbol, {
+      signal: operation.controller.signal,
       displayFrom: candidate.contextStartDate,
       displayThrough: candidate.qualificationDate,
       mask: {
@@ -237,10 +289,15 @@
         rangeLabel: 'Day −' + batch.rules.contextBars + ' → Day 0'
       },
       validateBars: function(bars){
+        // MainChartSession mutates only after this callback returns. Checking
+        // here prevents a response that resolves after Exit/new load from ever
+        // reinstalling the mask or replacing the restored chart.
+        assertCurrentOperation(operation);
         validated = verifyCandidateBars(candidate, batch.rules, bars);
         window.SimDateMask.install(MASK_OWNER, createDateAdapter(bars, validated));
       }
     });
+    assertCurrentOperation(operation);
     if (!validated) throw new Error('Candidate validation did not complete');
     runtime.fullBars = fullBars;
     runtime.qualificationIndex = validated.qualificationIndex;
@@ -280,13 +337,15 @@
       return;
     }
 
+    const operation = beginOperation();
     state.status = 'loading';
     setSetupBusy(true);
     setSetupStatus('Selecting three point-in-time candidates…', false);
     let draft = null;
     let runtime = null;
     try {
-      const descriptors = await fetchBatchDescriptors();
+      const descriptors = await fetchBatchDescriptors(operation);
+      assertCurrentOperation(operation);
       draft = createBatch(descriptors, startingEquity);
       runtime = {
         chartSession: window.MainChartSession,
@@ -297,8 +356,10 @@
         activeSymbol: null,
         lockedControls: []
       };
+      state.runtime = runtime;
       setSetupStatus('Loading the first masked chart…', false);
-      await loadCandidate(draft, runtime, 0);
+      await loadCandidate(draft, runtime, 0, operation);
+      assertCurrentOperation(operation);
       draft.status = 'active';
       state = { status:'active', batch:draft, lastBatch:state.lastBatch, runtime };
       lockOrdinaryControls(runtime);
@@ -307,6 +368,7 @@
       setSetupStatus('', false);
       updateStrip();
     } catch (error) {
+      if (isStaleOperation(error, operation)) return;
       console.error('[EntryTrainer] start failed:', error);
       try { window.SimDateMask?.remove(MASK_OWNER); } catch (ignored) {}
       try { runtime?.chartSession?.restore(); } catch (ignored) {}
@@ -318,7 +380,10 @@
       byId('entry-trainer-strip')?.classList.remove('is-active');
       setSetupStatus('Could not start the batch. The previous chart was preserved.', true);
     } finally {
-      setSetupBusy(false);
+      if (isCurrentOperation(operation)) {
+        setSetupBusy(false);
+        finishOperation(operation);
+      }
     }
   }
 
@@ -341,12 +406,15 @@
     }
 
     if (status) status.textContent = 'Loading the next masked ticker…';
+    const operation = beginOperation();
     state.status = 'loading';
     try {
-      await loadCandidate(batch, state.runtime, batch.activeIndex + 1);
+      await loadCandidate(batch, state.runtime, batch.activeIndex + 1, operation);
+      assertCurrentOperation(operation);
       state.status = 'active';
       updateStrip();
     } catch (error) {
+      if (isStaleOperation(error, operation)) return;
       console.error('[EntryTrainer] candidate load failed:', error);
       batch.status = 'abandoned';
       batch.abandonedAt = new Date().toISOString();
@@ -354,6 +422,8 @@
       cleanupShell();
       state = { status:'idle', batch:null, lastBatch:batch, runtime:null };
       window.alert('Entry Trainer ended because the next masked chart could not be loaded. Your previous chart was restored.');
+    } finally {
+      finishOperation(operation);
     }
   }
 
@@ -371,22 +441,24 @@
   }
 
   function isActive(){
-    return !!(state.batch && (state.status === 'active' || state.status === 'loading'));
+    return state.status === 'loading' || !!(state.batch && state.status === 'active');
   }
 
   function exit(){
-    if (!state.batch) {
+    const hadPendingWork = state.status === 'loading' || !!state.batch;
+    cancelOperations();
+    if (!hadPendingWork) {
       setSetupOpen(false);
       return false;
     }
     const batch = state.batch;
-    if (batch.status !== 'completed') {
+    if (batch && batch.status !== 'completed') {
       batch.status = 'abandoned';
       batch.abandonedAt = new Date().toISOString();
     }
-    state.lastBatch = batch;
+    if (batch) state.lastBatch = batch;
     cleanupShell();
-    state = { status:'idle', batch:null, lastBatch:batch, runtime:null };
+    state = { status:'idle', batch:null, lastBatch:batch || state.lastBatch, runtime:null };
     return true;
   }
 
