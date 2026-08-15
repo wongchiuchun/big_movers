@@ -415,6 +415,10 @@
     const status = byId('entry-trainer-shell-status');
     const candidate = batch.candidates[batch.activeIndex];
     const order = workingOrder(candidate);
+    const retryNotice = state.runtime && state.runtime.orderRetryNotice;
+    const retryMessage = order && retryNotice && retryNotice.orderId === order.id
+      ? retryNotice.message
+      : null;
     if (ticker) ticker.textContent = 'Ticker ' + (batch.activeIndex + 1) + ' of ' + BATCH_SIZE;
     const playback = state.runtime && state.runtime.playbackState;
     let attemptNumber = candidate.attempts.length;
@@ -425,13 +429,15 @@
     if (status) {
       status.textContent = batch.status === 'completed'
         ? 'Batch complete · review and persistence arrive in a later task.'
-        : playback && playback.atHorizon
-          ? '90-bar horizon reached.'
-          : playback && playback.attemptActive
-            ? 'Attempt open · manage the stop or close the full position at the paused close.'
-            : order
-              ? 'Limit order working · Wait advances one candle and checks for a fill.'
-            : 'Out of position · wait one bar, enter at this close, or skip the ticker.';
+        : retryMessage
+          ? retryMessage
+          : playback && playback.atHorizon
+            ? '90-bar horizon reached.'
+            : playback && playback.attemptActive
+              ? 'Attempt open · manage the stop or close the full position at the paused close.'
+              : order
+                ? 'Limit order working · Wait advances one candle and checks for a fill.'
+                : 'Out of position · wait one bar, enter at this close, or skip the ticker.';
     }
     const pending = byId('entry-trainer-pending');
     const pendingDetail = byId('entry-trainer-pending-detail');
@@ -623,11 +629,48 @@
 
   function restoreOrderTransaction(batch, candidate, snapshot){
     if (!batch || !candidate || !snapshot) return false;
-    candidate.pendingOrder = clone(snapshot.pendingOrder);
-    candidate.orderEvents = clone(snapshot.orderEvents);
-    batch.orderState = clone(snapshot.orderState);
-    reconcileOrders(batch, 'Entry Trainer restored a working reservation after fill commit failure.');
+    function restoreSnapshot(){
+      candidate.pendingOrder = clone(snapshot.pendingOrder);
+      candidate.orderEvents = clone(snapshot.orderEvents);
+      batch.orderState = clone(snapshot.orderState);
+    }
+    restoreSnapshot();
+    try {
+      const api = ordersApi();
+      if (api && typeof api.reconcile === 'function') {
+        api.reconcile(batch.orderState, batch.candidates, {
+          reason: 'Entry Trainer restored a working reservation after fill commit failure.'
+        });
+      }
+    } catch (error) {
+      console.error('[EntryTrainer] order rollback reconciliation failed:', error);
+      restoreSnapshot();
+    }
+    if (!workingOrder(candidate)) restoreSnapshot();
+    try { syncOrderPresentation(batch); }
+    catch (error) {
+      console.error('[EntryTrainer] order rollback presentation failed:', error);
+      try { showLimitLine(workingOrder(candidate)); } catch (ignored) {}
+      try { updateStrip(); } catch (ignored) {}
+    }
     return !!workingOrder(candidate);
+  }
+
+  function clearOrderRetryNotice(order){
+    const runtime = state.runtime;
+    if (!runtime || !runtime.orderRetryNotice) return;
+    if (!order || runtime.orderRetryNotice.orderId === order.id) runtime.orderRetryNotice = null;
+  }
+
+  function showOrderRetryNotice(order){
+    const runtime = state.runtime;
+    if (!runtime || !order) return;
+    runtime.orderRetryNotice = {
+      orderId: order.id,
+      message: 'The limit fill could not be applied. The order remains working; choose Wait to retry.'
+    };
+    try { updateStrip(); }
+    catch (error) { console.error('[EntryTrainer] order retry notice could not render:', error); }
   }
 
   function fillWorkingOrderOnBar(candidate, order, bar, barIdx, fill){
@@ -697,36 +740,44 @@
     }
 
     const orderSnapshot = captureOrderTransaction(batch, candidate);
-    const filledEvent = transitionOrder(candidate, 'filled', {
-      date: bar.time,
-      barIdx: barIdx,
-      price: fill.price,
-      fillPrice: fill.price,
-      requestedPrice: order.limitPrice,
-      gapImproved: fill.gapImproved === true,
-      fillTiming: fillTiming,
-      executionTiming: 'limit_fill',
-      extremaTiming: extremaTiming,
-      extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx
-    });
-    if (!filledEvent || filledEvent.type !== 'filled') {
-      window.Sim.Ctrl.discardFlatEntry(prepared);
-      if (candidate.pendingOrder && candidate.pendingOrder.id === order.id && candidate.pendingOrder.status === 'filled') {
-        restoreOrderTransaction(batch, candidate, orderSnapshot);
-        return { allow:false };
-      }
-      syncOrderPresentation(batch);
-      return null;
-    }
-
+    let committed = false;
+    let terminalizedWithoutFill = false;
     let started = null;
-    try { started = window.Sim.Ctrl.commitFlatEntry(prepared); }
-    catch (error) { started = { ok:false, error:error && error.message ? error.message : String(error) }; }
-    if (!started || !started.ok) {
-      try { window.Sim.Ctrl.discardFlatEntry(prepared); } catch (ignored) {}
-      restoreOrderTransaction(batch, candidate, orderSnapshot);
+    try {
+      const filledEvent = transitionOrder(candidate, 'filled', {
+        date: bar.time,
+        barIdx: barIdx,
+        price: fill.price,
+        fillPrice: fill.price,
+        requestedPrice: order.limitPrice,
+        gapImproved: fill.gapImproved === true,
+        fillTiming: fillTiming,
+        executionTiming: 'limit_fill',
+        extremaTiming: extremaTiming,
+        extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx
+      });
+      if (!filledEvent || filledEvent.type !== 'filled') {
+        terminalizedWithoutFill = !workingOrder(candidate)
+          && (!candidate.pendingOrder || candidate.pendingOrder.status !== 'filled');
+        return terminalizedWithoutFill ? null : { allow:false };
+      }
+
+      started = window.Sim.Ctrl.commitFlatEntry(prepared);
+      if (!started || !started.ok) return { allow:false };
+      committed = true;
+    } catch (error) {
+      console.error('[EntryTrainer] limit fill transaction failed:', error);
       return { allow:false };
+    } finally {
+      if (!committed) {
+        try { window.Sim.Ctrl.discardFlatEntry(prepared); }
+        catch (error) { console.error('[EntryTrainer] staged entry discard failed:', error); }
+        if (!terminalizedWithoutFill && restoreOrderTransaction(batch, candidate, orderSnapshot)) {
+          showOrderRetryNotice(workingOrder(candidate));
+        }
+      }
     }
+    clearOrderRetryNotice(order);
     if (gapThroughStop && started.stopEvent) {
       api.recordEvent(candidate, 'gap_stop', {
         order: order,
@@ -745,6 +796,7 @@
     const candidate = activeCandidate();
     const order = workingOrder(candidate);
     if (!order || !context || !context.bar) return null;
+    clearOrderRetryNotice(order);
     if (context.barIdx >= context.endBarIdx) {
       terminalizeWorkingOrder(candidate, 'expired', 'Limit order reached the ticker horizon unfilled.', context.barIdx);
       reconcileOrders(state.batch, 'Entry Trainer reconciled reservations at the ticker horizon.');
