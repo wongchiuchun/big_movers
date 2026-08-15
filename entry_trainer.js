@@ -23,6 +23,8 @@
   };
   let operationGeneration = 0;
   let activeOperation = null;
+  let setupOpener = null;
+  let setupFocusTimer = null;
 
   function beginOperation(){
     if (activeOperation) {
@@ -89,18 +91,64 @@
       start.disabled = !!busy;
       start.textContent = busy ? 'Selecting batch…' : 'Start 3-ticker batch';
     }
-    if (cancel) cancel.disabled = !!busy;
+    if (cancel) {
+      cancel.disabled = false;
+      cancel.textContent = busy ? 'Cancel loading' : 'Cancel';
+    }
     if (equity) equity.disabled = !!busy;
   }
 
-  function setSetupOpen(open){
+  function restoreSetupOpener(){
+    const opener = setupOpener;
+    setupOpener = null;
+    if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus();
+  }
+
+  function setSetupOpen(open, options){
+    options = options || {};
     const modal = byId('entry-trainer-setup-modal');
     if (!modal) return;
+    if (setupFocusTimer) {
+      clearTimeout(setupFocusTimer);
+      setupFocusTimer = null;
+    }
+    if (open && !modal.classList.contains('open') && !setupOpener) setupOpener = document.activeElement;
     modal.classList.toggle('open', !!open);
     modal.setAttribute('aria-hidden', open ? 'false' : 'true');
     if (open) {
-      const equity = byId('entry-trainer-equity');
-      setTimeout(function(){ equity?.focus(); equity?.select(); }, 30);
+      const focusTarget = options.focusTarget ? byId(options.focusTarget) : byId('entry-trainer-equity');
+      setupFocusTimer = setTimeout(function(){
+        setupFocusTimer = null;
+        if (!modal.classList.contains('open')) return;
+        focusTarget?.focus();
+        if (focusTarget && typeof focusTarget.select === 'function') focusTarget.select();
+      }, 30);
+    } else if (options.restoreFocus) {
+      restoreSetupOpener();
+    }
+  }
+
+  function trapSetupFocus(event){
+    const modal = byId('entry-trainer-setup-modal');
+    if (!modal || !modal.classList.contains('open') || event.key !== 'Tab') return;
+    const focusable = Array.from(modal.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter(function(node){ return node.getClientRects().length > 0; });
+    if (!focusable.length) {
+      event.preventDefault();
+      modal.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!modal.contains(document.activeElement)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   }
 
@@ -279,6 +327,7 @@
     assertCurrentOperation(operation);
     const candidate = batch.candidates[index];
     let validated = null;
+    runtime.sessionStarted = true;
     const fullBars = await runtime.chartSession.loadSymbol(candidate.symbol, {
       signal: operation.controller.signal,
       displayFrom: candidate.contextStartDate,
@@ -289,12 +338,14 @@
         rangeLabel: 'Day −' + batch.rules.contextBars + ' → Day 0'
       },
       validateBars: function(bars){
-        // MainChartSession mutates only after this callback returns. Checking
-        // here prevents a response that resolves after Exit/new load from ever
-        // reinstalling the mask or replacing the restored chart.
         assertCurrentOperation(operation);
         validated = verifyCandidateBars(candidate, batch.rules, bars);
-        window.SimDateMask.install(MASK_OWNER, createDateAdapter(bars, validated));
+      },
+      beforeCommit: function(bars){
+        assertCurrentOperation(operation);
+        if (!validated || !runtime.maskLease || !runtime.maskLease.install(createDateAdapter(bars, validated))) {
+          throw new Error('Entry Trainer lost its date-mask lease');
+        }
       }
     });
     assertCurrentOperation(operation);
@@ -308,19 +359,41 @@
     batch.activeIndex = index;
   }
 
-  function cleanupShell(){
-    try { window.SimDateMask?.remove(MASK_OWNER); } catch (error) {}
-    try { state.runtime?.chartSession?.restore(); } catch (error) { console.error('[EntryTrainer] chart restore failed:', error); }
-    unlockOrdinaryControls(state.runtime);
+  function cleanupShell(options){
+    options = options || {};
+    const runtime = state.runtime;
+    let restored = { ok:true, restored:false, error:null };
+    try {
+      if (runtime && runtime.chartSession && runtime.sessionStarted) restored = runtime.chartSession.restore();
+    } catch (error) {
+      restored = { ok:false, restored:false, error };
+    }
+    if (!restored || !restored.ok) {
+      if (runtime && !(runtime.lockedControls || []).length) lockOrdinaryControls(runtime);
+      state.status = 'restore-error';
+      document.body.classList.add('entry-trainer-active');
+      setSetupBusy(false);
+      const start = byId('entry-trainer-start');
+      const cancel = byId('entry-trainer-cancel');
+      if (start) start.disabled = true;
+      if (cancel) cancel.textContent = 'Retry restore';
+      setSetupOpen(true, {focusTarget:'entry-trainer-cancel'});
+      setSetupStatus('The prior chart could not be fully restored. Cancel retries restoration while ordinary controls remain locked. ' + (restored && restored.error ? restored.error.message : ''), true);
+      return restored || { ok:false, restored:false, error:new Error('Unknown chart restore failure') };
+    }
+    try { runtime?.maskLease?.release(); } catch (error) {}
+    unlockOrdinaryControls(runtime);
     document.body.classList.remove('entry-trainer-active');
     byId('entry-trainer-strip')?.classList.remove('is-active');
     const launch = byId('entry-trainer-btn');
     if (launch) launch.setAttribute('aria-pressed', 'false');
     setSetupBusy(false);
+    if (options.closeModal) setSetupOpen(false, {restoreFocus:!!options.restoreFocus});
+    return restored;
   }
 
   async function startFromSetup(){
-    if (state.status === 'loading' || state.status === 'active') return;
+    if (state.status === 'loading' || state.status === 'active' || state.status === 'restore-error') return;
     const input = byId('entry-trainer-equity');
     const startingEquity = Number(input && input.value);
     if (!Number.isFinite(startingEquity) || startingEquity <= 0) {
@@ -336,27 +409,40 @@
       setSetupStatus('The chart session is still loading. Try again in a moment.', true);
       return;
     }
+    if (typeof window.SimDateMask.tryAcquire !== 'function') {
+      setSetupStatus('The date-mask service is not ready. Try again in a moment.', true);
+      return;
+    }
+
+    const maskAcquisition = window.SimDateMask.tryAcquire(MASK_OWNER);
+    if (!maskAcquisition.ok) {
+      const owner = maskAcquisition.owner === 'sim-blind' ? 'Blind Sim' : (maskAcquisition.owner || 'another playback mode');
+      setSetupStatus('Entry Trainer cannot start because date masking is currently owned by ' + owner + '. Exit it and try again.', true);
+      return;
+    }
 
     const operation = beginOperation();
+    const runtime = {
+      chartSession: window.MainChartSession,
+      maskLease: maskAcquisition.lease,
+      sessionStarted: false,
+      fullBars: null,
+      qualificationIndex: null,
+      contextIndex: null,
+      endIndex: null,
+      activeSymbol: null,
+      lockedControls: []
+    };
     state.status = 'loading';
+    state.runtime = runtime;
     setSetupBusy(true);
     setSetupStatus('Selecting three point-in-time candidates…', false);
     let draft = null;
-    let runtime = null;
     try {
       const descriptors = await fetchBatchDescriptors(operation);
       assertCurrentOperation(operation);
       draft = createBatch(descriptors, startingEquity);
-      runtime = {
-        chartSession: window.MainChartSession,
-        fullBars: null,
-        qualificationIndex: null,
-        contextIndex: null,
-        endIndex: null,
-        activeSymbol: null,
-        lockedControls: []
-      };
-      state.runtime = runtime;
+      state.batch = draft;
       setSetupStatus('Loading the first masked chart…', false);
       await loadCandidate(draft, runtime, 0, operation);
       assertCurrentOperation(operation);
@@ -364,21 +450,20 @@
       state = { status:'active', batch:draft, lastBatch:state.lastBatch, runtime };
       lockOrdinaryControls(runtime);
       document.body.classList.add('entry-trainer-active');
-      setSetupOpen(false);
+      setSetupOpen(false, {restoreFocus:false});
       setSetupStatus('', false);
       updateStrip();
+      byId('entry-trainer-strip')?.focus();
     } catch (error) {
       if (isStaleOperation(error, operation)) return;
       console.error('[EntryTrainer] start failed:', error);
-      try { window.SimDateMask?.remove(MASK_OWNER); } catch (ignored) {}
-      try { runtime?.chartSession?.restore(); } catch (ignored) {}
-      unlockOrdinaryControls(runtime);
-      state.status = 'idle';
-      state.batch = null;
-      state.runtime = null;
-      document.body.classList.remove('entry-trainer-active');
-      byId('entry-trainer-strip')?.classList.remove('is-active');
-      setSetupStatus('Could not start the batch. The previous chart was preserved.', true);
+      const cleanup = cleanupShell({closeModal:false, restoreFocus:false});
+      if (cleanup.ok) {
+        state.status = 'idle';
+        state.batch = null;
+        state.runtime = null;
+        setSetupStatus('Could not start the batch. The previous chart was preserved. ' + error.message, true);
+      }
     } finally {
       if (isCurrentOperation(operation)) {
         setSetupBusy(false);
@@ -419,9 +504,11 @@
       batch.status = 'abandoned';
       batch.abandonedAt = new Date().toISOString();
       state.lastBatch = batch;
-      cleanupShell();
-      state = { status:'idle', batch:null, lastBatch:batch, runtime:null };
-      window.alert('Entry Trainer ended because the next masked chart could not be loaded. Your previous chart was restored.');
+      const cleanup = cleanupShell({closeModal:true, restoreFocus:true});
+      if (cleanup.ok) {
+        state = { status:'idle', batch:null, lastBatch:batch, runtime:null };
+        window.alert('Entry Trainer ended because the next masked chart could not be loaded. Your previous chart was restored.');
+      }
     } finally {
       finishOperation(operation);
     }
@@ -429,6 +516,10 @@
 
   function open(){
     if (!wired) wire();
+    if (state.status === 'restore-error') {
+      setSetupOpen(true, {focusTarget:'entry-trainer-cancel'});
+      return;
+    }
     if (isActive()) {
       byId('entry-trainer-strip')?.focus();
       return;
@@ -441,14 +532,14 @@
   }
 
   function isActive(){
-    return state.status === 'loading' || !!(state.batch && state.status === 'active');
+    return state.status === 'loading' || state.status === 'restore-error' || !!(state.batch && state.status === 'active');
   }
 
   function exit(){
-    const hadPendingWork = state.status === 'loading' || !!state.batch;
+    const hadPendingWork = state.status === 'loading' || state.status === 'restore-error' || !!state.batch || !!state.runtime;
     cancelOperations();
     if (!hadPendingWork) {
-      setSetupOpen(false);
+      setSetupOpen(false, {restoreFocus:true});
       return false;
     }
     const batch = state.batch;
@@ -457,7 +548,8 @@
       batch.abandonedAt = new Date().toISOString();
     }
     if (batch) state.lastBatch = batch;
-    cleanupShell();
+    const cleanup = cleanupShell({closeModal:true, restoreFocus:true});
+    if (!cleanup.ok) return false;
     state = { status:'idle', batch:null, lastBatch:batch || state.lastBatch, runtime:null };
     return true;
   }
@@ -467,6 +559,12 @@
     if (!target || (batchId && target.id !== batchId)) return false;
     // Review rendering is deliberately reserved for the review task.
     return false;
+  }
+
+  function cancelSetup(){
+    if (state.status === 'loading' || state.status === 'restore-error') return exit();
+    setSetupOpen(false, {restoreFocus:true});
+    return true;
   }
 
   function wire(){
@@ -479,12 +577,12 @@
     }
     wired = true;
     launch.addEventListener('click', open);
-    byId('entry-trainer-cancel')?.addEventListener('click', function(){ if (state.status !== 'loading') setSetupOpen(false); });
+    byId('entry-trainer-cancel')?.addEventListener('click', cancelSetup);
     byId('entry-trainer-start')?.addEventListener('click', startFromSetup);
     byId('entry-trainer-skip')?.addEventListener('click', skipTicker);
     byId('entry-trainer-exit')?.addEventListener('click', exit);
     modal.addEventListener('click', function(event){
-      if (event.target === modal && state.status !== 'loading') setSetupOpen(false);
+      if (event.target === modal) cancelSetup();
     });
     byId('entry-trainer-equity')?.addEventListener('keydown', function(event){
       if (event.key === 'Enter') {
@@ -493,8 +591,11 @@
       }
     });
     document.addEventListener('keydown', function(event){
-      if (event.key !== 'Escape') return;
-      if (modal.classList.contains('open') && state.status !== 'loading') setSetupOpen(false);
+      trapSetupFocus(event);
+      if (event.key === 'Escape' && modal.classList.contains('open')) {
+        event.preventDefault();
+        cancelSetup();
+      }
     });
     return true;
   }

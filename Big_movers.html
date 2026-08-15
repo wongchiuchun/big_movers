@@ -6776,7 +6776,48 @@
 window.SimDateMask = (function(){
   let owner = null;
   let adapter = null;
+  let leaseToken = null;
   let refreshChart = null;
+
+  function clear(refreshAfter){
+    owner = null;
+    adapter = null;
+    leaseToken = null;
+    if (refreshAfter !== false) refresh();
+  }
+
+  function tryAcquire(nextOwner){
+    const requestedOwner = String(nextOwner || '');
+    if (!requestedOwner) return { ok:false, owner:null, reason:'owner-required' };
+    if (owner) return { ok:false, owner, reason:'already-owned' };
+    const token = {};
+    owner = requestedOwner;
+    leaseToken = token;
+    let released = false;
+    return {
+      ok: true,
+      owner: requestedOwner,
+      lease: Object.freeze({
+        install: function(nextAdapter){
+          if (released || leaseToken !== token || owner !== requestedOwner) return false;
+          if (!nextAdapter || typeof nextAdapter !== 'object') {
+            throw new Error('SimDateMask lease requires an adapter');
+          }
+          adapter = nextAdapter;
+          refresh();
+          return true;
+        },
+        release: function(options){
+          if (released) return true;
+          if (leaseToken !== token || owner !== requestedOwner) return false;
+          released = true;
+          clear(!(options && options.refresh === false));
+          return true;
+        },
+        isCurrent: function(){ return !released && leaseToken === token && owner === requestedOwner; }
+      })
+    };
+  }
 
   function install(nextOwner, nextAdapter){
     if (!nextOwner || !nextAdapter || typeof nextAdapter !== 'object') {
@@ -6785,15 +6826,15 @@ window.SimDateMask = (function(){
     if (owner && owner !== String(nextOwner)) {
       throw new Error('SimDateMask already has an active owner');
     }
+    if (leaseToken) throw new Error('SimDateMask owner must install through its active lease');
     owner = String(nextOwner);
     adapter = nextAdapter;
     refresh();
   }
   function remove(removeOwner){
     if (removeOwner && owner !== String(removeOwner)) return false;
-    owner = null;
-    adapter = null;
-    refresh();
+    if (leaseToken) return false;
+    clear(true);
     return true;
   }
   function call(name, value, surface){
@@ -6807,6 +6848,7 @@ window.SimDateMask = (function(){
     }
   }
   return {
+    tryAcquire,
     install,
     remove,
     isActive: function(){ return !!adapter; },
@@ -6866,7 +6908,51 @@ let currentMoveRow=null; // cache selected row for re-applying markers after set
 // assignment so the EMA / ATR / swing-low / base-low stop computations work.
 function _syncWindowBars(){ window.currentBars = currentBars; window.currentMoveRow = currentMoveRow; }
 _syncWindowBars();
-let activeOhlcvController=null;
+let activeOhlcvRequest=null;
+const ordinaryChartRequests=new Set();
+
+function beginOrdinaryChartLoad(){
+  if (activeOhlcvRequest) {
+    try { activeOhlcvRequest.controller.abort(); } catch (error) {}
+  }
+  let settle;
+  const request = {
+    controller: new AbortController(),
+    settled: new Promise(function(resolve){ settle = resolve; }),
+    settle: null
+  };
+  request.settle = settle;
+  ordinaryChartRequests.add(request);
+  activeOhlcvRequest = request;
+  return request;
+}
+
+function isCurrentOrdinaryChartLoad(request){
+  return activeOhlcvRequest === request;
+}
+
+function finishOrdinaryChartLoad(request){
+  if (activeOhlcvRequest === request) activeOhlcvRequest = null;
+  ordinaryChartRequests.delete(request);
+  request.settle();
+}
+
+function waitForPromiseOrAbort(promise, signal){
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(new DOMException('Aborted', 'AbortError'));
+  return new Promise(function(resolve, reject){
+    const onAbort = function(){ reject(new DOMException('Aborted', 'AbortError')); };
+    signal.addEventListener('abort', onAbort, {once:true});
+    promise.then(resolve, reject).finally(function(){ signal.removeEventListener('abort', onAbort); });
+  });
+}
+
+async function waitForOrdinaryChartQuiescence(signal){
+  while (ordinaryChartRequests.size) {
+    const requests = Array.from(ordinaryChartRequests);
+    await waitForPromiseOrAbort(Promise.all(requests.map(function(request){ return request.settled; })), signal);
+  }
+}
 let sortCol='year',sortDir=1;
 let isLogScale=false;
 let maList=[],maIdCounter=0;
@@ -7272,9 +7358,9 @@ async function loadDrawings(){
 async function loadIndicators(symbol) {
   try {
     const r = await fetch(`/api/indicators?symbol=${encodeURIComponent(symbol)}`);
-    if (!r.ok) { aiIndicators = null; return; }
-    aiIndicators = await r.json();
-  } catch (e) { console.warn('loadIndicators failed', e); aiIndicators = null; }
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { console.warn('loadIndicators failed', e); return null; }
 }
 
 function clearIndicatorOverlays() {
@@ -9781,8 +9867,8 @@ function initChart(){
       horzLine:{visible:false,color:'rgba(0,0,0,0)',width:1,style:LightweightCharts.LineStyle.Dashed},
     },
     rightPriceScale:{borderColor:borderColor},
-    timeScale:{borderColor:borderColor,timeVisible:false,rightOffset:persistedRightOffset},
-    localization:{locale:'en-US'},
+    timeScale:{borderColor:borderColor,timeVisible:false,rightOffset:persistedRightOffset,tickMarkFormatter:mainChartTickFormatter},
+    localization:{locale:'en-US',timeFormatter:mainChartTimeFormatter},
   });
   candleSeries=chart.addCandlestickSeries({
     upColor:'#26a69a',downColor:'#ef5350',
@@ -9920,8 +10006,8 @@ function initChart(){
             horzLine:{visible:false,color:'rgba(0,0,0,0)',width:1,style:LightweightCharts.LineStyle.Dashed},
           },
           rightPriceScale:{borderColor:borderColor, visible:true, borderVisible:true},
-          timeScale:{borderColor:borderColor,timeVisible:true,rightOffset:persistedRightOffset},
-          localization:{locale:'en-US'},
+          timeScale:{borderColor:borderColor,timeVisible:true,rightOffset:persistedRightOffset,tickMarkFormatter:mainChartTickFormatter},
+          localization:{locale:'en-US',timeFormatter:mainChartTimeFormatter},
           handleScroll:false,
           handleScale:false,
         });
@@ -10422,24 +10508,16 @@ async function loadIndexInChart(idxName){
     alert('Enter a 4-digit year in the Year filter to load an index chart.');
     return;
   }
-  if(manualLegPick)cancelManualLegPick();
-  if (activeOhlcvController){
-    try { activeOhlcvController.abort(); } catch(e){}
-    activeOhlcvController = null;
-  }
-  const reqController = new AbortController();
-  activeOhlcvController = reqController;
+  const request = beginOrdinaryChartLoad();
+  const reqController = request.controller;
   document.getElementById('placeholder').classList.add('hidden');
   document.getElementById('loading').classList.remove('hidden');
-  // Visual hint — flip button active state.
-  document.getElementById('idx-spx-btn').classList.toggle('is-active', idxName === 'SPX');
-  document.getElementById('idx-ndq-btn').classList.toggle('is-active', idxName === 'NDQ' || idxName === 'NDX');
   try {
     const resp = await fetch(`/api/ohlcv?symbol=${encodeURIComponent(sym)}&_=${Date.now()}`, { signal: reqController.signal });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const allBars = await resp.json();
     if (allBars && allBars.error) throw new Error(allBars.error);
-    if (activeOhlcvController !== reqController) return;
+    if (!isCurrentOrdinaryChartLoad(request)) return;
     // Slice to the year window: Jan 1 → Dec 31. Bar.time is YYYY-MM-DD.
     const from = year + '-01-01', to = year + '-12-31';
     const bars = (allBars || []).filter(b => {
@@ -10449,9 +10527,14 @@ async function loadIndexInChart(idxName){
     if (!bars.length){
       throw new Error(`No ${sym} bars in ${year}`);
     }
+    if(manualLegPick)cancelManualLegPick();
+    // Visual hint — flip button active state only when this request commits.
+    document.getElementById('idx-spx-btn').classList.toggle('is-active', idxName === 'SPX');
+    document.getElementById('idx-ndq-btn').classList.toggle('is-active', idxName === 'NDQ' || idxName === 'NDX');
     // Detach any existing AI MA overlays — they're keyed to currentSymbol
     // and will be wrong for the index.
     try { clearIndicatorOverlays(); } catch(e){}
+    aiIndicators = null;
     // Detach R-levels / sim adornments from the previous row.
     try { if (typeof clearAllRLevels === 'function') clearAllRLevels(); } catch(e){}
     extraCandleMarkers = [];
@@ -10485,36 +10568,17 @@ async function loadIndexInChart(idxName){
     console.error('[loadIndexInChart]', e);
     alert(`Failed to load ${idxName} for ${year}: ${e.message}`);
   } finally {
-    if (activeOhlcvController === reqController) activeOhlcvController = null;
-    document.getElementById('loading').classList.add('hidden');
+    const wasCurrent = isCurrentOrdinaryChartLoad(request);
+    finishOrdinaryChartLoad(request);
+    if (wasCurrent) document.getElementById('loading').classList.add('hidden');
   }
 }
 
 async function selectRow(i){
-  if(manualLegPick)cancelManualLegPick();
-  if (activeOhlcvController) {
-    try { activeOhlcvController.abort(); } catch (e) {}
-    activeOhlcvController = null;
-  }
-  const reqController = new AbortController();
-  activeOhlcvController = reqController;
-
-  activeIdx=i;renderTable();
-  document.querySelector('.row.active')?.scrollIntoView({block:'nearest'});
-  // Clear any active SPX/NDQ index-view highlight — we're back to a row.
-  document.getElementById('idx-spx-btn')?.classList.remove('is-active');
-  document.getElementById('idx-ndq-btn')?.classList.remove('is-active');
   const r=filtered[i];
-  currentMoveRow = r;
-  _syncWindowBars();
-  currentSymbol=r.symbol;
-  syncDrawingVersionControls();
-  document.getElementById('ct-sym').textContent=r.symbol;
-  document.getElementById('ct-cond').textContent=r.year;
-  document.getElementById('ct-gain').textContent=`+${parseFloat(r.gain_pct).toFixed(2)}%`;
-  document.getElementById('ct-range').textContent=`${r.low_date} → ${r.high_date}`;
-  document.getElementById('ct-vol').textContent=`$${r.avg_vol_b}B/mo`;
-  if (document.getElementById('study-panel').classList.contains('open')) updateStudyPanel();
+  if(!r)return;
+  const request = beginOrdinaryChartLoad();
+  const reqController = request.controller;
   document.getElementById('placeholder').classList.add('hidden');
   document.getElementById('loading').classList.remove('hidden');
   try{
@@ -10524,9 +10588,24 @@ async function selectRow(i){
     }
     const bars=await resp.json();
     if(bars.error)throw new Error(bars.error);
-    if (activeOhlcvController !== reqController) return;
+    if (!isCurrentOrdinaryChartLoad(request)) return;
+    if(manualLegPick)cancelManualLegPick();
+    activeIdx=filtered.indexOf(r);renderTable();
+    document.querySelector('.row.active')?.scrollIntoView({block:'nearest'});
+    // Clear any active SPX/NDQ index-view highlight — we're back to a row.
+    document.getElementById('idx-spx-btn')?.classList.remove('is-active');
+    document.getElementById('idx-ndq-btn')?.classList.remove('is-active');
+    currentMoveRow = r;
+    currentSymbol=r.symbol;
     currentBars=bars;
     _syncWindowBars();
+    syncDrawingVersionControls();
+    document.getElementById('ct-sym').textContent=r.symbol;
+    document.getElementById('ct-cond').textContent=r.year;
+    document.getElementById('ct-gain').textContent=`+${parseFloat(r.gain_pct).toFixed(2)}%`;
+    document.getElementById('ct-range').textContent=`${r.low_date} → ${r.high_date}`;
+    document.getElementById('ct-vol').textContent=`$${r.avg_vol_b}B/mo`;
+    if (document.getElementById('study-panel').classList.contains('open')) updateStudyPanel();
     candleSeries.setData(bars.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close})));
     volSeries.setData(bars.map(b => {
       const volUp = isLightTheme ? '#d4efe6' : '#1a3a35';
@@ -10543,7 +10622,9 @@ async function selectRow(i){
     ];
     (priceSeries || candleSeries).setMarkers(extraCandleMarkers);
     // Load AI indicators (MA overlays) then render
-    await loadIndicators(currentSymbol);
+    const indicators = await loadIndicators(r.symbol);
+    if (!isCurrentOrdinaryChartLoad(request)) return;
+    aiIndicators = indicators;
     applyIndicatorOverlays();
     const times=tfBars.map(b=>b.time),si=times.indexOf(sb.time),ei=times.indexOf(eb.time);
     const pad=Math.max(5,Math.round((ei-si)*0.2));
@@ -10558,12 +10639,14 @@ async function selectRow(i){
     }
     console.error(e);
     // Keep gain text stable; show transient error on range label.
-    document.getElementById('ct-range').textContent=`${r.low_date} → ${r.high_date}  |  Error: ${e.message}`;
-  }finally{
-    if (activeOhlcvController === reqController) {
-      activeOhlcvController = null;
+    if (isCurrentOrdinaryChartLoad(request)) {
+      const range = document.getElementById('ct-range');
+      if (range) range.textContent = range.textContent.replace(/\s+\|\s+Error(?: loading [^:]+)?:.*$/, '') + `  |  Error loading ${r.symbol}: ${e.message}`;
     }
-    document.getElementById('loading').classList.add('hidden');
+  }finally{
+    const wasCurrent = isCurrentOrdinaryChartLoad(request);
+    finishOrdinaryChartLoad(request);
+    if (wasCurrent) document.getElementById('loading').classList.add('hidden');
   }
 }
 
@@ -10573,6 +10656,55 @@ async function selectRow(i){
 // snapshot so restore() always returns to the pre-session screen.
 window.MainChartSession = (function(){
   let snapshot = null;
+  let loadGeneration = 0;
+  let activeLoad = null;
+
+  function abortError(message){
+    const error = new Error(message || 'Main chart session load was aborted');
+    error.name = 'AbortError';
+    return error;
+  }
+
+  function beginLoad(externalSignal){
+    if (activeLoad) {
+      try { activeLoad.controller.abort(); } catch (error) {}
+      activeLoad.detachExternal?.();
+    }
+    const controller = new AbortController();
+    const lease = { generation:++loadGeneration, controller, detachExternal:null };
+    if (externalSignal) {
+      const onAbort = function(){ try { controller.abort(); } catch (error) {} };
+      if (externalSignal.aborted) onAbort();
+      else {
+        externalSignal.addEventListener('abort', onAbort, {once:true});
+        lease.detachExternal = function(){ externalSignal.removeEventListener('abort', onAbort); };
+      }
+    }
+    activeLoad = lease;
+    return lease;
+  }
+
+  function isCurrentLoad(lease){
+    return activeLoad === lease && lease.generation === loadGeneration && !lease.controller.signal.aborted;
+  }
+
+  function assertCurrentLoad(lease){
+    if (!isCurrentLoad(lease)) throw abortError('Main chart session load is no longer current');
+  }
+
+  function finishLoad(lease){
+    lease.detachExternal?.();
+    if (activeLoad === lease) activeLoad = null;
+  }
+
+  function invalidateLoads(){
+    loadGeneration += 1;
+    if (activeLoad) {
+      try { activeLoad.controller.abort(); } catch (error) {}
+      activeLoad.detachExternal?.();
+    }
+    activeLoad = null;
+  }
 
   function textSnapshot(){
     const ids = ['ct-sym','ct-cond','ct-gain','ct-range','ct-vol'];
@@ -10582,6 +10714,28 @@ window.MainChartSession = (function(){
       values[id] = node ? node.textContent : '';
     });
     return values;
+  }
+
+  function formatterSnapshot(target){
+    if (!target) return null;
+    try {
+      const options = typeof target.options === 'function' ? target.options() : null;
+      const timeOptions = target.timeScale && typeof target.timeScale().options === 'function'
+        ? target.timeScale().options()
+        : null;
+      return {
+        locale: options && options.localization ? options.localization.locale : 'en-US',
+        timeFormatter: options && options.localization ? options.localization.timeFormatter : null,
+        tickMarkFormatter: timeOptions ? timeOptions.tickMarkFormatter : null
+      };
+    } catch (error) { return null; }
+  }
+
+  function interactionSnapshot(){
+    try {
+      const options = chart && typeof chart.options === 'function' ? chart.options() : null;
+      return options ? { handleScroll:options.handleScroll, handleScale:options.handleScale } : null;
+    } catch (error) { return null; }
   }
 
   function capture(){
@@ -10600,6 +10754,11 @@ window.MainChartSession = (function(){
       drawTool,
       pendingPoint: pendingP1,
       selectedDrawingId: selectedId,
+      previewMouseX,
+      previewMouseY,
+      drawingHintHidden: !!document.getElementById('hint')?.classList.contains('hidden'),
+      chartCursor: document.getElementById('chart')?.style.cursor || '',
+      chartInteraction: interactionSnapshot(),
       manualLegPick: manualLegPick ? {
         moveKey: manualLegPick.moveKey,
         moveRow: manualLegPick.moveRow,
@@ -10612,9 +10771,10 @@ window.MainChartSession = (function(){
       extraMarkers: Array.isArray(extraCandleMarkers) ? extraCandleMarkers.slice() : [],
       title: textSnapshot(),
       visibleRange,
+      chartFormatter: formatterSnapshot(chart),
+      volumeFormatter: formatterSnapshot(volChart),
       studyOpen: !!document.getElementById('study-panel')?.classList.contains('open'),
       placeholderHidden: !!document.getElementById('placeholder')?.classList.contains('hidden'),
-      loadingHidden: !!document.getElementById('loading')?.classList.contains('hidden'),
       blindRevealDisplay: document.getElementById('ct-blind-reveal')?.style.display || '',
       indexSpActive: !!document.getElementById('idx-spx-btn')?.classList.contains('is-active'),
       indexNqActive: !!document.getElementById('idx-ndq-btn')?.classList.contains('is-active'),
@@ -10632,6 +10792,19 @@ window.MainChartSession = (function(){
   function setDailyToggle(){
     ['D','W','M'].forEach(function(tf){
       document.getElementById('tf-' + tf)?.classList.toggle('active', tf === 'D');
+    });
+  }
+
+  function restoreFormatter(target, prior){
+    if (!target || !prior) return;
+    target.applyOptions({
+      localization: {
+        locale: prior.locale || 'en-US',
+        timeFormatter: prior.timeFormatter || mainChartTimeFormatter
+      }
+    });
+    target.timeScale().applyOptions({
+      tickMarkFormatter: prior.tickMarkFormatter || mainChartTickFormatter
     });
   }
 
@@ -10700,31 +10873,44 @@ window.MainChartSession = (function(){
     const requested = String(symbol || '').trim().toUpperCase();
     if (!requested) throw new Error('A symbol is required');
 
-    // Fetch and caller validation happen before any visible/session mutation.
-    const response = await fetch('/api/ohlcv?symbol=' + encodeURIComponent(requested) + '&_=' + Date.now(), {
-      signal: options.signal
-    });
-    if (!response.ok) throw new Error('OHLCV request failed (' + response.status + ')');
-    const payload = await response.json();
-    if (payload && payload.error) throw new Error(String(payload.error));
-    const bars = normalizeBars(payload);
-    if (typeof options.validateBars === 'function') options.validateBars(bars);
-
-    const displayFrom = options.displayFrom ? String(options.displayFrom) : null;
-    const displayThrough = options.displayThrough ? String(options.displayThrough) : null;
-    const displayBars = bars.filter(function(bar){
-      return (!displayFrom || bar.time >= displayFrom) && (!displayThrough || bar.time <= displayThrough);
-    });
-    if (!displayBars.length) throw new Error('The requested chart window has no daily bars');
-
+    const lease = beginLoad(options.signal);
     let mutated = false;
     try {
+      // An ordinary row/index request mutates its title and bars as one commit.
+      // Waiting for its finally block prevents a mixed identity/bars snapshot.
+      await waitForOrdinaryChartQuiescence(lease.controller.signal);
+      assertCurrentLoad(lease);
+
+      // Fetch and caller validation happen before any visible/session mutation.
+      const response = await fetch('/api/ohlcv?symbol=' + encodeURIComponent(requested) + '&_=' + Date.now(), {
+        signal: lease.controller.signal
+      });
+      assertCurrentLoad(lease);
+      if (!response.ok) throw new Error('OHLCV request failed (' + response.status + ')');
+      const payload = await response.json();
+      assertCurrentLoad(lease);
+      if (payload && payload.error) throw new Error(String(payload.error));
+      const bars = normalizeBars(payload);
+      if (typeof options.validateBars === 'function') options.validateBars(bars);
+      assertCurrentLoad(lease);
+      // A row load may have started while this symbol was fetching (including
+      // from a programmatic caller in the same turn). Quiesce again so capture
+      // is based on the last complete ordinary commit.
+      await waitForOrdinaryChartQuiescence(lease.controller.signal);
+      assertCurrentLoad(lease);
+
+      const displayFrom = options.displayFrom ? String(options.displayFrom) : null;
+      const displayThrough = options.displayThrough ? String(options.displayThrough) : null;
+      const displayBars = bars.filter(function(bar){
+        return (!displayFrom || bar.time >= displayFrom) && (!displayThrough || bar.time <= displayThrough);
+      });
+      if (!displayBars.length) throw new Error('The requested chart window has no daily bars');
+
       if (!snapshot) snapshot = capture();
+      assertCurrentLoad(lease);
       mutated = true;
-      if (activeOhlcvController) {
-        try { activeOhlcvController.abort(); } catch (error) {}
-        activeOhlcvController = null;
-      }
+      if (typeof options.beforeCommit === 'function') options.beforeCommit(bars);
+      assertCurrentLoad(lease);
       if (manualLegPick) cancelManualLegPick();
       setTool('pan');
       selectedId = null;
@@ -10768,8 +10954,17 @@ window.MainChartSession = (function(){
       refreshMainChartDateFormatters();
       return bars.slice();
     } catch (error) {
-      if (mutated) restore();
+      if (mutated) {
+        const restored = restore();
+        if (!restored.ok) {
+          const restoreError = new Error(error.message + '; chart restore failed: ' + restored.error.message);
+          restoreError.cause = error;
+          throw restoreError;
+        }
+      }
       throw error;
+    } finally {
+      finishLoad(lease);
     }
   }
 
@@ -10799,81 +10994,109 @@ window.MainChartSession = (function(){
   }
 
   function restore(){
+    invalidateLoads();
     if (!snapshot) {
       mainChartSessionDetached = false;
-      return false;
+      return { ok:true, restored:false, error:null };
     }
     const prior = snapshot;
-    snapshot = null;
-    try { clearDetachedChrome(); } catch (error) {}
-    currentBars = prior.bars.slice();
-    currentSymbol = prior.symbol;
-    currentMoveRow = prior.moveRow;
-    activeIdx = prior.activeIndex;
-    currentTF = prior.timeframe;
-    chartType = prior.chartType;
-    drawTool = prior.drawTool;
-    pendingP1 = prior.pendingPoint;
-    selectedId = prior.selectedDrawingId;
-    aiIndicators = prior.aiIndicators;
-    extraCandleMarkers = prior.extraMarkers.slice();
-    priceSeries = chartType === 'ohlc' ? ohlcSeries : candleSeries;
-    mainChartSessionDetached = false;
-    _syncWindowBars();
-    ['D','W','M'].forEach(function(tf){
-      document.getElementById('tf-' + tf)?.classList.toggle('active', tf === currentTF);
+    const errors = [];
+    function attempt(label, callback){
+      try { callback(); } catch (error) { errors.push(label + ': ' + (error && error.message ? error.message : String(error))); }
+    }
+
+    attempt('clear detached chart', clearDetachedChrome);
+    attempt('restore chart state', function(){
+      currentBars = prior.bars.slice();
+      currentSymbol = prior.symbol;
+      currentMoveRow = prior.moveRow;
+      activeIdx = prior.activeIndex;
+      currentTF = prior.timeframe;
+      chartType = prior.chartType;
+      drawTool = prior.drawTool;
+      pendingP1 = prior.pendingPoint;
+      selectedId = prior.selectedDrawingId;
+      previewMouseX = prior.previewMouseX;
+      previewMouseY = prior.previewMouseY;
+      aiIndicators = prior.aiIndicators;
+      extraCandleMarkers = prior.extraMarkers.slice();
+      priceSeries = chartType === 'ohlc' ? ohlcSeries : candleSeries;
+      mainChartSessionDetached = false;
+      _syncWindowBars();
     });
-    TOOLS.forEach(function(tool){ document.getElementById('tool-' + tool)?.classList.toggle('active', tool === drawTool); });
-    syncDrawVars();
-    try { applyTimeframe(); } catch (error) { console.warn('[MainChartSession] restore data failed:', error); }
-    try { applyIndicatorOverlays(); } catch (error) {}
-    setTitle(prior.title);
-    document.getElementById('placeholder')?.classList.toggle('hidden', prior.placeholderHidden);
-    document.getElementById('loading')?.classList.toggle('hidden', prior.loadingHidden);
-    const reveal = document.getElementById('ct-blind-reveal');
-    if (reveal) reveal.style.display = prior.blindRevealDisplay;
-    document.getElementById('idx-spx-btn')?.classList.toggle('is-active', prior.indexSpActive);
-    document.getElementById('idx-ndq-btn')?.classList.toggle('is-active', prior.indexNqActive);
-    (prior.openPanelIds || []).forEach(function(id){
-      const node = document.getElementById(id);
-      if (node) {
-        node.classList.add('open');
-        if (node.hasAttribute('aria-hidden')) node.setAttribute('aria-hidden', 'false');
+    attempt('restore timeframe controls', function(){
+      ['D','W','M'].forEach(function(tf){
+        document.getElementById('tf-' + tf)?.classList.toggle('active', tf === currentTF);
+      });
+      TOOLS.forEach(function(tool){ document.getElementById('tool-' + tool)?.classList.toggle('active', tool === drawTool); });
+      syncDrawVars();
+      applyTimeframe();
+      applyIndicatorOverlays();
+    });
+    attempt('restore chart title', function(){
+      setTitle(prior.title);
+      document.getElementById('placeholder')?.classList.toggle('hidden', prior.placeholderHidden);
+      document.getElementById('loading')?.classList.add('hidden');
+      const reveal = document.getElementById('ct-blind-reveal');
+      if (reveal) reveal.style.display = prior.blindRevealDisplay;
+      document.getElementById('idx-spx-btn')?.classList.toggle('is-active', prior.indexSpActive);
+      document.getElementById('idx-ndq-btn')?.classList.toggle('is-active', prior.indexNqActive);
+    });
+    attempt('restore panels', function(){
+      (prior.openPanelIds || []).forEach(function(id){
+        const node = document.getElementById(id);
+        if (node) {
+          node.classList.add('open');
+          if (node.hasAttribute('aria-hidden')) node.setAttribute('aria-hidden', 'false');
+        }
+      });
+      if ((prior.openPanelIds || []).includes('ct-pop')) document.getElementById('ct-menu-btn')?.setAttribute('aria-expanded', 'true');
+      setupChartMenu();
+      renderTable();
+      const study = document.getElementById('study-panel');
+      if (study) {
+        study.classList.toggle('open', prior.studyOpen);
+        study.setAttribute('aria-hidden', prior.studyOpen ? 'false' : 'true');
+        if (prior.studyOpen && currentMoveRow) updateStudyPanel();
       }
     });
-    if ((prior.openPanelIds || []).includes('ct-pop')) document.getElementById('ct-menu-btn')?.setAttribute('aria-expanded', 'true');
-    setupChartMenu();
-    renderTable();
-    const study = document.getElementById('study-panel');
-    if (study) {
-      study.classList.toggle('open', prior.studyOpen);
-      study.setAttribute('aria-hidden', prior.studyOpen ? 'false' : 'true');
-      if (prior.studyOpen && currentMoveRow) try { updateStudyPanel(); } catch (error) {}
+    attempt('restore visible range', function(){
+      if (prior.visibleRange) chart.timeScale().setVisibleRange(prior.visibleRange);
+    });
+    attempt('restore drawing state', function(){
+      document.getElementById('hint')?.classList.toggle('hidden', prior.drawingHintHidden);
+      const chartNode = document.getElementById('chart');
+      if (chartNode) chartNode.style.cursor = prior.chartCursor;
+      if (prior.chartInteraction) chart.applyOptions(prior.chartInteraction);
+      manualLegPick = prior.manualLegPick ? {
+        moveKey: prior.manualLegPick.moveKey,
+        moveRow: prior.manualLegPick.moveRow,
+        start: prior.manualLegPick.start
+      } : null;
+      manualLegClickConsumed = false;
+      const manualLegButton = document.getElementById('manual-leg-add');
+      if (manualLegButton) {
+        manualLegButton.classList.toggle('active', prior.manualLegButtonActive);
+        manualLegButton.textContent = prior.manualLegButtonText != null
+          ? prior.manualLegButtonText
+          : '+ Add manual leg';
+      }
+      const legHighlight = document.getElementById('leg-highlight');
+      if (legHighlight) legHighlight.style.cssText = prior.legHighlightStyle || '';
+      redrawAll();
+    });
+    attempt('restore date formatters', function(){
+      restoreFormatter(chart, prior.chartFormatter);
+      restoreFormatter(volChart, prior.volumeFormatter);
+      updateCrosshairInfo(null);
+    });
+
+    if (errors.length) {
+      mainChartSessionDetached = true;
+      return { ok:false, restored:false, error:new Error(errors.join('; ')) };
     }
-    if (prior.visibleRange) {
-      try { chart.timeScale().setVisibleRange(prior.visibleRange); } catch (error) {}
-    }
-    // loadSymbol suspends an in-progress manual leg pick while the detached
-    // chart is active. Resume the exact picker and overlay after the original
-    // data and visible range are back in place.
-    manualLegPick = prior.manualLegPick ? {
-      moveKey: prior.manualLegPick.moveKey,
-      moveRow: prior.manualLegPick.moveRow,
-      start: prior.manualLegPick.start
-    } : null;
-    manualLegClickConsumed = false;
-    const manualLegButton = document.getElementById('manual-leg-add');
-    if (manualLegButton) {
-      manualLegButton.classList.toggle('active', prior.manualLegButtonActive);
-      manualLegButton.textContent = prior.manualLegButtonText != null
-        ? prior.manualLegButtonText
-        : '+ Add manual leg';
-    }
-    const legHighlight = document.getElementById('leg-highlight');
-    if (legHighlight) legHighlight.style.cssText = prior.legHighlightStyle || '';
-    try { updateCrosshairInfo(null); } catch (error) {}
-    refreshMainChartDateFormatters();
-    return true;
+    snapshot = null;
+    return { ok:true, restored:true, error:null };
   }
 
   return { loadSymbol, maskIdentity, revealIdentity, restore };
