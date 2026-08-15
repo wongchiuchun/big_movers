@@ -430,7 +430,12 @@
       return {
         label: COMPARISON_DIAGNOSTIC_LABEL,
         mfeR: null,
-        reason: 'invalid_stop'
+        endReason: 'invalid_stop',
+        endDate: null,
+        endBarIdx: null,
+        stopped: null,
+        sequencingAssumption: 'stop_before_high',
+        stopBarHighIncluded: false
       };
     }
     let maxHigh = entry;
@@ -453,7 +458,9 @@
       endReason: stopped ? 'stop' : 'horizon',
       endDate: comparisonDate(bars[endBarIdx]),
       endBarIdx: endBarIdx,
-      stopped: stopped
+      stopped: stopped,
+      sequencingAssumption: 'stop_before_high',
+      stopBarHighIncluded: false
     };
   }
 
