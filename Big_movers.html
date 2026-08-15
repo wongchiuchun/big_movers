@@ -2599,6 +2599,10 @@
   .entry-trainer-action:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
   .entry-trainer-action:disabled{opacity:0.42;cursor:not-allowed;}
   .entry-trainer-action.is-exit{border-color:rgba(251,113,133,0.45);color:var(--red);}
+  #entry-trainer-result{display:none;align-items:center;gap:9px;min-width:0;}
+  #entry-trainer-result.is-visible{display:flex;}
+  #entry-trainer-result-r{color:var(--accent);font-size:15px;font-weight:800;white-space:nowrap;}
+  #entry-trainer-result-detail{color:var(--text-2);white-space:nowrap;}
   body.entry-trainer-active .table-panel{pointer-events:none;opacity:0.45;}
   body.entry-trainer-active #study-toggle-btn,
   body.entry-trainer-active #defs-btn,
@@ -2619,6 +2623,7 @@
     #entry-trainer-strip{align-items:flex-start;flex-wrap:wrap;}
     .entry-trainer-strip-spacer{display:none;}
     .entry-trainer-actions{width:100%;flex-wrap:wrap;}
+    #entry-trainer-result{width:100%;flex-wrap:wrap;}
   }
 
   /* Sim-related auxiliary topbar buttons (Random / Blind / Saved / Stats) — match
@@ -5550,8 +5555,14 @@
           <span id="entry-trainer-attempt-progress">Attempt 0 of 3</span>
         </div>
         <span id="entry-trainer-shell-status">Qualification day · decide whether to wait, enter, or skip.</span>
+        <div id="entry-trainer-result" role="status" aria-live="polite">
+          <strong id="entry-trainer-result-r">+0.00R</strong>
+          <span id="entry-trainer-result-detail">$0 · 0 bars · MFE +0.00R · MAE 0.00R</span>
+          <button id="entry-trainer-try-again" class="entry-trainer-action" type="button">Try Again</button>
+          <button id="entry-trainer-finish" class="entry-trainer-action" type="button">Finish Ticker</button>
+        </div>
         <span class="entry-trainer-strip-spacer"></span>
-        <div class="entry-trainer-actions" aria-label="Entry Trainer actions">
+        <div id="entry-trainer-primary-actions" class="entry-trainer-actions" aria-label="Entry Trainer actions">
           <button id="entry-trainer-wait" class="entry-trainer-action" type="button" disabled title="Playback is not available in this shell yet">Wait</button>
           <button id="entry-trainer-enter" class="entry-trainer-action" type="button" disabled title="Trade entry is not available in this shell yet">Enter</button>
           <button id="entry-trainer-skip" class="entry-trainer-action" type="button">Skip ticker</button>
@@ -12581,6 +12592,7 @@ const Sim = (function(){
         const ev = {
           barIdx: idx, date: bar.time || null, type: 'movestop',
           stopId: s.id, newStop: s.price, pct: s.pct,
+          stopTrail: clone(s.trail), trailUpdate: true,
           triggerMode: normalizeStopTriggerMode(s.triggerMode),
           note: (normalizeStopTriggerMode(s.triggerMode) === 'close' ? 'EOD ' : '') + 'auto-trail EMA' + period + (kRaw ? ' ' + arrow + kRaw + '%' : '')
                 + ': ' + (oldPrice != null ? oldPrice.toFixed(2) + ' → ' : '')
@@ -12750,6 +12762,7 @@ const Sim = (function(){
         const pctLbl = Math.round(pct * 100);
         const trailLbl = trail ? ' · trail EMA' + trail.period + (trail.k ? ' −' + trail.k + '%' : '') : '';
         const ev = { barIdx, date: bar.time, type: 'movestop', qty: sim.qty, price: null, newStop: r2(ns), pct, stopId, triggerMode,
+          stopTrail: trail ? clone(trail) : null,
           note: (triggerMode === 'close' ? 'EOD stop ' : 'stop ') + r2(ns) + ' added (' + pctLbl + '%)' + trailLbl };
         sim.eventsLog.push(ev); fired.push(ev);
       }
@@ -13839,7 +13852,8 @@ window.Sim = Sim;
     const { stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl,
             priceEl, dateEl, lsKey, defaultK, includeBase,
             emaPeriodEl,
-            barsProvider, moveKeyProvider, directionProvider, onApplied } = opts || {};
+            barsProvider, moveKeyProvider, directionProvider, onApplied,
+            allowInitialTrail = true } = opts || {};
     if (!stratEl || !stopEl) return;
     function _dir(){
       if (typeof directionProvider === 'function'){
@@ -13858,13 +13872,19 @@ window.Sim = Sim;
       const baseOpt = stratEl.querySelector('option[value="base"]');
       if (baseOpt) baseOpt.parentNode.removeChild(baseOpt);
     }
+    const trailOpt = stratEl.querySelector('option[value="ema_trail"]');
+    if (trailOpt) {
+      trailOpt.hidden = !allowInitialTrail;
+      trailOpt.disabled = !allowInitialTrail;
+    }
+    if (!allowInitialTrail && stratEl.value === 'ema_trail') stratEl.value = 'ema';
 
     // Restore previously-used strategy from localStorage.
     let restored = null;
     try { restored = JSON.parse(localStorage.getItem(lsKey) || 'null'); } catch (_){}
     if (restored && typeof restored.type === 'string'){
       const opt = stratEl.querySelector('option[value="' + restored.type + '"]');
-      if (opt) stratEl.value = restored.type;
+      if (opt && (allowInitialTrail || restored.type !== 'ema_trail')) stratEl.value = restored.type;
       if (restored.k != null && stratKEl) stratKEl.value = restored.k;
       if (restored.emaPeriod != null && emaPeriodEl){
         const periodOpt = emaPeriodEl.querySelector('option[value="' + restored.emaPeriod + '"]');
@@ -13959,7 +13979,7 @@ window.Sim = Sim;
     // Expose a small reader so callers can pull trail metadata at submit time.
     // Returns null unless the user picked an auto-trail strategy.
     stratEl._getTrailParams = function(){
-      if (stratEl.value !== 'ema_trail') return null;
+      if (!allowInitialTrail || stratEl.value !== 'ema_trail') return null;
       return {
         type: 'ema',
         period: parseInt(emaPeriodEl && emaPeriodEl.value, 10) || 10,
@@ -14121,13 +14141,22 @@ window.Sim = Sim;
     const container = document.getElementById(containerId); if (!container) return;
     container.querySelectorAll('.sim-pill').forEach(p => p.classList.toggle('sim-pill-active', p.getAttribute('data-direction') === dir));
   }
+  function _constrainDirectionPills(containerId, longOnly) {
+    const container = document.getElementById(containerId); if (!container) return;
+    container.querySelectorAll('[data-direction]').forEach(function(pill){
+      const isShort = pill.getAttribute('data-direction') === 'short';
+      pill.disabled = !!longOnly && isShort;
+      pill.style.display = (!!longOnly && isShort) ? 'none' : '';
+    });
+  }
 
-  // Portfolio entry/add modals share the same order controls while standalone
-  // simulation keeps its original editable-price behavior. A fresh portfolio
-  // open always starts at Market at close and never restores the prior order.
-  function _setupPortfolioOrderControls(opts) {
+  // Portfolio orders and future pending-limit callers share this neutral
+  // control seam. Standalone simulation keeps its editable-price behavior.
+  function _setupOrderControls(opts) {
     opts = opts || {};
     const portMode = !!opts.portMode;
+    const pendingLimitMode = opts.orderMode === 'pending_limit';
+    const enabled = portMode || pendingLimitMode;
     const root = document.getElementById(opts.rootId);
     const pillsRoot = document.getElementById(opts.pillsId);
     const priceEl = opts.priceEl;
@@ -14140,19 +14169,19 @@ window.Sim = Sim;
     let orderType = 'market_close';
 
     if (root) {
-      root.style.display = portMode ? '' : 'none';
-      root.setAttribute('aria-hidden', portMode ? 'false' : 'true');
+      root.style.display = enabled ? '' : 'none';
+      root.setAttribute('aria-hidden', enabled ? 'false' : 'true');
     }
-    pills.forEach(function(pill) { pill.disabled = !portMode; });
+    pills.forEach(function(pill) { pill.disabled = !enabled; });
     if (fillEl) {
       fillEl.checked = false;
       fillEl.disabled = true;
     }
     if (fillWrap) fillWrap.style.display = 'none';
 
-    // Undo any portfolio-only price locking when a shared modal is next opened
-    // by the single-ticker simulator.
-    if (!portMode) {
+    // Undo managed-order price locking when a shared modal is next opened by
+    // the ordinary single-ticker simulator.
+    if (!enabled) {
       if (priceEl) priceEl.disabled = false;
       if (priceLabelEl) priceLabelEl.textContent = opts.standalonePriceLabel || 'Price';
       if (timingNoteEl && opts.standaloneTimingNote) timingNoteEl.textContent = opts.standaloneTimingNote;
@@ -14238,6 +14267,11 @@ window.Sim = Sim;
         })());
     if (dirHiddenEl) dirHiddenEl.value = defaultDir;
     _setDirectionPillActive('sim-setup-direction', defaultDir);
+    _constrainDirectionPills('sim-setup-direction', !!ctx.longOnly);
+    if (ctx.longOnly) {
+      if (dirHiddenEl) dirHiddenEl.value = 'long';
+      _setDirectionPillActive('sim-setup-direction', 'long');
+    }
 
     if (ctx.defaultDate) dateEl.value = ctx.defaultDate;
     if (ctx.defaultPrice != null) priceEl.value = Number(ctx.defaultPrice).toFixed(2);
@@ -14312,8 +14346,9 @@ window.Sim = Sim;
       }
     }
     let _stopWire = null;
-    const _setupOrderControls = _setupPortfolioOrderControls({
+    const _setupOrderControlsHandle = _setupOrderControls({
       portMode: ctx.portMode,
+      orderMode: ctx.orderMode,
       rootId: 'sim-setup-order-controls',
       pillsId: 'sim-setup-order-type',
       priceEl: priceEl,
@@ -14341,7 +14376,7 @@ window.Sim = Sim;
     _stopWire = _wireStopStrategy({
       stratEl, stratKEl, stratSuffixEl, stopEl, stopDistEl, priceEl, dateEl,
       emaPeriodEl,
-      lsKey: 'bm_sim_stop_strategy',
+      lsKey: ctx.fixedInitialStop ? 'bm_entry_trainer_stop_strategy' : 'bm_sim_stop_strategy',
       defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: true,
       // P2: feed direction so presets / labels flip per radio.
@@ -14359,7 +14394,8 @@ window.Sim = Sim;
         const r = window.currentMoveRow;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
       },
-      onApplied: ctx.portMode ? recompute : null
+      onApplied: (ctx.portMode || ctx.orderMode === 'pending_limit') ? recompute : null,
+      allowInitialTrail: !ctx.fixedInitialStop
     });
     // Re-run strategy when direction toggles (label flip + recompute).
     _setupDirectionPills('sim-setup-direction', 'sim-direction-value', function(){
@@ -14405,12 +14441,12 @@ window.Sim = Sim;
     document.getElementById('sim-setup-submit').onclick = function() {
       _clearStatus('sim-setup-status');
       const date = dateEl.value;
-      const orderValues = _setupOrderControls.read();
+      const orderValues = _setupOrderControlsHandle.read();
       const price = orderValues ? orderValues.price : _parseNum(priceEl.value, NaN);
       const size = _parseNum(sizeEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
       const mode = modeEl.value;
-      const direction = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
+      const direction = ctx.longOnly ? 'long' : ((dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long');
       if (!date) return _setStatus('sim-setup-status', 'Entry date is required', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-setup-status', 'Entry price must be > 0', true);
       if (!isFinite(size) || size <= 0) return _setStatus('sim-setup-status', 'Size must be > 0', true);
@@ -14428,7 +14464,7 @@ window.Sim = Sim;
       if (endDate && endDate <= date) return _setStatus('sim-setup-status', 'End date must be after entry date', true);
       const equityRaw = equityEl ? _parseNum(equityEl.value, NaN) : NaN;
       const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
-      const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
+      const stopTrail = ctx.fixedInitialStop ? null : ((stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null);
       const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
       const payload = { direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail, stopTriggerMode };
       if (orderValues) {
@@ -14530,6 +14566,11 @@ window.Sim = Sim;
     }
     if (dirHiddenEl) dirHiddenEl.value = defaultDir;
     _setDirectionPillActive('sim-newleg-direction', defaultDir);
+    _constrainDirectionPills('sim-newleg-direction', !!ctx.longOnly);
+    if (ctx.longOnly) {
+      if (dirHiddenEl) dirHiddenEl.value = 'long';
+      _setDirectionPillActive('sim-newleg-direction', 'long');
+    }
 
     sizeEl.value = ctx.suggestedSize != null ? ctx.suggestedSize : '';
     priceEl.value = isFinite(barClose) ? barClose.toFixed(2) : '';
@@ -14563,8 +14604,9 @@ window.Sim = Sim;
       ]);
     }
     let _newlegStopWire = null;
-    const _newlegOrderControls = _setupPortfolioOrderControls({
+    const _newlegOrderControls = _setupOrderControls({
       portMode: ctx.portMode,
+      orderMode: ctx.orderMode,
       rootId: 'sim-newleg-order-controls',
       pillsId: 'sim-newleg-order-type',
       priceEl: priceEl,
@@ -14580,6 +14622,12 @@ window.Sim = Sim;
         else recompute();
       }
     });
+    if (ctx.fixedMarketPrice && priceEl) {
+      priceEl.value = isFinite(barClose) ? barClose.toFixed(2) : '';
+      priceEl.disabled = true;
+      const priceLabel = document.getElementById('sim-newleg-price-label');
+      if (priceLabel) priceLabel.textContent = 'Market price (paused close)';
+    }
     [sizeEl, priceEl, stopEl].forEach(el => { el.oninput = recompute; });
     _setupPills('sim-newleg-pills', 'sim-newleg-size-mode', 'sim-newleg-size-label', recompute);
     // direction pills wired after _wireStopStrategy returns its handle.
@@ -14597,7 +14645,7 @@ window.Sim = Sim;
       emaPeriodEl,
       dateEl: null,
       dateProvider: function(){ return ctx.barDate || null; },
-      lsKey: 'bm_sim_stop_strategy',
+      lsKey: ctx.fixedInitialStop ? 'bm_entry_trainer_stop_strategy' : 'bm_sim_stop_strategy',
       defaultK: { pct: 7, atr: 1.5, ema: 0 },
       includeBase: false,
       // P2: feed direction so presets / labels flip per radio.
@@ -14615,7 +14663,8 @@ window.Sim = Sim;
         const r = window.currentMoveRow;
         return r && r.symbol ? (r.symbol + '_' + (r.year || '')) : null;
       },
-      onApplied: ctx.portMode ? recompute : null
+      onApplied: (ctx.portMode || ctx.orderMode === 'pending_limit') ? recompute : null,
+      allowInitialTrail: !ctx.fixedInitialStop
     });
     _setupDirectionPills('sim-newleg-direction', 'sim-newleg-direction-value', function(){
       recompute();
@@ -14631,7 +14680,7 @@ window.Sim = Sim;
       const orderValues = _newlegOrderControls.read();
       const price = orderValues ? orderValues.price : _parseNum(priceEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
-      const direction = (dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long';
+      const direction = ctx.longOnly ? 'long' : ((dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long');
       if (!isFinite(size) || size <= 0) return _setStatus('sim-newleg-status', 'Size must be > 0', true);
       if (!isFinite(price) || price <= 0) return _setStatus('sim-newleg-status', 'Entry price must be > 0', true);
       if (!isFinite(stop) || stop <= 0) return _setStatus('sim-newleg-status', 'Stop must be > 0', true);
@@ -14646,7 +14695,7 @@ window.Sim = Sim;
       // Pull the EMA-trail spec from the strategy picker if the user picked
       // 'ema_trail'. Without this, the new-leg modal silently dropped the
       // trail wiring and the stop behaved as a snapshot instead of trailing.
-      const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
+      const stopTrail = ctx.fixedInitialStop ? null : ((stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null);
       try {
         const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
         const payload = { direction, sizeMode: mode, sizeValue: size, price, stop, stopTrail, stopTriggerMode };
@@ -14703,8 +14752,9 @@ window.Sim = Sim;
         { label: 'New qty', value: isFinite(newQty) ? _fmtInt(newQty) : '—' }
       ]);
     }
-    const _addOrderControls = _setupPortfolioOrderControls({
+    const _addOrderControls = _setupOrderControls({
       portMode: ctx.portMode,
+      orderMode: ctx.orderMode,
       rootId: 'sim-add-order-controls',
       pillsId: 'sim-add-order-type',
       priceEl: priceEl,
@@ -14778,6 +14828,7 @@ window.Sim = Sim;
     if (stopEodEl) stopEodEl.checked = ctx.currentStopTriggerMode === 'close';
     priceEl.value = isFinite(currentStop) ? currentStop.toFixed(2) : '';
     pctEl.value = 100;
+    pctEl.disabled = !!ctx.fullExitOnly;
     _clearStatus('sim-movestop-status');
     // Port sim "Move Stop" replaces existing unfired stops (applyMoveStopNow);
     // single-ticker sim queues the action and keeps prior stops intact.
@@ -14786,7 +14837,7 @@ window.Sim = Sim;
 
     function recompute() {
       const newStop = _parseNum(priceEl.value, NaN);
-      const pct = _parseNum(pctEl.value, NaN);
+      const pct = ctx.fullExitOnly ? 100 : _parseNum(pctEl.value, NaN);
       const rows = [];
       if (isFinite(newStop) && isFinite(currentPrice) && currentPrice > 0) {
         const diff = newStop - currentPrice;
@@ -14845,7 +14896,7 @@ window.Sim = Sim;
     document.getElementById('sim-movestop-submit').onclick = function() {
       _clearStatus('sim-movestop-status');
       const newStop = _parseNum(priceEl.value, NaN);
-      const pct = _parseNum(pctEl.value, NaN);
+      const pct = ctx.fullExitOnly ? 100 : _parseNum(pctEl.value, NaN);
       if (!isFinite(newStop) || newStop <= 0) return _setStatus('sim-movestop-status', 'Stop must be > 0', true);
       if (isFinite(currentPrice)) {
         const validStop = (window.Sim && window.Sim.Direction)
@@ -18894,7 +18945,13 @@ Sim.Ctrl = (function(){
     _rLevels: [], _hitRLevels: null, _rMarkers: [],
     _legMarkers: [], _legStopLines: [],
     _curve: null,
-    _history: []
+    _history: [],
+    policy: null,
+    _flatEndBarIdx: null,
+    _flatCompletedLegs: new Set(),
+    _flatAttemptPending: false,
+    _flatExitReason: null,
+    _flatHorizonNotified: false
   };
   const PLAY_INTERVAL_MS = 900;
   const SPEEDS = [0.35, 0.5, 1, 2];
@@ -18904,6 +18961,194 @@ Sim.Ctrl = (function(){
   const INITIAL_STOP_COLOR = '#6b7280';
   const R_STAR_COLOR = '#fbbf24';
   const CHART_STAR_MIN_R = 3;
+
+  function _deepFreeze(value) {
+    if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+    Object.keys(value).forEach(function(key){ _deepFreeze(value[key]); });
+    return Object.freeze(value);
+  }
+
+  function _immutable(value) {
+    return _deepFreeze(JSON.parse(JSON.stringify(value)));
+  }
+
+  function _normalizeFlatPolicy(policy) {
+    if (!policy) return null;
+    const maxLegs = Number.isInteger(policy.maxLegs) && policy.maxLegs > 0 ? policy.maxLegs : Infinity;
+    return Object.freeze({
+      longOnly: !!policy.longOnly,
+      disableRewind: !!policy.disableRewind,
+      disableAdds: !!policy.disableAdds,
+      fullExitOnly: !!policy.fullExitOnly,
+      pauseWhenFlat: !!policy.pauseWhenFlat,
+      maxLegs: maxLegs,
+      onAttemptComplete: typeof policy.onAttemptComplete === 'function' ? policy.onAttemptComplete : null,
+      onHorizonComplete: typeof policy.onHorizonComplete === 'function' ? policy.onHorizonComplete : null,
+      onStateChange: typeof policy.onStateChange === 'function' ? policy.onStateChange : null
+    });
+  }
+
+  function _policyCallback(name, payload) {
+    const fn = state.policy && state.policy[name];
+    if (typeof fn !== 'function') return;
+    try { fn(payload); }
+    catch (error) { console.error('[Sim.Ctrl] flat playback ' + name + ' callback failed:', error); }
+  }
+
+  function _applyPolicyUI() {
+    const policy = state.policy;
+    const rules = [
+      ['sim-btn-entry', !!(policy && policy.disableRewind)],
+      ['sim-btn-step-back', !!(policy && policy.disableRewind)],
+      ['sim-btn-add', !!(policy && policy.disableAdds)],
+      ['sim-btn-sell', !!(policy && policy.fullExitOnly)],
+      ['sim-btn-newleg', !!policy],
+      ['sim-btn-continue-inline', !!policy],
+      ['sim-btn-continue', !!policy],
+      ['sim-btn-calendar', !!policy],
+      ['sim-btn-export', !!policy],
+      ['sim-btn-exit', !!policy]
+    ];
+    rules.forEach(function(rule){
+      const el = document.getElementById(rule[0]);
+      if (!el) return;
+      el.hidden = rule[1];
+      el.disabled = rule[1];
+    });
+  }
+
+  function _flatState(reason) {
+    if (!state.policy || !state.sim) return null;
+    const atHorizon = state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx;
+    const completed = (state.sim.legs || []).length + (state._flatAttemptPending ? 1 : 0);
+    const flat = state.sim.qty <= 0;
+    return _immutable({
+      reason: reason || 'render',
+      playIdx: state.sim.playIdx,
+      startBarIdx: state.sim.simStartBarIdx,
+      endBarIdx: state._flatEndBarIdx,
+      flat: flat,
+      attemptActive: !flat && !state._flatAttemptPending,
+      attemptCompletePending: state._flatAttemptPending,
+      attemptsCompleted: completed,
+      attemptNumber: state._flatAttemptPending
+        ? completed
+        : Math.min((state.sim.legs || []).length + 1, state.policy.maxLegs),
+      atHorizon: atHorizon,
+      canWait: flat && !state._flatAttemptPending && !atHorizon,
+      canEnter: flat && !state._flatAttemptPending && !atHorizon && completed < state.policy.maxLegs,
+      canTryAgain: state._flatAttemptPending && !atHorizon && completed < state.policy.maxLegs
+    });
+  }
+
+  function _notifyFlatState(reason) {
+    const snapshot = _flatState(reason);
+    if (snapshot) _policyCallback('onStateChange', snapshot);
+    return snapshot;
+  }
+
+  function _attemptSnapshot(exitReason) {
+    const sim = state.sim;
+    if (!sim || sim.between || !sim.entry) return null;
+    const events = (sim.eventsLog || []).map(function(event){ return Object.assign({}, event); });
+    const exitEvent = events.slice().reverse().find(function(event){ return event.type === 'stop' || event.type === 'close'; }) || null;
+    const trailEvents = events.filter(function(event){ return event.type === 'movestop' && event.stopTrail; });
+    const firstTrail = trailEvents.find(function(event){ return !event.trailUpdate; }) || trailEvents[0] || null;
+    const entryPrice = Number(sim.entry.price);
+    const initialStop = Number(sim.entry.stop);
+    const initialRisk = Number(sim.initialRisk) || 0;
+    const initialQty = Number(sim.shares0) || 0;
+    const stopDistance = Math.abs(entryPrice - initialStop);
+    let trailActivatedAt = null;
+    if (firstTrail) {
+      const trailBar = state.bars && state.bars[firstTrail.barIdx];
+      const close = trailBar ? Number(trailBar.close) : NaN;
+      const perShare = Number.isFinite(close)
+        ? Sim.Direction.pnlPerShare(sim.direction || 'long', close, entryPrice)
+        : 0;
+      trailActivatedAt = {
+        barIdx: firstTrail.barIdx,
+        date: firstTrail.date || (trailBar && trailBar.time) || null,
+        barsFromEntry: firstTrail.barIdx - sim.entry.barIdx,
+        openR: initialRisk > 0 ? (perShare * initialQty) / initialRisk : null
+      };
+    }
+    const realizedPnL = Number(sim.realizedPnL) || 0;
+    const mfeDollars = Math.max(0, Number(sim._mfeVal) || 0);
+    const maeDollars = Math.min(0, Number(sim._maeVal) || 0);
+    const reason = exitReason || (sim.stoppedOut ? 'stop' : 'manual_close');
+    const snapshot = {
+      attemptNumber: (sim.legs || []).length + 1,
+      direction: sim.direction || 'long',
+      legId: sim.legId || null,
+      entryBarIdx: sim.entry.barIdx,
+      entryDate: sim.entry.date || null,
+      entryPrice: entryPrice,
+      requestedPrice: entryPrice,
+      fillBarIdx: sim.entry.barIdx,
+      fillDate: sim.entry.date || null,
+      fillPrice: entryPrice,
+      initialStop: initialStop,
+      initialStopDistanceDollars: stopDistance,
+      initialStopDistancePct: entryPrice > 0 ? (stopDistance / entryPrice) * 100 : null,
+      initialRisk: initialRisk,
+      initialQty: initialQty,
+      quantity: initialQty,
+      sizeMode: sim.entry.sizeMode || 'shares',
+      sizeValue: sim.entry.sizeValue,
+      stopEvents: [{
+        type: 'initial_stop', barIdx: sim.entry.barIdx, date: sim.entry.date || null,
+        price: initialStop, qty: initialQty, stopTrail: null
+      }].concat(events.filter(function(event){ return event.type === 'movestop' || event.type === 'stop'; })),
+      trailEvents: trailEvents,
+      exitBarIdx: exitEvent ? exitEvent.barIdx : sim.playIdx,
+      exitDate: exitEvent ? exitEvent.date : ((state.bars && state.bars[sim.playIdx]) || {}).time || null,
+      exitPrice: exitEvent ? exitEvent.price : null,
+      exitQty: exitEvent ? exitEvent.qty : 0,
+      exitReason: reason,
+      realizedPnL: realizedPnL,
+      realizedR: initialRisk > 0 ? realizedPnL / initialRisk : null,
+      barsHeld: sim.playIdx - sim.entry.barIdx,
+      mfeDollars: mfeDollars,
+      maeDollars: maeDollars,
+      mfe: mfeDollars,
+      mae: maeDollars,
+      mfeR: initialRisk > 0 ? mfeDollars / initialRisk : null,
+      maeR: initialRisk > 0 ? maeDollars / initialRisk : null,
+      trailActivatedAt: trailActivatedAt,
+      trailSpec: firstTrail ? Object.assign({}, firstTrail.stopTrail) : null,
+      trailActivationOpenR: trailActivatedAt ? trailActivatedAt.openR : null,
+      openRAtTrailActivation: trailActivatedAt ? trailActivatedAt.openR : null,
+      events: events
+    };
+    return _immutable(snapshot);
+  }
+
+  function _completePolicyAttempt(exitReason) {
+    if (!state.policy || !state.sim || state.sim.between || (!state.sim.closed && !state.sim.stoppedOut)) return null;
+    const completionId = state.sim.legId || ('attempt-' + ((state.sim.legs || []).length + 1));
+    if (state._flatCompletedLegs.has(completionId)) return null;
+    state._flatCompletedLegs.add(completionId);
+    state._flatAttemptPending = true;
+    if (state.policy.pauseWhenFlat) pause();
+    const snapshot = _attemptSnapshot(exitReason);
+    if (snapshot) _policyCallback('onAttemptComplete', snapshot);
+    _notifyFlatState('attempt-complete');
+    return snapshot;
+  }
+
+  function _completePolicyHorizon() {
+    if (!state.policy || state._flatHorizonNotified || !state.sim || state._flatEndBarIdx == null || state.sim.playIdx < state._flatEndBarIdx) return;
+    state._flatHorizonNotified = true;
+    pause();
+    _policyCallback('onHorizonComplete', _immutable({
+      playIdx: state.sim.playIdx,
+      endBarIdx: state._flatEndBarIdx,
+      attemptsCompleted: (state.sim.legs || []).length + (state._flatAttemptPending ? 1 : 0),
+      forcedExit: state._flatExitReason === 'horizon_end'
+    }));
+    _notifyFlatState('horizon-complete');
+  }
 
   function _addStopLine(price, barIdx, pct, type, simStopId) {
     if (!candleSeries || price == null || !Number.isFinite(price) || !state.sim) return;
@@ -19637,7 +19882,12 @@ Sim.Ctrl = (function(){
         else if (ev.type === 'add' && ev.qty > 0) _addLegAddMarker(legNum, ev.barIdx, ev.price, ev.qty);
       });
     }
-    if (d.stoppedOut || d.closed) { pause(); setTimeout(() => _showSummary(d), 400); }
+    if (state.policy) {
+      if (d.stoppedOut || d.closed) _completePolicyAttempt(state._flatExitReason || (d.stoppedOut ? 'stop' : 'manual_close'));
+      if (state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx) _completePolicyHorizon();
+      _notifyFlatState('render');
+    }
+    else if (d.stoppedOut || d.closed) { pause(); setTimeout(() => _showSummary(d), 400); }
     else if (state.sim.endBarIdx != null && state.sim.playIdx >= state.sim.endBarIdx) {
       // Hit the user-set bar cap. For blind playback (no auto-close because qty
       // may be 0), still trigger the summary AND auto-reveal — sim is done.
@@ -19683,8 +19933,80 @@ Sim.Ctrl = (function(){
     // Do not pause — sim keeps running while the modal is open.
     _showSummary(undefined, { viewOnly: true, focusTab: 'calendar' });
   }
+  function _continueFlatAttempt() {
+    if (!state.policy || !state.sim || !state._flatAttemptPending) return false;
+    const atHorizon = state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx;
+    const completed = (state.sim.legs || []).length + 1;
+    if (atHorizon || completed >= state.policy.maxLegs) return false;
+    Sim.continueSim(state.sim);
+    state._flatAttemptPending = false;
+    state._flatExitReason = null;
+    state._history = [];
+    _clearStopHistory();
+    _clearInitialStopLine();
+    state._rLevels = []; state._hitRLevels = new Set(); state._rMarkers = [];
+    _applyAllMarkers();
+    state._curve = [];
+    _appendCurvePoint(state.sim.playIdx);
+    _render(null);
+    _notifyFlatState('continued-flat');
+    return true;
+  }
+
+  function _openFlatEntry() {
+    if (!state.policy || !state.active || !state.sim || !state.sim.between || state._flatAttemptPending) return false;
+    const atHorizon = state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx;
+    if (atHorizon || (state.sim.legs || []).length >= state.policy.maxLegs) return false;
+    pause();
+    const bar = state.bars[state.sim.playIdx];
+    if (!bar) return false;
+    Sim.UI.showNewLegModal({
+      barClose: bar.close,
+      barDate: bar.time,
+      legNum: (state.sim.legs || []).length + 1,
+      suggestedSize: state.sim.shares0 || 1000,
+      defaultDirection: state.policy.longOnly ? 'long' : (state.sim.direction || 'long'),
+      longOnly: state.policy.longOnly,
+      fixedMarketPrice: true,
+      fixedInitialStop: true,
+      cardBars: state.bars,
+      cardMoveKey: state.sim.moveKey
+    }, function(form){
+      if (!state.policy || !state.sim || !state.sim.between || state._flatAttemptPending) return;
+      if (state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx) return;
+      if ((state.sim.legs || []).length >= state.policy.maxLegs) return;
+      _pushSnapshot();
+      try {
+        Sim.startNewLeg(state.sim, {
+          barIdx: state.sim.playIdx,
+          date: bar.time,
+          price: bar.close,
+          sizeMode: form.sizeMode,
+          sizeValue: form.sizeValue,
+          stop: form.stop,
+          direction: state.policy.longOnly ? 'long' : form.direction,
+          stopTrail: null
+        });
+      } catch (error) {
+        alert('Could not start new leg: ' + error.message);
+        return;
+      }
+      state._flatExitReason = null;
+      _ensureInitialStopLine();
+      _addStopLine(state.sim.entry.stop, state.sim.entry.barIdx, 1.0, 'initial', state.sim.stopLevels[0].id);
+      _buildRLevels();
+      _addLegEntryMarker((state.sim.legs || []).length + 1, state.sim.entry.barIdx);
+      _appendCurvePoint(state.sim.playIdx);
+      _checkRHits(state.bars[state.sim.playIdx]);
+      _render(null);
+      _notifyFlatState('attempt-entered');
+    });
+    return true;
+  }
+
   function onContinueClick() {
     if (!state.sim) return;
+    if (state.policy) return _continueFlatAttempt();
     _pushSnapshot();
     Sim.continueSim(state.sim);
     _clearStopHistory();
@@ -19698,6 +20020,7 @@ Sim.Ctrl = (function(){
   }
   function onNewEntryClick() {
     if (!state.active || !state.sim || !state.sim.between) return;
+    if (state.policy) return _openFlatEntry();
     pause();
     const bar = state.bars[state.sim.playIdx];
     if (!bar) return;
@@ -19774,6 +20097,13 @@ Sim.Ctrl = (function(){
     // Stash the form so Replay can re-run this sim from day 0 with the same
     // setup. Cloned to keep it independent of any post-submit form mutation.
     state._lastSetup = Object.assign({}, form);
+    state.policy = null;
+    state._flatEndBarIdx = null;
+    state._flatCompletedLegs = new Set();
+    state._flatAttemptPending = false;
+    state._flatExitReason = null;
+    state._flatHorizonNotified = false;
+    _applyPolicyUI();
     let barIdx = currentBars.findIndex(b => b.time === form.date);
     if (barIdx < 0) {
       for (let i = currentBars.length - 1; i >= 0; i--) {
@@ -19826,7 +20156,8 @@ Sim.Ctrl = (function(){
     _bindKeys();
   }
 
-  function exit() {
+  function exit(options) {
+    options = options || {};
     _exitPickMode();
     pause();
     _clearStopHistory();
@@ -19835,6 +20166,13 @@ Sim.Ctrl = (function(){
     state.active = false; state.sim = null; state.bars = null; state._maData = null;
     state._curve = null; state._rLevels = []; state._hitRLevels = null; state._rMarkers = [];
     state._legMarkers = [];
+    state.policy = null;
+    state._flatEndBarIdx = null;
+    state._flatCompletedLegs = new Set();
+    state._flatAttemptPending = false;
+    state._flatExitReason = null;
+    state._flatHorizonNotified = false;
+    _applyPolicyUI();
     Sim.UI.setActive(false);
     _unbindKeys();
     // Clear blind-replay state on exit so the chart goes back to normal
@@ -19842,7 +20180,7 @@ Sim.Ctrl = (function(){
     if (window.SimBlind && typeof window.SimBlind.clear === 'function') {
       try { window.SimBlind.clear(); } catch(e){}
     }
-    if (wasActive && typeof activeIdx !== 'undefined' && activeIdx >= 0 && typeof selectRow === 'function') {
+    if (!options.preserveChart && wasActive && typeof activeIdx !== 'undefined' && activeIdx >= 0 && typeof selectRow === 'function') {
       try { selectRow(activeIdx); } catch(e) {}
     }
   }
@@ -19998,7 +20336,11 @@ Sim.Ctrl = (function(){
     if (!state.active || !state.sim) return;
     if (state.sim.closed || state.sim.stoppedOut) { pause(); return; }
     const before = state.sim.playIdx;
-    const target = Math.min(state.bars.length - 1, before + n);
+    const target = Math.min(
+      state.bars.length - 1,
+      state._flatEndBarIdx != null ? state._flatEndBarIdx : Infinity,
+      before + n
+    );
     if (target === before) { pause(); return; }
     let lastResult = null;
     for (let step = before + 1; step <= target; step++) {
@@ -20010,6 +20352,19 @@ Sim.Ctrl = (function(){
         _checkRHits(state.bars[state.sim.playIdx]);
         _appendCurvePoint(state.sim.playIdx);
       }
+      if (state.policy && state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx
+          && state.sim.qty > 0 && !state.sim.closed && !state.sim.stoppedOut) {
+        const horizonBar = state.bars[state.sim.playIdx];
+        state._flatExitReason = 'horizon_end';
+        const closed = Sim.closeAt(state.sim, state.bars, horizonBar.close);
+        const closeEvent = (state.sim.eventsLog || [])[state.sim.eventsLog.length - 1];
+        if (closeEvent && closeEvent.type === 'close') {
+          closeEvent.exitReason = 'horizon_end';
+          closeEvent.note = 'horizon end, force close at ' + Number(horizonBar.close).toFixed(2);
+        }
+        lastResult = { derived: closed.derived, eventsFired: closeEvent ? [closeEvent] : [] };
+        _appendCurvePoint(state.sim.playIdx);
+      }
       if (state.sim.closed || state.sim.stoppedOut) break;
     }
     _render(lastResult);
@@ -20017,6 +20372,7 @@ Sim.Ctrl = (function(){
 
   function _stepBack(n) {
     if (!state.active || !state.sim) return;
+    if (state.policy && state.policy.disableRewind) return;
     if (!state._history.length) return;
     n = Math.max(1, n|0);
     let snap = null;
@@ -20038,6 +20394,7 @@ Sim.Ctrl = (function(){
 
   function jumpToEntry() {
     if (!state.active || !state.sim) return;
+    if (state.policy && state.policy.disableRewind) return;
     pause();
     Sim.reset(state.sim, state.bars);
     state._history = [];
@@ -20056,6 +20413,7 @@ Sim.Ctrl = (function(){
     if (!state.active || state.playing || !state.sim) return;
     if (state.sim.stoppedOut || state.sim.closed) return;
     if (state.sim.playIdx >= state.bars.length - 1) return;
+    if (state._flatEndBarIdx != null && state.sim.playIdx >= state._flatEndBarIdx) return;
     state.playing = true;
     Sim.UI.setPlayingState(true);
     const intervalMs = PLAY_INTERVAL_MS / state.speed;
@@ -20082,6 +20440,7 @@ Sim.Ctrl = (function(){
 
   function onSellClick() {
     if (!state.active || !state.sim || state.sim.qty <= 0) return;
+    if (state.policy && state.policy.fullExitOnly) return;
     const bar = state.bars[state.sim.playIdx]; pause();
     Sim.UI.showSellModal({
       currentPrice: bar.close, currentQty: state.sim.qty, avgCost: state.sim.avgCost,
@@ -20093,6 +20452,7 @@ Sim.Ctrl = (function(){
   }
   function onAddClick() {
     if (!state.active || !state.sim) return;
+    if (state.policy && state.policy.disableAdds) return;
     const bar = state.bars[state.sim.playIdx]; pause();
     Sim.UI.showAddModal({
       currentPrice: bar.close, currentQty: state.sim.qty,
@@ -20112,7 +20472,16 @@ Sim.Ctrl = (function(){
       (state.sim.stopLevels || []).filter(s => !s.fired)
     );
     const currentStopPx = activeStops.length ? activeStops[0].price : state.sim.entry.stop;
-    Sim.UI.showMoveStopModal({ currentStop: currentStopPx, currentPrice: bar.close, shares0: state.sim.shares0, barDate: bar.time || null, direction: state.sim.direction || 'long' }, form => {
+    Sim.UI.showMoveStopModal({
+      currentStop: currentStopPx,
+      currentPrice: bar.close,
+      shares0: state.sim.shares0,
+      barDate: bar.time || null,
+      direction: state.sim.direction || 'long',
+      fullExitOnly: !!(state.policy && state.policy.fullExitOnly),
+      cardBars: state.bars,
+      cardMoveKey: state.sim.moveKey
+    }, form => {
       Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop, pct: form.pct, stopTrail: form.stopTrail || null });
       _stepForward(1);
     });
@@ -20123,6 +20492,7 @@ Sim.Ctrl = (function(){
     const bar = state.bars[state.sim.playIdx];
     if (!confirm('Close entire position (' + state.sim.qty + ' shares) at $' + bar.close.toFixed(2) + '?')) return;
     _pushSnapshot();
+    if (state.policy) state._flatExitReason = 'manual_close';
     const { derived } = Sim.closeAt(state.sim, state.bars, bar.close);
     _appendCurvePoint(state.sim.playIdx);
     _render({ derived });
@@ -20140,14 +20510,14 @@ Sim.Ctrl = (function(){
       switch (e.key) {
         case ' ': case 'Spacebar': e.preventDefault(); playToggle(); break;
         case 'ArrowRight': e.preventDefault(); pause(); _stepForward(1); break;
-        case 'ArrowLeft':  e.preventDefault(); pause(); _stepBack(1); break;
+        case 'ArrowLeft':  e.preventDefault(); if (!(state.policy && state.policy.disableRewind)) { pause(); _stepBack(1); } break;
         case '[': e.preventDefault(); _speedStep(-1); break;
         case ']': e.preventDefault(); _speedStep(1); break;
-        case 's': case 'S': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); onSellClick(); } break;
-        case 'a': case 'A': if (!e.altKey) { e.preventDefault(); onAddClick(); } break;
+        case 's': case 'S': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); if (!(state.policy && state.policy.fullExitOnly)) onSellClick(); } break;
+        case 'a': case 'A': if (!e.altKey) { e.preventDefault(); if (!(state.policy && state.policy.disableAdds)) onAddClick(); } break;
         case 'm': case 'M': if (!e.altKey) { e.preventDefault(); onMoveStopClick(); } break;
         case 'c': case 'C': if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); onCloseAllClick(); } break;
-        case 'Escape': e.preventDefault(); if (confirm('Exit simulator?')) exit(); break;
+        case 'Escape': e.preventDefault(); if (!state.policy && confirm('Exit simulator?')) exit(); break;
       }
     };
     document.addEventListener('keydown', _keyHandler);
@@ -20193,36 +20563,53 @@ Sim.Ctrl = (function(){
     _clearInitialStopLine();
     _onSetupSubmit(Object.assign({}, state._lastSetup));
   }
-  // Playback-only launcher for SimBlind. Creates a no-entry sim at startBarIdx
-  // (sim.between = true, qty = 0, no stop) and wires the same chart/UI state
-  // that _onSetupSubmit does, minus stop-line/R-level/leg-marker setup since
-  // there's no position yet. The user opens their first leg via "+ New Entry".
-  function _onBlindPlaybackSubmit(p) {
+  // Neutral playback-only launcher. A policy can constrain the shared
+  // controller without teaching it anything about the caller's DOM or globals.
+  function _startFlatPlayback(p) {
     p = p || {};
-    if (typeof currentBars === 'undefined' || !Array.isArray(currentBars) || !currentBars.length) {
-      alert('No bars loaded for blind playback.'); return;
+    const sourceBars = Array.isArray(p.bars)
+      ? p.bars
+      : ((typeof currentBars !== 'undefined' && Array.isArray(currentBars)) ? currentBars : null);
+    const label = p._compatBlind ? 'blind playback' : 'flat playback';
+    if (!sourceBars || !sourceBars.length) {
+      alert('No bars loaded for ' + label + '.'); return false;
     }
-    if (typeof p.startBarIdx !== 'number' || p.startBarIdx < 0 || p.startBarIdx >= currentBars.length) {
-      alert('Invalid startBarIdx for blind playback.'); return;
+    if (typeof p.startBarIdx !== 'number' || p.startBarIdx < 0 || p.startBarIdx >= sourceBars.length) {
+      alert('Invalid startBarIdx for ' + label + '.'); return false;
     }
+    const policy = _normalizeFlatPolicy(p.policy);
+    if (policy && (typeof p.endBarIdx !== 'number' || p.endBarIdx <= p.startBarIdx || p.endBarIdx >= sourceBars.length)) {
+      alert('Invalid endBarIdx for flat playback.'); return false;
+    }
+    pause();
     state._lastSetup = null;
     let sim;
     try {
       sim = Sim.createSim({
-        moveKey: 'BLIND', direction: 'long', noEntry: true,
-        startBarIdx: p.startBarIdx, endBarIdx: p.endBarIdx != null ? p.endBarIdx : null,
-        startDate: currentBars[p.startBarIdx] && currentBars[p.startBarIdx].time,
+        moveKey: p.moveKey || 'BLIND', direction: 'long', noEntry: true,
+        startBarIdx: p.startBarIdx, endBarIdx: policy ? null : (p.endBarIdx != null ? p.endBarIdx : null),
+        startDate: sourceBars[p.startBarIdx] && sourceBars[p.startBarIdx].time,
         initialEquity: p.initialEquity || null
       });
-    } catch (e) { alert('Could not start blind sim: ' + e.message); return; }
+    } catch (e) {
+      alert((p._compatBlind ? 'Could not start blind sim: ' : 'Could not start flat playback: ') + e.message);
+      return false;
+    }
     state.sim = sim;
-    state.bars = currentBars.slice();
+    state.bars = sourceBars.slice();
     state.active = true;
     state.speed = 1;
     state._history = [];
+    state.policy = policy;
+    state._flatEndBarIdx = policy ? p.endBarIdx : null;
+    state._flatCompletedLegs = new Set();
+    state._flatAttemptPending = false;
+    state._flatExitReason = null;
+    state._flatHorizonNotified = false;
     _precomputeMAs();
     Sim.UI.setSpeed(1);
     Sim.UI.setActive(true);
+    _applyPolicyUI();
     _maskChart(sim.playIdx);
     _centerOnEntry(sim.playIdx);
     _clearStopHistory();
@@ -20232,6 +20619,22 @@ Sim.Ctrl = (function(){
     _appendCurvePoint(sim.playIdx);
     _render();
     _bindKeys();
+    _notifyFlatState('started');
+    return true;
+  }
+
+  function _flatAction(action) {
+    if (!state.policy || !state.active || !state.sim) return false;
+    if (action === 'wait') {
+      const current = _flatState('wait-requested');
+      if (!current || !current.canWait) return false;
+      pause();
+      _stepForward(1);
+      return state.sim.playIdx > current.playIdx;
+    }
+    if (action === 'enter') return _openFlatEntry();
+    if (action === 'continue') return _continueFlatAttempt();
+    return false;
   }
 
   return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null), replay,
@@ -20241,7 +20644,14 @@ Sim.Ctrl = (function(){
     startWithForm: function(form){ state._lastSetup = Object.assign({}, form); _onSetupSubmit(form); },
     // Playback-only entry point for SimBlind: starts the sim with no position;
     // user enters via "+ New Entry" once they've decided.
-    startBlindPlayback: function(p){ _onBlindPlaybackSubmit(p); },
+    startFlatPlayback: function(p){ return _startFlatPlayback(p); },
+    startBlindPlayback: function(p){ return _startFlatPlayback(Object.assign({}, p || {}, {
+      bars: (typeof currentBars !== 'undefined' && Array.isArray(currentBars)) ? currentBars : null,
+      moveKey: 'BLIND', policy: null, _compatBlind: true
+    })); },
+    flatAction: _flatAction,
+    getFlatPlaybackState: function(){ return _flatState('read'); },
+    stopFlatPlayback: function(){ if (!state.policy) return false; exit({ preserveChart:true }); return true; },
     // Returns the time-string of the current playhead bar, or null when no sim
     // is active. Used by the drawings layer (redrawAll) to skip annotations /
     // text labels that are anchored beyond the current bar — otherwise the

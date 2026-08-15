@@ -288,16 +288,143 @@
     const status = byId('entry-trainer-shell-status');
     const candidate = batch.candidates[batch.activeIndex];
     if (ticker) ticker.textContent = 'Ticker ' + (batch.activeIndex + 1) + ' of ' + BATCH_SIZE;
-    if (attempts) attempts.textContent = 'Attempt ' + Math.min(candidate.attempts.length, MAX_ATTEMPTS) + ' of ' + MAX_ATTEMPTS;
+    const playback = state.runtime && state.runtime.playbackState;
+    let attemptNumber = candidate.attempts.length;
+    if (playback && (playback.attemptActive || playback.attemptCompletePending)) {
+      attemptNumber = playback.attemptNumber;
+    }
+    if (attempts) attempts.textContent = 'Attempt ' + Math.min(attemptNumber, MAX_ATTEMPTS) + ' of ' + MAX_ATTEMPTS;
     if (status) {
       status.textContent = batch.status === 'completed'
-        ? 'Batch shell complete. Trade execution and review are not available in this shell yet.'
-        : 'Qualification day · 85 prior daily bars shown · Wait and Enter are not available in this shell yet.';
+        ? 'Batch complete · review and persistence arrive in a later task.'
+        : playback && playback.atHorizon
+          ? '90-bar horizon reached.'
+          : playback && playback.attemptActive
+            ? 'Attempt open · manage the stop or close the full position at the paused close.'
+            : 'Out of position · wait one bar, enter at this close, or skip the ticker.';
     }
+    const wait = byId('entry-trainer-wait');
+    const enter = byId('entry-trainer-enter');
     const skip = byId('entry-trainer-skip');
-    if (skip) skip.disabled = batch.status !== 'active';
+    const primary = byId('entry-trainer-primary-actions');
+    const result = byId('entry-trainer-result');
+    const showingResult = !!(result && result.classList.contains('is-visible'));
+    if (status) status.style.display = showingResult ? 'none' : '';
+    if (primary) primary.style.display = showingResult ? 'none' : '';
+    const tryAgain = byId('entry-trainer-try-again');
+    if (tryAgain && showingResult) tryAgain.disabled = !playback || !playback.canTryAgain;
+    if (wait) {
+      wait.disabled = batch.status !== 'active' || !playback || !playback.canWait;
+      wait.title = wait.disabled ? 'Wait is available only while flat before the horizon.' : 'Advance exactly one daily bar';
+    }
+    if (enter) {
+      enter.disabled = batch.status !== 'active' || !playback || !playback.canEnter;
+      enter.title = enter.disabled ? 'Entry is available only while flat before the horizon.' : 'Enter long at the current paused close';
+    }
+    if (skip) skip.disabled = batch.status !== 'active' || !playback || !playback.flat || playback.attemptCompletePending;
     const launch = byId('entry-trainer-btn');
     if (launch) launch.setAttribute('aria-pressed', 'true');
+  }
+
+  function hideAttemptResult(){
+    byId('entry-trainer-result')?.classList.remove('is-visible');
+    const primary = byId('entry-trainer-primary-actions');
+    if (primary) primary.style.display = '';
+  }
+
+  function signedR(value){
+    if (!Number.isFinite(value)) return '—R';
+    return (value >= 0 ? '+' : '−') + Math.abs(value).toFixed(2) + 'R';
+  }
+
+  function signedDollars(value){
+    if (!Number.isFinite(value)) return '$—';
+    return (value >= 0 ? '+' : '−') + '$' + Math.round(Math.abs(value)).toLocaleString();
+  }
+
+  function showAttemptResult(snapshot){
+    const result = byId('entry-trainer-result');
+    if (!result) return;
+    const r = byId('entry-trainer-result-r');
+    const detail = byId('entry-trainer-result-detail');
+    if (r) r.textContent = signedR(snapshot.realizedR);
+    if (detail) {
+      detail.textContent = signedDollars(snapshot.realizedPnL)
+        + ' · ' + snapshot.barsHeld + ' bars'
+        + ' · MFE ' + signedR(snapshot.mfeR)
+        + ' · MAE ' + signedR(snapshot.maeR);
+    }
+    const canTry = snapshot.attemptNumber < MAX_ATTEMPTS
+      && snapshot.exitReason !== 'horizon_end'
+      && state.runtime && state.runtime.playbackState
+      && !state.runtime.playbackState.atHorizon;
+    const tryAgain = byId('entry-trainer-try-again');
+    if (tryAgain) tryAgain.disabled = !canTry;
+    result.classList.add('is-visible');
+    updateStrip();
+  }
+
+  function playbackIsCurrent(runtime, candidateIndex, token){
+    return state.runtime === runtime
+      && state.batch
+      && state.batch.activeIndex === candidateIndex
+      && runtime.playbackToken === token
+      && state.status === 'active';
+  }
+
+  function scheduleAutomaticFinish(runtime, candidateIndex, token, reason){
+    if (!playbackIsCurrent(runtime, candidateIndex, token) || runtime.finishTimer) return;
+    runtime.finishTimer = setTimeout(function(){
+      runtime.finishTimer = null;
+      if (playbackIsCurrent(runtime, candidateIndex, token)) finishTicker(reason);
+    }, 650);
+  }
+
+  function activateCandidatePlayback(batch, runtime, index){
+    if (!window.Sim || !window.Sim.Ctrl || typeof window.Sim.Ctrl.startFlatPlayback !== 'function') {
+      throw new Error('The flat playback controller is not ready');
+    }
+    hideAttemptResult();
+    runtime.playbackState = null;
+    runtime.lastAttempt = null;
+    runtime.playbackToken = (runtime.playbackToken || 0) + 1;
+    const token = runtime.playbackToken;
+    const candidate = batch.candidates[index];
+    const started = window.Sim.Ctrl.startFlatPlayback({
+      bars: runtime.fullBars,
+      moveKey: 'ENTRY_TRAINER',
+      startBarIdx: runtime.qualificationIndex,
+      endBarIdx: runtime.endIndex,
+      initialEquity: batch.startingEquity,
+      policy: {
+        longOnly: true,
+        disableRewind: true,
+        disableAdds: true,
+        fullExitOnly: true,
+        pauseWhenFlat: true,
+        maxLegs: MAX_ATTEMPTS,
+        onStateChange: function(playbackState){
+          if (!playbackIsCurrent(runtime, index, token)) return;
+          runtime.playbackState = playbackState;
+          updateStrip();
+        },
+        onAttemptComplete: function(snapshot){
+          if (!playbackIsCurrent(runtime, index, token)) return;
+          candidate.attempts.push(clone(snapshot));
+          candidate.status = 'active';
+          runtime.lastAttempt = snapshot;
+          showAttemptResult(snapshot);
+          if (snapshot.attemptNumber >= MAX_ATTEMPTS || snapshot.exitReason === 'horizon_end') {
+            scheduleAutomaticFinish(runtime, index, token, snapshot.exitReason === 'horizon_end' ? 'horizon_end' : 'max_attempts');
+          }
+        },
+        onHorizonComplete: function(){
+          if (!playbackIsCurrent(runtime, index, token)) return;
+          scheduleAutomaticFinish(runtime, index, token, 'horizon_end');
+        }
+      }
+    });
+    if (!started) throw new Error('Could not start candidate playback');
   }
 
   function lockOrdinaryControls(runtime){
@@ -363,6 +490,13 @@
     options = options || {};
     const runtime = state.runtime;
     let restored = { ok:true, restored:false, error:null };
+    if (runtime && runtime.finishTimer) {
+      clearTimeout(runtime.finishTimer);
+      runtime.finishTimer = null;
+    }
+    if (window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.stopFlatPlayback === 'function') {
+      try { window.Sim.Ctrl.stopFlatPlayback(); } catch (error) {}
+    }
     try {
       if (runtime && runtime.chartSession) restored = runtime.chartSession.restore();
     } catch (error) {
@@ -385,6 +519,7 @@
     unlockOrdinaryControls(runtime);
     document.body.classList.remove('entry-trainer-active');
     byId('entry-trainer-strip')?.classList.remove('is-active');
+    hideAttemptResult();
     const launch = byId('entry-trainer-btn');
     if (launch) launch.setAttribute('aria-pressed', 'false');
     setSetupBusy(false);
@@ -441,7 +576,11 @@
       contextIndex: null,
       endIndex: null,
       activeSymbol: null,
-      lockedControls: []
+      lockedControls: [],
+      playbackState: null,
+      playbackToken: 0,
+      lastAttempt: null,
+      finishTimer: null
     };
     state.status = 'loading';
     state.runtime = runtime;
@@ -460,6 +599,7 @@
       state = { status:'active', batch:draft, lastBatch:state.lastBatch, runtime };
       lockOrdinaryControls(runtime);
       document.body.classList.add('entry-trainer-active');
+      activateCandidatePlayback(draft, runtime, 0);
       setSetupOpen(false, {restoreFocus:false});
       setSetupStatus('', false);
       updateStrip();
@@ -482,15 +622,27 @@
     }
   }
 
-  async function skipTicker(){
+  async function advanceCandidate(outcome, reason){
     const batch = state.batch;
     if (!batch || batch.status !== 'active' || state.status !== 'active') return;
     const skip = byId('entry-trainer-skip');
     const status = byId('entry-trainer-shell-status');
     if (skip) skip.disabled = true;
     const current = batch.candidates[batch.activeIndex];
-    current.status = 'skipped';
-    current.skipReason = 'shell_skip';
+    const runtime = state.runtime;
+    if (runtime.finishTimer) {
+      clearTimeout(runtime.finishTimer);
+      runtime.finishTimer = null;
+    }
+    runtime.playbackToken += 1;
+    if (window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.stopFlatPlayback === 'function') {
+      window.Sim.Ctrl.stopFlatPlayback();
+    }
+    runtime.playbackState = null;
+    hideAttemptResult();
+    current.status = outcome === 'skipped' ? 'skipped' : 'completed';
+    if (outcome === 'skipped') current.skipReason = reason || 'user_skip';
+    else current.finishReason = reason || 'user_finish';
 
     if (batch.activeIndex >= BATCH_SIZE - 1) {
       batch.status = 'completed';
@@ -507,6 +659,7 @@
       await loadCandidate(batch, state.runtime, batch.activeIndex + 1, operation);
       assertCurrentOperation(operation);
       state.status = 'active';
+      activateCandidatePlayback(batch, state.runtime, batch.activeIndex);
       updateStrip();
     } catch (error) {
       if (isStaleOperation(error, operation)) return;
@@ -522,6 +675,41 @@
     } finally {
       finishOperation(operation);
     }
+  }
+
+  function skipTicker(){
+    const playback = state.runtime && state.runtime.playbackState;
+    if (!playback || !playback.flat || playback.attemptCompletePending) return;
+    return advanceCandidate('skipped', 'user_skip');
+  }
+
+  function finishTicker(reason){
+    return advanceCandidate('completed', reason || 'user_finish');
+  }
+
+  function waitOneBar(){
+    if (!state.runtime || !state.runtime.playbackState || !state.runtime.playbackState.canWait) return false;
+    return !!(window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.flatAction === 'function'
+      && window.Sim.Ctrl.flatAction('wait'));
+  }
+
+  function enterAtClose(){
+    if (!state.runtime || !state.runtime.playbackState || !state.runtime.playbackState.canEnter) return false;
+    return !!(window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.flatAction === 'function'
+      && window.Sim.Ctrl.flatAction('enter'));
+  }
+
+  function tryAgain(){
+    const runtime = state.runtime;
+    if (!runtime || !runtime.playbackState || !runtime.playbackState.canTryAgain) return false;
+    const continued = !!(window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.flatAction === 'function'
+      && window.Sim.Ctrl.flatAction('continue'));
+    if (continued) {
+      runtime.lastAttempt = null;
+      hideAttemptResult();
+      updateStrip();
+    }
+    return continued;
   }
 
   function open(){
@@ -589,7 +777,11 @@
     launch.addEventListener('click', open);
     byId('entry-trainer-cancel')?.addEventListener('click', cancelSetup);
     byId('entry-trainer-start')?.addEventListener('click', startFromSetup);
+    byId('entry-trainer-wait')?.addEventListener('click', waitOneBar);
+    byId('entry-trainer-enter')?.addEventListener('click', enterAtClose);
     byId('entry-trainer-skip')?.addEventListener('click', skipTicker);
+    byId('entry-trainer-try-again')?.addEventListener('click', tryAgain);
+    byId('entry-trainer-finish')?.addEventListener('click', function(){ finishTicker('user_finish'); });
     byId('entry-trainer-exit')?.addEventListener('click', exit);
     modal.addEventListener('click', function(event){
       if (event.target === modal) cancelSetup();
