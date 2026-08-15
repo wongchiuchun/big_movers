@@ -6,6 +6,7 @@
   const MAX_ATTEMPTS = 3;
   const DEFAULT_EQUITY = 300000;
   const MASK_OWNER = 'entry-trainer';
+  const COMPARISON_DIAGNOSTIC_LABEL = 'Hindsight MFE R using 5-bar-low stop';
   const REQUIRED_RULES = Object.freeze({
     gainLookback: 63,
     minGain: 0.50,
@@ -187,7 +188,8 @@
       status: 'pending',
       attempts: [],
       pendingOrder: null,
-      orderEvents: []
+      orderEvents: [],
+      comparisonPoints: []
     };
   }
 
@@ -384,6 +386,125 @@
       throw new Error('Candidate daily history no longer matches the fixed trainer window');
     }
     return { qualificationIndex, contextIndex, endIndex };
+  }
+
+  function finiteNumber(value){
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value !== 'string' || !value.trim()) return null;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  // This intentionally remains review-only: playback receives no EMA series or comparison markers.
+  function pointInTimeEma(bars, period){
+    const values = Array.isArray(bars) ? new Array(bars.length).fill(null) : [];
+    const alpha = 2 / (period + 1);
+    let ema = null;
+    values.forEach(function(unused, index){
+      const close = finiteNumber(bars[index] && bars[index].close);
+      if (close == null || close <= 0) return;
+      ema = ema == null ? close : ema + alpha * (close - ema);
+      values[index] = ema;
+    });
+    return values;
+  }
+
+  function comparisonDate(bar){
+    return bar && typeof bar.time === 'string' && bar.time ? bar.time : null;
+  }
+
+  function fiveBarLow(bars, barIdx){
+    if (!Array.isArray(bars) || barIdx < 4) return null;
+    let lowest = null;
+    for (let index = barIdx - 4; index <= barIdx; index += 1) {
+      const low = finiteNumber(bars[index] && bars[index].low);
+      if (low == null) return null;
+      lowest = lowest == null ? low : Math.min(lowest, low);
+    }
+    return lowest;
+  }
+
+  function comparisonDiagnostic(bars, barIdx, endIndex, entry, stop){
+    const risk = entry - stop;
+    if (!Number.isFinite(entry) || !Number.isFinite(stop) || !Number.isFinite(risk) || risk <= 0) {
+      return {
+        label: COMPARISON_DIAGNOSTIC_LABEL,
+        mfeR: null,
+        reason: 'invalid_stop'
+      };
+    }
+    let maxHigh = entry;
+    let stopped = false;
+    let endBarIdx = endIndex;
+    for (let index = barIdx + 1; index <= endIndex; index += 1) {
+      const bar = bars[index];
+      const low = finiteNumber(bar && bar.low);
+      if (low != null && low <= stop) {
+        stopped = true;
+        endBarIdx = index;
+        break;
+      }
+      const high = finiteNumber(bar && bar.high);
+      if (high != null) maxHigh = Math.max(maxHigh, high);
+    }
+    return {
+      label: COMPARISON_DIAGNOSTIC_LABEL,
+      mfeR: Math.max(0, maxHigh - entry) / risk,
+      endReason: stopped ? 'stop' : 'horizon',
+      endDate: comparisonDate(bars[endBarIdx]),
+      endBarIdx: endBarIdx,
+      stopped: stopped
+    };
+  }
+
+  function createComparisonPoint(rule, bars, qualificationIndex, endIndex, barIdx){
+    const bar = bars[barIdx];
+    const entry = finiteNumber(bar && bar.close);
+    const stop = fiveBarLow(bars, barIdx);
+    return {
+      rule: rule,
+      date: comparisonDate(bar),
+      barIdx: barIdx,
+      relativeBarsFromQualification: barIdx - qualificationIndex,
+      hypotheticalEntry: entry,
+      hypotheticalStop: stop,
+      diagnostic: comparisonDiagnostic(bars, barIdx, endIndex, entry, stop)
+    };
+  }
+
+  function computeComparisonPoints(bars, qualificationIndex, endIndex){
+    if (!Array.isArray(bars) || !Number.isInteger(qualificationIndex) || !Number.isInteger(endIndex)
+        || qualificationIndex < 0 || endIndex >= bars.length) return [];
+    const firstBarIdx = Math.max(qualificationIndex + 1, 1);
+    const finalBarIdx = endIndex;
+    if (firstBarIdx > finalBarIdx) return [];
+    const points = [];
+    [10, 20].forEach(function(period){
+      const ema = pointInTimeEma(bars, period);
+      const rule = 'ema' + period + '_pullback';
+      let armed = true;
+      for (let barIdx = firstBarIdx; barIdx <= finalBarIdx; barIdx += 1) {
+        const bar = bars[barIdx];
+        const priorBar = bars[barIdx - 1];
+        const currentEma = ema[barIdx];
+        const priorEma = ema[barIdx - 1];
+        const close = finiteNumber(bar && bar.close);
+        const low = finiteNumber(bar && bar.low);
+        const priorClose = finiteNumber(priorBar && priorBar.close);
+        const wasArmed = armed;
+        if (!armed && close != null && currentEma != null && close >= currentEma * 1.03) armed = true;
+        if (!wasArmed || priorClose == null || close == null || low == null
+            || priorEma == null || currentEma == null) continue;
+        if (priorClose >= priorEma * 1.03 && low <= currentEma && close >= currentEma) {
+          points.push(createComparisonPoint(rule, bars, qualificationIndex, finalBarIdx, barIdx));
+          armed = false;
+        }
+      }
+    });
+    return points.sort(function(left, right){
+      if (left.barIdx !== right.barIdx) return left.barIdx - right.barIdx;
+      return left.rule < right.rule ? -1 : (left.rule > right.rule ? 1 : 0);
+    });
   }
 
   function relativeLabel(relative, surface){
@@ -929,11 +1050,20 @@
     });
     assertCurrentOperation(operation);
     if (!validated) throw new Error('Candidate validation did not complete');
+    const analysisToken = (runtime.comparisonAnalysisToken || 0) + 1;
+    runtime.comparisonAnalysisToken = analysisToken;
+    const comparisonPoints = computeComparisonPoints(fullBars, validated.qualificationIndex, validated.endIndex);
+    if (!isCurrentOperation(operation)
+        || runtime.comparisonAnalysisToken !== analysisToken
+        || batch.candidates[index] !== candidate) {
+      throw staleOperationError();
+    }
     runtime.fullBars = fullBars;
     runtime.qualificationIndex = validated.qualificationIndex;
     runtime.contextIndex = validated.contextIndex;
     runtime.endIndex = validated.endIndex;
     runtime.activeSymbol = candidate.symbol;
+    candidate.comparisonPoints = comparisonPoints;
     candidate.status = 'active';
     batch.activeIndex = index;
   }
