@@ -327,7 +327,6 @@
     assertCurrentOperation(operation);
     const candidate = batch.candidates[index];
     let validated = null;
-    runtime.sessionStarted = true;
     const fullBars = await runtime.chartSession.loadSymbol(candidate.symbol, {
       signal: operation.controller.signal,
       displayFrom: candidate.contextStartDate,
@@ -364,7 +363,7 @@
     const runtime = state.runtime;
     let restored = { ok:true, restored:false, error:null };
     try {
-      if (runtime && runtime.chartSession && runtime.sessionStarted) restored = runtime.chartSession.restore();
+      if (runtime && runtime.chartSession) restored = runtime.chartSession.restore();
     } catch (error) {
       restored = { ok:false, restored:false, error };
     }
@@ -420,12 +419,22 @@
       setSetupStatus('Entry Trainer cannot start because date masking is currently owned by ' + owner + '. Exit it and try again.', true);
       return;
     }
+    if (typeof window.MainChartSession.acquire !== 'function') {
+      maskAcquisition.lease.release();
+      setSetupStatus('The chart session owner is not ready. Try again in a moment.', true);
+      return;
+    }
+    const chartAcquisition = window.MainChartSession.acquire(MASK_OWNER);
+    if (!chartAcquisition.ok) {
+      maskAcquisition.lease.release();
+      setSetupStatus('Entry Trainer cannot start because the main chart is currently owned by ' + (chartAcquisition.owner || 'another session') + '.', true);
+      return;
+    }
 
     const operation = beginOperation();
     const runtime = {
-      chartSession: window.MainChartSession,
+      chartSession: chartAcquisition.session,
       maskLease: maskAcquisition.lease,
-      sessionStarted: false,
       fullBars: null,
       qualificationIndex: null,
       contextIndex: null,
@@ -591,12 +600,13 @@
       }
     });
     document.addEventListener('keydown', function(event){
-      trapSetupFocus(event);
       if (event.key === 'Escape' && modal.classList.contains('open')) {
         event.preventDefault();
+        event.stopImmediatePropagation();
         cancelSetup();
       }
-    });
+    }, true);
+    document.addEventListener('keydown', trapSetupFocus);
     return true;
   }
 

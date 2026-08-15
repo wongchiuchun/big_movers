@@ -6932,6 +6932,7 @@ function isCurrentOrdinaryChartLoad(request){
 }
 
 function finishOrdinaryChartLoad(request){
+  try { request.controller.abort(); } catch (error) {}
   if (activeOhlcvRequest === request) activeOhlcvRequest = null;
   ordinaryChartRequests.delete(request);
   request.settle();
@@ -7355,12 +7356,16 @@ async function loadDrawings(){
 }
 
 // ============ AI INDICATOR OVERLAYS ============
-async function loadIndicators(symbol) {
+async function loadIndicators(symbol, signal) {
   try {
-    const r = await fetch(`/api/indicators?symbol=${encodeURIComponent(symbol)}`);
+    const r = await fetch(`/api/indicators?symbol=${encodeURIComponent(symbol)}`, { signal });
     if (!r.ok) return null;
     return await r.json();
-  } catch (e) { console.warn('loadIndicators failed', e); return null; }
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw e;
+    console.warn('loadIndicators failed', e);
+    return null;
+  }
 }
 
 function clearIndicatorOverlays() {
@@ -10577,34 +10582,60 @@ async function loadIndexInChart(idxName){
 async function selectRow(i){
   const r=filtered[i];
   if(!r)return;
+  const requestedMoveKey=moveKey(r);
   const request = beginOrdinaryChartLoad();
   const reqController = request.controller;
   document.getElementById('placeholder').classList.add('hidden');
   document.getElementById('loading').classList.remove('hidden');
   try{
-    const resp = await fetch(`/api/ohlcv?symbol=${encodeURIComponent(r.symbol)}&_=${Date.now()}`, { signal: reqController.signal });
-    if(!resp.ok){
-      throw new Error(`HTTP ${resp.status}`);
-    }
-    const bars=await resp.json();
-    if(bars.error)throw new Error(bars.error);
+    const prepared = await Promise.all([
+      fetch(`/api/ohlcv?symbol=${encodeURIComponent(r.symbol)}&_=${Date.now()}`, { signal: reqController.signal })
+        .then(async function(resp){
+          if(!resp.ok)throw new Error(`HTTP ${resp.status}`);
+          const bars=await resp.json();
+          if(bars.error)throw new Error(bars.error);
+          return bars;
+        }),
+      loadIndicators(r.symbol, reqController.signal)
+    ]);
+    const bars=prepared[0];
+    const indicators=prepared[1];
     if (!isCurrentOrdinaryChartLoad(request)) return;
+    const commitIndex=filtered.findIndex(function(row){ return moveKey(row)===requestedMoveKey; });
+    if(commitIndex<0)return;
+    const commitRow=filtered[commitIndex];
+    if(!commitRow||moveKey(commitRow)!==requestedMoveKey)return;
+
+    const tfBars=resampleBars(bars,currentTF);
+    if(!tfBars.length)throw new Error('No chart bars are available');
+    const findBar=t=>tfBars.find(b=>b.time===t)||tfBars.reduce((best,b)=>b.time.localeCompare(t)<0?b:best,tfBars[0]);
+    const sb=findBar(commitRow.low_date),eb=findBar(commitRow.high_date);
+    const nextMarkers = [
+      {time:sb.time,position:'belowBar',color:'#00d4aa',shape:'arrowUp',  text:`▶ Low ${commitRow.low_date} $${commitRow.low_price}`},
+      {time:eb.time,position:'aboveBar',color:'#ff6b35',shape:'arrowDown',text:`◀ High ${commitRow.high_date} +${parseFloat(commitRow.gain_pct).toFixed(0)}%`},
+    ];
+    if (!isCurrentOrdinaryChartLoad(request)) return;
+
+    // One current-request commit: identity, bars, markers, and indicators move
+    // together, so an aborted request cannot leave stale overlays behind.
     if(manualLegPick)cancelManualLegPick();
-    activeIdx=filtered.indexOf(r);renderTable();
+    activeIdx=commitIndex;renderTable();
     document.querySelector('.row.active')?.scrollIntoView({block:'nearest'});
     // Clear any active SPX/NDQ index-view highlight — we're back to a row.
     document.getElementById('idx-spx-btn')?.classList.remove('is-active');
     document.getElementById('idx-ndq-btn')?.classList.remove('is-active');
-    currentMoveRow = r;
-    currentSymbol=r.symbol;
+    currentMoveRow = commitRow;
+    currentSymbol=commitRow.symbol;
     currentBars=bars;
+    aiIndicators=indicators;
+    extraCandleMarkers=nextMarkers;
     _syncWindowBars();
     syncDrawingVersionControls();
-    document.getElementById('ct-sym').textContent=r.symbol;
-    document.getElementById('ct-cond').textContent=r.year;
-    document.getElementById('ct-gain').textContent=`+${parseFloat(r.gain_pct).toFixed(2)}%`;
-    document.getElementById('ct-range').textContent=`${r.low_date} → ${r.high_date}`;
-    document.getElementById('ct-vol').textContent=`$${r.avg_vol_b}B/mo`;
+    document.getElementById('ct-sym').textContent=commitRow.symbol;
+    document.getElementById('ct-cond').textContent=commitRow.year;
+    document.getElementById('ct-gain').textContent=`+${parseFloat(commitRow.gain_pct).toFixed(2)}%`;
+    document.getElementById('ct-range').textContent=`${commitRow.low_date} → ${commitRow.high_date}`;
+    document.getElementById('ct-vol').textContent=`$${commitRow.avg_vol_b}B/mo`;
     if (document.getElementById('study-panel').classList.contains('open')) updateStudyPanel();
     candleSeries.setData(bars.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close})));
     volSeries.setData(bars.map(b => {
@@ -10613,18 +10644,7 @@ async function selectRow(i){
       return { time: b.time, value: b.volume, color: b.close >= b.open ? volUp : volDown };
     }));
     applyTimeframe();
-    const tfBars=resampleBars(currentBars,currentTF);
-    const findBar=t=>tfBars.find(b=>b.time===t)||tfBars.reduce((best,b)=>b.time.localeCompare(t)<0?b:best,tfBars[0]);
-    const sb=findBar(r.low_date),eb=findBar(r.high_date);
-    extraCandleMarkers = [
-      {time:sb.time,position:'belowBar',color:'#00d4aa',shape:'arrowUp',  text:`▶ Low ${r.low_date} $${r.low_price}`},
-      {time:eb.time,position:'aboveBar',color:'#ff6b35',shape:'arrowDown',text:`◀ High ${r.high_date} +${parseFloat(r.gain_pct).toFixed(0)}%`},
-    ];
     (priceSeries || candleSeries).setMarkers(extraCandleMarkers);
-    // Load AI indicators (MA overlays) then render
-    const indicators = await loadIndicators(r.symbol);
-    if (!isCurrentOrdinaryChartLoad(request)) return;
-    aiIndicators = indicators;
     applyIndicatorOverlays();
     const times=tfBars.map(b=>b.time),si=times.indexOf(sb.time),ei=times.indexOf(eb.time);
     const pad=Math.max(5,Math.round((ei-si)*0.2));
@@ -10658,6 +10678,18 @@ window.MainChartSession = (function(){
   let snapshot = null;
   let loadGeneration = 0;
   let activeLoad = null;
+  let sessionToken = null;
+  let sessionOwner = null;
+
+  function ownershipError(message){
+    const error = new Error(message || 'Main chart session ownership is required');
+    error.code = 'MAIN_CHART_SESSION_OWNERSHIP';
+    return error;
+  }
+
+  function assertSession(token){
+    if (!token || sessionToken !== token) throw ownershipError('Main chart session handle is no longer current');
+  }
 
   function abortError(message){
     const error = new Error(message || 'Main chart session load was aborted');
@@ -10665,13 +10697,14 @@ window.MainChartSession = (function(){
     return error;
   }
 
-  function beginLoad(externalSignal){
+  function beginLoad(token, externalSignal){
+    assertSession(token);
     if (activeLoad) {
       try { activeLoad.controller.abort(); } catch (error) {}
       activeLoad.detachExternal?.();
     }
     const controller = new AbortController();
-    const lease = { generation:++loadGeneration, controller, detachExternal:null };
+    const lease = { generation:++loadGeneration, controller, detachExternal:null, sessionToken:token };
     if (externalSignal) {
       const onAbort = function(){ try { controller.abort(); } catch (error) {} };
       if (externalSignal.aborted) onAbort();
@@ -10685,7 +10718,8 @@ window.MainChartSession = (function(){
   }
 
   function isCurrentLoad(lease){
-    return activeLoad === lease && lease.generation === loadGeneration && !lease.controller.signal.aborted;
+    return activeLoad === lease && lease.generation === loadGeneration
+      && sessionToken === lease.sessionToken && !lease.controller.signal.aborted;
   }
 
   function assertCurrentLoad(lease){
@@ -10868,12 +10902,13 @@ window.MainChartSession = (function(){
     return bars;
   }
 
-  async function loadSymbol(symbol, options){
+  async function loadOwnedSymbol(token, symbol, options){
+    assertSession(token);
     options = options || {};
     const requested = String(symbol || '').trim().toUpperCase();
     if (!requested) throw new Error('A symbol is required');
 
-    const lease = beginLoad(options.signal);
+    const lease = beginLoad(token, options.signal);
     let mutated = false;
     try {
       // An ordinary row/index request mutates its title and bars as one commit.
@@ -10946,7 +10981,7 @@ window.MainChartSession = (function(){
       if (placeholder) placeholder.classList.add('hidden');
       const loading = document.getElementById('loading');
       if (loading) loading.classList.add('hidden');
-      maskIdentity(options.mask || {});
+      maskOwnedIdentity(token, options.mask || {});
       try {
         chart.timeScale().setVisibleRange({from:displayBars[0].time,to:displayBars[displayBars.length - 1].time});
       } catch (error) { try { chart.timeScale().fitContent(); } catch (ignored) {} }
@@ -10955,7 +10990,7 @@ window.MainChartSession = (function(){
       return bars.slice();
     } catch (error) {
       if (mutated) {
-        const restored = restore();
+        const restored = restoreOwned(token, {releaseOwnership:false});
         if (!restored.ok) {
           const restoreError = new Error(error.message + '; chart restore failed: ' + restored.error.message);
           restoreError.cause = error;
@@ -10968,7 +11003,8 @@ window.MainChartSession = (function(){
     }
   }
 
-  function maskIdentity(mask){
+  function maskOwnedIdentity(token, mask){
+    assertSession(token);
     mask = mask || {};
     setTitle({
       'ct-sym': mask.symbolLabel || '🎯 MASKED TICKER',
@@ -10981,7 +11017,8 @@ window.MainChartSession = (function(){
     refreshMainChartDateFormatters();
   }
 
-  function revealIdentity(meta){
+  function revealOwnedIdentity(token, meta){
+    assertSession(token);
     meta = meta || {};
     setTitle({
       'ct-sym': meta.symbol || '—',
@@ -10993,10 +11030,16 @@ window.MainChartSession = (function(){
     refreshMainChartDateFormatters();
   }
 
-  function restore(){
+  function restoreOwned(token, options){
+    assertSession(token);
+    options = options || {};
     invalidateLoads();
     if (!snapshot) {
       mainChartSessionDetached = false;
+      if (options.releaseOwnership !== false) {
+        sessionToken = null;
+        sessionOwner = null;
+      }
       return { ok:true, restored:false, error:null };
     }
     const prior = snapshot;
@@ -11096,10 +11139,49 @@ window.MainChartSession = (function(){
       return { ok:false, restored:false, error:new Error(errors.join('; ')) };
     }
     snapshot = null;
+    if (options.releaseOwnership !== false) {
+      sessionToken = null;
+      sessionOwner = null;
+    }
     return { ok:true, restored:true, error:null };
   }
 
-  return { loadSymbol, maskIdentity, revealIdentity, restore };
+  function acquire(owner){
+    const requestedOwner = String(owner || '').trim();
+    if (!requestedOwner) return {ok:false, owner:null, reason:'owner-required'};
+    if (sessionToken) return {ok:false, owner:sessionOwner, reason:'already-owned'};
+    const token = {};
+    sessionToken = token;
+    sessionOwner = requestedOwner;
+    const session = Object.freeze({
+      loadSymbol: function(symbol, options){ return loadOwnedSymbol(token, symbol, options); },
+      maskIdentity: function(mask){ return maskOwnedIdentity(token, mask); },
+      revealIdentity: function(meta){ return revealOwnedIdentity(token, meta); },
+      restore: function(){
+        try { return restoreOwned(token, {releaseOwnership:true}); }
+        catch (error) { return {ok:false, restored:false, error}; }
+      }
+    });
+    return {ok:true, owner:requestedOwner, session};
+  }
+
+  function requireHandle(handle, method){
+    if (!handle || typeof handle[method] !== 'function') throw ownershipError('Acquire a MainChartSession handle before calling ' + method);
+    return handle;
+  }
+
+  // Compatibility names remain available, but require an acquired handle as
+  // the first argument so unrelated callers cannot share or restore a snapshot.
+  return {
+    acquire,
+    loadSymbol: function(handle, symbol, options){ return requireHandle(handle, 'loadSymbol').loadSymbol(symbol, options); },
+    maskIdentity: function(handle, mask){ return requireHandle(handle, 'maskIdentity').maskIdentity(mask); },
+    revealIdentity: function(handle, meta){ return requireHandle(handle, 'revealIdentity').revealIdentity(meta); },
+    restore: function(handle){
+      try { return requireHandle(handle, 'restore').restore(); }
+      catch (error) { return {ok:false, restored:false, error}; }
+    }
+  };
 })();
 
 // ============ STUDY PANEL ============
