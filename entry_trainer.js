@@ -115,6 +115,7 @@
     if (open && !modal.classList.contains('open') && !setupOpener) setupOpener = document.activeElement;
     modal.classList.toggle('open', !!open);
     modal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.body.classList.toggle('entry-trainer-setup-open', !!open);
     if (open) {
       const focusTarget = options.focusTarget ? byId(options.focusTarget) : byId('entry-trainer-equity');
       setupFocusTimer = setTimeout(function(){

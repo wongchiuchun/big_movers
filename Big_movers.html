@@ -7356,15 +7356,56 @@ async function loadDrawings(){
 }
 
 // ============ AI INDICATOR OVERLAYS ============
+const INDICATOR_PREP_TIMEOUT_MS = 2500;
+
+function indicatorAbortError(){
+  const error = new Error('Indicator preparation was aborted');
+  error.name = 'AbortError';
+  return error;
+}
+
 async function loadIndicators(symbol, signal) {
+  const controller = new AbortController();
+  let timeoutId = null;
+  let timedOut = false;
+  let detachAbort = function(){};
+  const request = fetch(`/api/indicators?symbol=${encodeURIComponent(symbol)}`, { signal:controller.signal })
+    .then(async function(response){
+      if (!response.ok) return null;
+      return await response.json();
+    })
+    .catch(function(error){
+      if (signal && signal.aborted) throw indicatorAbortError();
+      if (timedOut && error && error.name === 'AbortError') return null;
+      if (error && error.name === 'AbortError') throw error;
+      console.warn('loadIndicators failed', error);
+      return null;
+    });
+  const timeout = new Promise(function(resolve){
+    timeoutId = setTimeout(function(){
+      timedOut = true;
+      try { controller.abort(); } catch (error) {}
+      resolve(null);
+    }, INDICATOR_PREP_TIMEOUT_MS);
+  });
+  const cancelled = new Promise(function(resolve, reject){
+    if (!signal) return;
+    const onAbort = function(){
+      try { controller.abort(); } catch (error) {}
+      reject(indicatorAbortError());
+    };
+    if (signal.aborted) onAbort();
+    else {
+      signal.addEventListener('abort', onAbort, {once:true});
+      detachAbort = function(){ signal.removeEventListener('abort', onAbort); };
+    }
+  });
   try {
-    const r = await fetch(`/api/indicators?symbol=${encodeURIComponent(symbol)}`, { signal });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch (e) {
-    if (e && e.name === 'AbortError') throw e;
-    console.warn('loadIndicators failed', e);
-    return null;
+    return await Promise.race([request, timeout, cancelled]);
+  } finally {
+    if (timeoutId != null) clearTimeout(timeoutId);
+    detachAbort();
+    try { controller.abort(); } catch (error) {}
   }
 }
 
@@ -9666,7 +9707,8 @@ function showTextInput(px,py,price,time,initialText='',onConfirm,initialBoxWidth
 // KEYBOARD
 // ==============================================
 document.addEventListener('keydown',e=>{
-  if(document.body.classList.contains('entry-trainer-active'))return;
+  if(document.body.classList.contains('entry-trainer-active')
+      ||document.body.classList.contains('entry-trainer-setup-open'))return;
   const inInput=document.activeElement===document.getElementById('txt-input')
     ||document.activeElement.tagName==='INPUT'
     ||document.activeElement.tagName==='SELECT'
@@ -11151,6 +11193,7 @@ window.MainChartSession = (function(){
     if (!requestedOwner) return {ok:false, owner:null, reason:'owner-required'};
     if (sessionToken) return {ok:false, owner:sessionOwner, reason:'already-owned'};
     const token = {};
+    let released = false;
     sessionToken = token;
     sessionOwner = requestedOwner;
     const session = Object.freeze({
@@ -11158,8 +11201,12 @@ window.MainChartSession = (function(){
       maskIdentity: function(mask){ return maskOwnedIdentity(token, mask); },
       revealIdentity: function(meta){ return revealOwnedIdentity(token, meta); },
       restore: function(){
-        try { return restoreOwned(token, {releaseOwnership:true}); }
-        catch (error) { return {ok:false, restored:false, error}; }
+        if (released) return {ok:true, restored:false, error:null};
+        try {
+          const result = restoreOwned(token, {releaseOwnership:true});
+          if (result && result.ok) released = true;
+          return result;
+        } catch (error) { return {ok:false, restored:false, error}; }
       }
     });
     return {ok:true, owner:requestedOwner, session};
@@ -12128,6 +12175,7 @@ document.addEventListener('click', e => {
 
   document.getElementById('screenshot-btn').addEventListener('click', takeScreenshot);
   document.addEventListener('keydown', e => {
+    if (document.body.classList.contains('entry-trainer-setup-open')) return;
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
       e.preventDefault();
       takeScreenshot();
@@ -12157,6 +12205,7 @@ document.addEventListener('click', e => {
   if (btn) btn.addEventListener('click', () => togglePopout());
   // Capture-phase ESC handler so we exit pop-out before the simulator's own ESC ("Exit simulator?") fires.
   document.addEventListener('keydown', (e) => {
+    if (document.body.classList.contains('entry-trainer-setup-open')) return;
     if (e.key !== 'Escape') return;
     if (!document.body.classList.contains('sim-popout')) return;
     const tag = (document.activeElement && document.activeElement.tagName) || '';
