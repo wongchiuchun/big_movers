@@ -7,7 +7,6 @@
   const DEFAULT_EQUITY = 300000;
   const MASK_OWNER = 'entry-trainer';
   const STORAGE_KEY = 'bm_entry_trainer_batches_v1';
-  const STORAGE_LIMIT = 100;
   const COMPARISON_DIAGNOSTIC_LABEL = 'Hindsight MFE R using 5-bar-low stop';
   const REQUIRED_RULES = Object.freeze({
     gainLookback: 63,
@@ -28,13 +27,18 @@
   let activeOperation = null;
   let setupOpener = null;
   let setupFocusTimer = null;
+  let lastPersistenceFailure = null;
   let reviewState = {
     batch: null,
     activeTab: 'summary',
     chart: null,
     barsController: null,
     dirty: false,
-    opener: null
+    opener: null,
+    persistenceWarning: null,
+    backgroundInert: [],
+    modalParent: null,
+    modalNextSibling: null
   };
 
   const REVIEW_ENUMS = Object.freeze({
@@ -284,8 +288,33 @@
     };
   }
 
-  function sanitizePersistedBatch(raw){
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || Number(raw.version) !== BATCH_VERSION) return null;
+  function sanitizeRulesV1(raw){
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const gainLookback = safeInteger(raw.gainLookback, 1);
+    const minGain = finiteNumber(raw.minGain);
+    const contextBars = safeInteger(raw.contextBars, 1);
+    const forwardBars = safeInteger(raw.forwardBars, 1);
+    const emaPeriods = Array.isArray(raw.emaPeriods)
+      ? raw.emaPeriods.map(function(period){ return safeInteger(period, 1); })
+      : [];
+    if (gainLookback == null || gainLookback > 5000
+        || minGain == null || minGain < 0 || minGain > 100
+        || contextBars == null || contextBars > 5000
+        || forwardBars == null || forwardBars > 5000
+        || !emaPeriods.length || emaPeriods.length > 10
+        || emaPeriods.some(function(period){ return period == null || period > 1000; })
+        || new Set(emaPeriods).size !== emaPeriods.length) return null;
+    return {
+      gainLookback: gainLookback,
+      minGain: minGain,
+      emaPeriods: emaPeriods.slice(),
+      contextBars: contextBars,
+      forwardBars: forwardBars
+    };
+  }
+
+  function sanitizePersistedBatchV1(raw){
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || Number(raw.version) !== 1) return null;
     const id = safeId(raw.id);
     const status = safeEnum(raw.status, ['completed', 'abandoned']);
     const startingEquity = finiteNumber(raw.startingEquity);
@@ -294,21 +323,8 @@
     const abandonedAt = safeIsoTimestamp(raw.abandonedAt);
     if (!id || !status || startingEquity == null || startingEquity <= 0 || !createdAt
         || (status === 'completed' && !completedAt) || (status === 'abandoned' && !abandonedAt)) return null;
-    const rulesRaw = raw.rules && typeof raw.rules === 'object' ? raw.rules : {};
-    const periods = Array.isArray(rulesRaw.emaPeriods) ? rulesRaw.emaPeriods.map(Number) : [];
-    const rules = {
-      gainLookback: finiteNumber(rulesRaw.gainLookback),
-      minGain: finiteNumber(rulesRaw.minGain),
-      emaPeriods: periods.filter(Number.isFinite).slice(0, 10),
-      contextBars: finiteNumber(rulesRaw.contextBars),
-      forwardBars: finiteNumber(rulesRaw.forwardBars)
-    };
-    if (rules.gainLookback !== REQUIRED_RULES.gainLookback
-        || rules.minGain !== REQUIRED_RULES.minGain
-        || rules.contextBars !== REQUIRED_RULES.contextBars
-        || rules.forwardBars !== REQUIRED_RULES.forwardBars
-        || rules.emaPeriods.length !== 2
-        || rules.emaPeriods.slice().sort(function(a,b){ return a-b; }).join(',') !== '10,20') return null;
+    const rules = sanitizeRulesV1(raw.rules);
+    if (!rules) return null;
     const rawCandidates = Array.isArray(raw.candidates) ? raw.candidates : [];
     if (rawCandidates.length !== BATCH_SIZE) return null;
     const candidates = [];
@@ -347,6 +363,8 @@
       abandonedAt: abandonedAt,
       savedAt: safeIsoTimestamp(raw.savedAt),
       status: status,
+      exitReason: safeText(raw.exitReason, 500),
+      abandonReason: safeText(raw.abandonReason, 500),
       startingEquity: startingEquity,
       rules: rules,
       candidates: candidates,
@@ -355,6 +373,17 @@
         nextDrillFocus: safeText(batchReview.nextDrillFocus)
       }
     };
+  }
+
+  const PERSISTED_BATCH_READERS = Object.freeze({
+    1: sanitizePersistedBatchV1
+  });
+
+  function sanitizePersistedBatch(raw){
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const version = safeInteger(raw.version, 1);
+    const reader = version == null ? null : PERSISTED_BATCH_READERS[version];
+    return typeof reader === 'function' ? reader(raw) : null;
   }
 
   function readSavedBatches(){
@@ -366,23 +395,35 @@
   }
 
   function writeSavedBatches(records){
-    const clean = (Array.isArray(records) ? records : []).map(sanitizePersistedBatch).filter(Boolean).slice(0, STORAGE_LIMIT);
+    const clean = (Array.isArray(records) ? records : []).map(sanitizePersistedBatch).filter(Boolean);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
-      return true;
+      return { ok:true, quota:false, error:null };
     } catch (error) {
       console.warn('[EntryTrainer] save failed:', error);
-      return false;
+      const quota = !!(error && (
+        error.name === 'QuotaExceededError'
+        || error.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+        || error.code === 22
+        || error.code === 1014
+      ));
+      return { ok:false, quota:quota, error:error || new Error('Storage write failed') };
     }
   }
 
   function saveBatch(raw){
     const draft = Object.assign({}, raw || {}, { savedAt:new Date().toISOString() });
     const record = sanitizePersistedBatch(draft);
-    if (!record) return null;
+    if (!record) return { ok:false, quota:false, error:new Error('Batch record is invalid'), record:null };
     const records = readSavedBatches().filter(function(item){ return item.id !== record.id; });
     records.unshift(record);
-    return writeSavedBatches(records) ? clone(record) : null;
+    const result = writeSavedBatches(records);
+    return {
+      ok: result.ok,
+      quota: result.quota,
+      error: result.error,
+      record: clone(record)
+    };
   }
 
   function setSetupStatus(message, isError){
@@ -426,6 +467,7 @@
     modal.setAttribute('aria-hidden', open ? 'false' : 'true');
     document.body.classList.toggle('entry-trainer-setup-open', !!open);
     if (open) {
+      if (options.preserveFocus) return;
       const focusTarget = options.focusTarget ? byId(options.focusTarget) : byId('entry-trainer-equity');
       setupFocusTimer = setTimeout(function(){
         setupFocusTimer = null;
@@ -441,7 +483,26 @@
   function trapSetupFocus(event){
     const modal = byId('entry-trainer-setup-modal');
     if (!modal || !modal.classList.contains('open') || event.key !== 'Tab') return;
-    const focusable = Array.from(modal.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+    trapFocusWithin(modal, event);
+  }
+
+  function handleReviewKeydown(event){
+    const modal = byId('entry-trainer-review-modal');
+    if (!modal || !modal.classList.contains('open')) return false;
+    event.stopImmediatePropagation();
+    if (event.key === 'Tab') trapFocusWithin(modal, event);
+    else if (event.key === 'Escape') {
+      event.preventDefault();
+      closeReview();
+    } else if (!modal.contains(event.target)) {
+      event.preventDefault();
+      byId('entry-trainer-review-close')?.focus();
+    }
+    return true;
+  }
+
+  function trapFocusWithin(modal, event){
+    const focusable = Array.from(modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
       .filter(function(node){ return node.getClientRects().length > 0; });
     if (!focusable.length) {
       event.preventDefault();
@@ -556,6 +617,8 @@
         _orderReservationCents: {}
       },
       status: 'loading',
+      exitReason: '',
+      abandonReason: '',
       activeIndex: 0,
       candidates: descriptors.candidates.map(function(candidate){ return clone(candidate); }),
       review: { recurringEntryHabit:'', nextDrillFocus:'' }
@@ -1446,6 +1509,9 @@
     batch._finalizing = true;
     cancelOperations();
     if (status === 'abandoned') {
+      const abandonReason = safeText(options.abandonReason || options.exitReason || 'user_exit', 500) || 'user_exit';
+      batch.exitReason = abandonReason;
+      batch.abandonReason = abandonReason;
       if (!closeOpenAttemptForAbandonment()) {
         batch._finalizing = false;
         setSetupStatus('The open attempt could not be captured at the paused close. Retry Exit batch.', true);
@@ -1456,6 +1522,9 @@
         current.status = 'abandoned';
         current.exitReason = options.exitReason || 'abandoned';
       }
+    } else {
+      batch.exitReason = batch.exitReason || 'completed';
+      batch.abandonReason = '';
     }
     cleanupWorkingOrders(
       status === 'completed' ? 'expired' : 'cancelled',
@@ -1473,16 +1542,22 @@
       batch._finalizing = false;
       return false;
     }
-    const saved = saveBatch(batch);
+    const saveResult = saveBatch(batch);
+    const saved = saveResult.record;
     if (!saved) {
       batch._finalizing = false;
-      state.status = 'restore-error';
-      setSetupOpen(true, {focusTarget:'entry-trainer-cancel'});
-      setSetupStatus('The batch ended and the chart was restored, but local review storage failed. Free browser storage and retry Cancel.', true);
+      window.alert('The batch ended and the chart was restored, but the review record could not be prepared.');
       return false;
     }
     batch._finalized = true;
     state = { status:'idle', batch:null, lastBatch:saved, runtime:null };
+    lastPersistenceFailure = saveResult.ok ? null : {
+      batchId:saved.id,
+      quota:saveResult.quota,
+      message:saveResult.quota
+        ? 'This batch is not saved because browser storage is full. Delete older saved batches, then choose Save Review to retry.'
+        : 'This batch is not saved because browser storage failed. Choose Save Review to retry or export it now.'
+    };
     renderSavedBatches();
     if (options.openReview !== false) openReview(saved.id);
     if (options.alertMessage) window.alert(options.alertMessage);
@@ -1712,7 +1787,10 @@
       return false;
     }
     const batch = state.batch;
-    if (batch) return finalizeBatch(batch.status === 'completed' ? 'completed' : 'abandoned');
+    if (batch) return finalizeBatch(batch.status === 'completed' ? 'completed' : 'abandoned', {
+      exitReason:batch.status === 'completed' ? 'completed' : 'user_exit',
+      abandonReason:batch.status === 'completed' ? '' : 'user_exit'
+    });
     const cleanup = cleanupShell({closeModal:true, restoreFocus:true, orderReason:'Entry Trainer batch exited.'});
     if (!cleanup.ok) return false;
     state = { status:'idle', batch:null, lastBatch:state.lastBatch, runtime:null };
@@ -1829,6 +1907,13 @@
     return '<div class="entry-trainer-disclosure"><strong>State disclosure:</strong> Daily OHLC cannot determine intraday sequence. Comparison diagnostics use a stop-before-high convention, so the stop bar high is excluded. Entry quality self-rating is separate from outcome: a profitable chase may be low quality, while a structured stopped entry may be high quality. If a batch is exited with a position open, that attempt is closed and captured at the currently paused daily close with exitReason <code>abandoned</code>.</div>';
   }
 
+  function persistenceWarningHtml(){
+    const warning = reviewState.persistenceWarning;
+    return warning
+      ? '<div class="entry-trainer-persistence-warning" role="alert"><strong>Not saved locally.</strong> ' + esc(warning.message) + '</div>'
+      : '';
+  }
+
   function renderReviewTabs(){
     const tabs = byId('entry-trainer-review-tabs');
     const batch = reviewState.batch;
@@ -1848,7 +1933,7 @@
     const body = byId('entry-trainer-review-body');
     if (!body) return;
     const batchScope = 'data-review-scope="batch"';
-    body.innerHTML = disclosureHtml()
+    body.innerHTML = persistenceWarningHtml() + disclosureHtml()
       + '<div class="entry-trainer-summary-r">'
       + '<div class="entry-trainer-metric is-primary"><strong>' + esc(formatR(metrics.totalR)) + '</strong><span>Total realized R</span></div>'
       + '<div class="entry-trainer-metric"><strong>' + esc(formatR(metrics.averageR)) + '</strong><span>Average R per attempt</span></div>'
@@ -1860,6 +1945,9 @@
       + '<div class="entry-trainer-metric"><strong>' + esc(metrics.averageRating == null ? '—' : metrics.averageRating.toFixed(2) + ' / 5') + '</strong><span>Self-rated entry quality</span></div>'
       + '</div>'
       + '<h4>Batch</h4>'
+      + '<div class="entry-trainer-candidate-card"><strong>' + esc(batch.status) + '</strong>'
+      + (batch.exitReason ? '<br>Batch exit reason: ' + esc(batch.exitReason) : '')
+      + (batch.abandonReason ? '<br>Abandon reason: ' + esc(batch.abandonReason) : '') + '</div>'
       + '<div class="entry-trainer-candidate-list">' + batch.candidates.map(function(candidate){
           return '<div class="entry-trainer-candidate-card"><strong>' + esc(candidate.symbol) + '</strong><br>'
             + esc(candidate.qualificationDate) + ' qualification · ' + esc(candidate.endDate) + ' horizon<br>'
@@ -1979,7 +2067,7 @@
     const body = byId('entry-trainer-review-body');
     if (!candidate || !body) return;
     const candidateScope = 'data-review-scope="candidate" data-candidate-index="' + candidateIndex + '"';
-    body.innerHTML = disclosureHtml()
+    body.innerHTML = persistenceWarningHtml() + disclosureHtml()
       + '<div class="entry-trainer-review-attempt-head"><strong>' + esc(candidate.symbol) + '</strong><span>Qualification ' + esc(candidate.qualificationDate) + ' · context ' + esc(candidate.contextStartDate) + ' · horizon ' + esc(candidate.endDate) + ' · status ' + esc(candidate.status) + '</span></div>'
       + compactTickerSummaryHtml(candidate)
       + '<div class="entry-trainer-review-chart" id="entry-trainer-review-chart"><div class="entry-trainer-review-placeholder">Loading local daily chart…</div></div>'
@@ -2073,32 +2161,46 @@
         });
         if (!bars.length) throw new Error('No saved local bars cover the trainer window');
         host.innerHTML = '';
-        const chart = window.LightweightCharts.createChart(host, {
-          width:host.clientWidth || 900,
-          height:host.clientHeight || 390,
-          layout:{background:{color:'transparent'},textColor:'#888'},
-          grid:{horzLines:{color:'#1a1c22'},vertLines:{color:'#1a1c22'}},
-          rightPriceScale:{borderColor:'#262932',scaleMargins:{top:0.05,bottom:0.18}},
-          timeScale:{borderColor:'#262932',timeVisible:false},
-          crosshair:{mode:window.LightweightCharts.CrosshairMode.Normal}
-        });
-        const candles = chart.addCandlestickSeries({
-          upColor:'#26a69a',downColor:'#ef5350',borderVisible:false,wickUpColor:'#26a69a',wickDownColor:'#ef5350'
-        });
-        candles.setData(bars.map(function(bar){ return {time:bar.time,open:+bar.open,high:+bar.high,low:+bar.low,close:+bar.close}; }));
-        const volume = chart.addHistogramSeries({priceScaleId:'',priceFormat:{type:'volume'},scaleMargins:{top:0.85,bottom:0},color:'rgba(120,140,160,0.4)'});
-        volume.setData(bars.map(function(bar){ return {time:bar.time,value:+bar.volume || 0}; }));
-        try { candles.setMarkers(reviewMarkers(candidate)); } catch (error) { console.warn('[EntryTrainer] review markers:', error); }
-        try { chart.timeScale().fitContent(); } catch (error) {}
+        let chart = null;
         let resizeObserver = null;
-        if (typeof ResizeObserver !== 'undefined') {
-          resizeObserver = new ResizeObserver(function(){
-            if (host.clientWidth && host.clientHeight) chart.resize(host.clientWidth, host.clientHeight);
+        try {
+          chart = window.LightweightCharts.createChart(host, {
+            width:host.clientWidth || 900,
+            height:host.clientHeight || 390,
+            layout:{background:{color:'transparent'},textColor:'#888'},
+            grid:{horzLines:{color:'#1a1c22'},vertLines:{color:'#1a1c22'}},
+            rightPriceScale:{borderColor:'#262932',scaleMargins:{top:0.05,bottom:0.18}},
+            timeScale:{borderColor:'#262932',timeVisible:false},
+            crosshair:{mode:window.LightweightCharts.CrosshairMode.Normal}
           });
-          resizeObserver.observe(host);
+          reviewState.chart = {chart:chart, resizeObserver:null};
+          const candles = chart.addCandlestickSeries({
+            upColor:'#26a69a',downColor:'#ef5350',borderVisible:false,wickUpColor:'#26a69a',wickDownColor:'#ef5350'
+          });
+          candles.setData(bars.map(function(bar){ return {time:bar.time,open:+bar.open,high:+bar.high,low:+bar.low,close:+bar.close}; }));
+          const volume = chart.addHistogramSeries({priceScaleId:'',priceFormat:{type:'volume'},scaleMargins:{top:0.85,bottom:0},color:'rgba(120,140,160,0.4)'});
+          volume.setData(bars.map(function(bar){ return {time:bar.time,value:+bar.volume || 0}; }));
+          try { candles.setMarkers(reviewMarkers(candidate)); } catch (error) { console.warn('[EntryTrainer] review markers:', error); }
+          try { chart.timeScale().fitContent(); } catch (error) {}
+          if (typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(function(){
+              if (host.clientWidth && host.clientHeight) chart.resize(host.clientWidth, host.clientHeight);
+            });
+            reviewState.chart.resizeObserver = resizeObserver;
+            resizeObserver.observe(host);
+          }
+          reviewState.barsController = null;
+        } catch (error) {
+          if (resizeObserver) {
+            try { resizeObserver.disconnect(); } catch (disconnectError) {}
+          }
+          if (chart) {
+            try { chart.remove(); } catch (removeError) {}
+          }
+          if (reviewState.chart && reviewState.chart.chart === chart) reviewState.chart = null;
+          if (reviewState.barsController === controller) reviewState.barsController = null;
+          throw error;
         }
-        reviewState.chart = {chart:chart, resizeObserver:resizeObserver};
-        reviewState.barsController = null;
       })
       .catch(function(error){
         if (error && error.name === 'AbortError') return;
@@ -2160,23 +2262,58 @@
 
   function saveCurrentReview(){
     if (!reviewState.batch) return false;
-    const saved = saveBatch(reviewState.batch);
-    if (!saved) {
-      setReviewStatus('Save failed', false);
+    const result = saveBatch(reviewState.batch);
+    if (!result.record) {
+      setReviewStatus('Save failed · export available', false);
       return false;
     }
-    reviewState.batch = saved;
-    state.lastBatch = state.lastBatch && state.lastBatch.id === saved.id ? clone(saved) : state.lastBatch;
+    reviewState.batch = result.record;
+    if (state.lastBatch && state.lastBatch.id === result.record.id) state.lastBatch = clone(result.record);
+    if (!result.ok) {
+      state.lastBatch = clone(result.record);
+      lastPersistenceFailure = {
+        batchId:result.record.id,
+        quota:result.quota,
+        message:result.quota
+          ? 'This batch is not saved because browser storage is full. Delete older saved batches, then choose Save Review to retry.'
+          : 'This batch is not saved because browser storage failed. Choose Save Review to retry or export it now.'
+      };
+      reviewState.persistenceWarning = clone(lastPersistenceFailure);
+      reviewState.dirty = true;
+      setReviewStatus(result.quota ? 'Not saved · storage full' : 'Not saved · storage error', false);
+      renderReview();
+      renderReviewSavedBatches();
+      return false;
+    }
+    if (lastPersistenceFailure && lastPersistenceFailure.batchId === result.record.id) lastPersistenceFailure = null;
+    reviewState.persistenceWarning = null;
     reviewState.dirty = false;
     setReviewStatus('Saved', true);
-    renderSavedBatches();
+    if (!refreshSavedBatchRows(result.record)) renderSavedBatches();
+    renderReviewSavedBatches();
+    renderReview();
     return true;
   }
 
+  function restoreReviewEnvironment(modal){
+    (reviewState.backgroundInert || []).forEach(function(item){
+      if (!item.node || !item.node.isConnected) return;
+      item.node.inert = item.inert;
+      if (item.hadAttribute) item.node.setAttribute('inert', '');
+      else item.node.removeAttribute('inert');
+    });
+    const parent = reviewState.modalParent;
+    const sibling = reviewState.modalNextSibling;
+    if (modal && parent && parent.isConnected) {
+      if (sibling && sibling.parentNode === parent) parent.insertBefore(modal, sibling);
+      else parent.appendChild(modal);
+    }
+  }
+
   function closeReview(){
-    if (reviewState.batch && reviewState.dirty && !saveCurrentReview()) {
-      setReviewStatus('Save failed · review remains open', false);
-      if (!window.confirm('The review could not be saved. Close and discard these unsaved changes?')) return false;
+    if (reviewState.batch && (reviewState.dirty || reviewState.persistenceWarning) && !saveCurrentReview()) {
+      setReviewStatus('Not saved · review remains open', false);
+      if (!window.confirm('This review is not saved locally. It remains available during this page session, and you can export it now. Close anyway?')) return false;
     }
     destroyReviewChart();
     const modal = byId('entry-trainer-review-modal');
@@ -2187,45 +2324,151 @@
     document.body.classList.remove('entry-trainer-review-open');
     const tabs = byId('entry-trainer-review-tabs');
     const body = byId('entry-trainer-review-body');
+    const storage = byId('entry-trainer-review-storage');
+    const manage = byId('entry-trainer-review-manage');
     if (tabs) tabs.innerHTML = '';
     if (body) body.innerHTML = '';
+    storage?.classList.remove('is-visible');
+    if (manage) manage.setAttribute('aria-expanded', 'false');
     setReviewStatus('', false);
     const opener = reviewState.opener;
-    reviewState = {batch:null,activeTab:'summary',chart:null,barsController:null,dirty:false,opener:null};
+    const reopenSetup = !!(opener && opener.closest && opener.closest('#entry-trainer-setup-modal'));
+    restoreReviewEnvironment(modal);
+    reviewState = {
+      batch:null,activeTab:'summary',chart:null,barsController:null,dirty:false,opener:null,
+      persistenceWarning:null,backgroundInert:[],modalParent:null,modalNextSibling:null
+    };
+    if (reopenSetup) setSetupOpen(true, {preserveFocus:true});
     if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus();
+    else if (reopenSetup) byId('entry-trainer-saved')?.focus();
     return true;
   }
 
-  function renderSavedBatches(){
-    const host = byId('entry-trainer-saved-list');
-    if (!host) return;
+  function deleteSavedBatch(batchId){
+    const id = safeId(batchId);
+    if (!id || !window.confirm('Delete this saved Entry Trainer batch? This cannot be undone.')) return false;
     const records = readSavedBatches();
+    const remaining = records.filter(function(record){ return record.id !== id; });
+    if (remaining.length === records.length) return false;
+    const result = writeSavedBatches(remaining);
+    if (!result.ok) {
+      if (reviewState.batch) setReviewStatus('Could not delete saved batch', false);
+      else setSetupStatus('Could not delete the saved batch from local browser storage.', true);
+      return false;
+    }
+    if (reviewState.batch && reviewState.batch.id === id) {
+      state.lastBatch = clone(reviewState.batch);
+      lastPersistenceFailure = {
+        batchId:id,
+        quota:false,
+        message:'This open batch was deleted from local storage. Choose Save Review to save it again, or export it now.'
+      };
+      reviewState.persistenceWarning = clone(lastPersistenceFailure);
+      reviewState.dirty = true;
+      setReviewStatus('Deleted locally · save to restore', false);
+      renderReview();
+    }
+    document.querySelectorAll('[data-saved-batch-id="' + id.replace(/"/g, '') + '"]').forEach(function(row){ row.remove(); });
+    [byId('entry-trainer-saved-list'), byId('entry-trainer-review-saved-list')].forEach(function(host){
+      if (host && !host.querySelector('.entry-trainer-saved-row')) {
+        host.innerHTML = '<div class="entry-trainer-saved-empty">No completed or abandoned batches saved yet.</div>';
+      }
+    });
+    renderReviewSavedBatches();
+    if (reviewState.persistenceWarning) setReviewStatus('Storage freed · choose Save Review', false);
+    return true;
+  }
+
+  function reviewableBatchRows(){
+    const stored = readSavedBatches();
+    const rows = stored.map(function(record){ return {record:record, unsaved:false, persisted:true}; });
+    if (lastPersistenceFailure && state.lastBatch && state.lastBatch.id === lastPersistenceFailure.batchId) {
+      const current = sanitizePersistedBatch(state.lastBatch);
+      if (current) {
+        const index = rows.findIndex(function(item){ return item.record.id === current.id; });
+        const row = {record:current, unsaved:true, persisted:index >= 0};
+        if (index >= 0) rows.splice(index, 1);
+        rows.unshift(row);
+      }
+    }
+    return rows;
+  }
+
+  function savedBatchButtonLabel(record, unsaved){
+    const metric = batchMetrics(record);
+    return (unsaved ? 'NOT SAVED · ' : '') + record.status.toUpperCase() + ' · '
+      + record.candidates.map(function(candidate){ return candidate.symbol; }).join(' / ') + ' · ' + formatR(metric.totalR);
+  }
+
+  function refreshSavedBatchRows(record){
+    const selector = '[data-saved-batch-id="' + record.id.replace(/"/g, '') + '"]';
+    const rows = Array.from(document.querySelectorAll(selector));
+    rows.forEach(function(row){
+      const openButton = row.querySelector('button:not(.entry-trainer-saved-delete)');
+      const priorAction = row.children[2];
+      if (openButton) openButton.textContent = savedBatchButtonLabel(record, false);
+      if (priorAction) priorAction.remove();
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'entry-trainer-saved-delete';
+      remove.textContent = 'Delete';
+      remove.setAttribute('aria-label', 'Delete saved batch ' + record.id);
+      remove.addEventListener('click', function(){ deleteSavedBatch(record.id); });
+      row.appendChild(remove);
+    });
+    return rows.length;
+  }
+
+  function renderSavedBatchRows(host, rows){
+    if (!host) return;
     host.innerHTML = '';
-    if (!records.length) {
+    if (!rows.length) {
       const empty = document.createElement('div');
       empty.className = 'entry-trainer-saved-empty';
       empty.textContent = 'No completed or abandoned batches saved yet.';
       host.appendChild(empty);
       return;
     }
-    records.forEach(function(record){
+    rows.forEach(function(item){
+      const record = item.record;
       const row = document.createElement('div');
       row.className = 'entry-trainer-saved-row';
+      row.dataset.savedBatchId = record.id;
       const button = document.createElement('button');
       button.type = 'button';
-      const metric = batchMetrics(record);
-      button.textContent = record.status.toUpperCase() + ' · ' + record.candidates.map(function(candidate){ return candidate.symbol; }).join(' / ') + ' · ' + formatR(metric.totalR);
+      button.textContent = savedBatchButtonLabel(record, item.unsaved);
       button.addEventListener('click', function(){
-        setSetupOpen(false, {restoreFocus:false});
-        openReview(record.id);
+        openReview(record.id, {opener:button});
       });
       const meta = document.createElement('span');
       meta.className = 'entry-trainer-saved-meta';
       meta.textContent = (record.completedAt || record.abandonedAt || record.createdAt).slice(0, 10);
       row.appendChild(button);
       row.appendChild(meta);
+      if (item.persisted) {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'entry-trainer-saved-delete';
+        remove.textContent = 'Delete';
+        remove.setAttribute('aria-label', 'Delete saved batch ' + record.id);
+        remove.addEventListener('click', function(){ deleteSavedBatch(record.id); });
+        row.appendChild(remove);
+      } else {
+        const retry = document.createElement('span');
+        retry.className = 'entry-trainer-saved-meta';
+        retry.textContent = 'Open to retry';
+        row.appendChild(retry);
+      }
       host.appendChild(row);
     });
+  }
+
+  function renderSavedBatches(){
+    renderSavedBatchRows(byId('entry-trainer-saved-list'), reviewableBatchRows());
+  }
+
+  function renderReviewSavedBatches(){
+    renderSavedBatchRows(byId('entry-trainer-review-saved-list'), reviewableBatchRows());
   }
 
   function toggleSavedBatches(){
@@ -2239,7 +2482,20 @@
     return true;
   }
 
-  function openReview(batchId){
+  function activateReviewEnvironment(modal){
+    reviewState.modalParent = modal.parentNode;
+    reviewState.modalNextSibling = modal.nextSibling;
+    document.body.appendChild(modal);
+    reviewState.backgroundInert = Array.from(document.body.children).filter(function(node){ return node !== modal; }).map(function(node){
+      const snapshot = {node:node, inert:!!node.inert, hadAttribute:node.hasAttribute('inert')};
+      node.inert = true;
+      node.setAttribute('inert', '');
+      return snapshot;
+    });
+  }
+
+  function openReview(batchId, options){
+    options = options || {};
     if (isActive()) return false;
     const id = safeId(batchId || (state.lastBatch && state.lastBatch.id));
     if (!id) return false;
@@ -2248,7 +2504,19 @@
     if (!target) return false;
     const modal = byId('entry-trainer-review-modal');
     if (!modal) return false;
-    setSetupOpen(false, {restoreFocus:false});
+    const alreadyOpen = modal.classList.contains('open');
+    if (alreadyOpen && reviewState.batch && reviewState.batch.id === id) return true;
+    if (alreadyOpen && reviewState.batch && reviewState.batch.id !== id
+        && (reviewState.dirty || reviewState.persistenceWarning) && !saveCurrentReview()
+        && !window.confirm('The current review is not saved locally. Switch batches anyway?')) return false;
+    const environment = alreadyOpen ? {
+      opener:reviewState.opener,
+      backgroundInert:reviewState.backgroundInert,
+      modalParent:reviewState.modalParent,
+      modalNextSibling:reviewState.modalNextSibling
+    } : null;
+    const opener = options.opener || document.activeElement;
+    if (!alreadyOpen) setSetupOpen(false, {restoreFocus:false});
     destroyReviewChart();
     reviewState = {
       batch:clone(target),
@@ -2256,12 +2524,20 @@
       chart:null,
       barsController:null,
       dirty:false,
-      opener:document.activeElement
+      opener:environment ? environment.opener : opener,
+      persistenceWarning:lastPersistenceFailure && lastPersistenceFailure.batchId === id ? clone(lastPersistenceFailure) : null,
+      backgroundInert:environment ? environment.backgroundInert : [],
+      modalParent:environment ? environment.modalParent : null,
+      modalNextSibling:environment ? environment.modalNextSibling : null
     };
+    if (!alreadyOpen) activateReviewEnvironment(modal);
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('entry-trainer-review-open');
-    setReviewStatus('Saved', true);
+    setReviewStatus(reviewState.persistenceWarning
+      ? (reviewState.persistenceWarning.quota ? 'Not saved · storage full' : 'Not saved · storage error')
+      : 'Saved', !reviewState.persistenceWarning);
+    renderReviewSavedBatches();
     renderReview();
     byId('entry-trainer-review-close')?.focus();
     return true;
@@ -2283,6 +2559,8 @@
     lines.push('');
     lines.push('- **Batch ID:** ' + mdCell(batch.id));
     lines.push('- **Status:** ' + mdCell(batch.status));
+    lines.push('- **Batch exit reason:** ' + mdCell(batch.exitReason || '—'));
+    lines.push('- **Abandon reason:** ' + mdCell(batch.abandonReason || '—'));
     lines.push('- **Created:** ' + mdCell(batch.createdAt));
     lines.push('- **Finished:** ' + mdCell(batch.completedAt || batch.abandonedAt || '—'));
     lines.push('');
@@ -2304,6 +2582,7 @@
     lines.push('## Drill configuration');
     lines.push('');
     lines.push('- **Starting equity (sizing/notional validation only):** ' + formatMoney(batch.startingEquity));
+    lines.push('- **Rules snapshot:** `' + JSON.stringify(batch.rules) + '`');
     lines.push('');
     lines.push('## Batch reflection');
     lines.push('');
@@ -2401,13 +2680,13 @@
   function csvEscape(value){
     if (value == null) return '';
     let text = String(value);
-    if (/^[=+\-@]/.test(text) && !/^-?\d+(?:\.\d+)?$/.test(text)) text = "'" + text;
+    if (typeof value === 'string' && /^[\t\r\n ]*[=+\-@]/.test(text)) text = "'" + text;
     return '"' + text.replace(/"/g, '""') + '"';
   }
 
   function buildCsv(batch){
     const columns = [
-      'schema_version','row_type','batch_id','batch_status','batch_created_at','batch_finished_at',
+      'schema_version','row_type','batch_id','batch_status','batch_exit_reason','batch_abandon_reason','batch_created_at','batch_finished_at',
       'total_realized_r','average_r_per_attempt','positive_r_rate_pct','total_realized_pnl_dollars','median_bars_held','attempts_used','skipped_no_trade_count','self_rated_entry_quality',
       'starting_equity_dollars','recurring_entry_habit','next_drill_focus','candidate_symbol','candidate_status','qualification_date','context_start_date','horizon_end_date','skip_reason','finish_reason','candidate_exit_reason',
       'attempt_number','entry_date','entry_price_dollars','requested_price_dollars','fill_price_dollars','initial_stop_dollars','initial_stop_distance_dollars','initial_stop_distance_pct','initial_risk_dollars','quantity','exit_date','exit_price_dollars','exit_reason','realized_r','realized_pnl_dollars','bars_held','mfe_dollars','mfe_r','mae_dollars','mae_r','exit_efficiency_ratio','trail_activation_date','trail_activation_bar','trail_spec','trail_activation_open_r',
@@ -2418,7 +2697,8 @@
     const metrics = batchMetrics(batch);
     const finishedAt = batch.completedAt || batch.abandonedAt || '';
     const base = {
-      schema_version:BATCH_VERSION,batch_id:batch.id,batch_status:batch.status,batch_created_at:batch.createdAt,batch_finished_at:finishedAt,
+      schema_version:BATCH_VERSION,batch_id:batch.id,batch_status:batch.status,batch_exit_reason:batch.exitReason,
+      batch_abandon_reason:batch.abandonReason,batch_created_at:batch.createdAt,batch_finished_at:finishedAt,
       starting_equity_dollars:batch.startingEquity,recurring_entry_habit:batch.review.recurringEntryHabit,next_drill_focus:batch.review.nextDrillFocus
     };
     const rows = [];
@@ -2500,7 +2780,8 @@
     if (!reviewState.batch) return false;
     const filename = 'entry_trainer_' + reviewState.batch.createdAt.slice(0, 10) + '_' + reviewState.batch.id.replace(/[^A-Za-z0-9_-]/g, '_') + '.md';
     const ok = downloadReviewFile(buildMarkdown(clone(reviewState.batch)), filename, 'text/markdown');
-    setReviewStatus(ok ? (reviewState.dirty ? 'Exported · unsaved' : 'Saved · exported') : 'Export failed', ok && !reviewState.dirty);
+    const unsaved = reviewState.dirty || reviewState.persistenceWarning;
+    setReviewStatus(ok ? (unsaved ? 'Exported · not saved locally' : 'Saved · exported') : 'Export failed', ok && !unsaved);
     return ok;
   }
 
@@ -2508,7 +2789,8 @@
     if (!reviewState.batch) return false;
     const filename = 'entry_trainer_' + reviewState.batch.createdAt.slice(0, 10) + '_' + reviewState.batch.id.replace(/[^A-Za-z0-9_-]/g, '_') + '.csv';
     const ok = downloadReviewFile(buildCsv(clone(reviewState.batch)), filename, 'text/csv');
-    setReviewStatus(ok ? (reviewState.dirty ? 'Exported · unsaved' : 'Saved · exported') : 'Export failed', ok && !reviewState.dirty);
+    const unsaved = reviewState.dirty || reviewState.persistenceWarning;
+    setReviewStatus(ok ? (unsaved ? 'Exported · not saved locally' : 'Saved · exported') : 'Export failed', ok && !unsaved);
     return ok;
   }
 
@@ -2540,6 +2822,15 @@
     byId('entry-trainer-exit')?.addEventListener('click', exit);
     byId('entry-trainer-review-close')?.addEventListener('click', closeReview);
     byId('entry-trainer-review-save')?.addEventListener('click', saveCurrentReview);
+    byId('entry-trainer-review-manage')?.addEventListener('click', function(){
+      const panel = byId('entry-trainer-review-storage');
+      const button = byId('entry-trainer-review-manage');
+      if (!panel || !button) return;
+      const visible = !panel.classList.contains('is-visible');
+      panel.classList.toggle('is-visible', visible);
+      button.setAttribute('aria-expanded', visible ? 'true' : 'false');
+      if (visible) renderReviewSavedBatches();
+    });
     byId('entry-trainer-review-md')?.addEventListener('click', exportMarkdown);
     byId('entry-trainer-review-csv')?.addEventListener('click', exportCsv);
     byId('entry-trainer-review-tabs')?.addEventListener('click', function(event){
@@ -2562,15 +2853,12 @@
         startFromSetup();
       }
     });
-    document.addEventListener('keydown', function(event){
+    window.addEventListener('keydown', function(event){
+      if (handleReviewKeydown(event)) return;
       if (event.key === 'Escape' && modal.classList.contains('open')) {
         event.preventDefault();
         event.stopImmediatePropagation();
         cancelSetup();
-      } else if (event.key === 'Escape' && byId('entry-trainer-review-modal')?.classList.contains('open')) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        closeReview();
       }
     }, true);
     document.addEventListener('keydown', trapSetupFocus);
