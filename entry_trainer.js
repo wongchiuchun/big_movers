@@ -696,6 +696,12 @@
     const candidate = activeCandidate();
     const order = workingOrder(candidate);
     if (!order || !context || !context.bar) return null;
+    if (context.barIdx >= context.endBarIdx) {
+      terminalizeWorkingOrder(candidate, 'expired', 'Limit order reached the ticker horizon unfilled.', context.barIdx);
+      reconcileOrders(state.batch, 'Entry Trainer reconciled reservations at the ticker horizon.');
+      updateStrip();
+      return null;
+    }
     const api = ordersApi();
     const fill = api && api.evaluateFill(order, context.bar, context.barIdx);
     if (fill) {
@@ -705,11 +711,6 @@
       if (order.status === 'filled') return { handled:true };
       if (order.status === 'working') return { allow:false };
       return null;
-    }
-    if (context.barIdx >= context.endBarIdx) {
-      terminalizeWorkingOrder(candidate, 'expired', 'Limit order reached the ticker horizon unfilled.', context.barIdx);
-      reconcileOrders(state.batch, 'Entry Trainer reconciled reservations at the ticker horizon.');
-      updateStrip();
     }
     return null;
   }
