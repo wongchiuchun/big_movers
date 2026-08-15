@@ -12640,22 +12640,56 @@ const Sim = (function(){
     return sim;
   }
 
-  // Replace every active stop with one immediately-effective stop at the
-  // current playhead. This is engine-neutral so individual and portfolio
-  // controllers share identical replacement and event semantics.
-  function replaceStopNow(sim, bars, newStop, pct, stopTrail, stopTriggerMode) {
-    if (!sim || sim.closed || sim.stoppedOut || sim.between || !(sim.qty > 0)) return false;
+  function validateStopReplacement(sim, bars, newStop, pct, execution) {
+    execution = execution && typeof execution === 'object' ? execution : {};
+    if (!sim || sim.closed || sim.stoppedOut || sim.between || !(sim.qty > 0)) {
+      return { ok: false, reason: 'Position is not active.' };
+    }
     const ns = Number(newStop);
-    if (!Number.isFinite(ns) || ns <= 0) return false;
+    if (!Number.isFinite(ns) || ns <= 0) return { ok: false, reason: 'Stop must be positive.' };
     const p = Number.isFinite(Number(pct)) ? Math.max(0, Math.min(1, Number(pct))) : 1.0;
-    if (p <= 0) return false;
+    if (p <= 0) return { ok: false, reason: 'Stop percentage must be positive.' };
     const bar = bars && bars[sim.playIdx];
-    if (!bar) return false;
-    const referencePrice = Number(bar.close);
+    if (!bar) return { ok: false, reason: 'Current bar is unavailable.' };
+    const executionPhase = execution.executionPhase == null ? 'paused_close' : execution.executionPhase;
+    if (executionPhase !== 'paused_close' && executionPhase !== 'fill') {
+      return { ok: false, reason: 'Unknown stop execution phase.' };
+    }
+    if (executionPhase === 'fill' && execution.referencePrice == null) {
+      return { ok: false, reason: 'Fill-phase stop validation requires the actual fill price.' };
+    }
+    const referencePrice = execution.referencePrice == null
+      ? Number(bar.close)
+      : Number(execution.referencePrice);
     const direction = sim.direction || 'long';
     if (!Number.isFinite(referencePrice) || referencePrice <= 0 ||
-        !Sim.Direction || typeof Sim.Direction.stopValidates !== 'function' ||
-        !Sim.Direction.stopValidates(direction, referencePrice, ns)) return false;
+        !Sim.Direction || typeof Sim.Direction.stopValidates !== 'function') {
+      return { ok: false, reason: 'Stop reference price is unavailable.' };
+    }
+    const directionallyValid = Sim.Direction.stopValidates(direction, referencePrice, ns);
+    const immediateSafety = !directionallyValid && executionPhase === 'fill' &&
+      execution.allowThroughMarketForImmediateSafety === true;
+    if (!directionallyValid && !immediateSafety) {
+      return { ok: false, reason: direction === 'short'
+        ? 'Short stop must be above the execution reference.'
+        : 'Long stop must be below the execution reference.' };
+    }
+    return {
+      ok: true, bar: bar, stopPrice: ns, pct: p, direction: direction,
+      referencePrice: referencePrice, executionPhase: executionPhase,
+      immediateSafety: immediateSafety
+    };
+  }
+
+  // Replace every active stop with one immediately-effective stop at the
+  // current playhead. Manual moves validate against the paused close; fill
+  // callers must provide their actual execution reference explicitly.
+  function replaceStopNow(sim, bars, newStop, pct, stopTrail, stopTriggerMode, execution) {
+    const validation = validateStopReplacement(sim, bars, newStop, pct, execution);
+    if (!validation.ok) return false;
+    const ns = validation.stopPrice;
+    const p = validation.pct;
+    const bar = validation.bar;
     let replaced = 0;
     if (!Array.isArray(sim.stopLevels)) sim.stopLevels = [];
     for (let i = sim.stopLevels.length - 1; i >= 0; i--) {
@@ -12681,6 +12715,9 @@ const Sim = (function(){
       barIdx: sim.playIdx, date: bar.time, type: 'movestop',
       qty: sim.qty, price: null, newStop: rounded, pct: p, stopId: stopId,
       triggerMode: triggerMode, direction: sim.direction || 'long', legId: sim.legId || null,
+      executionPhase: validation.executionPhase,
+      executionReferencePrice: r2(validation.referencePrice),
+      immediateSafety: validation.immediateSafety,
       stopTrail: trail ? clone(trail) : null,
       note: (triggerMode === 'close' ? 'EOD stop ' : 'stop ') + rounded + ' ' + verb + ' (' + Math.round(p * 100) + '%)' + trailLbl + replacedLbl
     });
@@ -12859,6 +12896,7 @@ const Sim = (function(){
         const pctLbl = Math.round(pct * 100);
         const trailLbl = trail ? ' · trail EMA' + trail.period + (trail.k ? ' −' + trail.k + '%' : '') : '';
         const ev = { barIdx, date: bar.time, type: 'movestop', qty: sim.qty, price: null, newStop: r2(ns), pct, stopId, triggerMode,
+          direction: d, legId: sim.legId || null,
           stopTrail: trail ? clone(trail) : null,
           note: (triggerMode === 'close' ? 'EOD stop ' : 'stop ') + r2(ns) + ' added (' + pctLbl + '%)' + trailLbl };
         sim.eventsLog.push(ev); fired.push(ev);
@@ -13118,7 +13156,7 @@ const Sim = (function(){
     return true;
   }
 
-  return { createSim, queueAction, replaceStopNow, advanceTo, processAttachedStopOnBar, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode, normalizeExecutionTiming };
+  return { createSim, queueAction, validateStopReplacement, replaceStopNow, advanceTo, processAttachedStopOnBar, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode, normalizeExecutionTiming };
 })();
 
 // Expose the Sim core on window so cross-module code (PortSim.Ctrl, Track J,
@@ -20903,9 +20941,9 @@ Sim.Ctrl = (function(){
   if (window.PortSim.Util && window.PortSim.Util.applyMoveStopNow) return;
   window.PortSim.Util = window.PortSim.Util || {};
 
-  window.PortSim.Util.applyMoveStopNow = function(sim, bars, newStop, pct, stopTrail, stopTriggerMode){
+  window.PortSim.Util.applyMoveStopNow = function(sim, bars, newStop, pct, stopTrail, stopTriggerMode, execution){
     return window.Sim && typeof window.Sim.replaceStopNow === 'function'
-      ? window.Sim.replaceStopNow(sim, bars, newStop, pct, stopTrail, stopTriggerMode)
+      ? window.Sim.replaceStopNow(sim, bars, newStop, pct, stopTrail, stopTriggerMode, execution)
       : false;
   };
 })();
@@ -24983,10 +25021,10 @@ Sim.Ctrl = (function(){
     }, opts);
   }
 
-  function _applyReplacementStopNow(sim, bars, newStop, stopTrail, stopTriggerMode){
+  function _applyReplacementStopNow(sim, bars, newStop, stopTrail, stopTriggerMode, execution){
     if (!sim || !Number.isFinite(+newStop) || +newStop <= 0) return null;
     const stopId = window.Sim && typeof window.Sim.replaceStopNow === 'function'
-      ? window.Sim.replaceStopNow(sim, bars, +newStop, 1.0, stopTrail || null, stopTriggerMode)
+      ? window.Sim.replaceStopNow(sim, bars, +newStop, 1.0, stopTrail || null, stopTriggerMode, execution)
       : false;
     if (!stopId) return null;
     return (sim.stopLevels || []).find(function(stop){ return stop && stop.id === stopId; }) || null;
@@ -24994,36 +25032,99 @@ Sim.Ctrl = (function(){
 
   function _applyAddNow(entry, qty, price, ctx, replacement){
     const sim = entry && entry.sim;
-    if (!sim || sim.closed || sim.stoppedOut || sim.between || !(sim.qty > 0)) return null;
+    function failure(code, reason){ return { ok: false, code: code, reason: reason }; }
+    if (!sim || sim.closed || sim.stoppedOut || sim.between || !(sim.qty > 0)) {
+      return failure('inactive_position', 'The parent position is no longer active.');
+    }
     const addQty = Math.floor(+qty || 0);
     const fillPrice = +price;
-    if (!(addQty > 0) || !Number.isFinite(fillPrice) || fillPrice <= 0) return null;
-    const oldQty = sim.qty;
-    sim.avgCost = ((oldQty * sim.avgCost) + (addQty * fillPrice)) / (oldQty + addQty);
-    sim.qty = oldQty + addQty;
-    const event = {
-      barIdx: ctx.barIdx,
-      date: ctx.date,
-      type: 'add',
-      qty: addQty,
-      price: _r2(fillPrice),
-      direction: sim.direction || 'long',
-      legId: sim.legId || null,
-      note: 'add ' + addQty + '@' + _r2(fillPrice)
-    };
-    sim.eventsLog.push(event);
-    PortSim.Cash.fold(_state, event);
-    let newStop = null;
-    if (replacement && replacement.stopPrice != null){
-      newStop = _applyReplacementStopNow(
-        sim,
-        entry.bars,
-        replacement.stopPrice,
-        replacement.stopTrail || null,
-        replacement.stopTriggerMode
-      );
+    if (!(addQty > 0) || !Number.isFinite(fillPrice) || fillPrice <= 0) {
+      return failure('invalid_fill', 'The add quantity or fill price is invalid.');
     }
-    return { event: event, stop: newStop };
+    if (!ctx || !Number.isInteger(ctx.barIdx) || !ctx.date) {
+      return failure('invalid_context', 'The add execution context is incomplete.');
+    }
+
+    // Validate replacement installation against the execution reference
+    // before touching quantity, average cost, events, stops, or cash.
+    if (replacement && replacement.stopPrice != null){
+      if (!window.Sim || typeof window.Sim.validateStopReplacement !== 'function') {
+        return failure('replacement_unavailable', 'Stop replacement validation is unavailable.');
+      }
+      const validation = window.Sim.validateStopReplacement(
+        sim, entry.bars, replacement.stopPrice, 1.0, replacement.execution || null
+      );
+      if (!validation || !validation.ok) {
+        return failure('replacement_invalid', validation && validation.reason
+          ? validation.reason
+          : 'The replacement stop is invalid at the execution reference.');
+      }
+    }
+
+    const oldQty = sim.qty;
+    const oldAvgCost = sim.avgCost;
+    const oldStops = _clonePlain(sim.stopLevels || []);
+    const oldEventsLength = (sim.eventsLog || []).length;
+    const oldCash = _state.cash;
+    const oldRealized = _state.realizedPnL;
+    const legId = sim.legId || null;
+    const hadShortLock = !!(_state.shortLocks && legId && Object.prototype.hasOwnProperty.call(_state.shortLocks, legId));
+    const oldShortLock = hadShortLock ? _clonePlain(_state.shortLocks[legId]) : null;
+    let rolledBack = false;
+    function rollback(){
+      if (rolledBack) return false;
+      rolledBack = true;
+      sim.qty = oldQty;
+      sim.avgCost = oldAvgCost;
+      sim.stopLevels = _clonePlain(oldStops);
+      if (Array.isArray(sim.eventsLog)) sim.eventsLog.length = oldEventsLength;
+      _state.cash = oldCash;
+      _state.realizedPnL = oldRealized;
+      if (legId){
+        _state.shortLocks = _state.shortLocks || {};
+        if (hadShortLock) _state.shortLocks[legId] = _clonePlain(oldShortLock);
+        else delete _state.shortLocks[legId];
+      }
+      return true;
+    }
+
+    let event = null;
+    let newStop = null;
+    try {
+      sim.avgCost = ((oldQty * oldAvgCost) + (addQty * fillPrice)) / (oldQty + addQty);
+      sim.qty = oldQty + addQty;
+      event = {
+        barIdx: ctx.barIdx,
+        date: ctx.date,
+        type: 'add',
+        qty: addQty,
+        price: _r2(fillPrice),
+        direction: sim.direction || 'long',
+        legId: sim.legId || null,
+        note: 'add ' + addQty + '@' + _r2(fillPrice)
+      };
+      sim.eventsLog.push(event);
+      if (replacement && replacement.stopPrice != null){
+        newStop = _applyReplacementStopNow(
+          sim,
+          entry.bars,
+          replacement.stopPrice,
+          replacement.stopTrail || null,
+          replacement.stopTriggerMode,
+          replacement.execution || null
+        );
+        if (!newStop){
+          rollback();
+          return failure('replacement_install_failed', 'The replacement stop could not be installed.');
+        }
+      }
+      PortSim.Cash.fold(_state, event);
+    }
+    catch (error) {
+      rollback();
+      return failure('add_transition_failed', error && error.message ? error.message : 'The add transition failed.');
+    }
+    return { ok: true, event: event, stop: newStop, rollback: rollback };
   }
 
   function _onCardAction(entry, action){
@@ -25072,7 +25173,10 @@ Sim.Ctrl = (function(){
           stopTrail: form.stopTrail || null,
           stopTriggerMode: form.stopTriggerMode
         } : null);
-        if (!applied){ alert('Add failed because the position is no longer active.'); return; }
+        if (!applied || !applied.ok){
+          alert('Add failed: ' + (applied && applied.reason ? applied.reason : 'The position is no longer active.'));
+          return;
+        }
         _recomputeRealizedFromCash();
         _renderAll();
       });
@@ -25095,12 +25199,12 @@ Sim.Ctrl = (function(){
         // pending-actions queue. form.stopTrail carries the ema_trail spec
         // when the user picks an auto-trail strategy in the modal — without
         // this, the trail was silently dropped and the stop never ratcheted.
-        const ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-          ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null, form.stopTriggerMode)
-          : false;
-        if (!ok){
-          // Fallback: queue + advance like the single-ticker sim does.
+        const applyNow = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow;
+        if (typeof applyNow !== 'function'){
+          // Compatibility fallback only when the immediate API is unavailable.
           window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null, triggerMode: form.stopTriggerMode });
+        } else if (!applyNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null, form.stopTriggerMode)){
+          alert('Stop replacement failed because the stop is invalid at the current close.');
         }
         _renderAll();
       });
@@ -25543,6 +25647,7 @@ Sim.Ctrl = (function(){
     if (!_canSettlePendingOrder(entry, order, fill.price, bar.time, barIdx)) return null;
     const gapThrough = _gapThroughProposedStop(order, bar);
     let preparedSim = null;
+    let preparedAdd = null;
     if (order.kind === 'entry'){
       try {
         preparedSim = _prepareFilledEntrySim(entry, order, bar, barIdx, fill.price, gapThrough);
@@ -25555,6 +25660,33 @@ Sim.Ctrl = (function(){
         });
         return null;
       }
+    } else {
+      preparedAdd = _applyAddNow(entry, order.qty, fill.price, {
+        bar: bar,
+        barIdx: barIdx,
+        date: bar.time
+      }, order.stopPrice != null ? {
+        stopPrice: order.stopPrice,
+        stopTrail: order.stopTrail || null,
+        stopTriggerMode: order.stopTriggerMode,
+        execution: {
+          executionPhase: 'fill',
+          referencePrice: fill.price,
+          allowThroughMarketForImmediateSafety: gapThrough === true
+        }
+      } : null);
+      if (!preparedAdd || !preparedAdd.ok){
+        _transitionPendingOrder(entry, 'invalidated', {
+          date: bar.time,
+          barIdx: barIdx,
+          price: fill.price,
+          reason: 'Add settlement failed: ' + (preparedAdd && preparedAdd.reason
+            ? preparedAdd.reason
+            : 'The position transition could not be prepared.')
+        });
+        return null;
+      }
+      preparedAdd.event.orderId = order.id;
     }
 
     const filledEvent = _transitionPendingOrder(entry, 'filled', {
@@ -25564,7 +25696,10 @@ Sim.Ctrl = (function(){
       fillPrice: fill.price,
       gapImproved: fill.gapImproved === true
     });
-    if (!filledEvent) return null;
+    if (!filledEvent){
+      if (preparedAdd && typeof preparedAdd.rollback === 'function') preparedAdd.rollback();
+      return null;
+    }
 
     if (order.kind === 'entry'){
       entry.sim = preparedSim;
@@ -25575,19 +25710,8 @@ Sim.Ctrl = (function(){
         _processOnlyNewStopOnFillBar(entry, newStop, bar, barIdx, gapThrough, order);
       }
     } else {
-      const added = _applyAddNow(entry, order.qty, fill.price, {
-        bar: bar,
-        barIdx: barIdx,
-        date: bar.time
-      }, order.stopPrice != null ? {
-        stopPrice: order.stopPrice,
-        stopTrail: order.stopTrail || null,
-        stopTriggerMode: order.stopTriggerMode
-      } : null);
-      if (!added) return null;
-      added.event.orderId = order.id;
-      if (added.stop && (gapThrough || order.allowFillBarStop)){
-        _processOnlyNewStopOnFillBar(entry, added.stop, bar, barIdx, gapThrough, order);
+      if (preparedAdd.stop && (gapThrough || order.allowFillBarStop)){
+        _processOnlyNewStopOnFillBar(entry, preparedAdd.stop, bar, barIdx, gapThrough, order);
       }
     }
     entry.lastCloseSeen = +bar.close;
@@ -30770,11 +30894,11 @@ Sim.Ctrl = (function(){
               // Apply at the current bar so the stop line updates immediately;
               // queueAction would defer until the next advanceTo() and the
               // change wouldn't show up on a paused chart.
-              var ok = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow
-                ? window.PortSim.Util.applyMoveStopNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null, form.stopTriggerMode)
-                : false;
-              if (!ok){
+              var applyNow = window.PortSim.Util && window.PortSim.Util.applyMoveStopNow;
+              if (typeof applyNow !== 'function'){
                 window.Sim.queueAction(entry.sim, { type: 'movestop', newStop: ns, pct: pct, stopTrail: form.stopTrail || null, triggerMode: form.stopTriggerMode });
+              } else if (!applyNow(entry.sim, entry.bars, ns, pct, form.stopTrail || null, form.stopTriggerMode)){
+                window.alert('Stop replacement failed because the stop is invalid at the current close.');
               }
             } catch(e){ console.error('[PortSim.Positions] movestop:', e); }
             // Track J's 120ms watcher will pick up the new stopLevels entry
