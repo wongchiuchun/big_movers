@@ -17,6 +17,7 @@ import threading
 import tempfile
 from datetime import date
 from flask import Flask, jsonify, send_from_directory, request, Response
+from entry_trainer_scanner import CandidateAvailabilityError, EntryTrainerScanner
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Make the local `classifier` package importable regardless of cwd
@@ -153,7 +154,7 @@ def _parse_collected_stocks_csv(path):
                         t = row[0].strip()
                         c = float(row[1]); o = float(row[2]); h = float(row[3])
                         l = float(row[4]); v = float(row[5])
-                    if c <= 0:
+                    if not math.isfinite(c) or c <= 0:
                         continue
                     bars.append({"time": t, "open": o, "high": h, "low": l, "close": c, "volume": v})
                 except (ValueError, IndexError):
@@ -163,6 +164,8 @@ def _parse_collected_stocks_csv(path):
     bars.sort(key=lambda x: x["time"])
     return bars
 # ============ PORTSIM TRACK C: NDQ/QQQ data path — END ==============
+
+_ENTRY_TRAINER_SCANNER = EntryTrainerScanner(STOCKS_DIRS, _parse_collected_stocks_csv)
 
 # Twelve Data API key (loaded from ../.env or ./.env)
 TWELVE_API_KEY = None
@@ -389,67 +392,7 @@ def api_ohlcv():
     if not path:
         return jsonify({"error": f"{symbol}.csv not found in any configured directory"}), 404
 
-    bars = []
-    try:
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
-            reader = csv.reader(f)
-            header = next(reader, None)
-            if not header:
-                return jsonify([])
-            # Detect CSV column layout
-            if len(header) >= 2 and "date" in (header[1] or "").lower():
-                fmt = "new"
-            elif len(header) >= 1 and "date" in (header[0] or "").lower():
-                fmt = "noindex"
-            else:
-                fmt = "old"
-            for row in reader:
-                try:
-                    if fmt == "new":
-                        # [idx, date, open, high, low, close, volume]
-                        if len(row) < 7:
-                            continue
-                        t = row[1].strip()
-                        o = float(row[2])
-                        h = float(row[3])
-                        l = float(row[4])
-                        c = float(row[5])
-                        v = float(row[6])
-                    elif fmt == "noindex":
-                        # [DateTime, Open, High, Low, Close, Volume]
-                        if len(row) < 6:
-                            continue
-                        raw_t = row[0].strip()
-                        if len(raw_t) == 10 and raw_t[2] == '/':
-                            parts = raw_t.split('/')
-                            t = f"{parts[2]}-{parts[0]:>02}-{parts[1]:>02}"
-                        else:
-                            t = raw_t
-                        o = float(row[1])
-                        h = float(row[2])
-                        l = float(row[3])
-                        c = float(row[4])
-                        v = float(row[5])
-                    else:
-                        # [date, close, open, high, low, volume, ...]
-                        if len(row) < 6:
-                            continue
-                        t = row[0].strip()
-                        c = float(row[1])
-                        o = float(row[2])
-                        h = float(row[3])
-                        l = float(row[4])
-                        v = float(row[5])
-                    if c <= 0:
-                        continue
-                    bars.append({"time": t, "open": o, "high": h, "low": l, "close": c, "volume": v})
-                except (ValueError, IndexError):
-                    continue
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    bars.sort(key=lambda x: x["time"])
-    return jsonify(bars)
+    return jsonify(_parse_collected_stocks_csv(path))
 
 
 @app.route("/api/stock-list")
@@ -471,6 +414,19 @@ def api_stock_list():
     if not found_any_dir:
         return jsonify({"error": "collected_stocks directory not found"}), 404
     return jsonify(sorted(symbols))
+
+
+@app.route("/api/entry-trainer/candidates")
+def api_entry_trainer_candidates():
+    count = request.args.get("count", "3")
+    if count != "3":
+        return jsonify({"error": "count must be 3 for entry trainer version one"}), 400
+
+    try:
+        candidates = _ENTRY_TRAINER_SCANNER.select_candidates(count=3)
+    except CandidateAvailabilityError as exc:
+        return jsonify({"error": str(exc)}), 409
+    return jsonify({"rules": _ENTRY_TRAINER_SCANNER.rules, "candidates": candidates})
 
 
 @app.route("/api/market-anchors")
