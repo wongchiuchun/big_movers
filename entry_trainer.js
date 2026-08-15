@@ -27,7 +27,7 @@
   let activeOperation = null;
   let setupOpener = null;
   let setupFocusTimer = null;
-  let lastPersistenceFailure = null;
+  const unsavedBatches = new Map();
   let reviewState = {
     batch: null,
     activeTab: 'summary',
@@ -356,7 +356,7 @@
     if (new Set(candidates.map(function(candidate){ return candidate.symbol; })).size !== BATCH_SIZE) return null;
     const batchReview = raw.review && typeof raw.review === 'object' ? raw.review : {};
     return {
-      version: BATCH_VERSION,
+      version: 1,
       id: id,
       createdAt: createdAt,
       completedAt: completedAt,
@@ -424,6 +424,35 @@
       error: result.error,
       record: clone(record)
     };
+  }
+
+  function persistenceWarning(result){
+    return {
+      quota:!!(result && result.quota),
+      message:result && result.quota
+        ? 'This batch is not saved because browser storage is full. Delete older saved batches, then choose Save Review to retry.'
+        : 'This batch is not saved because browser storage failed. Choose Save Review to retry or export it now.'
+    };
+  }
+
+  function rememberUnsavedBatch(record, result, message){
+    const clean = sanitizePersistedBatch(record);
+    if (!clean) return null;
+    const warning = persistenceWarning(result);
+    if (message) warning.message = safeText(message, 1000);
+    unsavedBatches.delete(clean.id);
+    unsavedBatches.set(clean.id, {batch:clone(clean), warning:warning});
+    return clone(warning);
+  }
+
+  function unsavedBatchRecord(batchId){
+    const entry = unsavedBatches.get(batchId);
+    return entry ? sanitizePersistedBatch(entry.batch) : null;
+  }
+
+  function unsavedBatchWarning(batchId){
+    const entry = unsavedBatches.get(batchId);
+    return entry ? clone(entry.warning) : null;
   }
 
   function setSetupStatus(message, isError){
@@ -1551,13 +1580,8 @@
     }
     batch._finalized = true;
     state = { status:'idle', batch:null, lastBatch:saved, runtime:null };
-    lastPersistenceFailure = saveResult.ok ? null : {
-      batchId:saved.id,
-      quota:saveResult.quota,
-      message:saveResult.quota
-        ? 'This batch is not saved because browser storage is full. Delete older saved batches, then choose Save Review to retry.'
-        : 'This batch is not saved because browser storage failed. Choose Save Review to retry or export it now.'
-    };
+    if (saveResult.ok) unsavedBatches.delete(saved.id);
+    else rememberUnsavedBatch(saved, saveResult);
     renderSavedBatches();
     if (options.openReview !== false) openReview(saved.id);
     if (options.alertMessage) window.alert(options.alertMessage);
@@ -2270,22 +2294,14 @@
     reviewState.batch = result.record;
     if (state.lastBatch && state.lastBatch.id === result.record.id) state.lastBatch = clone(result.record);
     if (!result.ok) {
-      state.lastBatch = clone(result.record);
-      lastPersistenceFailure = {
-        batchId:result.record.id,
-        quota:result.quota,
-        message:result.quota
-          ? 'This batch is not saved because browser storage is full. Delete older saved batches, then choose Save Review to retry.'
-          : 'This batch is not saved because browser storage failed. Choose Save Review to retry or export it now.'
-      };
-      reviewState.persistenceWarning = clone(lastPersistenceFailure);
+      reviewState.persistenceWarning = rememberUnsavedBatch(result.record, result);
       reviewState.dirty = true;
       setReviewStatus(result.quota ? 'Not saved · storage full' : 'Not saved · storage error', false);
       renderReview();
       renderReviewSavedBatches();
       return false;
     }
-    if (lastPersistenceFailure && lastPersistenceFailure.batchId === result.record.id) lastPersistenceFailure = null;
+    unsavedBatches.delete(result.record.id);
     reviewState.persistenceWarning = null;
     reviewState.dirty = false;
     setReviewStatus('Saved', true);
@@ -2344,9 +2360,48 @@
     return true;
   }
 
-  function deleteSavedBatch(batchId){
+  function focusManagerAfterDelete(sourceHost, priorIndex){
+    const reviewOpen = !!byId('entry-trainer-review-modal')?.classList.contains('open');
+    const host = reviewOpen ? byId('entry-trainer-review-saved-list') : sourceHost;
+    const rows = host ? Array.from(host.querySelectorAll('.entry-trainer-saved-row')) : [];
+    const row = rows.length ? rows[Math.min(Math.max(priorIndex, 0), rows.length - 1)] : null;
+    const target = row && row.querySelector('button:not([disabled])')
+      || (reviewOpen ? byId('entry-trainer-review-manage') || byId('entry-trainer-review-save') : byId('entry-trainer-saved'));
+    if (target && typeof target.focus === 'function') target.focus();
+  }
+
+  function syncSetupRowAfterDelete(batchId){
+    const host = byId('entry-trainer-saved-list');
+    if (!host) return;
+    const row = host.querySelector('[data-saved-batch-id="' + batchId.replace(/"/g, '') + '"]');
+    if (!row) return;
+    const item = reviewableBatchRows().find(function(candidate){ return candidate.record.id === batchId; });
+    if (!item) {
+      row.remove();
+      if (!host.querySelector('.entry-trainer-saved-row')) {
+        host.innerHTML = '<div class="entry-trainer-saved-empty">No completed or abandoned batches saved yet.</div>';
+      }
+      return;
+    }
+    const openButton = row.querySelector('button:not(.entry-trainer-saved-delete)');
+    if (openButton) openButton.textContent = savedBatchButtonLabel(item.record, item.unsaved);
+    if (row.children[2]) row.children[2].remove();
+    if (item.persisted) appendDeleteButton(row, item.record);
+    else {
+      const retry = document.createElement('span');
+      retry.className = 'entry-trainer-saved-meta';
+      retry.textContent = 'Open to retry';
+      row.appendChild(retry);
+    }
+  }
+
+  function deleteSavedBatch(batchId, sourceButton){
     const id = safeId(batchId);
     if (!id || !window.confirm('Delete this saved Entry Trainer batch? This cannot be undone.')) return false;
+    const sourceHost = sourceButton && sourceButton.closest('.entry-trainer-saved-list');
+    const sourceRows = sourceHost ? Array.from(sourceHost.querySelectorAll('.entry-trainer-saved-row')) : [];
+    const sourceRow = sourceButton && sourceButton.closest('.entry-trainer-saved-row');
+    const priorIndex = Math.max(0, sourceRows.indexOf(sourceRow));
     const records = readSavedBatches();
     const remaining = records.filter(function(record){ return record.id !== id; });
     if (remaining.length === records.length) return false;
@@ -2357,40 +2412,37 @@
       return false;
     }
     if (reviewState.batch && reviewState.batch.id === id) {
-      state.lastBatch = clone(reviewState.batch);
-      lastPersistenceFailure = {
-        batchId:id,
-        quota:false,
-        message:'This open batch was deleted from local storage. Choose Save Review to save it again, or export it now.'
-      };
-      reviewState.persistenceWarning = clone(lastPersistenceFailure);
+      if (!unsavedBatches.has(id)) {
+        rememberUnsavedBatch(reviewState.batch, {quota:false}, 'This open batch was deleted from local storage. Choose Save Review to save it again, or export it now.');
+      }
+      reviewState.persistenceWarning = unsavedBatchWarning(id);
       reviewState.dirty = true;
       setReviewStatus('Deleted locally · save to restore', false);
       renderReview();
     }
-    document.querySelectorAll('[data-saved-batch-id="' + id.replace(/"/g, '') + '"]').forEach(function(row){ row.remove(); });
-    [byId('entry-trainer-saved-list'), byId('entry-trainer-review-saved-list')].forEach(function(host){
-      if (host && !host.querySelector('.entry-trainer-saved-row')) {
-        host.innerHTML = '<div class="entry-trainer-saved-empty">No completed or abandoned batches saved yet.</div>';
-      }
-    });
+    if (state.lastBatch && state.lastBatch.id === id && !unsavedBatches.has(id)) state.lastBatch = null;
+    if (byId('entry-trainer-review-modal')?.classList.contains('open')) syncSetupRowAfterDelete(id);
+    else renderSavedBatches();
     renderReviewSavedBatches();
     if (reviewState.persistenceWarning) setReviewStatus('Storage freed · choose Save Review', false);
+    focusManagerAfterDelete(sourceHost, priorIndex);
     return true;
   }
 
   function reviewableBatchRows(){
     const stored = readSavedBatches();
-    const rows = stored.map(function(record){ return {record:record, unsaved:false, persisted:true}; });
-    if (lastPersistenceFailure && state.lastBatch && state.lastBatch.id === lastPersistenceFailure.batchId) {
-      const current = sanitizePersistedBatch(state.lastBatch);
-      if (current) {
-        const index = rows.findIndex(function(item){ return item.record.id === current.id; });
-        const row = {record:current, unsaved:true, persisted:index >= 0};
-        if (index >= 0) rows.splice(index, 1);
-        rows.unshift(row);
-      }
-    }
+    const storedById = new Map(stored.map(function(record){ return [record.id, record]; }));
+    const rows = [];
+    Array.from(unsavedBatches.values()).reverse().forEach(function(entry){
+      const record = sanitizePersistedBatch(entry.batch);
+      if (!record) return;
+      rows.push({record:record, unsaved:true, persisted:storedById.delete(record.id)});
+    });
+    stored.forEach(function(record){
+      if (!storedById.has(record.id)) return;
+      rows.push({record:record, unsaved:false, persisted:true});
+      storedById.delete(record.id);
+    });
     return rows;
   }
 
@@ -2398,6 +2450,16 @@
     const metric = batchMetrics(record);
     return (unsaved ? 'NOT SAVED · ' : '') + record.status.toUpperCase() + ' · '
       + record.candidates.map(function(candidate){ return candidate.symbol; }).join(' / ') + ' · ' + formatR(metric.totalR);
+  }
+
+  function appendDeleteButton(row, record){
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'entry-trainer-saved-delete';
+    remove.textContent = 'Delete';
+    remove.setAttribute('aria-label', 'Delete saved batch ' + record.id);
+    remove.addEventListener('click', function(){ deleteSavedBatch(record.id, remove); });
+    row.appendChild(remove);
   }
 
   function refreshSavedBatchRows(record){
@@ -2408,13 +2470,7 @@
       const priorAction = row.children[2];
       if (openButton) openButton.textContent = savedBatchButtonLabel(record, false);
       if (priorAction) priorAction.remove();
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'entry-trainer-saved-delete';
-      remove.textContent = 'Delete';
-      remove.setAttribute('aria-label', 'Delete saved batch ' + record.id);
-      remove.addEventListener('click', function(){ deleteSavedBatch(record.id); });
-      row.appendChild(remove);
+      appendDeleteButton(row, record);
     });
     return rows.length;
   }
@@ -2446,13 +2502,7 @@
       row.appendChild(button);
       row.appendChild(meta);
       if (item.persisted) {
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'entry-trainer-saved-delete';
-        remove.textContent = 'Delete';
-        remove.setAttribute('aria-label', 'Delete saved batch ' + record.id);
-        remove.addEventListener('click', function(){ deleteSavedBatch(record.id); });
-        row.appendChild(remove);
+        appendDeleteButton(row, record);
       } else {
         const retry = document.createElement('span');
         retry.className = 'entry-trainer-saved-meta';
@@ -2497,9 +2547,11 @@
   function openReview(batchId, options){
     options = options || {};
     if (isActive()) return false;
-    const id = safeId(batchId || (state.lastBatch && state.lastBatch.id));
+    const latestUnsavedId = Array.from(unsavedBatches.keys()).pop();
+    const id = safeId(batchId || latestUnsavedId || (state.lastBatch && state.lastBatch.id));
     if (!id) return false;
-    let target = state.lastBatch && state.lastBatch.id === id ? sanitizePersistedBatch(state.lastBatch) : null;
+    let target = unsavedBatchRecord(id);
+    if (!target) target = state.lastBatch && state.lastBatch.id === id ? sanitizePersistedBatch(state.lastBatch) : null;
     if (!target) target = readSavedBatches().find(function(record){ return record.id === id; }) || null;
     if (!target) return false;
     const modal = byId('entry-trainer-review-modal');
@@ -2525,7 +2577,7 @@
       barsController:null,
       dirty:false,
       opener:environment ? environment.opener : opener,
-      persistenceWarning:lastPersistenceFailure && lastPersistenceFailure.batchId === id ? clone(lastPersistenceFailure) : null,
+      persistenceWarning:unsavedBatchWarning(id),
       backgroundInert:environment ? environment.backgroundInert : [],
       modalParent:environment ? environment.modalParent : null,
       modalNextSibling:environment ? environment.modalNextSibling : null
@@ -2557,6 +2609,7 @@
     const lines = [];
     lines.push('# Entry Trainer Batch Review');
     lines.push('');
+    lines.push('- **Schema version:** ' + reviewValue(batch.version));
     lines.push('- **Batch ID:** ' + mdCell(batch.id));
     lines.push('- **Status:** ' + mdCell(batch.status));
     lines.push('- **Batch exit reason:** ' + mdCell(batch.exitReason || '—'));
@@ -2697,7 +2750,7 @@
     const metrics = batchMetrics(batch);
     const finishedAt = batch.completedAt || batch.abandonedAt || '';
     const base = {
-      schema_version:BATCH_VERSION,batch_id:batch.id,batch_status:batch.status,batch_exit_reason:batch.exitReason,
+      schema_version:batch.version,batch_id:batch.id,batch_status:batch.status,batch_exit_reason:batch.exitReason,
       batch_abandon_reason:batch.abandonReason,batch_created_at:batch.createdAt,batch_finished_at:finishedAt,
       starting_equity_dollars:batch.startingEquity,recurring_entry_habit:batch.review.recurringEntryHabit,next_drill_focus:batch.review.nextDrillFocus
     };
