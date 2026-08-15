@@ -400,12 +400,8 @@ def api_ohlcv():
     for path in paths:
         try:
             bars = _parse_collected_stocks_csv(path, tolerate_errors=False)
-        except (OSError, UnicodeError) as exc:
+        except (OSError, UnicodeError, csv.Error) as exc:
             return jsonify({"error": str(exc)}), 500
-        except csv.Error:
-            # A malformed higher-priority CSV is unusable, so continue with
-            # the next source exactly as the scanner does.
-            continue
         if bars:
             return jsonify(bars)
     return jsonify([])

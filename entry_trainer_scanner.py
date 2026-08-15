@@ -139,27 +139,23 @@ class EntryTrainerScanner:
         candidates = []
         for symbol, paths in sources:
             usable_bars = None
-            usable_path = None
+            fatal_source_error = False
             for path in paths:
                 try:
                     bars = self._valid_bars(self._parse_bars(path))
-                except (OSError, UnicodeError, csv.Error, ValueError, TypeError, OverflowError) as exc:
+                except (OSError, UnicodeError, csv.Error) as exc:
                     LOGGER.warning("Skipping Entry Trainer source %s (%s): %s", symbol, path, exc)
-                    continue
+                    fatal_source_error = True
+                    break
                 if bars:
                     usable_bars = bars
-                    usable_path = path
                     break
 
             # A usable higher-priority source is what playback will load. Its
             # lack of qualification must not cause a lower-priority fallback.
-            if usable_bars is None:
+            if fatal_source_error or usable_bars is None:
                 continue
-            try:
-                candidate = self._find_candidate(symbol, usable_bars)
-            except (KeyError, TypeError, ValueError, OverflowError) as exc:
-                LOGGER.warning("Skipping Entry Trainer source %s (%s): %s", symbol, usable_path, exc)
-                continue
+            candidate = self._find_candidate(symbol, usable_bars)
             if candidate is not None:
                 candidates.append(candidate)
         return candidates
