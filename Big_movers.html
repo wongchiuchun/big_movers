@@ -2588,6 +2588,15 @@
   .entry-trainer-rules li{padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg3);color:var(--text-2);font-family:var(--mono);font-size:10px;line-height:1.45;}
   .entry-trainer-rules strong{color:var(--accent);font-weight:700;}
   .entry-trainer-limit{margin:0 0 14px;padding:9px 11px;border-left:3px solid var(--yellow);background:rgba(245,200,66,0.08);color:var(--text-2);font-family:var(--mono);font-size:10px;line-height:1.5;}
+  .entry-trainer-setup-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;}
+  .entry-trainer-saved-list{display:none;margin-top:14px;max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:7px;background:var(--bg2);}
+  .entry-trainer-saved-list.is-visible{display:block;}
+  .entry-trainer-saved-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid var(--border);}
+  .entry-trainer-saved-row:last-child{border-bottom:0;}
+  .entry-trainer-saved-row button{appearance:none;border:0;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;min-width:0;}
+  .entry-trainer-saved-row button:hover{color:var(--accent);}
+  .entry-trainer-saved-meta{color:var(--muted);font-family:var(--mono);font-size:9px;white-space:nowrap;}
+  .entry-trainer-saved-empty{padding:16px;color:var(--muted);font-family:var(--mono);font-size:10px;text-align:center;}
   #entry-trainer-strip{display:none;align-items:center;gap:10px;min-height:38px;padding:5px 10px;border-bottom:1px solid rgba(212,165,116,0.35);background:rgba(212,165,116,0.08);font-family:var(--mono);font-size:10px;}
   #entry-trainer-strip.is-active{display:flex;}
   .entry-trainer-progress{display:flex;align-items:center;gap:8px;white-space:nowrap;}
@@ -2606,6 +2615,45 @@
   #entry-trainer-result.is-visible{display:flex;}
   #entry-trainer-result-r{color:var(--accent);font-size:15px;font-weight:800;white-space:nowrap;}
   #entry-trainer-result-detail{color:var(--text-2);white-space:nowrap;}
+  .entry-trainer-review-overlay{z-index:12000;align-items:flex-start;padding:3vh 2vw;overflow:auto;}
+  .entry-trainer-review{width:min(1220px,96vw);max-width:none;min-height:min(900px,94vh);padding:0;overflow:hidden;background:var(--bg);border:1px solid var(--border-bright);border-radius:10px;box-shadow:0 24px 70px rgba(0,0,0,.5);}
+  .entry-trainer-review-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:3;}
+  .entry-trainer-review-title{font-family:var(--display);font-size:20px;color:var(--accent-cream);margin-right:auto;}
+  .entry-trainer-review-btn{padding:6px 9px;border:1px solid var(--border-bright);border-radius:5px;background:var(--bg3);color:var(--text-2);font-family:var(--mono);font-size:9px;cursor:pointer;}
+  .entry-trainer-review-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .entry-trainer-review-status{min-width:86px;color:var(--muted);font-family:var(--mono);font-size:9px;text-align:right;}
+  .entry-trainer-review-status.is-saved{color:var(--green);}
+  .entry-trainer-review-tabs{display:flex;gap:5px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--bg2);overflow:auto;}
+  .entry-trainer-review-tab{padding:6px 10px;border:1px solid var(--border);border-radius:5px;background:var(--bg3);color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;white-space:nowrap;}
+  .entry-trainer-review-tab.is-active{border-color:var(--accent);color:var(--accent);background:rgba(212,165,116,.08);}
+  .entry-trainer-review-body{padding:16px;}
+  .entry-trainer-disclosure{margin:0 0 14px;padding:10px 12px;border-left:3px solid var(--yellow);background:rgba(245,200,66,.07);color:var(--text-2);font-size:11px;line-height:1.55;}
+  .entry-trainer-summary-r{display:grid;grid-template-columns:minmax(190px,1.35fr) repeat(3,minmax(120px,1fr));gap:8px;margin-bottom:14px;}
+  .entry-trainer-metric{padding:12px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);}
+  .entry-trainer-metric strong{display:block;color:var(--text);font-family:var(--mono);font-size:17px;margin-bottom:3px;}
+  .entry-trainer-metric.is-primary strong{font-size:29px;color:var(--accent);}
+  .entry-trainer-metric span{color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.08em;}
+  .entry-trainer-review h4{margin:18px 0 8px;color:var(--accent-cream);font-family:var(--display);font-size:16px;}
+  .entry-trainer-candidate-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .entry-trainer-candidate-card{padding:10px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);font-size:11px;line-height:1.5;}
+  .entry-trainer-candidate-card strong{color:var(--accent);font-family:var(--mono);}
+  .entry-trainer-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px;}
+  .entry-trainer-review-field{display:flex;flex-direction:column;gap:4px;}
+  .entry-trainer-review-field.is-wide{grid-column:1/-1;}
+  .entry-trainer-review-field label{color:var(--muted);font-family:var(--mono);font-size:9px;line-height:1.4;text-transform:uppercase;letter-spacing:.06em;}
+  .entry-trainer-review-field select,.entry-trainer-review-field input,.entry-trainer-review-field textarea{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);color:var(--text);font:11px/1.45 var(--mono);}
+  .entry-trainer-review-field textarea{min-height:58px;resize:vertical;}
+  .entry-trainer-review-attempt{margin:12px 0;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg3);}
+  .entry-trainer-review-attempt-head{display:flex;gap:10px;align-items:baseline;margin-bottom:10px;color:var(--text-2);font-family:var(--mono);font-size:10px;}
+  .entry-trainer-review-attempt-head strong{font-size:13px;color:var(--accent-cream);}
+  .entry-trainer-review-chart{height:390px;margin:10px 0 14px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);overflow:hidden;}
+  .entry-trainer-review-placeholder{display:grid;place-items:center;height:100%;padding:20px;color:var(--muted);font-family:var(--mono);font-size:10px;text-align:center;}
+  .entry-trainer-review-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:7px;margin-bottom:12px;}
+  .entry-trainer-review-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:9px;white-space:nowrap;}
+  .entry-trainer-review-table th,.entry-trainer-review-table td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;}
+  .entry-trainer-review-table th{color:var(--muted);background:var(--bg3);font-size:8px;letter-spacing:.06em;}
+  .entry-trainer-review-table tr:last-child td{border-bottom:0;}
+  .entry-trainer-review-empty{padding:14px;color:var(--muted);font-family:var(--mono);font-size:10px;}
   body.entry-trainer-active .table-panel{pointer-events:none;opacity:0.45;}
   body.entry-trainer-active #study-toggle-btn,
   body.entry-trainer-active #defs-btn,
@@ -2627,6 +2675,10 @@
     .entry-trainer-strip-spacer{display:none;}
     .entry-trainer-actions{width:100%;flex-wrap:wrap;}
     #entry-trainer-result{width:100%;flex-wrap:wrap;}
+    .entry-trainer-review-head{flex-wrap:wrap;}
+    .entry-trainer-review-title{width:100%;}
+    .entry-trainer-summary-r,.entry-trainer-candidate-list,.entry-trainer-review-grid{grid-template-columns:1fr;}
+    .entry-trainer-review-field.is-wide{grid-column:auto;}
   }
 
   /* Sim-related auxiliary topbar buttons (Random / Blind / Saved / Stats) — match
@@ -5770,11 +5822,31 @@
             <label for="entry-trainer-equity">Starting equity ($)</label>
             <input id="entry-trainer-equity" type="number" min="1" step="100" value="300000" required inputmode="decimal" autocomplete="off">
           </div>
-          <div class="fetch-actions">
-            <button class="fetch-btn-cancel" id="entry-trainer-cancel" type="button">Cancel</button>
-            <button class="fetch-btn-primary" id="entry-trainer-start" type="button">Start 3-ticker batch</button>
+          <div class="entry-trainer-setup-actions">
+            <button class="fetch-btn-cancel" id="entry-trainer-saved" type="button" aria-expanded="false" aria-controls="entry-trainer-saved-list">Saved Batches</button>
+            <div class="fetch-actions" style="margin:0;">
+              <button class="fetch-btn-cancel" id="entry-trainer-cancel" type="button">Cancel</button>
+              <button class="fetch-btn-primary" id="entry-trainer-start" type="button">Start 3-ticker batch</button>
+            </div>
           </div>
+          <div class="entry-trainer-saved-list" id="entry-trainer-saved-list" aria-live="polite"></div>
           <div class="fetch-status" id="entry-trainer-setup-status" role="alert" aria-live="assertive"></div>
+        </div>
+      </div>
+
+      <!-- Entry Trainer Review Modal -->
+      <div class="fetch-modal-overlay entry-trainer-review-overlay" id="entry-trainer-review-modal" role="dialog" aria-modal="true" aria-labelledby="entry-trainer-review-title" aria-hidden="true">
+        <div class="entry-trainer-review">
+          <div class="entry-trainer-review-head">
+            <div class="entry-trainer-review-title" id="entry-trainer-review-title">Entry Trainer Review</div>
+            <span class="entry-trainer-review-status" id="entry-trainer-review-status" role="status"></span>
+            <button class="entry-trainer-review-btn" id="entry-trainer-review-save" type="button">Save Review</button>
+            <button class="entry-trainer-review-btn" id="entry-trainer-review-md" type="button">Export Markdown</button>
+            <button class="entry-trainer-review-btn" id="entry-trainer-review-csv" type="button">Export CSV</button>
+            <button class="entry-trainer-review-btn" id="entry-trainer-review-close" type="button">Close</button>
+          </div>
+          <div class="entry-trainer-review-tabs" id="entry-trainer-review-tabs" role="tablist"></div>
+          <div class="entry-trainer-review-body" id="entry-trainer-review-body"></div>
         </div>
       </div>
 
@@ -9726,7 +9798,8 @@ function showTextInput(px,py,price,time,initialText='',onConfirm,initialBoxWidth
 // ==============================================
 document.addEventListener('keydown',e=>{
   if(document.body.classList.contains('entry-trainer-active')
-      ||document.body.classList.contains('entry-trainer-setup-open'))return;
+      ||document.body.classList.contains('entry-trainer-setup-open')
+      ||document.body.classList.contains('entry-trainer-review-open'))return;
   const inInput=document.activeElement===document.getElementById('txt-input')
     ||document.activeElement.tagName==='INPUT'
     ||document.activeElement.tagName==='SELECT'
@@ -12193,7 +12266,7 @@ document.addEventListener('click', e => {
 
   document.getElementById('screenshot-btn').addEventListener('click', takeScreenshot);
   document.addEventListener('keydown', e => {
-    if (document.body.classList.contains('entry-trainer-setup-open')) return;
+    if (document.body.classList.contains('entry-trainer-setup-open') || document.body.classList.contains('entry-trainer-review-open')) return;
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
       e.preventDefault();
       takeScreenshot();
@@ -12223,7 +12296,7 @@ document.addEventListener('click', e => {
   if (btn) btn.addEventListener('click', () => togglePopout());
   // Capture-phase ESC handler so we exit pop-out before the simulator's own ESC ("Exit simulator?") fires.
   document.addEventListener('keydown', (e) => {
-    if (document.body.classList.contains('entry-trainer-setup-open')) return;
+    if (document.body.classList.contains('entry-trainer-setup-open') || document.body.classList.contains('entry-trainer-review-open')) return;
     if (e.key !== 'Escape') return;
     if (!document.body.classList.contains('sim-popout')) return;
     const tag = (document.activeElement && document.activeElement.tagName) || '';
@@ -21175,6 +21248,27 @@ Sim.Ctrl = (function(){
     return false;
   }
 
+  // Policy-only terminal action used by Entry Trainer during an intentional
+  // early batch exit. It captures the ordinary immutable attempt snapshot at
+  // the currently paused close before the shared controller is torn down.
+  function _closeFlatAttemptAtPausedClose(exitReason) {
+    if (!state.policy || !state.active || !state.sim || state.sim.qty <= 0 || state.sim.closed || state.sim.stoppedOut) return false;
+    pause();
+    const bar = state.bars && state.bars[state.sim.playIdx];
+    if (!bar || !Number.isFinite(Number(bar.close))) return false;
+    _pushSnapshot();
+    state._flatExitReason = exitReason || 'abandoned';
+    const result = Sim.closeAt(state.sim, state.bars, Number(bar.close));
+    const closeEvent = (state.sim.eventsLog || [])[state.sim.eventsLog.length - 1];
+    if (closeEvent && closeEvent.type === 'close') {
+      closeEvent.exitReason = state._flatExitReason;
+      closeEvent.note = 'batch exit, close at paused daily close ' + Number(bar.close).toFixed(2);
+    }
+    _appendCurvePoint(state.sim.playIdx);
+    _render({ derived: result.derived });
+    return true;
+  }
+
   return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null), replay,
     // SimBlind dispatches into the same submit path the modal uses, so blind
     // mode can launch a sim without ever opening the setup form (which would
@@ -21194,6 +21288,7 @@ Sim.Ctrl = (function(){
     },
     commitFlatEntry: _commitFlatEntry,
     discardFlatEntry: _discardFlatEntry,
+    closeFlatAttemptAtPausedClose: _closeFlatAttemptAtPausedClose,
     setFlatGuideLine: function(spec){ return _setFlatGuideLine(spec || null); },
     getFlatPlaybackState: function(){ return _flatState('read'); },
     stopFlatPlayback: function(){ if (!state.policy) return false; exit({ preserveChart:true }); return true; },
