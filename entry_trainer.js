@@ -175,12 +175,19 @@
     }
     return {
       symbol,
+      displaySymbol: symbol,
+      assetType: 'stock',
+      role: 'entry_trainer_candidate',
+      entryKey: 'entry_trainer:' + symbol + ':' + qualificationDate,
+      entryInstanceKey: 'entry_trainer:' + symbol + ':' + qualificationDate,
       qualificationDate,
       qualificationBar,
       contextStartDate,
       endDate,
       status: 'pending',
       attempts: [],
+      pendingOrder: null,
+      orderEvents: [],
       order: { status:'none', activity:[] }
     };
   }
@@ -234,10 +241,106 @@
       createdAt: new Date().toISOString(),
       rules: clone(descriptors.rules),
       startingEquity,
+      orderState: {
+        cash: startingEquity,
+        reservedBuyingPower: 0,
+        _orderReservationCents: {}
+      },
       status: 'loading',
       activeIndex: 0,
       candidates: descriptors.candidates.map(function(candidate){ return clone(candidate); })
     };
+  }
+
+  function ordersApi(){
+    return window.PortSimOrders || null;
+  }
+
+  function activeCandidate(){
+    const batch = state.batch;
+    return batch && batch.candidates ? batch.candidates[batch.activeIndex] : null;
+  }
+
+  function workingOrder(candidate){
+    const order = candidate && candidate.pendingOrder;
+    return order && order.status === 'working' ? order : null;
+  }
+
+  function reconcileOrders(batch, reason){
+    const api = ordersApi();
+    if (!api || !batch || !batch.orderState || typeof api.reconcile !== 'function') return 0;
+    const runtime = state.runtime;
+    const barIdx = runtime && runtime.playbackState ? runtime.playbackState.playIdx : null;
+    const bar = runtime && runtime.fullBars && Number.isInteger(barIdx) ? runtime.fullBars[barIdx] : null;
+    return api.reconcile(batch.orderState, batch.candidates, {
+      date: bar && bar.time || null,
+      barIdx: barIdx,
+      reason: reason || 'Entry Trainer reservation state was reconciled.'
+    });
+  }
+
+  function clearLimitLine(){
+    if (window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.setFlatGuideLine === 'function') {
+      window.Sim.Ctrl.setFlatGuideLine(null);
+    }
+  }
+
+  function showLimitLine(order){
+    if (!order || !window.Sim || !window.Sim.Ctrl || typeof window.Sim.Ctrl.setFlatGuideLine !== 'function') return false;
+    return window.Sim.Ctrl.setFlatGuideLine({
+      price: order.limitPrice,
+      color: '#60a5fa',
+      title: 'ENTRY LIMIT'
+    });
+  }
+
+  function transitionOrder(candidate, status, details){
+    const api = ordersApi();
+    const batch = state.batch;
+    if (!api || !batch || !candidate || !workingOrder(candidate)) return null;
+    let event = api.transition(batch.orderState, candidate, status, details || {});
+    if (!event) {
+      reconcileOrders(batch, 'Entry Trainer repaired a reservation before terminal transition.');
+      event = api.transition(batch.orderState, candidate, status, details || {});
+    }
+    if (event) {
+      candidate.order = {
+        status: status,
+        orderId: event.orderId || null,
+        completedDate: event.date || null,
+        completedBarIdx: event.barIdx == null ? null : event.barIdx
+      };
+      clearLimitLine();
+    }
+    return event;
+  }
+
+  function terminalizeWorkingOrder(candidate, status, reason, barIdx){
+    const order = workingOrder(candidate);
+    if (!order) return null;
+    const runtime = state.runtime;
+    const resolvedIdx = Number.isInteger(barIdx)
+      ? barIdx
+      : (runtime && runtime.playbackState ? runtime.playbackState.playIdx : order.submittedBarIdx);
+    const bar = runtime && runtime.fullBars && Number.isInteger(resolvedIdx) ? runtime.fullBars[resolvedIdx] : null;
+    return transitionOrder(candidate, status, {
+      date: bar && bar.time || order.submittedDate,
+      barIdx: resolvedIdx,
+      reason: reason
+    });
+  }
+
+  function cleanupWorkingOrders(status, reason){
+    const batch = state.batch;
+    if (!batch || !Array.isArray(batch.candidates)) {
+      clearLimitLine();
+      return;
+    }
+    batch.candidates.forEach(function(candidate){
+      terminalizeWorkingOrder(candidate, status, reason);
+    });
+    reconcileOrders(batch, reason);
+    clearLimitLine();
   }
 
   function verifyCandidateBars(candidate, rules, bars){
@@ -287,6 +390,7 @@
     const attempts = byId('entry-trainer-attempt-progress');
     const status = byId('entry-trainer-shell-status');
     const candidate = batch.candidates[batch.activeIndex];
+    const order = workingOrder(candidate);
     if (ticker) ticker.textContent = 'Ticker ' + (batch.activeIndex + 1) + ' of ' + BATCH_SIZE;
     const playback = state.runtime && state.runtime.playbackState;
     let attemptNumber = candidate.attempts.length;
@@ -301,8 +405,21 @@
           ? '90-bar horizon reached.'
           : playback && playback.attemptActive
             ? 'Attempt open · manage the stop or close the full position at the paused close.'
+            : order
+              ? 'Limit order working · Wait advances one candle and checks for a fill.'
             : 'Out of position · wait one bar, enter at this close, or skip the ticker.';
     }
+    const pending = byId('entry-trainer-pending');
+    const pendingDetail = byId('entry-trainer-pending-detail');
+    const cancelOrder = byId('entry-trainer-cancel-order');
+    if (pending) pending.classList.toggle('is-visible', !!order);
+    if (pendingDetail) {
+      pendingDetail.textContent = order
+        ? order.qty.toLocaleString() + ' @ $' + Number(order.limitPrice).toFixed(2)
+          + ' · $' + Math.round(order.reservedBuyingPower).toLocaleString() + ' reserved'
+        : '';
+    }
+    if (cancelOrder) cancelOrder.disabled = !order || batch.status !== 'active';
     const wait = byId('entry-trainer-wait');
     const enter = byId('entry-trainer-enter');
     const skip = byId('entry-trainer-skip');
@@ -318,8 +435,10 @@
       wait.title = wait.disabled ? 'Wait is available only while flat before the horizon.' : 'Advance exactly one daily bar';
     }
     if (enter) {
-      enter.disabled = batch.status !== 'active' || !playback || !playback.canEnter;
-      enter.title = enter.disabled ? 'Entry is available only while flat before the horizon.' : 'Enter long at the current paused close';
+      enter.disabled = batch.status !== 'active' || !playback || !playback.canEnter || !!order;
+      enter.title = order
+        ? 'Cancel the working limit order before submitting another entry.'
+        : (enter.disabled ? 'Entry is available only while flat before the horizon.' : 'Submit a market-at-close or exact-price limit entry');
     }
     if (skip) skip.disabled = batch.status !== 'active' || !playback || !playback.flat || playback.attemptCompletePending;
     const launch = byId('entry-trainer-btn');
@@ -393,6 +512,208 @@
       && state.status === 'active';
   }
 
+  function validateEntrySubmission(form, context){
+    const batch = state.batch;
+    const runtime = state.runtime;
+    const candidate = activeCandidate();
+    const playback = runtime && runtime.playbackState;
+    if (!batch || batch.status !== 'active' || state.status !== 'active' || !candidate || !playback
+        || !playback.flat || playback.attemptCompletePending || playback.atHorizon
+        || playback.attemptsCompleted >= MAX_ATTEMPTS || workingOrder(candidate)) {
+      throw new Error('Entry is no longer available at this paused bar.');
+    }
+    if (!context || context.playIdx !== playback.playIdx) throw new Error('The paused bar changed before entry submission.');
+    const price = Number(form && form.price);
+    const stop = Number(form && form.stop);
+    const sizeValue = Number(form && form.sizeValue);
+    if (!Number.isFinite(price) || price <= 0) throw new Error('Entry price must be greater than $0.');
+    if (!Number.isFinite(stop) || stop <= 0 || stop >= price) throw new Error('The long protective stop must be below the entry price.');
+    if (!Number.isFinite(sizeValue) || sizeValue <= 0) throw new Error('Order size must be greater than zero.');
+    if (form.sizeMode === 'shares' && !Number.isInteger(sizeValue)) throw new Error('Share quantity must be a whole number.');
+    const qty = form.sizeMode === 'dollars' ? Math.floor(sizeValue / price) : sizeValue;
+    if (!Number.isSafeInteger(qty) || qty <= 0) throw new Error('Order size must resolve to at least one whole share.');
+    const notional = qty * price;
+    if (!Number.isFinite(notional) || notional > batch.startingEquity + 1e-9) {
+      throw new Error('Order notional cannot exceed the starting equity.');
+    }
+    return { candidate:candidate, qty:qty, price:price, stop:stop, notional:notional };
+  }
+
+  function handleEntrySubmission(form, context){
+    const validated = validateEntrySubmission(form, context);
+    if (form.orderType !== 'limit') return null;
+    const api = ordersApi();
+    const batch = state.batch;
+    if (!api || typeof api.create !== 'function' || typeof api.reserve !== 'function') {
+      throw new Error('Pending-order support is unavailable.');
+    }
+    if (batch.candidates.some(function(candidate){ return !!workingOrder(candidate); })) {
+      throw new Error('Only one Entry Trainer order may be working at a time.');
+    }
+    reconcileOrders(batch, 'Entry Trainer reconciled reservations before order placement.');
+    const created = api.create({
+      kind: 'entry',
+      direction: 'long',
+      limitPrice: validated.price,
+      sizeMode: 'shares',
+      sizeValue: validated.qty,
+      stopPrice: validated.stop,
+      stopTrail: null,
+      stopTriggerMode: form.stopTriggerMode,
+      allowFillBarStop: form.allowFillBarStop === true
+    }, {
+      state: batch.orderState,
+      entry: validated.candidate,
+      eligible: true,
+      submittedBarIdx: context.playIdx,
+      submittedDate: context.date
+    });
+    if (!created || !created.ok) throw new Error(created && created.error || 'Could not create the limit order.');
+    let reserved = api.reserve(batch.orderState, validated.candidate, created.order);
+    if (!reserved) {
+      reconcileOrders(batch, 'Entry Trainer repaired reservations before order placement.');
+      reserved = api.reserve(batch.orderState, validated.candidate, created.order);
+    }
+    if (!reserved) throw new Error('Could not reserve buying power for the limit order.');
+    validated.candidate.order = {
+      status: 'working',
+      orderId: reserved.id,
+      qty: reserved.qty,
+      limitPrice: reserved.limitPrice,
+      reservedBuyingPower: reserved.reservedBuyingPower
+    };
+    showLimitLine(reserved);
+    updateStrip();
+    return { handled:true };
+  }
+
+  function cancelPendingOrder(){
+    const candidate = activeCandidate();
+    const event = terminalizeWorkingOrder(candidate, 'cancelled', 'Manually cancelled.');
+    if (!event) return false;
+    reconcileOrders(state.batch, 'Entry Trainer reconciled reservations after cancellation.');
+    updateStrip();
+    byId('entry-trainer-enter')?.focus();
+    return true;
+  }
+
+  function fillWorkingOrderOnBar(candidate, order, bar, barIdx, fill){
+    const api = ordersApi();
+    const batch = state.batch;
+    const runtime = state.runtime;
+    if (!api || !batch || !runtime || !workingOrder(candidate)) return false;
+    let canSettle = api.canSettle(batch.orderState, order, fill.price);
+    if (!canSettle) {
+      reconcileOrders(batch, 'Entry Trainer repaired reservations before fill settlement.');
+      canSettle = api.canSettle(batch.orderState, order, fill.price);
+    }
+    if (!canSettle) {
+      transitionOrder(candidate, 'invalidated', {
+        date: bar.time,
+        barIdx: barIdx,
+        price: fill.price,
+        reason: 'Reserved buying power was unavailable when the order tried to fill.'
+      });
+      updateStrip();
+      return false;
+    }
+
+    const openingFill = Number(bar.open) > 0 && Number(bar.open) <= Number(order.limitPrice);
+    const gapThroughStop = openingFill && Number(bar.open) <= Number(order.stopPrice);
+    const processFillBarStop = gapThroughStop || order.allowFillBarStop === true;
+    const recordIntradayExtremes = openingFill;
+    const fillTiming = gapThroughStop
+      ? 'opening_gap_through_stop'
+      : (openingFill ? 'opening_limit_fill' : 'intraday_limit_touch');
+    const extremaTiming = gapThroughStop
+      ? 'opening_gap_safety'
+      : processFillBarStop
+        ? (recordIntradayExtremes ? 'fill_bar_full' : 'fill_bar_close_and_stop_only')
+        : 'next_bar';
+    const filledEvent = transitionOrder(candidate, 'filled', {
+      date: bar.time,
+      barIdx: barIdx,
+      price: fill.price,
+      fillPrice: fill.price,
+      requestedPrice: order.limitPrice,
+      gapImproved: fill.gapImproved === true,
+      fillTiming: fillTiming,
+      executionTiming: 'limit_fill',
+      extremaTiming: extremaTiming,
+      extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx
+    });
+    if (!filledEvent) return false;
+
+    const started = window.Sim.Ctrl.fillFlatEntry({
+      direction: 'long',
+      price: fill.price,
+      sizeMode: 'shares',
+      sizeValue: order.qty,
+      stop: order.stopPrice,
+      stopTrail: null,
+      stopTriggerMode: order.stopTriggerMode
+    }, {
+      barIdx: barIdx,
+      orderId: order.id,
+      requestedPrice: order.limitPrice,
+      riskReferencePrice: order.limitPrice,
+      executionTiming: 'limit_fill',
+      fillTiming: fillTiming,
+      extremaTiming: extremaTiming,
+      extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx,
+      processFillBarStop: processFillBarStop,
+      recordIntradayExtremes: recordIntradayExtremes,
+      forceGap: gapThroughStop
+    });
+    if (!started || !started.ok) {
+      api.recordEvent(candidate, 'fill_error', {
+        order: order,
+        date: bar.time,
+        barIdx: barIdx,
+        price: fill.price,
+        reason: started && started.error || 'Flat-playback fill adapter rejected the fill.'
+      });
+      window.alert('The limit order filled, but the attempt could not be started. Exit this batch to reset safely.');
+      updateStrip();
+      return false;
+    }
+    if (gapThroughStop && started.stopEvent) {
+      api.recordEvent(candidate, 'gap_stop', {
+        order: order,
+        date: bar.time,
+        barIdx: barIdx,
+        price: started.stopEvent.price,
+        fillTiming: fillTiming,
+        reason: 'Opening gap filled the entry through its fixed protective stop.'
+      });
+    }
+    reconcileOrders(batch, 'Entry Trainer reconciled reservations after fill settlement.');
+    updateStrip();
+    return true;
+  }
+
+  function handleBeforeFlatStep(context){
+    const candidate = activeCandidate();
+    const order = workingOrder(candidate);
+    if (!order || !context || !context.bar) return null;
+    const api = ordersApi();
+    const fill = api && api.evaluateFill(order, context.bar, context.barIdx);
+    if (fill) {
+      fillWorkingOrderOnBar(candidate, order, context.bar, context.barIdx, fill);
+      // A committed fill owns this bar even if the downstream adapter reports
+      // an unexpected failure; never advance the now-terminal order twice.
+      if (order.status === 'filled') return { handled:true };
+      if (order.status === 'working') return { allow:false };
+      return null;
+    }
+    if (context.barIdx >= context.endBarIdx) {
+      terminalizeWorkingOrder(candidate, 'expired', 'Limit order reached the ticker horizon unfilled.', context.barIdx);
+      reconcileOrders(state.batch, 'Entry Trainer reconciled reservations at the ticker horizon.');
+      updateStrip();
+    }
+    return null;
+  }
+
   function activateCandidatePlayback(batch, runtime, index){
     if (!window.Sim || !window.Sim.Ctrl || typeof window.Sim.Ctrl.startFlatPlayback !== 'function') {
       throw new Error('The flat playback controller is not ready');
@@ -404,6 +725,17 @@
     runtime.playbackToken = (runtime.playbackToken || 0) + 1;
     const token = runtime.playbackToken;
     const candidate = batch.candidates[index];
+    batch.candidates.forEach(function(owner, ownerIndex){
+      const stale = ownerIndex !== index ? workingOrder(owner) : null;
+      if (!stale) return;
+      transitionOrder(owner, 'expired', {
+        date: stale.submittedDate,
+        barIdx: null,
+        reason: 'Prior candidate was deactivated before the order filled.'
+      });
+    });
+    reconcileOrders(batch, 'Entry Trainer reconciled reservations during candidate activation.');
+    clearLimitLine();
     const started = window.Sim.Ctrl.startFlatPlayback({
       bars: runtime.fullBars,
       moveKey: 'ENTRY_TRAINER',
@@ -417,6 +749,15 @@
         fullExitOnly: true,
         pauseWhenFlat: true,
         maxLegs: MAX_ATTEMPTS,
+        entryOrderMode: 'pending_limit',
+        beforeFlatStep: function(context){
+          if (!playbackIsCurrent(runtime, index, token)) return { allow:false };
+          return handleBeforeFlatStep(context);
+        },
+        onEntrySubmit: function(form, context){
+          if (!playbackIsCurrent(runtime, index, token)) throw new Error('This candidate is no longer active.');
+          return handleEntrySubmission(form, context);
+        },
         onStateChange: function(playbackState){
           if (!playbackIsCurrent(runtime, index, token)) return;
           runtime.playbackState = playbackState;
@@ -438,6 +779,7 @@
       }
     });
     if (!started) throw new Error('Could not start candidate playback');
+    if (workingOrder(candidate)) showLimitLine(candidate.pendingOrder);
   }
 
   function lockOrdinaryControls(runtime){
@@ -503,6 +845,7 @@
     options = options || {};
     const runtime = state.runtime;
     let restored = { ok:true, restored:false, error:null };
+    cleanupWorkingOrders('cancelled', options.orderReason || 'Entry Trainer batch exited.');
     if (window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.stopFlatPlayback === 'function') {
       try { window.Sim.Ctrl.stopFlatPlayback(); } catch (error) {}
     }
@@ -549,7 +892,8 @@
       setSetupStatus('Exit the active simulation or quiz before starting Entry Trainer.', true);
       return;
     }
-    if (!window.MainChartSession || !window.SimDateMask) {
+    if (!window.MainChartSession || !window.SimDateMask || !ordersApi()
+        || !window.Sim || !window.Sim.Ctrl || typeof window.Sim.Ctrl.fillFlatEntry !== 'function') {
       setSetupStatus('The chart session is still loading. Try again in a moment.', true);
       return;
     }
@@ -639,6 +983,15 @@
     if (skip) skip.disabled = true;
     const current = batch.candidates[batch.activeIndex];
     const runtime = state.runtime;
+    if (workingOrder(current)) {
+      terminalizeWorkingOrder(
+        current,
+        outcome === 'skipped' ? 'cancelled' : 'expired',
+        outcome === 'skipped' ? 'Ticker skipped before the order filled.' : 'Ticker finished before the order filled.'
+      );
+      reconcileOrders(batch, 'Entry Trainer reconciled reservations before candidate cleanup.');
+    }
+    clearLimitLine();
     runtime.playbackToken += 1;
     if (window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.stopFlatPlayback === 'function') {
       window.Sim.Ctrl.stopFlatPlayback();
@@ -669,6 +1022,7 @@
     } catch (error) {
       if (isStaleOperation(error, operation)) return;
       console.error('[EntryTrainer] candidate load failed:', error);
+      cleanupWorkingOrders('cancelled', 'Candidate load failed.');
       batch.status = 'abandoned';
       batch.abandonedAt = new Date().toISOString();
       state.lastBatch = batch;
@@ -700,13 +1054,15 @@
   }
 
   function waitOneBar(){
-    if (!state.runtime || !state.runtime.playbackState || !state.runtime.playbackState.canWait) return false;
+    const runtime = state.runtime;
+    const playback = runtime && runtime.playbackState;
+    if (!runtime || !playback || !playback.canWait) return false;
     return !!(window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.flatAction === 'function'
       && window.Sim.Ctrl.flatAction('wait'));
   }
 
   function enterAtClose(){
-    if (!state.runtime || !state.runtime.playbackState || !state.runtime.playbackState.canEnter) return false;
+    if (!state.runtime || !state.runtime.playbackState || !state.runtime.playbackState.canEnter || workingOrder(activeCandidate())) return false;
     return !!(window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.flatAction === 'function'
       && window.Sim.Ctrl.flatAction('enter'));
   }
@@ -758,7 +1114,7 @@
       batch.abandonedAt = new Date().toISOString();
     }
     if (batch) state.lastBatch = batch;
-    const cleanup = cleanupShell({closeModal:true, restoreFocus:true});
+    const cleanup = cleanupShell({closeModal:true, restoreFocus:true, orderReason:'Entry Trainer batch exited.'});
     if (!cleanup.ok) return false;
     state = { status:'idle', batch:null, lastBatch:batch || state.lastBatch, runtime:null };
     return true;
@@ -791,6 +1147,7 @@
     byId('entry-trainer-start')?.addEventListener('click', startFromSetup);
     byId('entry-trainer-wait')?.addEventListener('click', waitOneBar);
     byId('entry-trainer-enter')?.addEventListener('click', enterAtClose);
+    byId('entry-trainer-cancel-order')?.addEventListener('click', cancelPendingOrder);
     byId('entry-trainer-skip')?.addEventListener('click', skipTicker);
     byId('entry-trainer-try-again')?.addEventListener('click', tryAgain);
     byId('entry-trainer-finish')?.addEventListener('click', function(){ finishTicker(); });
