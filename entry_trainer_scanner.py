@@ -1,5 +1,7 @@
 """Point-in-time candidate selection for the Entry R:R Trainer."""
 
+import csv
+import logging
 import math
 import os
 import random
@@ -20,6 +22,20 @@ RULES = {
     "contextBars": CONTEXT_BARS,
     "forwardBars": FORWARD_BARS,
 }
+
+LOGGER = logging.getLogger(__name__)
+
+
+def resolve_stock_csv_paths(stock_dirs, symbol):
+    """Return existing local CSVs in the same priority order as playback."""
+    paths = []
+    for directory in stock_dirs:
+        for filename in (f"{symbol}.csv", f"{symbol.lower()}.csv"):
+            path = os.path.join(directory, filename)
+            if os.path.isfile(path):
+                paths.append(os.path.abspath(path))
+                break
+    return paths
 
 
 class CandidateAvailabilityError(Exception):
@@ -82,7 +98,7 @@ class EntryTrainerScanner:
                 sources, fingerprint = current_sources, current_fingerprint
 
     def _sources_and_fingerprint(self):
-        sources = []
+        symbols = set()
         for directory in self._stock_dirs:
             try:
                 entries = os.scandir(directory)
@@ -95,30 +111,54 @@ class EntryTrainerScanner:
                     symbol = entry.name[:-4].upper()
                     if not symbol or symbol in EXCLUDED_SYMBOLS:
                         continue
-                    try:
-                        stat = entry.stat()
-                    except OSError:
-                        continue
                     if not entry.is_file():
                         continue
-                    sources.append((os.path.abspath(entry.path), symbol, stat.st_mtime_ns, stat.st_size))
+                    symbols.add(symbol)
+
+        source_groups = []
+        sources = []
+        for symbol in sorted(symbols):
+            paths = []
+            for path in resolve_stock_csv_paths(self._stock_dirs, symbol):
+                try:
+                    stat = os.stat(path)
+                except OSError:
+                    continue
+                paths.append(path)
+                sources.append((path, stat.st_mtime_ns, stat.st_size))
+            if paths:
+                # Keep source grouping in STOCKS_DIRS order; it controls
+                # duplicate fallback and must stay aligned with playback.
+                source_groups.append((symbol, tuple(paths)))
 
         sources.sort()
-        fingerprint = tuple((path, mtime_ns, size) for path, _, mtime_ns, size in sources)
-        return [(path, symbol) for path, symbol, _, _ in sources], fingerprint
+        fingerprint = tuple(sources)
+        return source_groups, fingerprint
 
     def _build_catalogue(self, sources):
         candidates = []
-        seen_symbols = set()
-        for path, symbol in sources:
-            if symbol in seen_symbols:
+        for symbol, paths in sources:
+            usable_bars = None
+            usable_path = None
+            for path in paths:
+                try:
+                    bars = self._valid_bars(self._parse_bars(path))
+                except (OSError, UnicodeError, csv.Error, ValueError, TypeError, OverflowError) as exc:
+                    LOGGER.warning("Skipping Entry Trainer source %s (%s): %s", symbol, path, exc)
+                    continue
+                if bars:
+                    usable_bars = bars
+                    usable_path = path
+                    break
+
+            # A usable higher-priority source is what playback will load. Its
+            # lack of qualification must not cause a lower-priority fallback.
+            if usable_bars is None:
                 continue
-            seen_symbols.add(symbol)
             try:
-                bars = self._valid_bars(self._parse_bars(path))
-                candidate = self._find_candidate(symbol, bars)
-            except Exception:
-                # One unreadable or malformed ticker must not hide the rest.
+                candidate = self._find_candidate(symbol, usable_bars)
+            except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                LOGGER.warning("Skipping Entry Trainer source %s (%s): %s", symbol, usable_path, exc)
                 continue
             if candidate is not None:
                 candidates.append(candidate)

@@ -17,7 +17,11 @@ import threading
 import tempfile
 from datetime import date
 from flask import Flask, jsonify, send_from_directory, request, Response
-from entry_trainer_scanner import CandidateAvailabilityError, EntryTrainerScanner
+from entry_trainer_scanner import (
+    CandidateAvailabilityError,
+    EntryTrainerScanner,
+    resolve_stock_csv_paths,
+)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Make the local `classifier` package importable regardless of cwd
@@ -113,9 +117,14 @@ def _load_ndq_bars():
         return None
 
 
-def _parse_collected_stocks_csv(path):
+def _parse_collected_stocks_csv(path, tolerate_errors=True):
     """Parse a CSV in collected_stocks/ using the same auto-detect logic as
-    /api/ohlcv. Returns a list of bar dicts (possibly empty) — never raises."""
+    /api/ohlcv.
+
+    Tolerant callers receive an empty result for source read errors; strict
+    playback callers receive those errors so the route can preserve its 500
+    response rather than presenting a broken source as an empty chart.
+    """
     bars = []
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as f:
@@ -159,13 +168,18 @@ def _parse_collected_stocks_csv(path):
                     bars.append({"time": t, "open": o, "high": h, "low": l, "close": c, "volume": v})
                 except (ValueError, IndexError):
                     continue
-    except Exception:
-        return bars
+    except (OSError, UnicodeError, csv.Error):
+        if tolerate_errors:
+            return bars
+        raise
     bars.sort(key=lambda x: x["time"])
     return bars
 # ============ PORTSIM TRACK C: NDQ/QQQ data path — END ==============
 
-_ENTRY_TRAINER_SCANNER = EntryTrainerScanner(STOCKS_DIRS, _parse_collected_stocks_csv)
+_ENTRY_TRAINER_SCANNER = EntryTrainerScanner(
+    STOCKS_DIRS,
+    lambda path: _parse_collected_stocks_csv(path, tolerate_errors=False),
+)
 
 # Twelve Data API key (loaded from ../.env or ./.env)
 TWELVE_API_KEY = None
@@ -379,20 +393,22 @@ def api_ohlcv():
     # ============ PORTSIM TRACK C: NDQ/QQQ data path — END ==============
 
     # Search configured directories
-    path = None
-    for d in STOCKS_DIRS:
-        for fname in [f"{symbol}.csv", f"{symbol.lower()}.csv"]:
-            c = os.path.join(d, fname)
-            if os.path.exists(c):
-                path = c
-                break
-        if path:
-            break
-
-    if not path:
+    paths = resolve_stock_csv_paths(STOCKS_DIRS, symbol)
+    if not paths:
         return jsonify({"error": f"{symbol}.csv not found in any configured directory"}), 404
 
-    return jsonify(_parse_collected_stocks_csv(path))
+    for path in paths:
+        try:
+            bars = _parse_collected_stocks_csv(path, tolerate_errors=False)
+        except (OSError, UnicodeError) as exc:
+            return jsonify({"error": str(exc)}), 500
+        except csv.Error:
+            # A malformed higher-priority CSV is unusable, so continue with
+            # the next source exactly as the scanner does.
+            continue
+        if bars:
+            return jsonify(bars)
+    return jsonify([])
 
 
 @app.route("/api/stock-list")
@@ -426,6 +442,9 @@ def api_entry_trainer_candidates():
         candidates = _ENTRY_TRAINER_SCANNER.select_candidates(count=3)
     except CandidateAvailabilityError as exc:
         return jsonify({"error": str(exc)}), 409
+    except Exception:
+        app.logger.exception("Entry Trainer candidate scan failed")
+        return jsonify({"error": "entry trainer candidate scan failed"}), 500
     return jsonify({"rules": _ENTRY_TRAINER_SCANNER.rules, "candidates": candidates})
 
 
