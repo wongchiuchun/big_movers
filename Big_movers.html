@@ -12576,15 +12576,17 @@ const Sim = (function(){
   // ratchets the stop price toward favorable direction (long: up only;
   // short: down only) using the phase-appropriate completed EMA value.
   // Currently supports trail.type === 'ema' (Below/Above EMA · auto-trail).
-  function _maybeTrailStops(sim, bars, idx, fired) {
+  function _maybeTrailStops(sim, bars, idx, fired, triggerPhase, scopedStops) {
     if (!sim || !sim.stopLevels || !bars) return;
     const bar = bars[idx];
     if (!bar) return;
     const dir = sim.direction || 'long';
     sim.stopLevels.forEach(function(s) {
       if (!s || s.fired || !s.trail) return;
+      if (scopedStops && scopedStops.indexOf(s) < 0) return;
       if (s.trail.type !== 'ema') return;
       const phase = _trailPhase(s, idx);
+      if (phase.triggerMode !== triggerPhase) return;
       if (phase.referenceIdx < 0 || phase.referenceIdx < Number(s.barIdx || 0)) return;
       const referenceBar = bars[phase.referenceIdx];
       if (!referenceBar) return;
@@ -12616,6 +12618,8 @@ const Sim = (function(){
           stopId: s.id, newStop: s.price, pct: s.pct,
           stopTrail: clone(s.trail), trailUpdate: true,
           triggerMode: phase.triggerMode,
+          direction: dir,
+          legId: sim.legId || null,
           trailPhase: phase.phase,
           trailReferenceBarIdx: phase.referenceIdx,
           trailReferenceDate: referenceBar.time || null,
@@ -12647,6 +12651,11 @@ const Sim = (function(){
     if (p <= 0) return false;
     const bar = bars && bars[sim.playIdx];
     if (!bar) return false;
+    const referencePrice = Number(bar.close);
+    const direction = sim.direction || 'long';
+    if (!Number.isFinite(referencePrice) || referencePrice <= 0 ||
+        !Sim.Direction || typeof Sim.Direction.stopValidates !== 'function' ||
+        !Sim.Direction.stopValidates(direction, referencePrice, ns)) return false;
     let replaced = 0;
     if (!Array.isArray(sim.stopLevels)) sim.stopLevels = [];
     for (let i = sim.stopLevels.length - 1; i >= 0; i--) {
@@ -12772,8 +12781,11 @@ const Sim = (function(){
     return anyFired;
   }
 
-  function _processStopOnBar(sim, bar, barIdx, fired) {
-    return _processStopsOnBar(sim, bar, barIdx, fired, sim.stopLevels || []);
+  function _processStopOnBar(sim, bar, barIdx, fired, triggerPhase) {
+    const phaseStops = (sim.stopLevels || []).filter(function(stop){
+      return stop && normalizeStopTriggerMode(stop.triggerMode) === triggerPhase;
+    });
+    return _processStopsOnBar(sim, bar, barIdx, fired, phaseStops);
   }
 
   // Process exactly one newly attached stop on its fill candle.  This is
@@ -12787,9 +12799,17 @@ const Sim = (function(){
     const attached = sim && Array.isArray(sim.stopLevels) && sim.stopLevels.indexOf(stop) >= 0;
     const attachedOnBar = stop && Number(stop.barIdx) === Number(barIdx);
     if (!sim || !bar || !stop || !attached || !attachedOnBar) return { sim: sim, eventsFired: fired };
-    _processStopsOnBar(sim, bar, barIdx, fired, [stop], options && options.forceGap ? stop : null);
+    const forceGapStop = options && options.forceGap ? stop : null;
+    const evaluatesAtClose = normalizeStopTriggerMode(stop.triggerMode) === 'close' && !forceGapStop;
+    // A genuine EOD stop remains exposed to the candle's full range and only
+    // exits at close. Forced gap safety is an opening/intraday liquidation.
+    if (evaluatesAtClose && sim.qty > 0) {
+      _updateIntradayExtremes(sim, bar, barIdx);
+      _maybeTrailStops(sim, bars, barIdx, fired, 'close', [stop]);
+    }
+    _processStopsOnBar(sim, bar, barIdx, fired, [stop], forceGapStop);
     _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), barIdx);
-    _updateIntradayExtremes(sim, bar, barIdx);
+    if (!evaluatesAtClose) _updateIntradayExtremes(sim, bar, barIdx);
     _pushPnlPoint(sim, bar);
     return { sim: sim, eventsFired: fired };
   }
@@ -12854,13 +12874,27 @@ const Sim = (function(){
     const lastIdx = Math.min(targetIdx, bars.length - 1, sim.endBarIdx != null ? sim.endBarIdx : Infinity);
     while (sim.playIdx < lastIdx) {
       const nextIdx = sim.playIdx + 1; const bar = bars[nextIdx]; if (!bar) break;
-      // Phase the trail before its trigger check. Intraday stops use the prior
-      // completed bar; close-triggered stops may use this bar's completed close.
-      _maybeTrailStops(sim, bars, nextIdx, fired);
-      const stopFired = _processStopOnBar(sim, bar, nextIdx, fired);
+      // Opening/intraday phase: prior-close trail is known before this candle
+      // trades, and intraday stops get first claim on the position.
+      _maybeTrailStops(sim, bars, nextIdx, fired, 'intraday');
+      const intradayStopFired = _processStopOnBar(sim, bar, nextIdx, fired, 'intraday');
+
+      // A position still held into the close experienced the candle's full
+      // high/low range. Capture that exposure before any EOD liquidation.
+      if (!sim.closed && !sim.stoppedOut && sim.qty > 0) {
+        _updateIntradayExtremes(sim, bar, nextIdx);
+      }
+
+      // Closing phase: close-triggered trails may consume the completed close,
+      // then close stops evaluate exactly once at that same close.
+      let closeStopFired = false;
+      if (!sim.closed && !sim.stoppedOut && sim.qty > 0) {
+        _maybeTrailStops(sim, bars, nextIdx, fired, 'close');
+        closeStopFired = _processStopOnBar(sim, bar, nextIdx, fired, 'close');
+      }
+      const stopFired = intradayStopFired || closeStopFired;
       if (!stopFired) _processActionsOnBar(sim, bar, nextIdx, fired);
       _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), nextIdx);
-      _updateIntradayExtremes(sim, bar, nextIdx);
       sim.playIdx = nextIdx;
       _pushPnlPoint(sim, bar);
       if (sim.closed || sim.stoppedOut) break;
