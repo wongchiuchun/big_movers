@@ -308,6 +308,8 @@ Add ticker-level prompts for better buy points, secondary attempts, and trail re
 
 The management review must explicitly ask whether the trail was activated too early, too late, or appropriately; whether the manual exit followed observable price behavior or a desire to relieve discomfort; and how much MFE was retained.
 
+Repeat the daily-OHLC sequencing limitation in review, and ask whether each rule-labelled comparison point was genuinely actionable using only the candles visible at that time.
+
 - [ ] **Step 5: Add saved-review browsing and Markdown/CSV exports**
 
 Use existing escape/download conventions. Export actual attempts and order lifecycle separately from comparison diagnostics. Keep R and P&L columns distinct and preserve abandoned/skipped sessions.
