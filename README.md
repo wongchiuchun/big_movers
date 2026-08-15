@@ -67,6 +67,12 @@ Each tool has independent color, width, and line style (solid/dashed/dotted). Dr
 - **Blind live roles** — source roles stay hidden during setup and playback, then appear with the basket composition and reproducible seed in Trade Review
 - **Offline randomization** — selection reads only `big_movers_result.csv`, `market_anchor_universe.json`, and local OHLCV files; it never downloads missing data
 
+### Entry Trainer
+- **Point-in-time momentum drills** — selects from the full local `collected_stocks/` universe, never the outcome-selected `big_movers_result.csv` catalogue. A ticker qualifies at its first 63-session gain of at least 50% while closing above its point-in-time EMA10 and EMA20.
+- **Masked three-ticker batches** — three long-only symbols are hidden during playback, each with 90 forward daily bars. Daily OHLC cannot establish intraday ordering, so fills and stops follow disclosed daily-bar rules.
+- **Deliberate entry practice** — wait, skip, market-at-close, or place one persistent exact-price limit; every filled attempt starts with a fixed stop. The user may later replace it manually with an EMA trail, and each ticker permits at most three filled attempts.
+- **R-first review** — completed and abandoned drills separate realized R from dollar P&L, bars held, MFE/MAE, entry and stop self-review, and rule-labelled comparison diagnostics. Training is fully offline/local and does not download data.
+
 ### Export
 - **Screenshot** — composites chart + drawings + volume pane + header (symbol, gain, rating, tags) + footer (notes) into a single PNG download. Ctrl+Shift+S shortcut.
 
@@ -149,6 +155,8 @@ Synchronization uses a minimum nine-second request interval, respects provider l
 big_movers/
 ├── Big_movers.html             # Main frontend document; layout, CSS, and most JS
 ├── Big_movers_server.py        # Flask backend, port 5051
+├── entry_trainer_scanner.py     # Local-universe, point-in-time qualification and cached 3-ticker selection
+├── entry_trainer.js             # Masked Entry Trainer lifecycle, orders, review, persistence, and exports
 ├── portfolio_assets.js         # Portfolio asset identity/entry helpers
 ├── portfolio_orders.js         # Pending limit-order lifecycle and reservations
 ├── portfolio_basket.js         # Seeded balanced-basket selection engine
