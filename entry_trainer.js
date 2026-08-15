@@ -50,6 +50,13 @@
     comparisonActionable: ['yes', 'no', 'unclear']
   });
 
+  const ATTEMPT_TEXT_REVIEW_FIELDS = Object.freeze([
+    { key:'supportStructureNotes', csvKey:'support_structure_notes', label:'Support / structure', question:'What support, consolidation, or other structure did this entry use?', maxLength:2000 },
+    { key:'extensionNotes', csvKey:'extension_notes', label:'Extension from EMA / base', question:'How extended was price from EMA10, EMA20, or the prior base?', maxLength:2000 },
+    { key:'stabilizationNotes', csvKey:'stabilization_notes', label:'Pullback stabilization', question:'Had the pullback stabilized before entry? What did the visible candles show?', maxLength:2000 },
+    { key:'stopTightnessNotes', csvKey:'stop_tightness_notes', label:'Initial-stop tightness', question:'Was the initial stop structurally justified or artificially tight for R:R?', maxLength:2000 }
+  ]);
+
   function beginOperation(){
     if (activeOperation) {
       try { activeOperation.controller.abort(); } catch (error) {}
@@ -149,7 +156,7 @@
   }
 
   function emptyAttemptReview(){
-    return {
+    const review = {
       entryLocationRating: null,
       stopValidity: '',
       timing: '',
@@ -160,13 +167,15 @@
       manualExitDriver: '',
       mfeRetained: null
     };
+    ATTEMPT_TEXT_REVIEW_FIELDS.forEach(function(field){ review[field.key] = ''; });
+    return review;
   }
 
   function sanitizeAttemptReview(raw){
     raw = raw && typeof raw === 'object' ? raw : {};
     const rating = safeInteger(raw.entryLocationRating, 1);
     const retained = finiteNumber(raw.mfeRetained);
-    return {
+    const review = {
       entryLocationRating: rating != null && rating <= 5 ? rating : null,
       stopValidity: safeEnum(raw.stopValidity, REVIEW_ENUMS.stopValidity),
       timing: safeEnum(raw.timing, REVIEW_ENUMS.timing),
@@ -177,6 +186,10 @@
       manualExitDriver: safeEnum(raw.manualExitDriver, REVIEW_ENUMS.manualExitDriver),
       mfeRetained: retained != null && retained >= 0 && retained <= 100 ? retained : null
     };
+    ATTEMPT_TEXT_REVIEW_FIELDS.forEach(function(field){
+      review[field.key] = safeText(raw[field.key], field.maxLength);
+    });
+    return review;
   }
 
   function sanitizeEvent(raw){
@@ -884,7 +897,10 @@
     if (!Array.isArray(bars) || !Number.isInteger(qualificationIndex) || !Number.isInteger(endIndex)
         || qualificationIndex < 0 || endIndex >= bars.length) return [];
     const firstBarIdx = Math.max(qualificationIndex + 1, 1);
-    const finalBarIdx = endIndex;
+    // The end index is the first bar outside the exercise. It remains
+    // available to each earlier point's diagnostic, but cannot itself become
+    // a hypothetical comparison entry.
+    const finalBarIdx = endIndex - 1;
     if (firstBarIdx > finalBarIdx) return [];
     const points = [];
     [10, 20].forEach(function(period){
@@ -904,7 +920,7 @@
         if (!wasArmed || priorClose == null || close == null || low == null
             || priorEma == null || currentEma == null) continue;
         if (priorClose >= priorEma * 1.03 && low <= currentEma && close >= currentEma) {
-          points.push(createComparisonPoint(rule, bars, qualificationIndex, finalBarIdx, barIdx));
+          points.push(createComparisonPoint(rule, bars, qualificationIndex, endIndex, barIdx));
           armed = false;
         }
       }
@@ -1249,14 +1265,14 @@
       barIdx: barIdx,
       orderId: order.id,
       requestedPrice: order.limitPrice,
-      riskReferencePrice: order.limitPrice,
       executionTiming: 'limit_fill',
       fillTiming: fillTiming,
       extremaTiming: extremaTiming,
       extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx,
       processFillBarStop: processFillBarStop,
       recordIntradayExtremes: recordIntradayExtremes,
-      forceGap: gapThroughStop
+      forceGap: gapThroughStop,
+      causalDailyExecution: true
     });
     if (!prepared || !prepared.ok) {
       transitionOrder(candidate, 'invalidated', {
@@ -1375,6 +1391,7 @@
         fullExitOnly: true,
         pauseWhenFlat: true,
         maxLegs: MAX_ATTEMPTS,
+        causalDailyExecution: true,
         entryOrderMode: 'pending_limit',
         beforeFlatStep: function(context){
           if (!playbackIsCurrent(runtime, index, token)) return { allow:false };
@@ -1740,7 +1757,14 @@
   function skipTicker(){
     const playback = state.runtime && state.runtime.playbackState;
     if (!playback || !playback.flat || playback.attemptCompletePending) return;
-    return advanceCandidate('skipped', 'user_skip');
+    const reason = window.prompt('Why are you skipping this masked ticker?');
+    if (reason == null) return false;
+    const normalizedReason = safeText(reason, 500).trim();
+    if (!normalizedReason) {
+      window.alert('Enter a skip reason, or Cancel to keep the ticker active.');
+      return false;
+    }
+    return advanceCandidate('skipped', normalizedReason);
   }
 
   function finishTicker(reason){
@@ -1920,10 +1944,11 @@
       + '</select>';
   }
 
-  function textFieldHtml(label, field, value, scope, placeholder, wide){
+  function textFieldHtml(label, field, value, scope, placeholder, wide, maxLength){
+    const lengthAttribute = Number.isInteger(maxLength) && maxLength > 0 ? ' maxlength="' + maxLength + '"' : '';
     return '<div class="entry-trainer-review-field' + (wide ? ' is-wide' : '') + '">'
       + '<label>' + esc(label) + '</label>'
-      + '<textarea data-review-field="' + esc(field) + '" ' + scope + ' placeholder="' + esc(placeholder || '') + '">' + esc(value || '') + '</textarea>'
+      + '<textarea data-review-field="' + esc(field) + '" ' + scope + ' placeholder="' + esc(placeholder || '') + '"' + lengthAttribute + '>' + esc(value || '') + '</textarea>'
       + '</div>';
   }
 
@@ -2080,6 +2105,9 @@
           {value:'price_behavior',label:'Price behavior'}, {value:'discomfort',label:'Discomfort'}, {value:'mixed',label:'Mixed'}, {value:'not_applicable',label:'Not applicable'}
         ], 'Choose…', scope) + '</div>'
       + '<div class="entry-trainer-review-field"><label>MFE retained (%)</label><input type="number" min="0" max="100" step="0.1" data-review-field="mfeRetained" ' + scope + ' value="' + esc(review.mfeRetained == null ? '' : review.mfeRetained) + '"></div>'
+      + ATTEMPT_TEXT_REVIEW_FIELDS.map(function(field){
+        return textFieldHtml(field.label, field.key, review[field.key], scope, field.question, true, field.maxLength);
+      }).join('')
       + textFieldHtml('Repeat next time', 'repeatNextTime', review.repeatNextTime, scope, 'What deserves repetition?', true)
       + textFieldHtml('Change next time', 'changeNextTime', review.changeNextTime, scope, 'What specific decision changes next time?', true)
       + '</div></div>';
@@ -2279,7 +2307,10 @@
       value = safeEnum(value, REVIEW_ENUMS.comparisonActionable);
     } else if (REVIEW_ENUMS[field]) {
       value = safeEnum(value, REVIEW_ENUMS[field]);
-    } else value = safeText(value);
+    } else {
+      const textField = ATTEMPT_TEXT_REVIEW_FIELDS.find(function(item){ return item.key === field; });
+      value = safeText(value, textField ? textField.maxLength : undefined);
+    }
     owner[field] = value;
     markReviewDirty();
   }
@@ -2690,6 +2721,9 @@
         lines.push('- **trailTiming:** ' + mdCell(reviewValue(review.trailTiming)));
         lines.push('- **manualExitDriver:** ' + mdCell(reviewValue(review.manualExitDriver)));
         lines.push('- **mfeRetained:** ' + (review.mfeRetained == null ? '—' : formatNumber(review.mfeRetained, 1) + '%'));
+        ATTEMPT_TEXT_REVIEW_FIELDS.forEach(function(field){
+          lines.push('- **' + field.key + ':** ' + mdCell(reviewValue(review[field.key])));
+        });
         lines.push('');
       });
       lines.push('### Order lifecycle');
@@ -2743,10 +2777,12 @@
       'total_realized_r','average_r_per_attempt','positive_r_rate_pct','total_realized_pnl_dollars','median_bars_held','attempts_used','skipped_no_trade_count','self_rated_entry_quality',
       'starting_equity_dollars','recurring_entry_habit','next_drill_focus','candidate_symbol','candidate_status','qualification_date','context_start_date','horizon_end_date','skip_reason','finish_reason','candidate_exit_reason',
       'attempt_number','entry_date','entry_price_dollars','requested_price_dollars','fill_price_dollars','initial_stop_dollars','initial_stop_distance_dollars','initial_stop_distance_pct','initial_risk_dollars','quantity','exit_date','exit_price_dollars','exit_reason','realized_r','realized_pnl_dollars','bars_held','mfe_dollars','mfe_r','mae_dollars','mae_r','exit_efficiency_ratio','trail_activation_date','trail_activation_bar','trail_spec','trail_activation_open_r',
-      'entry_location_rating','stop_validity','timing','limit_assessment','repeat_next_time','change_next_time','trail_timing','manual_exit_driver','mfe_retained_pct','better_buy_points','secondary_entry_assessment','trail_reasonableness',
+      'entry_location_rating','stop_validity','timing','limit_assessment','repeat_next_time','change_next_time','trail_timing','manual_exit_driver','mfe_retained_pct'
+    ].concat(ATTEMPT_TEXT_REVIEW_FIELDS.map(function(field){ return field.csvKey; }), [
+      'better_buy_points','secondary_entry_assessment','trail_reasonableness',
       'order_event_type','order_id','order_event_date','order_event_bar','order_qty','order_requested_limit_dollars','order_actual_price_dollars','order_reason',
       'comparison_rule_label','comparison_date','comparison_entry_dollars','comparison_5_bar_stop_dollars','hindsight_mfe_r_using_5_bar_low_stop','comparison_end_reason','sequencing_assumption','stop_bar_high_included','comparison_actionable_then','comparison_actionability_notes','candidates_status_json'
-    ];
+    ]);
     const metrics = batchMetrics(batch);
     const finishedAt = batch.completedAt || batch.abandonedAt || '';
     const base = {
@@ -2773,7 +2809,7 @@
       (candidate.attempts || []).forEach(function(attempt){
         const review = attempt.review || emptyAttemptReview();
         const trail = attempt.trailActivatedAt || {};
-        rows.push(Object.assign({}, candidateBase, {
+        const row = Object.assign({}, candidateBase, {
           row_type:'attempt',attempt_number:attempt.attemptNumber,entry_date:attempt.entryDate || attempt.fillDate,
           entry_price_dollars:attempt.entryPrice,requested_price_dollars:attempt.requestedPrice,fill_price_dollars:attempt.fillPrice,
           initial_stop_dollars:attempt.initialStop,initial_stop_distance_dollars:attempt.initialStopDistanceDollars,
@@ -2785,7 +2821,9 @@
           entry_location_rating:review.entryLocationRating,stop_validity:review.stopValidity,timing:review.timing,
           limit_assessment:review.limitAssessment,repeat_next_time:review.repeatNextTime,change_next_time:review.changeNextTime,
           trail_timing:review.trailTiming,manual_exit_driver:review.manualExitDriver,mfe_retained_pct:review.mfeRetained
-        }));
+        });
+        ATTEMPT_TEXT_REVIEW_FIELDS.forEach(function(field){ row[field.csvKey] = review[field.key]; });
+        rows.push(row);
       });
       (candidate.orderEvents || []).forEach(function(event){
         rows.push(Object.assign({}, candidateBase, {

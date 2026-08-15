@@ -5829,6 +5829,7 @@
             <li><strong>Long-only</strong><br>maximum 3 filled attempts per ticker</li>
           </ul>
           <p class="entry-trainer-limit"><strong>Daily OHLC limitation:</strong> entries and stops use daily candles, so intraday price order is unknown. Conservative fill rules are required when trading is enabled.</p>
+          <p class="entry-trainer-limit"><strong>Buy-limit lifecycle:</strong> submitted buy limits persist until filled, cancelled, or the ticker exercise ends.</p>
           <div class="fetch-field">
             <label for="entry-trainer-equity">Starting equity ($)</label>
             <input id="entry-trainer-equity" type="number" min="1" step="100" value="300000" required inputmode="decimal" autocomplete="off">
@@ -12589,7 +12590,8 @@ const Sim = (function(){
         peakTotal: 0, peakBarIdx: params.startBarIdx, _maeVal: 0, _mfeVal: 0,
         legs: [], between: true, simStartBarIdx: params.startBarIdx,
         pnlSeries: [],
-        initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null
+        initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null,
+        causalDailyExecution: params.causalDailyExecution === true
       };
     }
 
@@ -12644,7 +12646,8 @@ const Sim = (function(){
       peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
       legs: [], between: false, simStartBarIdx: entry.barIdx,
       pnlSeries: [],
-      initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null
+      initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null,
+      causalDailyExecution: params.causalDailyExecution === true
     };
   }
 
@@ -12658,6 +12661,8 @@ const Sim = (function(){
     series.push({ date: bar.time, totalPnL: total, qty: sim.qty || 0 });
   }
 
+  // Entry Trainer opts into causal daily execution. The established simulator
+  // keeps its historical one-pass daily semantics unless that flag is set.
   // A close-triggered stop may use the just-completed current close when it
   // is evaluated at that close. Intraday stops must be known before the next
   // candle trades, so their trail is derived from the prior completed bar.
@@ -12674,7 +12679,7 @@ const Sim = (function(){
   // ratchets the stop price toward favorable direction (long: up only;
   // short: down only) using the phase-appropriate completed EMA value.
   // Currently supports trail.type === 'ema' (Below/Above EMA · auto-trail).
-  function _maybeTrailStops(sim, bars, idx, fired, triggerPhase, scopedStops) {
+  function _maybeCausalTrailStops(sim, bars, idx, fired, triggerPhase, scopedStops) {
     if (!sim || !sim.stopLevels || !bars) return;
     const bar = bars[idx];
     if (!bar) return;
@@ -12728,6 +12733,44 @@ const Sim = (function(){
         sim.eventsLog.push(ev);
         if (fired) fired.push(ev);
       }
+    });
+  }
+
+  function _maybeTrailStopsLegacy(sim, bars, idx, fired) {
+    if (!sim || !sim.stopLevels || !bars) return;
+    const bar = bars[idx];
+    if (!bar) return;
+    const dir = sim.direction || 'long';
+    sim.stopLevels.forEach(function(s) {
+      if (!s || s.fired || !s.trail || s.trail.type !== 'ema') return;
+      const period = s.trail.period || 10;
+      const kRaw = s.trail.k || 0;
+      let candidate;
+      if (dir === 'short'){
+        const e = Sim.StopRules.emaAt(bars, idx, period);
+        candidate = (e == null) ? null : Math.round(e * (1 + kRaw / 100) * 100) / 100;
+      } else {
+        candidate = Sim.StopRules.emaBelow(bars, idx, period, kRaw);
+      }
+      if (candidate == null || !isFinite(candidate)) return;
+      const prev = s.price || 0;
+      const moves = (dir === 'short')
+        ? (candidate < prev - 0.005)
+        : (candidate > prev + 0.005);
+      if (!moves) return;
+      const oldPrice = s.price;
+      s.price = Math.round(candidate * 100) / 100;
+      const arrow = dir === 'short' ? '+' : '−';
+      const ev = {
+        barIdx: idx, date: bar.time || null, type: 'movestop',
+        stopId: s.id, newStop: s.price, pct: s.pct,
+        triggerMode: normalizeStopTriggerMode(s.triggerMode),
+        note: (normalizeStopTriggerMode(s.triggerMode) === 'close' ? 'EOD ' : '') + 'auto-trail EMA' + period + (kRaw ? ' ' + arrow + kRaw + '%' : '')
+              + ': ' + (oldPrice != null ? oldPrice.toFixed(2) + ' → ' : '')
+              + s.price.toFixed(2)
+      };
+      sim.eventsLog.push(ev);
+      if (fired) fired.push(ev);
     });
   }
 
@@ -12845,7 +12888,7 @@ const Sim = (function(){
   }
   function _seedEntryExtremes(sim, bars) {
     const bar = bars[sim.entry.barIdx]; if (!bar) return;
-    if (normalizeExecutionTiming(sim.entry.executionTiming) !== 'intraday') {
+    if (sim.causalDailyExecution === true && normalizeExecutionTiming(sim.entry.executionTiming) !== 'intraday') {
       // Close fills and intrabar limit fills cannot claim the entry candle's
       // earlier high/low. Seed zero; the next bar is the first full candle.
       sim.peakTotal = 0;
@@ -12917,6 +12960,7 @@ const Sim = (function(){
   }
 
   function _processStopOnBar(sim, bar, barIdx, fired, triggerPhase) {
+    if (!triggerPhase) return _processStopsOnBar(sim, bar, barIdx, fired, sim.stopLevels || []);
     const phaseStops = (sim.stopLevels || []).filter(function(stop){
       return stop && normalizeStopTriggerMode(stop.triggerMode) === triggerPhase;
     });
@@ -12936,13 +12980,22 @@ const Sim = (function(){
     const attachedOnBar = stop && Number(stop.barIdx) === Number(barIdx);
     if (!sim || !bar || !stop || !attached || !attachedOnBar) return { sim: sim, eventsFired: fired };
     const forceGapStop = options && options.forceGap ? stop : null;
+    const causalDailyExecution = sim.causalDailyExecution === true
+      && options && options.causalDailyExecution === true;
+    if (!causalDailyExecution) {
+      _processStopsOnBar(sim, bar, barIdx, fired, [stop], forceGapStop);
+      _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), barIdx);
+      _updateIntradayExtremes(sim, bar, barIdx);
+      _pushPnlPoint(sim, bar);
+      return { sim: sim, eventsFired: fired };
+    }
     const recordIntradayExtremes = !options || options.recordIntradayExtremes !== false;
     const evaluatesAtClose = normalizeStopTriggerMode(stop.triggerMode) === 'close' && !forceGapStop;
     // A genuine EOD stop remains exposed to the candle's full range and only
     // exits at close. Forced gap safety is an opening/intraday liquidation.
     if (evaluatesAtClose && recordIntradayExtremes && sim.qty > 0) {
       _updateIntradayExtremes(sim, bar, barIdx);
-      _maybeTrailStops(sim, bars, barIdx, fired, 'close', [stop]);
+      _maybeCausalTrailStops(sim, bars, barIdx, fired, 'close', [stop]);
     }
     _processStopsOnBar(sim, bar, barIdx, fired, [stop], forceGapStop);
     _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), barIdx);
@@ -12956,7 +13009,7 @@ const Sim = (function(){
   // must not call this because pre-fill high/low ordering is unknown.
   function recordEntryBarExposure(sim, bars, barIdx) {
     const bar = Array.isArray(bars) ? bars[barIdx] : null;
-    if (!sim || !bar || sim.closed || sim.stoppedOut || !(sim.qty > 0) ||
+    if (!sim || sim.causalDailyExecution !== true || !bar || sim.closed || sim.stoppedOut || !(sim.qty > 0) ||
         !sim.entry || Number(sim.entry.barIdx) !== Number(barIdx)) return false;
     _updateIntradayExtremes(sim, bar, barIdx);
     _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), barIdx);
@@ -13025,27 +13078,28 @@ const Sim = (function(){
     const lastIdx = Math.min(targetIdx, bars.length - 1, sim.endBarIdx != null ? sim.endBarIdx : Infinity);
     while (sim.playIdx < lastIdx) {
       const nextIdx = sim.playIdx + 1; const bar = bars[nextIdx]; if (!bar) break;
-      // Opening/intraday phase: prior-close trail is known before this candle
-      // trades, and intraday stops get first claim on the position.
-      _maybeTrailStops(sim, bars, nextIdx, fired, 'intraday');
-      const intradayStopFired = _processStopOnBar(sim, bar, nextIdx, fired, 'intraday');
-
-      // A position still held into the close experienced the candle's full
-      // high/low range. Capture that exposure before any EOD liquidation.
-      if (!sim.closed && !sim.stoppedOut && sim.qty > 0) {
-        _updateIntradayExtremes(sim, bar, nextIdx);
+      let stopFired = false;
+      if (sim.causalDailyExecution === true) {
+        // Opening/intraday phase: prior-close trail is known before this candle
+        // trades, and intraday stops get first claim on the position.
+        _maybeCausalTrailStops(sim, bars, nextIdx, fired, 'intraday');
+        const intradayStopFired = _processStopOnBar(sim, bar, nextIdx, fired, 'intraday');
+        if (!sim.closed && !sim.stoppedOut && sim.qty > 0) {
+          _updateIntradayExtremes(sim, bar, nextIdx);
+        }
+        let closeStopFired = false;
+        if (!sim.closed && !sim.stoppedOut && sim.qty > 0) {
+          _maybeCausalTrailStops(sim, bars, nextIdx, fired, 'close');
+          closeStopFired = _processStopOnBar(sim, bar, nextIdx, fired, 'close');
+        }
+        stopFired = intradayStopFired || closeStopFired;
+      } else {
+        _maybeTrailStopsLegacy(sim, bars, nextIdx, fired);
+        stopFired = _processStopOnBar(sim, bar, nextIdx, fired);
       }
-
-      // Closing phase: close-triggered trails may consume the completed close,
-      // then close stops evaluate exactly once at that same close.
-      let closeStopFired = false;
-      if (!sim.closed && !sim.stoppedOut && sim.qty > 0) {
-        _maybeTrailStops(sim, bars, nextIdx, fired, 'close');
-        closeStopFired = _processStopOnBar(sim, bar, nextIdx, fired, 'close');
-      }
-      const stopFired = intradayStopFired || closeStopFired;
       if (!stopFired) _processActionsOnBar(sim, bar, nextIdx, fired);
       _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), nextIdx);
+      if (sim.causalDailyExecution !== true) _updateIntradayExtremes(sim, bar, nextIdx);
       sim.playIdx = nextIdx;
       _pushPnlPoint(sim, bar);
       if (sim.closed || sim.stoppedOut) break;
@@ -13143,7 +13197,8 @@ const Sim = (function(){
   function reset(sim, bars) {
     const preservedEndBarIdx = sim.endBarIdx;
     const preservedInitialEquity = sim.initialEquity || null;
-    const fresh = createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry), initialEquity: preservedInitialEquity });
+    const preservedCausalDailyExecution = sim.causalDailyExecution === true;
+    const fresh = createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry), initialEquity: preservedInitialEquity, causalDailyExecution: preservedCausalDailyExecution });
     Object.keys(sim).forEach(k => delete sim[k]);
     Object.assign(sim, fresh);
     sim.endBarIdx = preservedEndBarIdx;
@@ -19249,6 +19304,7 @@ Sim.Ctrl = (function(){
       fullExitOnly: !!policy.fullExitOnly,
       pauseWhenFlat: !!policy.pauseWhenFlat,
       maxLegs: maxLegs,
+      causalDailyExecution: policy.causalDailyExecution === true,
       entryOrderMode: policy.entryOrderMode === 'pending_limit' ? 'pending_limit' : null,
       onEntrySubmit: typeof policy.onEntrySubmit === 'function' ? policy.onEntrySubmit : null,
       beforeFlatStep: typeof policy.beforeFlatStep === 'function' ? policy.beforeFlatStep : null,
@@ -20378,13 +20434,6 @@ Sim.Ctrl = (function(){
           ? Math.max(submittedStop, fillPrice * 2, fillPrice + 0.01)
           : Math.max(0.000001, Math.min(submittedStop, fillPrice * 0.5)))
       : submittedStop;
-    const riskReference = Number(options.riskReferencePrice);
-    const plannedRiskPerShare = forceGap
-      ? Sim.Direction.initialRiskPerShare(direction, riskReference, submittedStop)
-      : null;
-    if (forceGap && (!Number.isFinite(plannedRiskPerShare) || plannedRiskPerShare <= 0)) {
-      return { ok:false, error:'Gap-stop risk reference is invalid.' };
-    }
     let stagedSim = null;
     try {
       stagedSim = JSON.parse(JSON.stringify(state.sim));
@@ -20407,7 +20456,7 @@ Sim.Ctrl = (function(){
     const sim = stagedSim;
     const timing = options.executionTiming || 'close';
     sim.entry.requestedPrice = Number.isFinite(Number(options.requestedPrice)) ? Number(options.requestedPrice) : fillPrice;
-    sim.entry.riskReferencePrice = forceGap ? riskReference : fillPrice;
+    sim.entry.riskReferencePrice = fillPrice;
     sim.entry.orderId = options.orderId || null;
     sim.entry.fillTiming = options.fillTiming || (timing === 'close' ? 'paused_close' : 'intraday');
     sim.entry.extremaTiming = options.extremaTiming || (timing === 'close' ? 'next_bar' : 'entry_bar');
@@ -20419,7 +20468,10 @@ Sim.Ctrl = (function(){
     if (forceGap) {
       sim.entry.stop = submittedStop;
       if (initialStop) initialStop.price = submittedStop;
-      sim.initialRisk = sim.shares0 * plannedRiskPerShare;
+      // Gap safety immediately closes this position at the actual opening
+      // fill. R therefore uses actual fill-to-stop distance, including a
+      // safe zero-risk result when the open equals the submitted stop.
+      sim.initialRisk = sim.shares0 * Math.abs(fillPrice - submittedStop);
     }
     const entryEvent = (sim.eventsLog || []).slice().reverse().find(function(event){ return event && event.type === 'entry'; });
     if (entryEvent) {
@@ -20435,7 +20487,8 @@ Sim.Ctrl = (function(){
     if (initialStop && options.processFillBarStop) {
       result = Sim.processAttachedStopOnBar(sim, state.bars, barIdx, initialStop, {
         forceGap: forceGap,
-        recordIntradayExtremes: options.recordIntradayExtremes !== false
+        recordIntradayExtremes: options.recordIntradayExtremes !== false,
+        causalDailyExecution: options.causalDailyExecution === true
       });
       result.derived = Sim.computeDerived(sim, state.bars);
     } else if (options.recordIntradayExtremes === true) {
@@ -21215,7 +21268,8 @@ Sim.Ctrl = (function(){
         moveKey: p.moveKey || 'BLIND', direction: 'long', noEntry: true,
         startBarIdx: p.startBarIdx, endBarIdx: policy ? null : (p.endBarIdx != null ? p.endBarIdx : null),
         startDate: sourceBars[p.startBarIdx] && sourceBars[p.startBarIdx].time,
-        initialEquity: p.initialEquity || null
+        initialEquity: p.initialEquity || null,
+        causalDailyExecution: !!(policy && policy.causalDailyExecution)
       });
     } catch (e) {
       alert((p._compatBlind ? 'Could not start blind sim: ' : 'Could not start flat playback: ') + e.message);
