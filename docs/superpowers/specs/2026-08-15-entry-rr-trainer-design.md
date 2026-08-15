@@ -81,6 +81,8 @@ The position starts with the fixed initial stop. The user may:
 
 The trail never activates automatically. The attempt ends immediately when the full position is manually exited or stopped out. Playback pauses and shows an attempt strip with realized R, dollar P&L, bars held, MFE in R, and MAE in R. The user can finish the ticker or continue from the same unseen future point for another attempt. The third filled attempt always ends the ticker.
 
+The exercise horizon is the close of the 90th bar after qualification. On that final bar, any working limit is cancelled unfilled and any open position is force-closed at the final close with exit reason `horizon_end`. No new attempt can begin on or after the final bar. This keeps every candidate comparable and guarantees a realized R result without inventing additional future data.
+
 Rewind is disabled in Entry Trainer mode. Seeing a future candle is irreversible within that exercise.
 
 ### Finish and review
@@ -95,7 +97,7 @@ Use `/api/stock-list` and the local `collected_stocks` files rather than `big_mo
 
 ### Point-in-time calculation
 
-For each symbol, process bars in ascending date order. At bar `i`:
+For each symbol, process bars in ascending date order. Seed EMA10 and EMA20 from the first valid close in the file and update them with the standard multiplier `2 / (period + 1)` on every subsequent close. A candidate must have at least 85 preceding bars, which supplies the masked chart's display context and fully warms both EMAs. At bar `i >= 85`:
 
 ```text
 gain63 = close[i] / close[i - 63] - 1
@@ -106,7 +108,7 @@ qualified = gain63 >= 0.50
 
 EMA values use closes through bar `i` only. No later price, future setup label, eventual high, or future return participates in qualification. The first bar that satisfies the rule is the symbol's qualification date for version one.
 
-A symbol is eligible only when it also has sufficient preceding display context and at least 90 subsequent local bars. Forward coverage is a playback-availability check only; future values are not inspected or ranked. The batch samples three unique eligible symbols uniformly, using a shuffled candidate order. Failure to obtain three candidates produces a clear non-mutating error rather than weakening the rules silently.
+A symbol is eligible only when it has at least 90 subsequent local bars after the qualification bar. Its exercise end index is exactly `qualificationIndex + 90`. Forward coverage is a playback-availability check only; future values are not inspected or ranked. The batch samples three unique eligible symbols uniformly, using a shuffled candidate order. Failure to obtain three candidates produces a clear non-mutating error rather than weakening the rules silently.
 
 ### Scanner seam and caching
 
@@ -220,6 +222,19 @@ Entry quality is reviewed independently of outcome. Each attempt asks:
 - Did a limit improve location or avoid necessary confirmation?
 - What should be repeated or changed?
 
+This is structured self-review, not an automated objective score. Persist these fields per attempt:
+
+```text
+entryLocationRating: 1 | 2 | 3 | 4 | 5
+stopValidity: structural | too_tight | too_wide | unclear
+timing: early | well_timed | late
+limitAssessment: improved | neutral | hurt_confirmation | not_used
+repeatNextTime: free text
+changeNextTime: free text
+```
+
+The batch may show the average self-rated entry location, but it must label it **Self-rated entry quality** and keep it separate from realized R.
+
 ### Management review
 
 - Was the trail rule reasonable?
@@ -229,14 +244,26 @@ Entry quality is reviewed independently of outcome. Each attempt asks:
 
 ### Comparison points
 
-The review chart may mark deterministic comparison points occurring after qualification and before exercise end:
+The review chart may mark deterministic comparison points occurring after qualification and before exercise end. For EMA period `p`, an EMA pullback comparison point is a bar where:
+
+```text
+prior close >= prior EMA(p) * 1.03
+current low <= current EMA(p)
+current close >= current EMA(p)
+```
+
+This defines “moved away” as at least 3% above the EMA on the immediately preceding bar and “test” as touching the EMA intraday while closing back above it. Mark the first qualifying EMA10 point and first qualifying EMA20 point, plus later points only after the condition has reset through another prior-close move of at least 3% above that EMA.
+
+The comparison points include:
 
 - First test of EMA10 that closes back above EMA10.
 - First test of EMA20 that closes back above EMA20.
-- Later repeat tests of those averages after price has first moved away.
+- Later repeat tests of those averages after the condition resets as defined above.
 - User attempts, cancelled limits, stops, exits, and trail activation.
 
-Comparison points must be labelled by rule, not as `optimal` or `perfect`. Their displayed forward R is explicitly hindsight diagnostic. They do not alter the user's entry-quality score. The manual review asks whether each point was actually actionable given the candles visible then and whether a valid secondary attempt existed.
+For a comparison point, use its closing price as the hypothetical entry and the lowest low of that bar and the preceding four bars as the hypothetical stop. Omit the R diagnostic when the stop is not finite or is not below entry. Otherwise begin stop evaluation on the next bar, end at the earlier of the first stop hit or the exercise horizon, and report maximum favorable excursion divided by the hypothetical initial risk. Label it **Hindsight MFE R using 5-bar-low stop**; do not present it as realized R or assume an exit at the maximum.
+
+Comparison points must be labelled by rule, not as `optimal` or `perfect`. Their diagnostic is explicitly hindsight-only and does not alter the user's self-rating or realized R. The manual review asks whether each point was actually actionable given the candles visible then and whether a valid secondary attempt existed.
 
 ## Daily-Bar Execution Rules
 
@@ -248,6 +275,7 @@ Comparison points must be labelled by rule, not as `optimal` or `perfect`. Their
 - The attached initial stop starts checking on the candle after fill by default.
 - Optional fill-candle stop and mandatory gap-through-stop behavior match Portfolio Simulation.
 - Existing fixed stops process before newly submitted actions on later bars.
+- On the final exercise bar, cancel any working order and force-close any position at that bar's close.
 - Daily OHLC ambiguity is disclosed in the setup and report.
 
 ## Error Handling and Invariants
@@ -267,7 +295,7 @@ Comparison points must be labelled by rule, not as `optimal` or `perfect`. Their
 
 ## Persistence and Export
 
-Save completed and intentionally abandoned batches locally under a versioned Entry Trainer key. Persist rules with each batch so later threshold changes do not reinterpret old sessions. Provide Markdown and CSV export using the same escaping and download conventions as existing reviews.
+Save completed and intentionally abandoned batches locally under a versioned Entry Trainer key. Persist rules with each batch so later threshold changes do not reinterpret old sessions. Active batches are not resumable in version one. Exiting early performs idempotent order/position cleanup, records the batch as `abandoned`, and saves the reviewable snapshots captured so far. Provide Markdown and CSV export using the same escaping and download conventions as existing reviews.
 
 Entry Trainer sessions may appear as a distinct `entry_trainer` type in the Stats picker, but their R-focused aggregates remain separate from individual/portfolio P&L aggregates. An initial release may expose saved batches from the trainer review rather than modifying every global Stats chart, provided no records are misclassified.
 
