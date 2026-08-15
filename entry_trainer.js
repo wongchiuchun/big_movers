@@ -339,9 +339,6 @@
     }
     if (new Set(candidates.map(function(candidate){ return candidate.symbol; })).size !== BATCH_SIZE) return null;
     const batchReview = raw.review && typeof raw.review === 'object' ? raw.review : {};
-    const attemptPnL = candidates.reduce(function(total, candidate){
-      return total + candidate.attempts.reduce(function(sum, attempt){ return sum + (attempt.realizedPnL || 0); }, 0);
-    }, 0);
     return {
       version: BATCH_VERSION,
       id: id,
@@ -351,7 +348,6 @@
       savedAt: safeIsoTimestamp(raw.savedAt),
       status: status,
       startingEquity: startingEquity,
-      endingEquity: startingEquity + attemptPnL,
       rules: rules,
       candidates: candidates,
       review: {
@@ -1766,22 +1762,49 @@
     return rows;
   }
 
-  function batchMetrics(batch){
-    const rows = allAttempts(batch);
-    const realizedRows = rows.filter(function(row){ return finiteNumber(row.attempt.realizedR) != null; });
-    const totalR = realizedRows.reduce(function(sum, row){ return sum + Number(row.attempt.realizedR); }, 0);
-    const totalPnL = rows.reduce(function(sum, row){ return sum + (finiteNumber(row.attempt.realizedPnL) || 0); }, 0);
-    const ratings = rows.map(function(row){ return finiteNumber(row.attempt.review && row.attempt.review.entryLocationRating); }).filter(function(value){ return value != null; });
+  function metricsForAttempts(attempts, skippedNoTrade){
+    attempts = Array.isArray(attempts) ? attempts : [];
+    const realizedAttempts = attempts.filter(function(attempt){ return finiteNumber(attempt.realizedR) != null; });
+    const totalR = realizedAttempts.reduce(function(sum, attempt){ return sum + Number(attempt.realizedR); }, 0);
+    const totalPnL = attempts.reduce(function(sum, attempt){ return sum + (finiteNumber(attempt.realizedPnL) || 0); }, 0);
+    const ratings = attempts.map(function(attempt){ return finiteNumber(attempt.review && attempt.review.entryLocationRating); }).filter(function(value){ return value != null; });
     return {
       totalR: totalR,
-      averageR: realizedRows.length ? totalR / realizedRows.length : null,
-      positiveRate: realizedRows.length ? realizedRows.filter(function(row){ return row.attempt.realizedR > 0; }).length / realizedRows.length * 100 : null,
+      averageR: realizedAttempts.length ? totalR / realizedAttempts.length : null,
+      positiveRate: realizedAttempts.length ? realizedAttempts.filter(function(attempt){ return attempt.realizedR > 0; }).length / realizedAttempts.length * 100 : null,
       totalPnL: totalPnL,
-      medianBarsHeld: median(rows.map(function(row){ return row.attempt.barsHeld; })),
-      attemptsUsed: rows.length,
-      skippedNoTrade: (batch.candidates || []).filter(function(candidate){ return candidate.status === 'skipped' || !(candidate.attempts || []).length; }).length,
+      medianBarsHeld: median(attempts.map(function(attempt){ return attempt.barsHeld; })),
+      attemptsUsed: attempts.length,
+      skippedNoTrade: skippedNoTrade || 0,
       averageRating: ratings.length ? ratings.reduce(function(sum, value){ return sum + value; }, 0) / ratings.length : null
     };
+  }
+
+  function batchMetrics(batch){
+    const attempts = allAttempts(batch).map(function(row){ return row.attempt; });
+    const skippedNoTrade = (batch.candidates || []).filter(function(candidate){
+      return candidate.status === 'skipped' || !(candidate.attempts || []).length;
+    }).length;
+    return metricsForAttempts(attempts, skippedNoTrade);
+  }
+
+  function candidateMetrics(candidate){
+    const attempts = candidate && Array.isArray(candidate.attempts) ? candidate.attempts : [];
+    const skippedNoTrade = candidate && (candidate.status === 'skipped' || !attempts.length) ? 1 : 0;
+    return metricsForAttempts(attempts, skippedNoTrade);
+  }
+
+  function compactTickerSummaryHtml(candidate){
+    const metrics = candidateMetrics(candidate);
+    return '<div class="entry-trainer-ticker-summary">'
+      + '<div class="entry-trainer-metric is-primary"><strong>' + esc(formatR(metrics.totalR)) + '</strong><span>Total realized R</span></div>'
+      + '<div class="entry-trainer-metric"><strong>' + esc(formatR(metrics.averageR)) + '</strong><span>Average R per attempt</span></div>'
+      + '<div class="entry-trainer-metric"><strong>' + esc(metrics.positiveRate == null ? '—' : metrics.positiveRate.toFixed(1) + '%') + '</strong><span>Positive-R rate</span></div>'
+      + '<div class="entry-trainer-metric"><strong>' + esc(formatMoney(metrics.totalPnL)) + '</strong><span>Total dollar P&amp;L</span></div>'
+      + '<div class="entry-trainer-metric"><strong>' + esc(metrics.medianBarsHeld == null ? '—' : formatNumber(metrics.medianBarsHeld, 1)) + '</strong><span>Median bars held</span></div>'
+      + '<div class="entry-trainer-metric"><strong>' + metrics.attemptsUsed + '</strong><span>Attempts used</span></div>'
+      + '<div class="entry-trainer-metric"><strong>' + (metrics.skippedNoTrade ? 'YES (1)' : 'NO (0)') + '</strong><span>Skipped / no-trade</span></div>'
+      + '</div>';
   }
 
   function selectHtml(field, value, options, blankLabel, scope){
@@ -1856,8 +1879,7 @@
     return '<div class="entry-trainer-review-table-wrap"><table class="entry-trainer-review-table"><thead><tr>'
       + '<th>Attempt</th><th>Entry</th><th>Initial stop</th><th>Stop distance</th><th>Exit</th><th>Realized R</th><th>$ P&amp;L</th><th>Bars</th><th>MFE $ / R</th><th>MAE $ / R</th><th>Exit efficiency</th><th>Trail activation</th>'
       + '</tr></thead><tbody>' + attempts.map(function(attempt){
-        const efficiency = finiteNumber(attempt.mfeR) > 0 && finiteNumber(attempt.realizedR) != null
-          ? attempt.realizedR / attempt.mfeR * 100 : null;
+        const efficiency = exitEfficiencyRatio(attempt);
         const trail = attempt.trailActivatedAt;
         return '<tr><td>' + esc(attempt.attemptNumber) + '</td>'
           + '<td>' + esc(attempt.entryDate || attempt.fillDate || '—') + ' @ ' + esc(formatNumber(attempt.entryPrice || attempt.fillPrice, 2)) + '</td>'
@@ -1867,9 +1889,15 @@
           + '<td>' + esc(formatR(attempt.realizedR)) + '</td><td>' + esc(formatMoney(attempt.realizedPnL)) + '</td><td>' + esc(attempt.barsHeld == null ? '—' : attempt.barsHeld) + '</td>'
           + '<td>' + esc(formatMoney(attempt.mfeDollars)) + ' / ' + esc(formatR(attempt.mfeR)) + '</td>'
           + '<td>' + esc(formatMoney(attempt.maeDollars)) + ' / ' + esc(formatR(attempt.maeR)) + '</td>'
-          + '<td>' + esc(efficiency == null ? '—' : efficiency.toFixed(2)) + '</td>'
+          + '<td>' + esc(efficiency == null ? '—' : efficiency.toFixed(2) + '×') + '</td>'
           + '<td>' + (trail ? esc((trail.date || '—') + ' · bar ' + trail.barIdx + ' / +' + trail.barsFromEntry + ' · ' + formatR(trail.openR) + ' · ' + JSON.stringify(attempt.trailSpec || {})) : 'Not activated') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
+  }
+
+  function exitEfficiencyRatio(attempt){
+    const realizedR = finiteNumber(attempt && attempt.realizedR);
+    const mfeR = finiteNumber(attempt && attempt.mfeR);
+    return mfeR != null && mfeR > 0 && realizedR != null ? realizedR / mfeR : null;
   }
 
   function orderLifecycleHtml(candidate){
@@ -1953,6 +1981,7 @@
     const candidateScope = 'data-review-scope="candidate" data-candidate-index="' + candidateIndex + '"';
     body.innerHTML = disclosureHtml()
       + '<div class="entry-trainer-review-attempt-head"><strong>' + esc(candidate.symbol) + '</strong><span>Qualification ' + esc(candidate.qualificationDate) + ' · context ' + esc(candidate.contextStartDate) + ' · horizon ' + esc(candidate.endDate) + ' · status ' + esc(candidate.status) + '</span></div>'
+      + compactTickerSummaryHtml(candidate)
       + '<div class="entry-trainer-review-chart" id="entry-trainer-review-chart"><div class="entry-trainer-review-placeholder">Loading local daily chart…</div></div>'
       + '<h4>Actual attempts</h4>' + attemptTableHtml(candidate)
       + (candidate.attempts || []).map(function(attempt, attemptIndex){ return attemptReviewHtml(attempt, candidateIndex, attemptIndex); }).join('')
@@ -1988,9 +2017,13 @@
       markers.push({ time:date, position:position, color:color, shape:shape, text:text, _sequence:sequence++ });
     }
     (candidate.orderEvents || []).forEach(function(event){
-      if (event.type === 'placed') push(event.date, 'belowBar', '#60a5fa', 'arrowUp', 'Limit requested ' + formatNumber(event.price, 2));
-      else if (event.type === 'filled') push(event.date, 'belowBar', '#6ee7b7', 'arrowUp', 'Limit fill ' + formatNumber(event.price, 2));
+      const markerPrice = finiteNumber(event.price) != null ? finiteNumber(event.price) : orderRequestedPrice(event);
+      if (event.type === 'placed') push(event.date, 'belowBar', '#60a5fa', 'arrowUp', 'Limit requested ' + formatNumber(orderRequestedPrice(event), 2));
+      else if (event.type === 'filled') push(event.date, 'belowBar', '#6ee7b7', 'arrowUp', 'Limit fill ' + formatNumber(orderActualPrice(event), 2));
       else if (event.type === 'gap_stop') push(event.date, 'aboveBar', '#fb7185', 'arrowDown', 'gap_stop ' + formatNumber(event.price, 2));
+      else if (event.type === 'cancelled') push(event.date, 'aboveBar', '#94a3b8', 'circle', 'Limit cancelled ' + formatNumber(markerPrice, 2));
+      else if (event.type === 'expired') push(event.date, 'aboveBar', '#f59e0b', 'circle', 'Limit expired ' + formatNumber(markerPrice, 2));
+      else if (event.type === 'invalidated') push(event.date, 'aboveBar', '#fb7185', 'circle', 'Limit invalidated ' + formatNumber(markerPrice, 2));
     });
     (candidate.attempts || []).forEach(function(attempt){
       const prefix = 'A' + attempt.attemptNumber + ' ';
@@ -2252,8 +2285,6 @@
     lines.push('- **Status:** ' + mdCell(batch.status));
     lines.push('- **Created:** ' + mdCell(batch.createdAt));
     lines.push('- **Finished:** ' + mdCell(batch.completedAt || batch.abandonedAt || '—'));
-    lines.push('- **Starting equity:** ' + formatMoney(batch.startingEquity));
-    lines.push('- **Ending equity:** ' + formatMoney(batch.endingEquity));
     lines.push('');
     lines.push('> Daily OHLC cannot determine intraday sequence. Comparison diagnostics use sequencingAssumption `stop_before_high`; `stopBarHighIncluded` is false. Entry quality self-rating is separate from outcome: a profitable chase may be low quality, while a structured stopped entry may be high quality. Early batch exit closes and captures an open attempt at the currently paused daily close with exitReason `abandoned`.');
     lines.push('');
@@ -2269,6 +2300,10 @@
     lines.push('| Attempts used | ' + metrics.attemptsUsed + ' |');
     lines.push('| Skipped / no-trade | ' + metrics.skippedNoTrade + ' |');
     lines.push('| Self-rated entry quality | ' + (metrics.averageRating == null ? '—' : metrics.averageRating.toFixed(2) + ' / 5') + ' |');
+    lines.push('');
+    lines.push('## Drill configuration');
+    lines.push('');
+    lines.push('- **Starting equity (sizing/notional validation only):** ' + formatMoney(batch.startingEquity));
     lines.push('');
     lines.push('## Batch reflection');
     lines.push('');
@@ -2292,7 +2327,7 @@
         lines.push('| # | Entry | Initial stop | Stop distance $ / % | Exit | Reason | Realized R | $ P&L | Bars | MFE $ / R | MAE $ / R | Exit efficiency | Trail activation |');
         lines.push('|---:|---|---:|---|---|---|---:|---:|---:|---|---|---:|---|');
         candidate.attempts.forEach(function(attempt){
-          const efficiency = finiteNumber(attempt.mfeR) > 0 && finiteNumber(attempt.realizedR) != null ? attempt.realizedR / attempt.mfeR : null;
+          const efficiency = exitEfficiencyRatio(attempt);
           const trail = attempt.trailActivatedAt;
           lines.push('| ' + attempt.attemptNumber
             + ' | ' + mdCell(attempt.entryDate || attempt.fillDate || '—') + ' @ ' + formatNumber(attempt.entryPrice || attempt.fillPrice, 2)
@@ -2305,7 +2340,7 @@
             + ' | ' + reviewValue(attempt.barsHeld)
             + ' | ' + formatMoney(attempt.mfeDollars) + ' / ' + formatR(attempt.mfeR)
             + ' | ' + formatMoney(attempt.maeDollars) + ' / ' + formatR(attempt.maeR)
-            + ' | ' + (efficiency == null ? '—' : efficiency.toFixed(2))
+            + ' | ' + (efficiency == null ? '—' : efficiency.toFixed(2) + '×')
             + ' | ' + (trail ? mdCell((trail.date || '—') + ', bar ' + trail.barIdx + ' / +' + trail.barsFromEntry + ', ' + formatR(trail.openR) + ', ' + JSON.stringify(attempt.trailSpec || {})) : 'Not activated') + ' |');
         });
       }
@@ -2372,10 +2407,10 @@
 
   function buildCsv(batch){
     const columns = [
-      'schema_version','row_type','batch_id','batch_status','batch_created_at','batch_finished_at','starting_equity_dollars','ending_equity_dollars',
+      'schema_version','row_type','batch_id','batch_status','batch_created_at','batch_finished_at',
       'total_realized_r','average_r_per_attempt','positive_r_rate_pct','total_realized_pnl_dollars','median_bars_held','attempts_used','skipped_no_trade_count','self_rated_entry_quality',
-      'recurring_entry_habit','next_drill_focus','candidate_symbol','candidate_status','qualification_date','context_start_date','horizon_end_date','skip_reason','finish_reason','candidate_exit_reason',
-      'attempt_number','entry_date','entry_price_dollars','requested_price_dollars','fill_price_dollars','initial_stop_dollars','initial_stop_distance_dollars','initial_stop_distance_pct','initial_risk_dollars','quantity','exit_date','exit_price_dollars','exit_reason','realized_r','realized_pnl_dollars','bars_held','mfe_dollars','mfe_r','mae_dollars','mae_r','exit_efficiency','trail_activation_date','trail_activation_bar','trail_spec','trail_activation_open_r',
+      'starting_equity_dollars','recurring_entry_habit','next_drill_focus','candidate_symbol','candidate_status','qualification_date','context_start_date','horizon_end_date','skip_reason','finish_reason','candidate_exit_reason',
+      'attempt_number','entry_date','entry_price_dollars','requested_price_dollars','fill_price_dollars','initial_stop_dollars','initial_stop_distance_dollars','initial_stop_distance_pct','initial_risk_dollars','quantity','exit_date','exit_price_dollars','exit_reason','realized_r','realized_pnl_dollars','bars_held','mfe_dollars','mfe_r','mae_dollars','mae_r','exit_efficiency_ratio','trail_activation_date','trail_activation_bar','trail_spec','trail_activation_open_r',
       'entry_location_rating','stop_validity','timing','limit_assessment','repeat_next_time','change_next_time','trail_timing','manual_exit_driver','mfe_retained_pct','better_buy_points','secondary_entry_assessment','trail_reasonableness',
       'order_event_type','order_id','order_event_date','order_event_bar','order_qty','order_requested_limit_dollars','order_actual_price_dollars','order_reason',
       'comparison_rule_label','comparison_date','comparison_entry_dollars','comparison_5_bar_stop_dollars','hindsight_mfe_r_using_5_bar_low_stop','comparison_end_reason','sequencing_assumption','stop_bar_high_included','comparison_actionable_then','comparison_actionability_notes','candidates_status_json'
@@ -2384,7 +2419,7 @@
     const finishedAt = batch.completedAt || batch.abandonedAt || '';
     const base = {
       schema_version:BATCH_VERSION,batch_id:batch.id,batch_status:batch.status,batch_created_at:batch.createdAt,batch_finished_at:finishedAt,
-      starting_equity_dollars:batch.startingEquity,ending_equity_dollars:batch.endingEquity,recurring_entry_habit:batch.review.recurringEntryHabit,next_drill_focus:batch.review.nextDrillFocus
+      starting_equity_dollars:batch.startingEquity,recurring_entry_habit:batch.review.recurringEntryHabit,next_drill_focus:batch.review.nextDrillFocus
     };
     const rows = [];
     rows.push(Object.assign({}, base, {
@@ -2412,7 +2447,7 @@
           initial_stop_distance_pct:attempt.initialStopDistancePct,initial_risk_dollars:attempt.initialRisk,quantity:attempt.quantity,
           exit_date:attempt.exitDate,exit_price_dollars:attempt.exitPrice,exit_reason:attempt.exitReason,realized_r:attempt.realizedR,
           realized_pnl_dollars:attempt.realizedPnL,bars_held:attempt.barsHeld,mfe_dollars:attempt.mfeDollars,mfe_r:attempt.mfeR,
-          mae_dollars:attempt.maeDollars,mae_r:attempt.maeR,exit_efficiency:finiteNumber(attempt.mfeR) > 0 ? attempt.realizedR / attempt.mfeR : null,
+          mae_dollars:attempt.maeDollars,mae_r:attempt.maeR,exit_efficiency_ratio:exitEfficiencyRatio(attempt),
           trail_activation_date:trail.date,trail_activation_bar:trail.barIdx,trail_spec:attempt.trailSpec ? JSON.stringify(attempt.trailSpec) : '',trail_activation_open_r:trail.openR,
           entry_location_rating:review.entryLocationRating,stop_validity:review.stopValidity,timing:review.timing,
           limit_assessment:review.limitAssessment,repeat_next_time:review.repeatNextTime,change_next_time:review.changeNextTime,
