@@ -328,6 +328,8 @@
 
   function hideAttemptResult(){
     byId('entry-trainer-result')?.classList.remove('is-visible');
+    const tryAgain = byId('entry-trainer-try-again');
+    if (tryAgain) tryAgain.hidden = false;
     const primary = byId('entry-trainer-primary-actions');
     if (primary) primary.style.display = '';
   }
@@ -359,7 +361,26 @@
       && state.runtime && state.runtime.playbackState
       && !state.runtime.playbackState.atHorizon;
     const tryAgain = byId('entry-trainer-try-again');
-    if (tryAgain) tryAgain.disabled = !canTry;
+    if (tryAgain) {
+      tryAgain.hidden = !canTry;
+      tryAgain.disabled = !canTry;
+    }
+    result.classList.add('is-visible');
+    updateStrip();
+  }
+
+  function showHorizonEnded(){
+    const result = byId('entry-trainer-result');
+    if (!result) return;
+    const r = byId('entry-trainer-result-r');
+    const detail = byId('entry-trainer-result-detail');
+    if (r) r.textContent = 'HORIZON';
+    if (detail) detail.textContent = '90 forward bars complete · no open position';
+    const tryAgain = byId('entry-trainer-try-again');
+    if (tryAgain) {
+      tryAgain.hidden = true;
+      tryAgain.disabled = true;
+    }
     result.classList.add('is-visible');
     updateStrip();
   }
@@ -372,14 +393,6 @@
       && state.status === 'active';
   }
 
-  function scheduleAutomaticFinish(runtime, candidateIndex, token, reason){
-    if (!playbackIsCurrent(runtime, candidateIndex, token) || runtime.finishTimer) return;
-    runtime.finishTimer = setTimeout(function(){
-      runtime.finishTimer = null;
-      if (playbackIsCurrent(runtime, candidateIndex, token)) finishTicker(reason);
-    }, 650);
-  }
-
   function activateCandidatePlayback(batch, runtime, index){
     if (!window.Sim || !window.Sim.Ctrl || typeof window.Sim.Ctrl.startFlatPlayback !== 'function') {
       throw new Error('The flat playback controller is not ready');
@@ -387,6 +400,7 @@
     hideAttemptResult();
     runtime.playbackState = null;
     runtime.lastAttempt = null;
+    runtime.horizonEnded = false;
     runtime.playbackToken = (runtime.playbackToken || 0) + 1;
     const token = runtime.playbackToken;
     const candidate = batch.candidates[index];
@@ -414,13 +428,12 @@
           candidate.status = 'active';
           runtime.lastAttempt = snapshot;
           showAttemptResult(snapshot);
-          if (snapshot.attemptNumber >= MAX_ATTEMPTS || snapshot.exitReason === 'horizon_end') {
-            scheduleAutomaticFinish(runtime, index, token, snapshot.exitReason === 'horizon_end' ? 'horizon_end' : 'max_attempts');
-          }
         },
         onHorizonComplete: function(){
           if (!playbackIsCurrent(runtime, index, token)) return;
-          scheduleAutomaticFinish(runtime, index, token, 'horizon_end');
+          runtime.horizonEnded = true;
+          if (!runtime.lastAttempt) showHorizonEnded();
+          else updateStrip();
         }
       }
     });
@@ -490,10 +503,6 @@
     options = options || {};
     const runtime = state.runtime;
     let restored = { ok:true, restored:false, error:null };
-    if (runtime && runtime.finishTimer) {
-      clearTimeout(runtime.finishTimer);
-      runtime.finishTimer = null;
-    }
     if (window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.stopFlatPlayback === 'function') {
       try { window.Sim.Ctrl.stopFlatPlayback(); } catch (error) {}
     }
@@ -580,7 +589,7 @@
       playbackState: null,
       playbackToken: 0,
       lastAttempt: null,
-      finishTimer: null
+      horizonEnded: false
     };
     state.status = 'loading';
     state.runtime = runtime;
@@ -630,10 +639,6 @@
     if (skip) skip.disabled = true;
     const current = batch.candidates[batch.activeIndex];
     const runtime = state.runtime;
-    if (runtime.finishTimer) {
-      clearTimeout(runtime.finishTimer);
-      runtime.finishTimer = null;
-    }
     runtime.playbackToken += 1;
     if (window.Sim && window.Sim.Ctrl && typeof window.Sim.Ctrl.stopFlatPlayback === 'function') {
       window.Sim.Ctrl.stopFlatPlayback();
@@ -684,7 +689,14 @@
   }
 
   function finishTicker(reason){
-    return advanceCandidate('completed', reason || 'user_finish');
+    const runtime = state.runtime;
+    const playback = runtime && runtime.playbackState;
+    const derivedReason = playback && playback.atHorizon
+      ? 'horizon_end'
+      : (runtime && runtime.lastAttempt && runtime.lastAttempt.attemptNumber >= MAX_ATTEMPTS)
+        ? 'max_attempts'
+        : 'user_finish';
+    return advanceCandidate('completed', reason || derivedReason);
   }
 
   function waitOneBar(){
@@ -781,7 +793,7 @@
     byId('entry-trainer-enter')?.addEventListener('click', enterAtClose);
     byId('entry-trainer-skip')?.addEventListener('click', skipTicker);
     byId('entry-trainer-try-again')?.addEventListener('click', tryAgain);
-    byId('entry-trainer-finish')?.addEventListener('click', function(){ finishTicker('user_finish'); });
+    byId('entry-trainer-finish')?.addEventListener('click', function(){ finishTicker(); });
     byId('entry-trainer-exit')?.addEventListener('click', exit);
     modal.addEventListener('click', function(event){
       if (event.target === modal) cancelSetup();

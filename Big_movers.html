@@ -12446,6 +12446,10 @@ const Sim = (function(){
     return mode === 'close' ? 'close' : 'intraday';
   }
 
+  function normalizeExecutionTiming(timing) {
+    return timing === 'close' ? 'close' : 'intraday';
+  }
+
   function _mintLegId(){
     return 'leg_' + Math.random().toString(36).slice(2, 10);
   }
@@ -12523,7 +12527,8 @@ const Sim = (function(){
       entry: {
         barIdx: entry.barIdx, date: entry.date || null, price: entry.price,
         sizeMode: entry.sizeMode || 'shares', sizeValue: entry.sizeValue, stop: entry.stop,
-        stopTriggerMode: normalizeStopTriggerMode(entry.stopTriggerMode)
+        stopTriggerMode: normalizeStopTriggerMode(entry.stopTriggerMode),
+        executionTiming: normalizeExecutionTiming(entry.executionTiming)
       },
       endBarIdx,
       shares0: shares, initialRisk,
@@ -12535,6 +12540,7 @@ const Sim = (function(){
       playIdx: entry.barIdx, stoppedOut: false, closed: false,
       pendingActions: [],
       eventsLog: [{ barIdx: entry.barIdx, date: entry.date || null, type: 'entry', qty: shares, price: entry.price, direction: direction, legId: legId,
+                    executionTiming: normalizeExecutionTiming(entry.executionTiming),
                     triggerMode: normalizeStopTriggerMode(entry.stopTriggerMode),
                     note: 'entry ' + shares + '@' + r2(entry.price) + ' ' + (normalizeStopTriggerMode(entry.stopTriggerMode) === 'close' ? 'EOD ' : '') + 'stop ' + r2(entry.stop) }],
       peakTotal: 0, peakBarIdx: entry.barIdx, _maeVal: 0, _mfeVal: 0,
@@ -12634,6 +12640,16 @@ const Sim = (function(){
   }
   function _seedEntryExtremes(sim, bars) {
     const bar = bars[sim.entry.barIdx]; if (!bar) return;
+    if (normalizeExecutionTiming(sim.entry.executionTiming) === 'close') {
+      // A close fill occurs after the candle's high/low have happened. Seed a
+      // zero close-to-close excursion; the next bar is the first tradable bar.
+      sim.peakTotal = 0;
+      sim.peakBarIdx = sim.entry.barIdx;
+      sim._mfeVal = 0;
+      sim._maeVal = 0;
+      _pushPnlPoint(sim, bar);
+      return;
+    }
     _updateExtremes(sim, _computeTotalPnLAtBar(sim, bar), sim.entry.barIdx);
     _updateIntradayExtremes(sim, bar, sim.entry.barIdx);
     _pushPnlPoint(sim, bar);
@@ -12952,7 +12968,8 @@ const Sim = (function(){
     sim.entry = {
       barIdx: params.barIdx, date: params.date || null, price: params.price,
       sizeMode: params.sizeMode || 'shares', sizeValue: params.sizeValue, stop: params.stop,
-      stopTriggerMode: normalizeStopTriggerMode(params.stopTriggerMode)
+      stopTriggerMode: normalizeStopTriggerMode(params.stopTriggerMode),
+      executionTiming: normalizeExecutionTiming(params.executionTiming)
     };
     sim.shares0 = shares;
     sim.initialRisk = initialRisk;
@@ -12983,6 +13000,7 @@ const Sim = (function(){
     sim.eventsLog.push({
       barIdx: params.barIdx, date: params.date || null, type: 'entry',
       qty: shares, price: params.price, direction: direction, legId: sim.legId,
+      executionTiming: normalizeExecutionTiming(params.executionTiming),
       triggerMode: normalizeStopTriggerMode(params.stopTriggerMode),
       note: 'leg ' + legNum + ' entry ' + shares + '@' + r2(params.price) + ' ' + (normalizeStopTriggerMode(params.stopTriggerMode) === 'close' ? 'EOD ' : '') + 'stop ' + r2(params.stop)
     });
@@ -13005,7 +13023,7 @@ const Sim = (function(){
     return true;
   }
 
-  return { createSim, queueAction, advanceTo, processAttachedStopOnBar, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode };
+  return { createSim, queueAction, advanceTo, processAttachedStopOnBar, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode, normalizeExecutionTiming };
 })();
 
 // Expose the Sim core on window so cross-module code (PortSim.Ctrl, Track J,
@@ -19015,6 +19033,13 @@ Sim.Ctrl = (function(){
       el.hidden = rule[1];
       el.disabled = rule[1];
     });
+    const stopManager = document.getElementById('sim-stops-manage-list');
+    const stopManagerRow = stopManager && stopManager.closest('.sim-row-stops');
+    if (stopManagerRow) {
+      const suppressed = !!(policy && policy.fullExitOnly);
+      stopManagerRow.hidden = suppressed;
+      stopManagerRow.inert = suppressed;
+    }
   }
 
   function _flatState(reason) {
@@ -19080,6 +19105,7 @@ Sim.Ctrl = (function(){
     const snapshot = {
       attemptNumber: (sim.legs || []).length + 1,
       direction: sim.direction || 'long',
+      executionTiming: sim.entry.executionTiming || 'intraday',
       legId: sim.legId || null,
       entryBarIdx: sim.entry.barIdx,
       entryDate: sim.entry.date || null,
@@ -19177,8 +19203,9 @@ Sim.Ctrl = (function(){
     }
   }
   function _deleteStopLine(id) {
+    if (state.policy && state.policy.fullExitOnly) return false;
     const idx = state._stopHistory.findIndex(s => s.id === id);
-    if (idx < 0) return;
+    if (idx < 0) return false;
     const s = state._stopHistory[idx];
     if (s.priceLine && candleSeries) {
       try { candleSeries.removePriceLine(s.priceLine); } catch(e) {}
@@ -19189,6 +19216,7 @@ Sim.Ctrl = (function(){
     state._stopHistory.splice(idx, 1);
     _renderManageStops();
     _render(null);
+    return true;
   }
   function _clearStopHistory() {
     (state._stopHistory || []).forEach(s => {
@@ -19200,6 +19228,7 @@ Sim.Ctrl = (function(){
     _renderManageStops();
   }
   function _saveStopEdit(visualId, newPrice, newPct) {
+    if (state.policy && state.policy.fullExitOnly) return false;
     const s = state._stopHistory.find(h => h.id === visualId);
     if (!s || !s.simStopId || !state.sim) return false;
     if (!Number.isFinite(newPrice) || newPrice <= 0) return false;
@@ -19215,6 +19244,7 @@ Sim.Ctrl = (function(){
     const el = document.getElementById('sim-stops-manage-list');
     if (!el) return;
     while (el.firstChild) el.removeChild(el.firstChild);
+    if (state.policy && state.policy.fullExitOnly) return;
     if (!state._stopHistory || !state._stopHistory.length) {
       const empty = document.createElement('span');
       empty.className = 'sim-stop-history-empty';
@@ -19985,7 +20015,8 @@ Sim.Ctrl = (function(){
           sizeValue: form.sizeValue,
           stop: form.stop,
           direction: state.policy.longOnly ? 'long' : form.direction,
-          stopTrail: null
+          stopTrail: null,
+          executionTiming: 'close'
         });
       } catch (error) {
         alert('Could not start new leg: ' + error.message);
@@ -19997,7 +20028,6 @@ Sim.Ctrl = (function(){
       _buildRLevels();
       _addLegEntryMarker((state.sim.legs || []).length + 1, state.sim.entry.barIdx);
       _appendCurvePoint(state.sim.playIdx);
-      _checkRHits(state.bars[state.sim.playIdx]);
       _render(null);
       _notifyFlatState('attempt-entered');
     });
@@ -20482,6 +20512,26 @@ Sim.Ctrl = (function(){
       cardBars: state.bars,
       cardMoveKey: state.sim.moveKey
     }, form => {
+      if (state.policy && state.policy.fullExitOnly) {
+        const applyNow = window.PortSim && window.PortSim.Util && window.PortSim.Util.applyMoveStopNow;
+        if (typeof applyNow !== 'function') {
+          alert('Move Stop is not ready. The existing full-position stop was preserved.');
+          return;
+        }
+        const stopId = applyNow(
+          state.sim, state.bars, form.newStop, 1.0,
+          form.stopTrail || null, form.stopTriggerMode
+        );
+        if (!stopId) {
+          alert('Could not replace the full-position stop. The existing stop was preserved.');
+          return;
+        }
+        _clearStopHistory();
+        _addStopLine(form.newStop, state.sim.playIdx, 1.0, 'moved', stopId);
+        _render(null);
+        _notifyFlatState('stop-replaced');
+        return;
+      }
       Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop, pct: form.pct, stopTrail: form.stopTrail || null });
       _stepForward(1);
     });
@@ -20724,6 +20774,8 @@ Sim.Ctrl = (function(){
     sim.eventsLog.push({
       barIdx: sim.playIdx, date: bar.time, type: 'movestop',
       qty: sim.qty, price: null, newStop: rounded, pct: p, stopId: stopId, triggerMode: triggerMode,
+      direction: sim.direction || 'long', legId: sim.legId || null,
+      stopTrail: trail ? { type: trail.type, period: trail.period, k: trail.k } : null,
       note: (triggerMode === 'close' ? 'EOD stop ' : 'stop ') + rounded + ' ' + verb + ' (' + Math.round(p * 100) + '%)' + trailLbl + replacedLbl
     });
     return stopId;
