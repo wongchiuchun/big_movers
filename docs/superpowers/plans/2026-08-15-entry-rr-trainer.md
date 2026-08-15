@@ -116,6 +116,8 @@ window.MainChartSession = {
 
 `loadSymbol` must clear result-catalogue markers, AI overlays, drawings, and study metadata; set daily bars and volume; and return the full sorted bar array. It must not require a row in `big_movers_result.csv`.
 
+Add a neutral masked-date provider at the same seam rather than masking only the chart axis. Refactor the three existing direct consumers of `SimBlind.formatDate/formatBarIdx` (crosshair label, simulation day readout, and entry/new-leg modal date label) to consult a shared `SimDateMask` interface. `SimBlind` and `EntryTrainer` install adapters into that interface; ordinary mode returns no override. Entry Trainer must mask the chart title, range, axis ticks, crosshair, current-day readout, entry form date, stop/event labels, and any toast/status text during playback. Absolute dates may appear only after reveal/review.
+
 - [ ] **Step 4: Create the batch state and lifecycle interface**
 
 In `entry_trainer.js`, expose only:
@@ -216,7 +218,9 @@ For the active candidate, create a serializable order owner with `pendingOrder`,
 
 - [ ] **Step 3: Route trainer entry submission**
 
-Market-at-close creates the leg immediately at the paused close. Limit mode stores fixed quantity, exact limit, initial stop, stop strategy/trail metadata, stop trigger mode, and optional fill-candle stop. Validate positive whole shares, notional within starting equity, and stop below limit.
+Market-at-close creates the leg immediately at the paused close. Limit mode stores fixed quantity, exact limit, initial stop, stop trigger mode, and optional fill-candle stop. Validate positive whole shares, notional within starting equity, and stop below limit.
+
+Trainer entry/new-attempt forms must not offer `ema_trail` as an initial stop strategy, and every created entry order must persist `stopTrail: null`. Snapshot EMA values remain available as fixed initial-stop helpers. The only path that can attach an EMA auto-trail is the existing Move Stop action after a position is active and the user explicitly selects `ema_trail` on that later bar.
 
 - [ ] **Step 4: Evaluate the order before normal position advancement**
 
@@ -285,7 +289,7 @@ Show total realized R first, then average R/attempt, positive-R rate, total doll
 
 - [ ] **Step 3: Build per-ticker charts and attempt tables**
 
-Reveal ticker and absolute dates in review. Mark requested limits, fills, initial stops, stop moves, manual trail activation, exits, and comparison points. Show realized R, dollar P&L, bars, MFE-R, MAE-R, initial stop distance, exit efficiency, and trail activation open R per attempt.
+Reveal ticker and absolute dates in review. Mark requested limits, fills, initial stops, stop moves, manual trail activation, exits, and comparison points. Show realized R, dollar P&L, bars held, MFE and MAE in both dollars and R, initial stop distance in both dollars and percent, exit efficiency, and trail activation open R per attempt.
 
 - [ ] **Step 4: Add structured manual review fields**
 
@@ -301,6 +305,8 @@ changeNextTime: text
 ```
 
 Add ticker-level prompts for better buy points, secondary attempts, and trail reasonableness, plus batch-level recurring entry habit and next-drill focus.
+
+The management review must explicitly ask whether the trail was activated too early, too late, or appropriately; whether the manual exit followed observable price behavior or a desire to relieve discomfort; and how much MFE was retained.
 
 - [ ] **Step 5: Add saved-review browsing and Markdown/CSV exports**
 
@@ -355,4 +361,3 @@ git commit -m "docs: describe entry R:R training workflow"
 - [ ] **Step 5: Integrate and clean up**
 
 Use the `superpowers:finishing-a-development-branch` workflow. Confirm the primary worktree's user-owned `drawings.json` and `metadata.json` remain untouched, merge `feature/entry-rr-trainer` into local `main`, remove the feature worktree, and delete the merged feature branch. Do not push unless the user separately asks.
-
