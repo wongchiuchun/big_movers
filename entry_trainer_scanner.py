@@ -26,6 +26,13 @@ RULES = {
 LOGGER = logging.getLogger(__name__)
 
 
+def _rules_snapshot():
+    """Return an independent serializable copy of the fixed v1 rules."""
+    snapshot = dict(RULES)
+    snapshot["emaPeriods"] = list(RULES["emaPeriods"])
+    return snapshot
+
+
 def resolve_stock_csv_paths(stock_dirs, symbol):
     """Return existing local CSVs in the same priority order as playback."""
     paths = []
@@ -63,9 +70,7 @@ class EntryTrainerScanner:
     @property
     def rules(self):
         """Return a fresh serializable snapshot of the fixed version-one rules."""
-        snapshot = dict(RULES)
-        snapshot["emaPeriods"] = list(RULES["emaPeriods"])
-        return snapshot
+        return _rules_snapshot()
 
     def select_candidates(self, count=3):
         """Return a shuffled, unique-symbol batch or raise availability error."""
@@ -205,5 +210,6 @@ class EntryTrainerScanner:
                     "qualificationBar": index,
                     "contextStartDate": bars[index - CONTEXT_BARS]["time"],
                     "endDate": bars[index + FORWARD_BARS]["time"],
+                    "rules": _rules_snapshot(),
                 }
         return None

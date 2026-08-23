@@ -959,6 +959,7 @@
     const attempts = byId('entry-trainer-attempt-progress');
     const status = byId('entry-trainer-shell-status');
     const candidate = batch.candidates[batch.activeIndex];
+    const hasAttempts = Array.isArray(candidate.attempts) && candidate.attempts.length > 0;
     const order = workingOrder(candidate);
     const retryNotice = state.runtime && state.runtime.orderRetryNotice;
     const retryMessage = order && retryNotice && retryNotice.orderId === order.id
@@ -982,7 +983,9 @@
               ? 'Attempt open · manage the stop or close the full position at the paused close.'
               : order
                 ? 'Limit order working · Wait advances one candle and checks for a fill.'
-                : 'Out of position · wait one bar, enter at this close, or skip the ticker.';
+                : hasAttempts
+                  ? 'Out of position · wait one bar, enter again, or finish the ticker.'
+                  : 'Out of position · wait one bar, enter at this close, or skip the ticker.';
     }
     const pending = byId('entry-trainer-pending');
     const pendingDetail = byId('entry-trainer-pending-detail');
@@ -1015,7 +1018,13 @@
         ? 'Cancel the working limit order before submitting another entry.'
         : (enter.disabled ? 'Entry is available only while flat before the horizon.' : 'Submit a market-at-close or exact-price limit entry');
     }
-    if (skip) skip.disabled = batch.status !== 'active' || !playback || !playback.flat || playback.attemptCompletePending;
+    if (skip) {
+      skip.textContent = hasAttempts ? 'Finish ticker' : 'Skip ticker';
+      skip.title = hasAttempts
+        ? 'Finish this ticker without taking another attempt.'
+        : 'Finish this ticker without taking a trade and record why.';
+      skip.disabled = batch.status !== 'active' || !playback || !playback.flat || playback.attemptCompletePending;
+    }
     const launch = byId('entry-trainer-btn');
     if (launch) launch.setAttribute('aria-pressed', 'true');
   }
@@ -1711,6 +1720,12 @@
     const status = byId('entry-trainer-shell-status');
     if (skip) skip.disabled = true;
     const current = batch.candidates[batch.activeIndex];
+    // Skip is a no-trade outcome. If an invocation path reaches here after a
+    // filled attempt, finish the ticker instead of corrupting review metrics.
+    if (outcome === 'skipped' && current && Array.isArray(current.attempts) && current.attempts.length) {
+      outcome = 'completed';
+      reason = reason || 'user_finish';
+    }
     const runtime = state.runtime;
     if (workingOrder(current)) {
       terminalizeWorkingOrder(
@@ -1757,6 +1772,10 @@
   function skipTicker(){
     const playback = state.runtime && state.runtime.playbackState;
     if (!playback || !playback.flat || playback.attemptCompletePending) return;
+    const candidate = activeCandidate();
+    if (candidate && Array.isArray(candidate.attempts) && candidate.attempts.length) {
+      return finishTicker('user_finish');
+    }
     const reason = window.prompt('Why are you skipping this masked ticker?');
     if (reason == null) return false;
     const normalizedReason = safeText(reason, 500).trim();
@@ -1909,14 +1928,14 @@
   function batchMetrics(batch){
     const attempts = allAttempts(batch).map(function(row){ return row.attempt; });
     const skippedNoTrade = (batch.candidates || []).filter(function(candidate){
-      return candidate.status === 'skipped' || !(candidate.attempts || []).length;
+      return !(candidate.attempts || []).length;
     }).length;
     return metricsForAttempts(attempts, skippedNoTrade);
   }
 
   function candidateMetrics(candidate){
     const attempts = candidate && Array.isArray(candidate.attempts) ? candidate.attempts : [];
-    const skippedNoTrade = candidate && (candidate.status === 'skipped' || !attempts.length) ? 1 : 0;
+    const skippedNoTrade = candidate && !attempts.length ? 1 : 0;
     return metricsForAttempts(attempts, skippedNoTrade);
   }
 
