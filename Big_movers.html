@@ -1856,6 +1856,9 @@
   .sim-summary-r { font-family: var(--mono); font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
   .sim-summary-r.up { color: var(--green); }
   .sim-summary-r.down { color: var(--red); }
+  .sim-summary-adjusted-r { font-family: var(--mono); font-size: 18px; font-weight: 650; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .sim-summary-adjusted-r.up { color: var(--green); }
+  .sim-summary-adjusted-r.down { color: var(--red); }
   .sim-summary-total { color: var(--text-2); font-size: 16px; margin-top: 4px; font-variant-numeric: tabular-nums; }
   .sim-summary-grid {
     display: grid;
@@ -5956,9 +5959,13 @@
             </div>
             <div class="sim-barcount-readout" id="sim-setup-barcount" style="display:none"></div>
           </div>
-          <div class="fetch-field">
-            <label for="sim-initial-equity">Starting equity (optional · enables % return + benchmark)</label>
-            <input type="number" step="100" min="0" id="sim-initial-equity" placeholder="e.g. 10000">
+          <div class="fetch-field" id="sim-initial-equity-field">
+            <label for="sim-initial-equity">Starting capital</label>
+            <input type="number" step="1000" min="0.01" id="sim-initial-equity" value="500000" required>
+          </div>
+          <div class="fetch-field" id="sim-fixed-risk-field">
+            <label for="sim-fixed-risk-dollar">Fixed dollar amount per adjusted R</label>
+            <input type="number" step="500" min="0.01" id="sim-fixed-risk-dollar" value="8000" required>
           </div>
           <div class="sim-readout sim-entry-setup-field" id="sim-setup-summary">
             <div>Shares: <strong>—</strong></div>
@@ -6314,7 +6321,8 @@
         <div class="fetch-modal sim-modal-wide">
           <h3>Simulation Complete</h3>
           <div class="sim-summary-hero">
-            <div class="sim-summary-r" id="sim-summary-r">R +0.00</div>
+            <div class="sim-summary-r" id="sim-summary-r">Total Risk R +0.00</div>
+            <div class="sim-summary-adjusted-r" id="sim-summary-adjusted-r">Adjusted R +0.00</div>
             <div class="sim-summary-total" id="sim-summary-total">Total P&amp;L: $0</div>
           </div>
           <div class="sim-summary-grid" id="sim-summary-grid">
@@ -6326,9 +6334,10 @@
             <div># Sells<strong id="sim-summary-sells">—</strong></div>
           </div>
           <div class="sim-summary-grid" id="sim-summary-grid-equity" style="display:none">
-            <div>Initial<strong id="sim-summary-eq-initial">—</strong></div>
+            <div>Initial capital<strong id="sim-summary-eq-initial">—</strong></div>
             <div>Final<strong id="sim-summary-eq-final">—</strong></div>
-            <div>Return<strong id="sim-summary-eq-return">—</strong></div>
+            <div>Return on initial capital<strong id="sim-summary-eq-return">—</strong></div>
+            <div>Fixed 1R<strong id="sim-summary-fixed-r">—</strong></div>
             <div>Ticker B&amp;H<strong id="sim-summary-bh">—</strong></div>
             <div>Alpha<strong id="sim-summary-alpha">—</strong></div>
             <div>Window<strong id="sim-summary-window">—</strong></div>
@@ -12564,7 +12573,7 @@ const Sim = (function(){
 
   function createSim(params) {
     params = params || {};
-    const { moveKey, direction = 'long', entry, initialEquity = null, noEntry = false } = params;
+    const { moveKey, direction = 'long', entry, initialEquity = null, fixedRiskDollar = null, noEntry = false } = params;
     if (direction !== 'long' && direction !== 'short') {
       throw new Error('createSim: direction must be "long" or "short"');
     }
@@ -12600,6 +12609,7 @@ const Sim = (function(){
         legs: [], between: true, simStartBarIdx: params.startBarIdx,
         pnlSeries: [],
         initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null,
+        fixedRiskDollar: (fixedRiskDollar != null && fixedRiskDollar > 0) ? +fixedRiskDollar : null,
         causalDailyExecution: params.causalDailyExecution === true
       };
     }
@@ -12656,7 +12666,28 @@ const Sim = (function(){
       legs: [], between: false, simStartBarIdx: entry.barIdx,
       pnlSeries: [],
       initialEquity: (initialEquity != null && initialEquity > 0) ? +initialEquity : null,
+      fixedRiskDollar: (fixedRiskDollar != null && fixedRiskDollar > 0) ? +fixedRiskDollar : null,
       causalDailyExecution: params.causalDailyExecution === true
+    };
+  }
+
+  // Full-notional capital model used by Individual Sim. Both long and short
+  // positions consume qty × average cost; realized P&L changes the cash base.
+  // Deriving this from sim state keeps rewind/replay deterministic.
+  function computeCapital(sim) {
+    if (!sim) return { initialCapital:null, cumulativeRealizedPnL:0, deployedNotional:0, availableBuyingPower:null };
+    const initialCapital = Number(sim.initialEquity);
+    const cumulativeRealizedPnL = (sim.legs || []).reduce(function(total, leg){
+      return total + Number(leg && leg.realizedPnL || 0);
+    }, 0) + Number(sim.realizedPnL || 0);
+    const deployedNotional = Math.max(0, Number(sim.qty || 0) * Number(sim.avgCost || 0));
+    return {
+      initialCapital: Number.isFinite(initialCapital) && initialCapital > 0 ? initialCapital : null,
+      cumulativeRealizedPnL: r2(cumulativeRealizedPnL),
+      deployedNotional: r2(deployedNotional),
+      availableBuyingPower: Number.isFinite(initialCapital) && initialCapital > 0
+        ? r2(initialCapital + cumulativeRealizedPnL - deployedNotional)
+        : null
     };
   }
 
@@ -13206,6 +13237,7 @@ const Sim = (function(){
   function reset(sim, bars) {
     const preservedEndBarIdx = sim.endBarIdx;
     const preservedInitialEquity = sim.initialEquity || null;
+    const preservedFixedRiskDollar = sim.fixedRiskDollar || null;
     const preservedCausalDailyExecution = sim.causalDailyExecution === true;
     const playbackOnly = !!(sim.between && !(sim.entry && sim.entry.price > 0) && !(sim.legs && sim.legs.length));
     const fresh = playbackOnly
@@ -13217,9 +13249,10 @@ const Sim = (function(){
           startDate: bars && bars[sim.simStartBarIdx] ? bars[sim.simStartBarIdx].time : sim.entry.date,
           endBarIdx: preservedEndBarIdx,
           initialEquity: preservedInitialEquity,
+          fixedRiskDollar: preservedFixedRiskDollar,
           causalDailyExecution: preservedCausalDailyExecution
         })
-      : createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry), initialEquity: preservedInitialEquity, causalDailyExecution: preservedCausalDailyExecution });
+      : createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry), initialEquity: preservedInitialEquity, fixedRiskDollar: preservedFixedRiskDollar, causalDailyExecution: preservedCausalDailyExecution });
     Object.keys(sim).forEach(k => delete sim[k]);
     Object.assign(sim, fresh);
     sim.endBarIdx = preservedEndBarIdx;
@@ -13345,7 +13378,7 @@ const Sim = (function(){
     return true;
   }
 
-  return { createSim, queueAction, validateStopReplacement, replaceStopNow, advanceTo, processAttachedStopOnBar, recordEntryBarExposure, computeDerived, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode, normalizeExecutionTiming };
+  return { createSim, queueAction, validateStopReplacement, replaceStopNow, advanceTo, processAttachedStopOnBar, recordEntryBarExposure, computeDerived, computeCapital, closeAt, reset, editStop, deleteStop, continueSim, startNewLeg, normalizeStopTriggerMode, normalizeExecutionTiming };
 })();
 
 // Expose the Sim core on window so cross-module code (PortSim.Ctrl, Track J,
@@ -13589,7 +13622,7 @@ window.Sim = Sim;
     if (cumMetaEl) cumMetaEl.textContent = totalLegs + (totalLegs === 1 ? ' leg' : ' legs');
 
     // ---- Total Equity row (only when initialEquity is set) ----
-    // Shows: equity (=initial+cumP&L), cash (=equity−deployed), initial.
+    // Shows mark-to-market equity, available buying power and initial capital.
     const equityRow = document.getElementById('sim-equity-row');
     const equityValEl = document.getElementById('sim-equity-value');
     const equityMetaEl = document.getElementById('sim-equity-meta');
@@ -13606,7 +13639,7 @@ window.Sim = Sim;
           else if (curEq != null && curEq < initEq) equityValEl.classList.add('sim-pnl-neg');
         }
         if (equityMetaEl) {
-          const cashTxt = (curCash != null) ? ('cash ' + fmt$(curCash)) : '';
+          const cashTxt = (curCash != null) ? ('buying power ' + fmt$(curCash)) : '';
           const initTxt = 'init ' + fmt$(initEq);
           equityMetaEl.textContent = (cashTxt ? cashTxt + ' · ' : '') + initTxt;
         }
@@ -14597,6 +14630,9 @@ window.Sim = Sim;
     const pickEntryBtn = document.getElementById('sim-pick-entry-btn');
     const pickEndBtn = document.getElementById('sim-pick-end-btn');
     const equityEl = document.getElementById('sim-initial-equity');
+    const equityFieldEl = document.getElementById('sim-initial-equity-field');
+    const fixedRiskEl = document.getElementById('sim-fixed-risk-dollar');
+    const fixedRiskFieldEl = document.getElementById('sim-fixed-risk-field');
     const dirHiddenEl = document.getElementById('sim-direction-value');
     const stopEodEl = document.getElementById('sim-setup-stop-eod');
     const stopEodWrap = document.getElementById('sim-setup-stop-eod-wrap');
@@ -14633,9 +14669,14 @@ window.Sim = Sim;
     _clearStatus('sim-setup-status');
 
     endDateEl.value = ctx.restoreFrom?.endDate || (ctx.defaultEndDate || '');
+    if (equityFieldEl) equityFieldEl.style.display = ctx.portMode ? 'none' : '';
+    if (fixedRiskFieldEl) fixedRiskFieldEl.style.display = ctx.portMode ? 'none' : '';
     if (equityEl) equityEl.value = (ctx.restoreFrom?.initialEquity != null)
       ? ctx.restoreFrom.initialEquity
-      : (ctx.defaultEquity != null ? ctx.defaultEquity : '');
+      : (ctx.defaultEquity != null ? ctx.defaultEquity : (ctx.portMode ? '' : 500000));
+    if (fixedRiskEl) fixedRiskEl.value = (ctx.restoreFrom?.fixedRiskDollar != null)
+      ? ctx.restoreFrom.fixedRiskDollar
+      : (ctx.defaultFixedRiskDollar != null ? ctx.defaultFixedRiskDollar : (ctx.portMode ? '' : 8000));
     if (ctx.restoreFrom) {
       if (ctx.restoreFrom.date) dateEl.value = ctx.restoreFrom.date;
       if (ctx.restoreFrom.price != null) priceEl.value = ctx.restoreFrom.price;
@@ -14806,6 +14847,7 @@ window.Sim = Sim;
         stop: _parseNum(stopEl.value, null),
         endDate: endDateEl.value,
         initialEquity: equityEl ? _parseNum(equityEl.value, null) : null,
+        fixedRiskDollar: fixedRiskEl ? _parseNum(fixedRiskEl.value, null) : null,
         startFlat: !!(startFlatEl && startFlatEl.checked),
         orderType: orderValues && orderValues.orderType,
         allowFillBarStop: orderValues && orderValues.allowFillBarStop,
@@ -14860,9 +14902,21 @@ window.Sim = Sim;
       if (endDate && endDate <= date) return _setStatus('sim-setup-status', 'End date must be after entry date', true);
       const equityRaw = equityEl ? _parseNum(equityEl.value, NaN) : NaN;
       const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
+      const fixedRiskRaw = fixedRiskEl ? _parseNum(fixedRiskEl.value, NaN) : NaN;
+      const fixedRiskDollar = (isFinite(fixedRiskRaw) && fixedRiskRaw > 0) ? fixedRiskRaw : null;
+      if (!ctx.portMode && initialEquity == null) return _setStatus('sim-setup-status', 'Starting capital must be > 0', true);
+      if (!ctx.portMode && fixedRiskDollar == null) return _setStatus('sim-setup-status', 'Fixed dollar amount per R must be > 0', true);
+      if (!ctx.portMode && !startFlat) {
+        const shares = mode === 'dollars' ? Math.floor(size / price) : Math.floor(size);
+        const requiredNotional = shares * price;
+        if (!(shares > 0)) return _setStatus('sim-setup-status', 'Order size resolves to zero whole shares', true);
+        if (requiredNotional > initialEquity + 0.005) {
+          return _setStatus('sim-setup-status', 'Entry exceeds starting capital of ' + _fmt$(initialEquity), true);
+        }
+      }
       const stopTrail = ctx.fixedInitialStop ? null : ((stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null);
       const stopTriggerMode = ((ctx.portMode || ctx.orderMode === 'pending_limit') && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
-      const payload = { direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail, stopTriggerMode, startFlat };
+      const payload = { direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, fixedRiskDollar, stopTrail, stopTriggerMode, startFlat };
       if (orderValues) {
         payload.orderType = orderValues.orderType;
         payload.allowFillBarStop = orderValues.allowFillBarStop;
@@ -15120,8 +15174,9 @@ window.Sim = Sim;
     const currentPrice = _parseNum(ctx.currentPrice, 0);
     const stopEodEl = document.getElementById('sim-add-stop-eod');
     const stopEodWrap = document.getElementById('sim-add-stop-eod-wrap');
-    if (stopEodWrap) stopEodWrap.style.display = ctx.portMode ? 'flex' : 'none';
-    if (stopEodEl) stopEodEl.checked = false;
+    const allowStopEod = !!(ctx.portMode || ctx.allowStopEod);
+    if (stopEodWrap) stopEodWrap.style.display = allowStopEod ? 'flex' : 'none';
+    if (stopEodEl) stopEodEl.checked = ctx.currentStopTriggerMode === 'close';
 
     sizeEl.value = '';
     priceEl.value = isFinite(currentPrice) && currentPrice > 0 ? currentPrice.toFixed(2) : '';
@@ -15200,7 +15255,7 @@ window.Sim = Sim;
         }
         if (newStop !== null) {
           payload.newStop = newStop;
-          payload.stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
+          payload.stopTriggerMode = (allowStopEod && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
         }
         onSubmit && onSubmit(payload); _closeModal('sim-add-modal');
       } catch (err) { _setStatus('sim-add-status', err && err.message ? err.message : 'Add failed', true); }
@@ -15220,7 +15275,8 @@ window.Sim = Sim;
     const direction = (ctx.direction === 'short' || ctx.direction === 'long') ? ctx.direction : 'long';
     const stopEodEl = document.getElementById('sim-movestop-stop-eod');
     const stopEodWrap = document.getElementById('sim-movestop-stop-eod-wrap');
-    if (stopEodWrap) stopEodWrap.style.display = ctx.portMode ? 'flex' : 'none';
+    const allowStopEod = !!(ctx.portMode || ctx.allowStopEod);
+    if (stopEodWrap) stopEodWrap.style.display = allowStopEod ? 'flex' : 'none';
     if (stopEodEl) stopEodEl.checked = ctx.currentStopTriggerMode === 'close';
     priceEl.value = isFinite(currentStop) ? currentStop.toFixed(2) : '';
     pctEl.value = 100;
@@ -15306,7 +15362,7 @@ window.Sim = Sim;
       }
       if (!isFinite(pct) || pct <= 0 || pct > 100) return _setStatus('sim-movestop-status', '% must be between 1 and 100', true);
       const stopTrail = (stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null;
-      const stopTriggerMode = (ctx.portMode && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
+      const stopTriggerMode = (allowStopEod && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
       try { onSubmit && onSubmit({ newStop, pct: pct / 100, stopTrail, stopTriggerMode }); _closeModal('sim-movestop-modal'); }
       catch (err) { _setStatus('sim-movestop-status', err && err.message ? err.message : 'Add failed', true); }
     };
@@ -15318,9 +15374,16 @@ window.Sim = Sim;
     derived = derived || {}; handlers = handlers || {};
     const r = _parseNum(derived.rMultiple, NaN);
     const rEl = document.getElementById('sim-summary-r');
-    rEl.textContent = _fmtSignedR(r);
+    rEl.textContent = 'Total Risk R ' + _fmtSignedR(r).replace(/^R\s*/, '');
     rEl.classList.remove('up', 'down');
     if (isFinite(r)) rEl.classList.add(r >= 0 ? 'up' : 'down');
+    const adjustedR = _parseNum(derived.adjustedR, NaN);
+    const adjustedREl = document.getElementById('sim-summary-adjusted-r');
+    if (adjustedREl) {
+      adjustedREl.textContent = 'Adjusted R ' + (isFinite(adjustedR) ? ((adjustedR >= 0 ? '+' : '') + adjustedR.toFixed(2) + 'R') : '—');
+      adjustedREl.classList.remove('up', 'down');
+      if (isFinite(adjustedR)) adjustedREl.classList.add(adjustedR >= 0 ? 'up' : 'down');
+    }
     const total = _parseNum(derived.totalPnL, NaN);
     const legCount = derived.legCount || 1;
     const totalLabel = legCount > 1 ? 'Cumulative P&L · ' + legCount + ' legs: ' : 'Total P&L: ';
@@ -15344,6 +15407,8 @@ window.Sim = Sim;
         const alpha = (ret != null && bh != null) ? (ret - bh) : null;
         document.getElementById('sim-summary-eq-initial').textContent = '$' + Math.round(ie).toLocaleString();
         document.getElementById('sim-summary-eq-final').textContent = (fe != null) ? ('$' + Math.round(fe).toLocaleString()) : '—';
+        const fixedREl = document.getElementById('sim-summary-fixed-r');
+        if (fixedREl) fixedREl.textContent = derived.fixedRiskDollar != null ? _fmt$(derived.fixedRiskDollar) : '—';
         const retEl = document.getElementById('sim-summary-eq-return');
         retEl.textContent = (ret != null) ? ((ret >= 0 ? '+' : '') + ret.toFixed(2) + '%') : '—';
         retEl.style.color = (ret != null) ? (ret >= 0 ? 'var(--green)' : 'var(--red)') : '';
@@ -16129,8 +16194,8 @@ window.Sim = Sim;
     if (btn) btn.style.display = visible ? '' : 'none';
   }
 
-  /* ---------- Mini-modal: Initial Equity + Bars to Simulate ---------- */
-  // The blind setup modal asks ONLY for initial capital and how many bars to
+  /* ---------- Mini-modal: Capital, Fixed R + Bars to Simulate ---------- */
+  // The blind setup modal asks for capital, adjusted-R sizing and how many bars to
   // play. Day-0 is randomized by the picker, the user has no entry/stop yet —
   // they enter later via "+ New Entry" once they've watched bars play out.
   function _openBlindMiniModal({onSubmit, onCancel}) {
@@ -16150,6 +16215,10 @@ window.Sim = Sim;
           '<input type="number" id="sim-blind-equity" min="100" step="100" value="' + DEFAULT_EQUITY + '">' +
         '</div>' +
         '<div class="fetch-field">' +
+          '<label for="sim-blind-fixed-risk">Fixed dollar amount per adjusted R</label>' +
+          '<input type="number" id="sim-blind-fixed-risk" min="1" step="500" value="' + DEFAULT_FIXED_RISK + '">' +
+        '</div>' +
+        '<div class="fetch-field">' +
           '<label for="sim-blind-bars">Bars to simulate</label>' +
           '<input type="number" id="sim-blind-bars" min="10" max="500" step="1" value="' + DEFAULT_BARS + '">' +
           '<div class="sim-stop-distance" id="sim-blind-bars-hint" style="margin-top:4px;">~' + Math.round(DEFAULT_BARS / 21) + ' months of trading days</div>' +
@@ -16163,6 +16232,7 @@ window.Sim = Sim;
     document.body.appendChild(overlay);
 
     const equityEl = overlay.querySelector('#sim-blind-equity');
+    const fixedRiskEl = overlay.querySelector('#sim-blind-fixed-risk');
     const barsEl = overlay.querySelector('#sim-blind-bars');
     const hintEl = overlay.querySelector('#sim-blind-bars-hint');
     const statusEl = overlay.querySelector('#sim-blind-status');
@@ -16177,11 +16247,13 @@ window.Sim = Sim;
     overlay.addEventListener('click', function(e){ if (e.target === overlay) { cleanup(); if (typeof onCancel === 'function') onCancel(); } });
     overlay.querySelector('#sim-blind-submit').onclick = function(){
       const equity = parseFloat(equityEl.value);
+      const fixedRiskDollar = parseFloat(fixedRiskEl.value);
       const bars = parseInt(barsEl.value, 10);
       if (!isFinite(equity) || equity < 100) { statusEl.textContent = 'Initial equity must be ≥ $100.'; statusEl.style.color = 'var(--red)'; return; }
+      if (!isFinite(fixedRiskDollar) || fixedRiskDollar <= 0) { statusEl.textContent = 'Fixed dollar amount per R must be > 0.'; statusEl.style.color = 'var(--red)'; return; }
       if (!isFinite(bars) || bars < 10) { statusEl.textContent = 'Bars must be ≥ 10.'; statusEl.style.color = 'var(--red)'; return; }
       cleanup();
-      if (typeof onSubmit === 'function') onSubmit({ initialEquity: equity, bars: bars });
+      if (typeof onSubmit === 'function') onSubmit({ initialEquity: equity, fixedRiskDollar: fixedRiskDollar, bars: bars });
     };
     setTimeout(function(){ equityEl.focus(); equityEl.select && equityEl.select(); }, 30);
   }
@@ -16205,7 +16277,8 @@ window.Sim = Sim;
   // always ≥2 months of forward bars to play.
   const MIN_CONTEXT = 85;       // ~4 months of weekday bars before day 0
   const MIN_FORWARD = 30;       // ~6 weeks of weekday bars after day 0
-  const DEFAULT_EQUITY = 300000;
+  const DEFAULT_EQUITY = 500000;
+  const DEFAULT_FIXED_RISK = 8000;
   const DEFAULT_BARS = 90;
 
   async function _open(opts) {
@@ -16321,7 +16394,8 @@ window.Sim = Sim;
           Sim.Ctrl.startBlindPlayback({
             startBarIdx: pickedStartIdx,
             endBarIdx: endIdx,
-            initialEquity: form.initialEquity
+            initialEquity: form.initialEquity,
+            fixedRiskDollar: form.fixedRiskDollar
           });
         } catch(e){
           alert('Could not start blind sim: ' + (e && e.message || e));
@@ -16832,6 +16906,7 @@ window.Sim = Sim;
       year: year,
       direction: sim.direction || 'long',
       initialEquity: sim.initialEquity || null,
+      fixedRiskDollar: sim.fixedRiskDollar || null,
       setup: {
         date: sim.entry.date,
         price: sim.entry.price,
@@ -16844,6 +16919,7 @@ window.Sim = Sim;
         totalReturnPct: derived && derived.totalReturnPct != null ? +derived.totalReturnPct.toFixed(2) : null,
         totalPnL: derived && derived.totalPnL != null ? +(+derived.totalPnL).toFixed(2) : null,
         rMultiple: derived && derived.rMultiple != null ? +(+derived.rMultiple).toFixed(2) : null,
+        adjustedR: derived && derived.adjustedR != null ? +(+derived.adjustedR).toFixed(2) : null,
         legCount: derived && derived.legCount != null ? derived.legCount : null
       }
     };
@@ -16966,6 +17042,7 @@ window.Sim = Sim;
         defaultDate: s.setup && s.setup.date,
         defaultEndDate: s.setup && s.setup.endDate,
         defaultEquity: s.initialEquity || null,
+        defaultFixedRiskDollar: s.fixedRiskDollar || null,
         restoreFrom: {
           date: s.setup && s.setup.date,
           price: s.setup && s.setup.price,
@@ -16973,7 +17050,8 @@ window.Sim = Sim;
           sizeValue: s.setup && s.setup.sizeValue,
           stop: s.setup && s.setup.stop,
           endDate: s.setup && s.setup.endDate,
-          initialEquity: s.initialEquity || null
+          initialEquity: s.initialEquity || null,
+          fixedRiskDollar: s.fixedRiskDollar || null
         }
       });
     }
@@ -17550,9 +17628,12 @@ window.Sim = Sim;
       symbols: [symbol], symbol: symbol, year: year,
       moveKey: moveKey, direction: sim.direction || 'long',
       initialEquity: sim.initialEquity || null,
+      fixedRiskDollar: sim.fixedRiskDollar || null,
       finalEquity: sim.initialEquity ? sim.initialEquity + agg.sessionPnL : null,
       sessionPnL: +agg.sessionPnL.toFixed(2),
       totalReturnPct: sim.initialEquity > 0 ? +((agg.sessionPnL / sim.initialEquity) * 100).toFixed(2) : null,
+      totalRiskR: derived && derived.totalRiskR != null ? +(+derived.totalRiskR).toFixed(2) : null,
+      adjustedR: sim.fixedRiskDollar > 0 ? +(agg.sessionPnL / sim.fixedRiskDollar).toFixed(2) : null,
       avgPctDeployed: dep.avg, peakPctDeployed: dep.peak, idlePctOfTime: dep.idlePct,
       tradeCount: agg.tradeCount, winCount: agg.winCount, lossCount: agg.lossCount,
       winRate: +agg.winRate.toFixed(1),
@@ -19177,7 +19258,10 @@ window.Sim = Sim;
     }
     L.push('## Result');
     L.push('');
-    L.push('- **R-Multiple:** ' + ((summary.rMultiple >= 0 ? '+' : '') + Number(summary.rMultiple || 0).toFixed(2)) + 'R');
+    L.push('- **Total Risk R:** ' + ((summary.rMultiple >= 0 ? '+' : '') + Number(summary.rMultiple || 0).toFixed(2)) + 'R');
+    if (summary.adjustedR != null) {
+      L.push('- **Adjusted R:** ' + ((summary.adjustedR >= 0 ? '+' : '') + Number(summary.adjustedR).toFixed(2)) + 'R (fixed 1R = ' + _money(summary.fixedRiskDollar) + ')');
+    }
     L.push('- **Total P&L:** ' + _moneyS(summary.totalPnL));
     L.push('- **Days held:** ' + (summary.daysHeld != null ? summary.daysHeld : '—'));
     L.push('- **MFE:** ' + _money(summary.mfe));
@@ -19185,9 +19269,9 @@ window.Sim = Sim;
     L.push('- **Max DD:** ' + _money(summary.maxDrawdown));
     L.push('- **Entries:** ' + (summary.numEntries || 0) + ' · **Sells:** ' + (summary.numSells || 0));
     if (summary.initialEquity != null){
-      L.push('- **Initial Equity:** ' + _money(summary.initialEquity));
-      L.push('- **Final Equity:** ' + _money(summary.finalEquity));
-      L.push('- **Return:** ' + _pctSigned(summary.totalReturnPct));
+      L.push('- **Initial Capital:** ' + _money(summary.initialEquity));
+      L.push('- **Final Capital:** ' + _money(summary.finalEquity));
+      L.push('- **Return on Initial Capital:** ' + _pctSigned(summary.totalReturnPct));
       if (summary.tickerBhPct != null){
         var alpha = (summary.totalReturnPct != null) ? (summary.totalReturnPct - summary.tickerBhPct) : null;
         L.push('- **Ticker B&H:** ' + _pctSigned(summary.tickerBhPct) + (alpha != null ? '  ·  **Alpha:** ' + _pctSigned(alpha) : ''));
@@ -19906,6 +19990,29 @@ Sim.Ctrl = (function(){
     return order && order.status === 'working' ? order : null;
   }
 
+  function _individualCapital() {
+    if (!state.sim || !Sim.computeCapital) return null;
+    return Sim.computeCapital(state.sim);
+  }
+
+  function _entryNotional(sizeMode, sizeValue, price) {
+    const px = Number(price);
+    const size = Number(sizeValue);
+    if (!(px > 0) || !(size > 0)) return NaN;
+    const qty = sizeMode === 'dollars' ? Math.floor(size / px) : Math.floor(size);
+    return qty > 0 ? qty * px : NaN;
+  }
+
+  function _assertIndividualBuyingPower(requiredNotional) {
+    const capital = _individualCapital();
+    if (!capital || capital.availableBuyingPower == null) return;
+    const required = Number(requiredNotional);
+    if (!Number.isFinite(required) || required <= 0) throw new Error('Order size resolves to zero whole shares.');
+    if (required > capital.availableBuyingPower + 0.005) {
+      throw new Error('Not enough buying power. Available: $' + Math.max(0, capital.availableBuyingPower).toLocaleString('en-US', { maximumFractionDigits:2 }) + '.');
+    }
+  }
+
   function _syncStandaloneEntryOrderUI() {
     const order = _workingStandaloneEntryOrder();
     const message = document.getElementById('sim-pending-entry-order');
@@ -19929,11 +20036,8 @@ Sim.Ctrl = (function(){
   }
 
   function _standaloneOrderBudget(requiredNotional) {
-    const sim = state.sim;
-    if (sim && Number.isFinite(Number(sim.initialEquity)) && Number(sim.initialEquity) > 0) {
-      const derived = Sim.computeDerived(sim, state.bars || []);
-      return Math.max(0, Number(sim.initialEquity) + Number(derived.cumulativePnL || 0));
-    }
+    const capital = _individualCapital();
+    if (capital && capital.availableBuyingPower != null) return Math.max(0, capital.availableBuyingPower);
     return requiredNotional;
   }
 
@@ -19947,6 +20051,7 @@ Sim.Ctrl = (function(){
       ? Math.floor(Number(form.sizeValue) / Number(form.price))
       : Math.floor(Number(form.sizeValue));
     const requiredNotional = qty * Number(form.price);
+    _assertIndividualBuyingPower(requiredNotional);
     const owner = state._entryOrderOwner || {
       symbol: (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'SIM',
       displaySymbol: (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'SIM',
@@ -20164,8 +20269,13 @@ Sim.Ctrl = (function(){
     row('# Simulation Summary');
     row('Symbol', sim.moveKey || '—');
     row('Direction', sim.direction || 'long');
-    row('R Multiple', sgnR(sum.rMultiple));
+    row('Total Risk R', sgnR(sum.rMultiple));
+    row('Adjusted R', sgnR(sum.adjustedR));
+    row('Fixed 1R', sum.fixedRiskDollar != null ? Number(sum.fixedRiskDollar).toFixed(2) : '');
     row('Cumulative P&L', sgn(sum.totalPnL));
+    row('Initial Capital', sum.initialEquity != null ? Number(sum.initialEquity).toFixed(2) : '');
+    row('Final Capital', sum.finalEquity != null ? Number(sum.finalEquity).toFixed(2) : '');
+    row('Return on Initial Capital %', sum.totalReturnPct != null ? Number(sum.totalReturnPct).toFixed(2) : '');
     row('Legs', sum.legCount);
     row('Days Held', sum.daysHeld);
     row('MFE', sgn(sum.mfe));
@@ -20372,6 +20482,10 @@ Sim.Ctrl = (function(){
   function _deriveForUI(d) {
     const sim = state.sim;
     const bar = state.bars[sim.playIdx];
+    const capital = Sim.computeCapital ? Sim.computeCapital(sim) : null;
+    const reservedBuyingPower = state._entryOrderState
+      ? Math.max(0, Number(state._entryOrderState.reservedBuyingPower || 0))
+      : 0;
     // When between legs (or in noEntry/blind playback before first entry),
     // there's no current position — show $0 / — instead of the previous
     // leg's notional. The cumulative P&L row carries the running total.
@@ -20425,12 +20539,13 @@ Sim.Ctrl = (function(){
       dateISO: bar ? bar.time : '—',
       between: d.between, legCount: d.legCount, legIndex: d.legIndex,
       cumulativePnL: d.cumulativePnL, cumulativeR: d.cumulativeR,
-      // Equity tracking — used by the "Total equity" row in the position panel.
-      // Null when the user didn't set an initial equity (regular sims pre-2024).
-      // Cash = equity − current position market value (uninvested money).
+      // Buying power uses realized P&L and full position cost basis. Unrealized
+      // gains cannot fund another order; working limits remain reserved.
       initialEquity: sim.initialEquity || null,
       currentEquity: sim.initialEquity != null ? (sim.initialEquity + d.cumulativePnL) : null,
-      currentCash: sim.initialEquity != null ? (sim.initialEquity + d.cumulativePnL - (d.positionValue || 0)) : null,
+      currentCash: capital && capital.availableBuyingPower != null
+        ? Math.max(0, capital.availableBuyingPower - reservedBuyingPower)
+        : null,
       legsSummary
     };
   }
@@ -20453,8 +20568,15 @@ Sim.Ctrl = (function(){
       if ((l.mfe || 0) > cumMfe) cumMfe = l.mfe;
       if ((l.mae || 0) < cumMae) cumMae = l.mae;
     });
+    const fixedRiskDollar = Number(sim.fixedRiskDollar);
+    const adjustedR = Number.isFinite(fixedRiskDollar) && fixedRiskDollar > 0
+      ? d.cumulativePnL / fixedRiskDollar
+      : null;
     return {
-      rMultiple: d.cumulativeR, totalPnL: d.cumulativePnL,
+      rMultiple: d.cumulativeR, totalRiskR: d.cumulativeR,
+      adjustedR: adjustedR,
+      fixedRiskDollar: Number.isFinite(fixedRiskDollar) && fixedRiskDollar > 0 ? fixedRiskDollar : null,
+      totalPnL: d.cumulativePnL,
       legR: d.rCurrent, legPnL: d.totalPnL,
       daysHeld: d.simDayCount != null ? d.simDayCount : d.dayCount,
       mfe: cumMfe, mae: cumMae, maxDrawdown: cumMae,
@@ -20626,6 +20748,11 @@ Sim.Ctrl = (function(){
     const direction = state.policy && state.policy.longOnly ? 'long' : (form.direction === 'short' ? 'short' : 'long');
     if (!Number.isFinite(fillPrice) || fillPrice <= 0 || !Number.isFinite(submittedStop) || submittedStop <= 0) {
       return { ok:false, error:'Entry fill and stop must be positive prices.' };
+    }
+    try {
+      _assertIndividualBuyingPower(_entryNotional(form.sizeMode, form.sizeValue, fillPrice));
+    } catch (error) {
+      return { ok:false, error:error && error.message ? error.message : String(error) };
     }
     const safeStop = forceGap
       ? (direction === 'short'
@@ -20931,6 +21058,7 @@ Sim.Ctrl = (function(){
       suggestedSize: 1000,
       defaultEndDate: defaultEndDate,
       defaultEquity: opts.defaultEquity != null ? opts.defaultEquity : null,
+      defaultFixedRiskDollar: opts.defaultFixedRiskDollar != null ? opts.defaultFixedRiskDollar : null,
       restoreFrom: opts.restoreFrom || null,
       allowFlatStart: true,
       orderMode: 'pending_limit',
@@ -20985,7 +21113,8 @@ Sim.Ctrl = (function(){
         moveKey: moveKey,
         startBarIdx: barIdx,
         endBarIdx: endBarIdx,
-        initialEquity: form.initialEquity || null
+        initialEquity: form.initialEquity || null,
+        fixedRiskDollar: form.fixedRiskDollar || null
       });
       if (!started) return;
       state._lastSetup = Object.assign({}, form);
@@ -21004,7 +21133,8 @@ Sim.Ctrl = (function(){
       sim = Sim.createSim({
         moveKey, direction: form.direction || 'long',
         entry: { barIdx, date: currentBars[barIdx].time, price: currentBars[barIdx].close, sizeMode: form.sizeMode, sizeValue: form.sizeValue, stop: form.stop, endBarIdx, stopTrail: form.stopTrail || null, stopTriggerMode: form.stopTriggerMode, executionTiming: 'close' },
-        initialEquity: form.initialEquity || null
+        initialEquity: form.initialEquity || null,
+        fixedRiskDollar: form.fixedRiskDollar || null
       });
     } catch (e) { alert('Could not start sim: ' + e.message); return; }
 
@@ -21465,11 +21595,15 @@ Sim.Ctrl = (function(){
     const bar = state.bars[state.sim.playIdx]; pause();
     Sim.UI.showAddModal({
       currentPrice: bar.close, currentQty: state.sim.qty,
-      currentStop: state.sim.currentStop, avgCost: state.sim.avgCost
+      currentStop: state.sim.currentStop, avgCost: state.sim.avgCost,
+      allowStopEod: true
     }, form => {
       const addShares = form.sizeMode === 'shares' ? Math.floor(form.sizeValue) : Math.floor(form.sizeValue / form.price);
+      _assertIndividualBuyingPower(addShares * form.price);
       Sim.queueAction(state.sim, { type: 'add', qty: addShares, price: form.price });
-      if (form.newStop != null) Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop });
+      if (form.newStop != null) Sim.queueAction(state.sim, {
+        type: 'movestop', newStop: form.newStop, stopTriggerMode: form.stopTriggerMode
+      });
       _stepForward(1);
     });
   }
@@ -21487,6 +21621,8 @@ Sim.Ctrl = (function(){
       shares0: state.sim.shares0,
       barDate: bar.time || null,
       direction: state.sim.direction || 'long',
+      allowStopEod: true,
+      currentStopTriggerMode: activeStops.length && activeStops[0].triggerMode === 'close' ? 'close' : 'intraday',
       fullExitOnly: !!(state.policy && state.policy.fullExitOnly),
       replaceMode: !!(state.policy && state.policy.fullExitOnly),
       cardBars: state.bars,
@@ -21508,7 +21644,10 @@ Sim.Ctrl = (function(){
         _notifyFlatState('stop-replaced');
         return;
       }
-      Sim.queueAction(state.sim, { type: 'movestop', newStop: form.newStop, pct: form.pct, stopTrail: form.stopTrail || null });
+      Sim.queueAction(state.sim, {
+        type: 'movestop', newStop: form.newStop, pct: form.pct,
+        stopTrail: form.stopTrail || null, stopTriggerMode: form.stopTriggerMode
+      });
       _stepForward(1);
     });
   }
@@ -21620,6 +21759,7 @@ Sim.Ctrl = (function(){
         startBarIdx: p.startBarIdx, endBarIdx: policy ? null : (p.endBarIdx != null ? p.endBarIdx : null),
         startDate: sourceBars[p.startBarIdx] && sourceBars[p.startBarIdx].time,
         initialEquity: p.initialEquity || null,
+        fixedRiskDollar: p.fixedRiskDollar || null,
         causalDailyExecution: !!(policy && policy.causalDailyExecution)
       });
     } catch (e) {
