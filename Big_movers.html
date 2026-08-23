@@ -143,7 +143,10 @@
     border-left: 1px solid var(--border);
     overflow-y: auto;
     min-height: 0;
-    height: 100%;
+    /* Override any inline height left by the normal vertical resize handle. */
+    height: 100% !important;
+    max-height: none;
+    align-self: stretch;
   }
   body.sim-popout #popout-btn { color: var(--accent); border-color: var(--accent); }
   /* Sim hero stacks vertically inside the narrow popout side rail */
@@ -5871,7 +5874,11 @@
       <div class="fetch-modal-overlay" id="sim-setup-modal">
         <div class="fetch-modal">
           <h3>Start Simulation</h3>
-          <div class="fetch-field">
+          <label class="sim-eod-stop-toggle" id="sim-setup-flat-wrap">
+            <input type="checkbox" id="sim-setup-start-flat">
+            <span>Start without a position</span>
+          </label>
+          <div class="fetch-field sim-entry-setup-field">
             <label>Direction</label>
             <div class="sim-pill-row" id="sim-setup-direction">
               <button type="button" class="sim-pill sim-pill-active" data-direction="long">↑ Long</button>
@@ -5880,28 +5887,28 @@
             <input type="hidden" id="sim-direction-value" value="long">
           </div>
           <div class="fetch-field">
-            <label for="sim-entry-date">Entry date</label>
+            <label id="sim-entry-date-label" for="sim-entry-date">Entry date</label>
             <div class="sim-input-with-pick">
               <input type="date" id="sim-entry-date">
               <button type="button" class="sim-pick-btn" id="sim-pick-entry-btn" title="Click a bar on the chart">📍 Pick</button>
             </div>
           </div>
-          <div class="fetch-field" id="sim-setup-order-controls" style="display:none" aria-hidden="true">
+          <div class="fetch-field sim-entry-setup-field" id="sim-setup-order-controls" style="display:none" aria-hidden="true">
             <label>Order type</label>
             <div class="sim-pill-row" id="sim-setup-order-type" role="group" aria-label="Order type">
               <button type="button" class="sim-pill sim-pill-active" data-order-type="market_close" aria-pressed="true">Market at close</button>
               <button type="button" class="sim-pill" data-order-type="limit" aria-pressed="false">Limit</button>
             </div>
           </div>
-          <div class="fetch-field" id="sim-setup-price-field">
+          <div class="fetch-field sim-entry-setup-field" id="sim-setup-price-field">
             <label id="sim-setup-price-label" for="sim-entry-price">Entry price</label>
             <input type="number" step="0.01" id="sim-entry-price">
           </div>
-          <label class="sim-eod-stop-toggle" id="sim-setup-fill-bar-stop-wrap" style="display:none">
+          <label class="sim-eod-stop-toggle sim-entry-setup-field" id="sim-setup-fill-bar-stop-wrap" style="display:none">
             <input type="checkbox" id="sim-setup-fill-bar-stop">
             <span>Activate protective stop on fill candle</span>
           </label>
-          <div class="fetch-field">
+          <div class="fetch-field sim-entry-setup-field">
             <label id="sim-setup-size-label" for="sim-size-value">Shares</label>
             <div class="sim-pill-row" id="sim-setup-pills">
               <button type="button" class="sim-pill sim-pill-active" data-mode="shares">Shares</button>
@@ -5910,7 +5917,7 @@
             <input type="hidden" id="sim-size-mode" value="shares">
             <input type="number" id="sim-size-value" style="margin-top:6px;">
           </div>
-          <div class="fetch-field">
+          <div class="fetch-field sim-entry-setup-field">
             <label for="sim-stop-strategy">Stop strategy</label>
             <div class="sim-stop-strategy-row">
               <select id="sim-stop-strategy">
@@ -5932,12 +5939,12 @@
               <span id="sim-stop-strategy-suffix" class="sim-stop-strategy-suffix"></span>
             </div>
           </div>
-          <div class="fetch-field">
+          <div class="fetch-field sim-entry-setup-field">
             <label for="sim-stop-price">Stop price</label>
             <input type="number" step="0.01" id="sim-stop-price">
             <div class="sim-stop-distance" id="sim-stop-distance"></div>
           </div>
-          <label class="sim-eod-stop-toggle" id="sim-setup-stop-eod-wrap" style="display:none">
+          <label class="sim-eod-stop-toggle sim-entry-setup-field" id="sim-setup-stop-eod-wrap" style="display:none">
             <input type="checkbox" id="sim-setup-stop-eod">
             <span>Trigger stop at end of day (closing price)</span>
           </label>
@@ -5953,7 +5960,7 @@
             <label for="sim-initial-equity">Starting equity (optional · enables % return + benchmark)</label>
             <input type="number" step="100" min="0" id="sim-initial-equity" placeholder="e.g. 10000">
           </div>
-          <div class="sim-readout" id="sim-setup-summary">
+          <div class="sim-readout sim-entry-setup-field" id="sim-setup-summary">
             <div>Shares: <strong>—</strong></div>
             <div>Notional: <strong>—</strong></div>
             <div>Risk: <strong>—</strong></div>
@@ -6841,8 +6848,10 @@
               <button id="sim-btn-closeall" class="sim-btn" type="button">Close</button>
             </div>
             <div class="sim-actions sim-actions-between" id="sim-actions-between">
-              <div class="sim-between-msg">Out of position · waiting for next entry</div>
+              <div class="sim-between-msg" id="sim-between-entry-message">Out of position · waiting for next entry</div>
+              <div class="sim-between-msg" id="sim-pending-entry-order" hidden></div>
               <button id="sim-btn-newleg" class="sim-btn sim-btn-primary" type="button">+ New Entry</button>
+              <button id="sim-btn-cancel-entry-order" class="sim-btn" type="button" hidden>Cancel Order</button>
             </div>
             <div class="sim-actions sim-actions-stopped" id="sim-actions-stopped">
               <div class="sim-between-msg" id="sim-stopped-msg">Position closed</div>
@@ -13198,7 +13207,19 @@ const Sim = (function(){
     const preservedEndBarIdx = sim.endBarIdx;
     const preservedInitialEquity = sim.initialEquity || null;
     const preservedCausalDailyExecution = sim.causalDailyExecution === true;
-    const fresh = createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry), initialEquity: preservedInitialEquity, causalDailyExecution: preservedCausalDailyExecution });
+    const playbackOnly = !!(sim.between && !(sim.entry && sim.entry.price > 0) && !(sim.legs && sim.legs.length));
+    const fresh = playbackOnly
+      ? createSim({
+          moveKey: sim.moveKey,
+          direction: sim.direction,
+          noEntry: true,
+          startBarIdx: sim.simStartBarIdx,
+          startDate: bars && bars[sim.simStartBarIdx] ? bars[sim.simStartBarIdx].time : sim.entry.date,
+          endBarIdx: preservedEndBarIdx,
+          initialEquity: preservedInitialEquity,
+          causalDailyExecution: preservedCausalDailyExecution
+        })
+      : createSim({ moveKey: sim.moveKey, direction: sim.direction, entry: clone(sim.entry), initialEquity: preservedInitialEquity, causalDailyExecution: preservedCausalDailyExecution });
     Object.keys(sim).forEach(k => delete sim[k]);
     Object.assign(sim, fresh);
     sim.endBarIdx = preservedEndBarIdx;
@@ -14484,7 +14505,7 @@ window.Sim = Sim;
     const fillEl = document.getElementById(opts.fillId);
     const timingNoteEl = opts.timingNoteId ? document.getElementById(opts.timingNoteId) : null;
     const pills = pillsRoot ? Array.from(pillsRoot.querySelectorAll('[data-order-type]')) : [];
-    const marketClose = _parseNum(opts.marketClose, NaN);
+    let marketClose = _parseNum(opts.marketClose, NaN);
     let orderType = 'market_close';
 
     if (root) {
@@ -14540,9 +14561,17 @@ window.Sim = Sim;
         setOrderType(pill.getAttribute('data-order-type'), true);
       };
     });
-    setOrderType('market_close', false);
+    setOrderType(opts.defaultOrderType === 'limit' ? 'limit' : 'market_close', false);
+    if (fillEl && orderType === 'limit') fillEl.checked = opts.defaultAllowFillBarStop === true;
 
     return {
+      setMarketClose: function(value) {
+        marketClose = _parseNum(value, NaN);
+        if (orderType === 'market_close' && priceEl) {
+          priceEl.value = isFinite(marketClose) ? String(marketClose) : '';
+        }
+      },
+      refresh: function() { setOrderType(orderType, false); },
       read: function() {
         const isLimit = orderType === 'limit';
         return {
@@ -14571,6 +14600,10 @@ window.Sim = Sim;
     const dirHiddenEl = document.getElementById('sim-direction-value');
     const stopEodEl = document.getElementById('sim-setup-stop-eod');
     const stopEodWrap = document.getElementById('sim-setup-stop-eod-wrap');
+    const startFlatEl = document.getElementById('sim-setup-start-flat');
+    const startFlatWrap = document.getElementById('sim-setup-flat-wrap');
+    const entryDateLabelEl = document.getElementById('sim-entry-date-label');
+    const submitEl = document.getElementById('sim-setup-submit');
     if (stopEodWrap) stopEodWrap.style.display = (ctx.portMode || ctx.orderMode === 'pending_limit') ? 'flex' : 'none';
     if (stopEodEl) stopEodEl.checked = ctx.restoreFrom?.stopTriggerMode === 'close';
 
@@ -14615,6 +14648,8 @@ window.Sim = Sim;
         if (flashEl) { flashEl.classList.add('sim-field-flash'); setTimeout(() => flashEl.classList.remove('sim-field-flash'), 600); }
       }
     }
+    if (startFlatWrap) startFlatWrap.style.display = ctx.allowFlatStart ? 'flex' : 'none';
+    if (startFlatEl) startFlatEl.checked = !!(ctx.allowFlatStart && ctx.restoreFrom && ctx.restoreFrom.startFlat);
 
     function recompute() {
       const price = _parseNum(priceEl.value, NaN);
@@ -14675,13 +14710,30 @@ window.Sim = Sim;
       fillWrapId: 'sim-setup-fill-bar-stop-wrap',
       fillId: 'sim-setup-fill-bar-stop',
       marketClose: ctx.marketClose,
+      defaultOrderType: ctx.restoreFrom && ctx.restoreFrom.orderType,
+      defaultAllowFillBarStop: !!(ctx.restoreFrom && ctx.restoreFrom.allowFillBarStop),
       standalonePriceLabel: 'Entry price',
       onChange: function() {
         if (_stopWire && typeof _stopWire.reapply === 'function') _stopWire.reapply();
         else recompute();
       }
     });
-    [priceEl, sizeEl, stopEl, dateEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
+    function marketCloseForDate() {
+      const bars = Array.isArray(ctx.cardBars) && ctx.cardBars.length
+        ? ctx.cardBars
+        : ((typeof window !== 'undefined' && Array.isArray(window.currentBars)) ? window.currentBars : []);
+      const date = dateEl && dateEl.value;
+      const bar = bars.find(function(item){ return item && item.time === date; });
+      return bar && Number.isFinite(Number(bar.close)) ? Number(bar.close) : NaN;
+    }
+    function syncMarketClose() {
+      _setupOrderControlsHandle.setMarketClose(marketCloseForDate());
+      if (_stopWire && typeof _stopWire.reapply === 'function') _stopWire.reapply();
+      else recompute();
+    }
+    [priceEl, sizeEl, stopEl, endDateEl].forEach(el => { el.oninput = recompute; el.onchange = recompute; });
+    dateEl.oninput = syncMarketClose;
+    dateEl.onchange = syncMarketClose;
     _setupPills('sim-setup-pills', 'sim-size-mode', 'sim-setup-size-label', recompute);
     // direction pills wired below after _wireStopStrategy returns its handle.
     recompute();
@@ -14722,10 +14774,30 @@ window.Sim = Sim;
       if (_stopWire && typeof _stopWire.reapply === 'function') _stopWire.reapply();
     });
 
+    function applyStartMode() {
+      const startFlat = !!(startFlatEl && startFlatEl.checked);
+      const modal = document.getElementById('sim-setup-modal');
+      const entryFields = modal ? Array.from(modal.querySelectorAll('.sim-entry-setup-field')) : [];
+      entryFields.forEach(function(field){
+        if (startFlat) field.style.display = 'none';
+        else if (field.id !== 'sim-setup-order-controls' && field.id !== 'sim-setup-fill-bar-stop-wrap' && field.id !== 'sim-setup-stop-eod-wrap') field.style.display = '';
+      });
+      if (!startFlat) {
+        _setupOrderControlsHandle.refresh();
+        if (stopEodWrap) stopEodWrap.style.display = (ctx.portMode || ctx.orderMode === 'pending_limit') ? 'flex' : 'none';
+      }
+      if (entryDateLabelEl) entryDateLabelEl.textContent = startFlat ? 'Simulation start date' : 'Entry date';
+      if (submitEl) submitEl.textContent = startFlat ? 'Start Flat' : 'Start Sim';
+      recompute();
+    }
+    if (startFlatEl) startFlatEl.onchange = applyStartMode;
+    applyStartMode();
+
     document.getElementById('sim-setup-cancel').onclick = () => _closeModal('sim-setup-modal');
     _onBackdrop('sim-setup-modal');
 
     function _snapshotForm() {
+      const orderValues = _setupOrderControlsHandle.read();
       return {
         date: dateEl.value,
         price: _parseNum(priceEl.value, null),
@@ -14733,7 +14805,11 @@ window.Sim = Sim;
         sizeValue: _parseNum(sizeEl.value, null),
         stop: _parseNum(stopEl.value, null),
         endDate: endDateEl.value,
-        initialEquity: equityEl ? _parseNum(equityEl.value, null) : null
+        initialEquity: equityEl ? _parseNum(equityEl.value, null) : null,
+        startFlat: !!(startFlatEl && startFlatEl.checked),
+        orderType: orderValues && orderValues.orderType,
+        allowFillBarStop: orderValues && orderValues.allowFillBarStop,
+        stopTriggerMode: stopEodEl && stopEodEl.checked ? 'close' : 'intraday'
       };
     }
     if (pickEntryBtn) pickEntryBtn.onclick = function() {
@@ -14760,21 +14836,22 @@ window.Sim = Sim;
     document.getElementById('sim-setup-submit').onclick = function() {
       _clearStatus('sim-setup-status');
       const date = dateEl.value;
+      const startFlat = !!(startFlatEl && startFlatEl.checked);
       const orderValues = _setupOrderControlsHandle.read();
       const price = orderValues ? orderValues.price : _parseNum(priceEl.value, NaN);
       const size = _parseNum(sizeEl.value, NaN);
       const stop = _parseNum(stopEl.value, NaN);
       const mode = modeEl.value;
       const direction = ctx.longOnly ? 'long' : ((dirHiddenEl && dirHiddenEl.value === 'short') ? 'short' : 'long');
-      if (!date) return _setStatus('sim-setup-status', 'Entry date is required', true);
-      if (!isFinite(price) || price <= 0) return _setStatus('sim-setup-status', 'Entry price must be > 0', true);
-      if (!isFinite(size) || size <= 0) return _setStatus('sim-setup-status', 'Size must be > 0', true);
-      if (!isFinite(stop) || stop <= 0) return _setStatus('sim-setup-status', 'Stop price must be > 0', true);
+      if (!date) return _setStatus('sim-setup-status', startFlat ? 'Simulation start date is required' : 'Entry date is required', true);
+      if (!startFlat && (!isFinite(price) || price <= 0)) return _setStatus('sim-setup-status', 'Entry price must be > 0', true);
+      if (!startFlat && (!isFinite(size) || size <= 0)) return _setStatus('sim-setup-status', 'Size must be > 0', true);
+      if (!startFlat && (!isFinite(stop) || stop <= 0)) return _setStatus('sim-setup-status', 'Stop price must be > 0', true);
       // Direction-aware stop validation.
       const validStop = (window.Sim && window.Sim.Direction)
         ? window.Sim.Direction.stopValidates(direction, price, stop)
         : (direction === 'short' ? stop > price : stop < price);
-      if (!validStop) {
+      if (!startFlat && !validStop) {
         return _setStatus('sim-setup-status',
           direction === 'short' ? 'Stop must be above entry for short' : 'Stop must be below entry for long',
           true);
@@ -14785,7 +14862,7 @@ window.Sim = Sim;
       const initialEquity = (isFinite(equityRaw) && equityRaw > 0) ? equityRaw : null;
       const stopTrail = ctx.fixedInitialStop ? null : ((stratEl && typeof stratEl._getTrailParams === 'function') ? stratEl._getTrailParams() : null);
       const stopTriggerMode = ((ctx.portMode || ctx.orderMode === 'pending_limit') && stopEodEl && stopEodEl.checked) ? 'close' : 'intraday';
-      const payload = { direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail, stopTriggerMode };
+      const payload = { direction, date, price, sizeMode: mode, sizeValue: size, stop, endDate: endDate || null, initialEquity, stopTrail, stopTriggerMode, startFlat };
       if (orderValues) {
         payload.orderType = orderValues.orderType;
         payload.allowFillBarStop = orderValues.allowFillBarStop;
@@ -19273,7 +19350,9 @@ Sim.Ctrl = (function(){
     _flatHorizonNotified: false,
     _flatPreparedEntry: null,
     _flatGuideLine: null,
-    _policyUiSnapshot: null
+    _policyUiSnapshot: null,
+    _entryOrderOwner: null,
+    _entryOrderState: null
   };
   const PLAY_INTERVAL_MS = 900;
   const SPEEDS = [0.35, 0.5, 1, 2];
@@ -19800,7 +19879,7 @@ Sim.Ctrl = (function(){
       try { candleSeries.removePriceLine(state._flatGuideLine); } catch(e) {}
     }
     state._flatGuideLine = null;
-    if (!state.policy || !spec || !Number.isFinite(Number(spec.price)) || Number(spec.price) <= 0 || !candleSeries) return false;
+    if ((!state.policy && !_workingStandaloneEntryOrder()) || !spec || !Number.isFinite(Number(spec.price)) || Number(spec.price) <= 0 || !candleSeries) return false;
     try {
       state._flatGuideLine = candleSeries.createPriceLine({
         price: Number(spec.price),
@@ -19815,6 +19894,111 @@ Sim.Ctrl = (function(){
       state._flatGuideLine = null;
       return false;
     }
+  }
+
+  function _standaloneOrdersApi() {
+    return (typeof window !== 'undefined' && window.PortSimOrders) ? window.PortSimOrders : null;
+  }
+
+  function _workingStandaloneEntryOrder() {
+    const owner = state._entryOrderOwner;
+    const order = owner && owner.pendingOrder;
+    return order && order.status === 'working' ? order : null;
+  }
+
+  function _syncStandaloneEntryOrderUI() {
+    const order = _workingStandaloneEntryOrder();
+    const message = document.getElementById('sim-pending-entry-order');
+    const flatMessage = document.getElementById('sim-between-entry-message');
+    const newEntry = document.getElementById('sim-btn-newleg');
+    const cancel = document.getElementById('sim-btn-cancel-entry-order');
+    if (message) {
+      message.hidden = !order;
+      message.textContent = order
+        ? ((order.direction === 'short' ? 'Short' : 'Buy') + ' limit ' + order.qty + ' @ $' + Number(order.limitPrice).toFixed(2) + ' · working until cancelled')
+        : '';
+    }
+    if (flatMessage) flatMessage.hidden = !!order;
+    if (newEntry) newEntry.hidden = !!order;
+    if (cancel) cancel.hidden = !order;
+    if (order) {
+      _setFlatGuideLine({ price: order.limitPrice, color: '#60a5fa', title: 'ENTRY LIMIT' });
+    } else if (!state.policy) {
+      _setFlatGuideLine(null);
+    }
+  }
+
+  function _standaloneOrderBudget(requiredNotional) {
+    const sim = state.sim;
+    if (sim && Number.isFinite(Number(sim.initialEquity)) && Number(sim.initialEquity) > 0) {
+      const derived = Sim.computeDerived(sim, state.bars || []);
+      return Math.max(0, Number(sim.initialEquity) + Number(derived.cumulativePnL || 0));
+    }
+    return requiredNotional;
+  }
+
+  function _placeStandaloneEntryLimit(form) {
+    const api = _standaloneOrdersApi();
+    const sim = state.sim;
+    const bar = sim && state.bars && state.bars[sim.playIdx];
+    if (!api || !sim || !bar || !sim.between) throw new Error('Pending-order support is unavailable.');
+    if (_workingStandaloneEntryOrder()) throw new Error('Cancel the working entry order before placing another.');
+    const qty = form.sizeMode === 'dollars'
+      ? Math.floor(Number(form.sizeValue) / Number(form.price))
+      : Math.floor(Number(form.sizeValue));
+    const requiredNotional = qty * Number(form.price);
+    const owner = state._entryOrderOwner || {
+      symbol: (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'SIM',
+      displaySymbol: (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'SIM',
+      assetType: 'stock', role: 'individual_sim', entryKey: 'individual_sim', entryInstanceKey: 'individual_sim',
+      pendingOrder: null, orderEvents: []
+    };
+    const orderState = {
+      cash: _standaloneOrderBudget(requiredNotional),
+      reservedBuyingPower: 0,
+      _orderReservationCents: {}
+    };
+    const created = api.create({
+      kind: 'entry', direction: form.direction === 'short' ? 'short' : 'long',
+      limitPrice: Number(form.price), sizeMode: form.sizeMode, sizeValue: Number(form.sizeValue),
+      stopPrice: Number(form.stop), stopTrail: form.stopTrail || null,
+      stopTriggerMode: form.stopTriggerMode, allowFillBarStop: form.allowFillBarStop === true
+    }, {
+      state: orderState, entry: owner, eligible: true,
+      submittedBarIdx: sim.playIdx, submittedDate: bar.time
+    });
+    if (!created || !created.ok) throw new Error(created && created.error || 'Could not create the limit order.');
+    const reserved = api.reserve(orderState, owner, created.order);
+    if (!reserved) throw new Error('Could not reserve buying power for the limit order.');
+    state._entryOrderOwner = owner;
+    state._entryOrderState = orderState;
+    _syncStandaloneEntryOrderUI();
+    return reserved;
+  }
+
+  function _transitionStandaloneEntryOrder(status, details) {
+    const api = _standaloneOrdersApi();
+    if (!api || !state._entryOrderState || !state._entryOrderOwner || !_workingStandaloneEntryOrder()) return null;
+    let event = api.transition(state._entryOrderState, state._entryOrderOwner, status, details || {});
+    if (!event && typeof api.reconcile === 'function') {
+      api.reconcile(state._entryOrderState, [state._entryOrderOwner], { reason: 'Individual Sim repaired its order reservation.' });
+      if (_workingStandaloneEntryOrder()) event = api.transition(state._entryOrderState, state._entryOrderOwner, status, details || {});
+    }
+    _syncStandaloneEntryOrderUI();
+    return event;
+  }
+
+  function _cancelStandaloneEntryOrder() {
+    const order = _workingStandaloneEntryOrder();
+    if (!order || !state.sim) return false;
+    pause();
+    _pushSnapshot();
+    const bar = state.bars && state.bars[state.sim.playIdx];
+    return !!_transitionStandaloneEntryOrder('cancelled', {
+      date: bar && bar.time || order.submittedDate,
+      barIdx: state.sim.playIdx,
+      reason: 'Manually cancelled.'
+    });
   }
 
   function _buildRLevels() {
@@ -20192,8 +20376,8 @@ Sim.Ctrl = (function(){
     // there's no current position — show $0 / — instead of the previous
     // leg's notional. The cumulative P&L row carries the running total.
     const notional = (d.between || sim.qty <= 0) ? 0 : (sim.shares0 * sim.entry.price);
-    const stopDollar = d.currentStop - sim.entry.price;
-    const stopPct = sim.entry.price > 0 ? stopDollar / sim.entry.price : 0;
+    const stopDollar = d.between ? null : (d.currentStop - sim.entry.price);
+    const stopPct = !d.between && sim.entry.price > 0 ? stopDollar / sim.entry.price : null;
     // Find the most recent exit event (stop or close) to surface exit context
     let exitPrice = null, exitDay = null, exitReason = null;
     if (d.stoppedOut || d.closed) {
@@ -20235,7 +20419,7 @@ Sim.Ctrl = (function(){
       initialNotional: notional, initialShares: (d.between || sim.qty <= 0) ? 0 : sim.shares0,
       stoppedOut: !!d.stoppedOut, closed: !!d.closed,
       exitPrice, exitDay, exitReason,
-      stop: d.currentStop, stopDollar, stopPct,
+      stop: d.between ? null : d.currentStop, stopDollar, stopPct,
       mfe: d.mfe, mae: d.mae, r: d.rCurrent,
       days: d.dayCount, barIndex: d.dayCount,
       dateISO: bar ? bar.time : '—',
@@ -20327,6 +20511,17 @@ Sim.Ctrl = (function(){
   function _render(result, options) {
     options = options || {};
     if (!state.sim) return null;
+    if (!state.policy && state.sim.between && _workingStandaloneEntryOrder()) {
+      const orderEndIdx = state._flatEndBarIdx != null ? state._flatEndBarIdx : state.bars.length - 1;
+      if (state.sim.playIdx >= orderEndIdx) {
+        const endBar = state.bars[state.sim.playIdx];
+        _transitionStandaloneEntryOrder('expired', {
+          date: endBar && endBar.time || null,
+          barIdx: state.sim.playIdx,
+          reason: 'Cancelled unfilled at simulation end.'
+        });
+      }
+    }
     const d = result ? result.derived : Sim.computeDerived(state.sim, state.bars);
     Sim.UI.render(_deriveForUI(d));
     if (result && result.eventsFired) {
@@ -20352,6 +20547,7 @@ Sim.Ctrl = (function(){
       }
     }
     else if (state.sim.playIdx >= state.bars.length - 1) { pause(); }
+    if (!state.policy) _syncStandaloneEntryOrderUI();
     _syncPolicyActionUI();
     return d;
   }
@@ -20412,7 +20608,9 @@ Sim.Ctrl = (function(){
   function _prepareFlatEntryAtBar(form, options) {
     options = options || {};
     const current = _flatState('entry-commit');
-    if (!current || !current.canEnter || !form) return { ok:false, error:'Entry is no longer available.' };
+    const nativeFlatEntry = !state.policy && state.active && state.sim && state.sim.between
+      && state.sim.qty <= 0 && !state.sim.closed && !state.sim.stoppedOut;
+    if (((!current || !current.canEnter) && !nativeFlatEntry) || !form) return { ok:false, error:'Entry is no longer available.' };
     const barIdx = Number.isInteger(options.barIdx) ? options.barIdx : state.sim.playIdx;
     const advancesPlayhead = barIdx > state.sim.playIdx;
     if ((advancesPlayhead && barIdx !== state.sim.playIdx + 1) || barIdx < state.sim.playIdx || !state.bars[barIdx]) {
@@ -20425,7 +20623,7 @@ Sim.Ctrl = (function(){
     const fillPrice = Number(form.price);
     const submittedStop = Number(form.stop);
     const forceGap = options.forceGap === true;
-    const direction = state.policy.longOnly ? 'long' : (form.direction === 'short' ? 'short' : 'long');
+    const direction = state.policy && state.policy.longOnly ? 'long' : (form.direction === 'short' ? 'short' : 'long');
     if (!Number.isFinite(fillPrice) || fillPrice <= 0 || !Number.isFinite(submittedStop) || submittedStop <= 0) {
       return { ok:false, error:'Entry fill and stop must be positive prices.' };
     }
@@ -20445,7 +20643,7 @@ Sim.Ctrl = (function(){
         sizeValue: form.sizeValue,
         stop: safeStop,
         direction: direction,
-        stopTrail: null,
+        stopTrail: form.stopTrail || null,
         stopTriggerMode: form.stopTriggerMode,
         executionTiming: options.executionTiming || 'close'
       });
@@ -20529,7 +20727,8 @@ Sim.Ctrl = (function(){
     return true;
   }
 
-  function _commitFlatEntry(prepared) {
+  function _commitFlatEntry(prepared, options) {
+    options = options || {};
     const preparation = prepared && prepared.preparation ? prepared.preparation : prepared;
     if (!preparation || state._flatPreparedEntry !== preparation || state.sim !== preparation.baseSim ||
         state.sim.playIdx !== preparation.basePlayIdx) {
@@ -20549,7 +20748,7 @@ Sim.Ctrl = (function(){
       curve: (state._curve || []).slice()
     };
     try {
-      _pushSnapshot();
+      if (!options.skipSnapshot) _pushSnapshot();
       state.sim = preparation.sim;
       state._flatExitReason = preparation.exitReason;
       if (preparation.advancesPlayhead) _appendBar(preparation.barIdx);
@@ -20662,6 +20861,10 @@ Sim.Ctrl = (function(){
   function onNewEntryClick() {
     if (!state.active || !state.sim || !state.sim.between) return;
     if (state.policy) return _openFlatEntry();
+    if (_workingStandaloneEntryOrder()) {
+      alert('Cancel the working entry order before placing another.');
+      return;
+    }
     pause();
     const bar = state.bars[state.sim.playIdx];
     if (!bar) return;
@@ -20671,31 +20874,31 @@ Sim.Ctrl = (function(){
       legNum: (state.sim.legs || []).length + 1,
       suggestedSize: state.sim.shares0 || 1000,
       // Default opposite of just-closed leg (stop-out re-entry case).
-      priorDirection: state.sim.direction || 'long'
+      defaultDirection: (state.sim.legs || []).length ? null : 'long',
+      priorDirection: (state.sim.legs || []).length ? (state.sim.direction || 'long') : null,
+      orderMode: 'pending_limit',
+      marketClose: bar.close,
+      cardBars: state.bars,
+      cardMoveKey: state.sim.moveKey
     }, form => {
-      _pushSnapshot();
-      try {
-        Sim.startNewLeg(state.sim, {
-          barIdx: state.sim.playIdx,
-          date: bar.time,
-          price: form.price,
-          sizeMode: form.sizeMode,
-          sizeValue: form.sizeValue,
-          stop: form.stop,
-          // P3 wires `form.direction` from the modal radio.
-          direction: form.direction,
-          // Carry through the EMA-trail spec if the user picked 'ema_trail'.
-          stopTrail: form.stopTrail || null
-        });
-      } catch (e) { alert('Could not start new leg: ' + e.message); return; }
-      _ensureInitialStopLine();
-      _addStopLine(state.sim.entry.stop, state.sim.entry.barIdx, 1.0, 'initial', state.sim.stopLevels[0].id);
-      _buildRLevels();
-      const legNum = (state.sim.legs || []).length + 1;
-      _addLegEntryMarker(legNum, state.sim.entry.barIdx);
-      _appendCurvePoint(state.sim.playIdx);
-      _checkRHits(state.bars[state.sim.playIdx]);
-      _render(null);
+      if (form.orderType === 'limit') {
+        _pushSnapshot();
+        try { _placeStandaloneEntryLimit(form); }
+        catch (e) {
+          state._history.pop();
+          throw e;
+        }
+        _render(null);
+        return;
+      }
+      const started = _startFlatEntryAtBar(Object.assign({}, form, { price:bar.close }), {
+        barIdx: state.sim.playIdx,
+        executionTiming: 'close',
+        fillTiming: 'paused_close',
+        extremaTiming: 'next_bar',
+        extremaStartBarIdx: state.sim.playIdx + 1
+      });
+      if (!started.ok) throw new Error('Could not start new leg: ' + started.error);
     });
   }
 
@@ -20728,7 +20931,14 @@ Sim.Ctrl = (function(){
       suggestedSize: 1000,
       defaultEndDate: defaultEndDate,
       defaultEquity: opts.defaultEquity != null ? opts.defaultEquity : null,
-      restoreFrom: opts.restoreFrom || null
+      restoreFrom: opts.restoreFrom || null,
+      allowFlatStart: true,
+      orderMode: 'pending_limit',
+      marketClose: defaultBar.close,
+      cardBars: currentBars,
+      cardMoveKey: (typeof currentMoveRow !== 'undefined' && currentMoveRow)
+        ? (currentMoveRow.symbol + '_' + currentMoveRow.year)
+        : currentSymbol
     }, _onSetupSubmit);
     // Consume the year-window only after the modal is opened (next start clears it).
     if (pending) window._pendingSimYearWindow = null;
@@ -20745,6 +20955,8 @@ Sim.Ctrl = (function(){
     state._flatExitReason = null;
     state._flatHorizonNotified = false;
     state._flatPreparedEntry = null;
+    state._entryOrderOwner = null;
+    state._entryOrderState = null;
     _setFlatGuideLine(null);
     _applyPolicyUI();
     let barIdx = currentBars.findIndex(b => b.time === form.date);
@@ -20767,11 +20979,31 @@ Sim.Ctrl = (function(){
     }
 
     const moveKey = (typeof currentMoveRow !== 'undefined' && currentMoveRow) ? (currentMoveRow.symbol + '_' + currentMoveRow.year) : currentSymbol;
+    if (form.startFlat || form.orderType === 'limit') {
+      const started = _startFlatPlayback({
+        bars: currentBars,
+        moveKey: moveKey,
+        startBarIdx: barIdx,
+        endBarIdx: endBarIdx,
+        initialEquity: form.initialEquity || null
+      });
+      if (!started) return;
+      state._lastSetup = Object.assign({}, form);
+      if (form.orderType === 'limit' && !form.startFlat) {
+        try { _placeStandaloneEntryLimit(form); }
+        catch (error) {
+          exit({ preserveChart:true });
+          throw error;
+        }
+        _render(null);
+      }
+      return;
+    }
     let sim;
     try {
       sim = Sim.createSim({
         moveKey, direction: form.direction || 'long',
-        entry: { barIdx, date: currentBars[barIdx].time, price: form.price, sizeMode: form.sizeMode, sizeValue: form.sizeValue, stop: form.stop, endBarIdx, stopTrail: form.stopTrail || null },
+        entry: { barIdx, date: currentBars[barIdx].time, price: currentBars[barIdx].close, sizeMode: form.sizeMode, sizeValue: form.sizeValue, stop: form.stop, endBarIdx, stopTrail: form.stopTrail || null, stopTriggerMode: form.stopTriggerMode, executionTiming: 'close' },
         initialEquity: form.initialEquity || null
       });
     } catch (e) { alert('Could not start sim: ' + e.message); return; }
@@ -20817,7 +21049,10 @@ Sim.Ctrl = (function(){
     state._flatExitReason = null;
     state._flatHorizonNotified = false;
     state._flatPreparedEntry = null;
+    state._entryOrderOwner = null;
+    state._entryOrderState = null;
     _applyPolicyUI();
+    _syncStandaloneEntryOrderUI();
     Sim.UI.setActive(false);
     _unbindKeys();
     // Clear blind-replay state on exit so the chart goes back to normal
@@ -20841,6 +21076,24 @@ Sim.Ctrl = (function(){
     try { chart.subscribeClick(_pickClickHandler); } catch(e) {}
     document.addEventListener('keydown', _pickKeyHandler, true);
     document.body.dataset.simPicking = mode;
+  }
+
+  function _reopenStandaloneSetup(stash) {
+    stash = stash || {};
+    const bar = currentBars.find(function(item){ return item && item.time === stash.date; });
+    Sim.UI.showSetupModal({
+      defaultDate: stash.date,
+      defaultPrice: stash.price,
+      suggestedSize: stash.sizeValue,
+      restoreFrom: stash,
+      allowFlatStart: true,
+      orderMode: 'pending_limit',
+      marketClose: bar ? bar.close : stash.price,
+      cardBars: currentBars,
+      cardMoveKey: (typeof currentMoveRow !== 'undefined' && currentMoveRow)
+        ? (currentMoveRow.symbol + '_' + currentMoveRow.year)
+        : currentSymbol
+    }, _onSetupSubmit);
   }
 
   function _lwcTimeToStr(t) {
@@ -20876,12 +21129,7 @@ Sim.Ctrl = (function(){
     stash.pickedField = pickedField;
     const cb = state._pickCb;
     _exitPickMode();
-    Sim.UI.showSetupModal({
-      defaultDate: stash.date,
-      defaultPrice: stash.price,
-      suggestedSize: stash.sizeValue,
-      restoreFrom: stash
-    }, _onSetupSubmit);
+    _reopenStandaloneSetup(stash);
     if (typeof cb === 'function') { try { cb({ time: bar.time, close: bar.close, barIdx: idx }); } catch(e) {} }
   }
 
@@ -20890,12 +21138,7 @@ Sim.Ctrl = (function(){
     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
     const stash = state._pickStash || {};
     _exitPickMode();
-    Sim.UI.showSetupModal({
-      defaultDate: stash.date,
-      defaultPrice: stash.price,
-      suggestedSize: stash.sizeValue,
-      restoreFrom: stash
-    }, _onSetupSubmit);
+    _reopenStandaloneSetup(stash);
   }
 
   function _exitPickMode() {
@@ -20928,7 +21171,7 @@ Sim.Ctrl = (function(){
       cancel.onclick = function() {
         const stash = state._pickStash || {};
         _exitPickMode();
-        Sim.UI.showSetupModal({ defaultDate: stash.date, defaultPrice: stash.price, suggestedSize: stash.sizeValue, restoreFrom: stash }, _onSetupSubmit);
+        _reopenStandaloneSetup(stash);
       };
       el.appendChild(cancel);
       const host = document.querySelector('.chart-panel') || document.body;
@@ -20963,7 +21206,9 @@ Sim.Ctrl = (function(){
       curve: state._curve ? state._curve.slice() : [],
       legMarkers: (state._legMarkers || []).slice(),
       rMarkers: (state._rMarkers || []).slice(),
-      hitRLevels: state._hitRLevels ? Array.from(state._hitRLevels) : []
+      hitRLevels: state._hitRLevels ? Array.from(state._hitRLevels) : [],
+      entryOrderOwner: state._entryOrderOwner ? JSON.parse(JSON.stringify(state._entryOrderOwner)) : null,
+      entryOrderState: state._entryOrderState ? JSON.parse(JSON.stringify(state._entryOrderState)) : null
     });
     if (state._history.length > HISTORY_MAX) state._history.shift();
   }
@@ -20975,6 +21220,103 @@ Sim.Ctrl = (function(){
       const type = (i === 0 || s.id === 'stop_initial') ? 'initial' : 'moved';
       _addStopLine(s.price, s.barIdx, s.pct, type, s.id);
     });
+  }
+
+  function _fillStandaloneEntryOrderOnBar(bar, barIdx) {
+    const api = _standaloneOrdersApi();
+    const order = _workingStandaloneEntryOrder();
+    if (!api || !order || !bar || !state.sim || !state.sim.between) return false;
+    const fill = api.evaluateFill(order, bar, barIdx);
+    if (!fill) return false;
+    if (!api.canSettle(state._entryOrderState, order, fill.price)) {
+      _transitionStandaloneEntryOrder('invalidated', {
+        date: bar.time, barIdx: barIdx, price: fill.price,
+        reason: 'Reserved buying power was unavailable when the order tried to fill.'
+      });
+      return false;
+    }
+
+    const openingFill = order.direction === 'short'
+      ? Number(bar.open) >= Number(order.limitPrice)
+      : Number(bar.open) <= Number(order.limitPrice);
+    const gapThroughStop = openingFill && (order.direction === 'short'
+      ? Number(bar.open) >= Number(order.stopPrice)
+      : Number(bar.open) <= Number(order.stopPrice));
+    const processFillBarStop = gapThroughStop || order.allowFillBarStop === true;
+    const fillTiming = gapThroughStop
+      ? 'opening_gap_through_stop'
+      : (openingFill ? 'opening_limit_fill' : 'intraday_limit_touch');
+    const extremaTiming = gapThroughStop
+      ? 'opening_gap_safety'
+      : (openingFill ? 'fill_bar_full' : (processFillBarStop ? 'fill_bar_close_and_stop_only' : 'next_bar'));
+    const prepared = _prepareFlatEntryAtBar({
+      direction: order.direction,
+      price: fill.price,
+      sizeMode: 'shares',
+      sizeValue: order.qty,
+      stop: order.stopPrice,
+      stopTrail: order.stopTrail || null,
+      stopTriggerMode: order.stopTriggerMode
+    }, {
+      barIdx: barIdx,
+      orderId: order.id,
+      requestedPrice: order.limitPrice,
+      executionTiming: 'limit_fill',
+      fillTiming: fillTiming,
+      extremaTiming: extremaTiming,
+      extremaStartBarIdx: extremaTiming === 'next_bar' ? barIdx + 1 : barIdx,
+      processFillBarStop: processFillBarStop,
+      recordIntradayExtremes: openingFill,
+      forceGap: gapThroughStop
+    });
+    if (!prepared || !prepared.ok) {
+      _transitionStandaloneEntryOrder('invalidated', {
+        date: bar.time, barIdx: barIdx, price: fill.price,
+        reason: 'Entry preparation failed: ' + (prepared && prepared.error || 'The fill could not be applied.')
+      });
+      return false;
+    }
+
+    const ownerBefore = JSON.parse(JSON.stringify(state._entryOrderOwner));
+    const orderStateBefore = JSON.parse(JSON.stringify(state._entryOrderState));
+    _pushSnapshot();
+    const filledEvent = _transitionStandaloneEntryOrder('filled', {
+      date: bar.time,
+      barIdx: barIdx,
+      price: fill.price,
+      fillPrice: fill.price,
+      requestedPrice: order.limitPrice,
+      gapImproved: fill.gapImproved === true,
+      fillTiming: fillTiming,
+      executionTiming: 'limit_fill'
+    });
+    if (!filledEvent) {
+      state._history.pop();
+      state._entryOrderOwner = ownerBefore;
+      state._entryOrderState = orderStateBefore;
+      _discardFlatEntry(prepared);
+      _syncStandaloneEntryOrderUI();
+      return false;
+    }
+    const started = _commitFlatEntry(prepared, { skipSnapshot:true });
+    if (!started || !started.ok) {
+      state._history.pop();
+      state._entryOrderOwner = ownerBefore;
+      state._entryOrderState = orderStateBefore;
+      _syncStandaloneEntryOrderUI();
+      return false;
+    }
+    if (gapThroughStop && started.stopEvent) {
+      api.recordEvent(state._entryOrderOwner, 'gap_stop', {
+        order: order,
+        date: bar.time,
+        barIdx: barIdx,
+        price: started.stopEvent.price,
+        reason: 'Opening gap filled the entry through its protective stop.'
+      });
+    }
+    _syncStandaloneEntryOrderUI();
+    return true;
   }
 
   function _stepForward(n) {
@@ -20989,6 +21331,9 @@ Sim.Ctrl = (function(){
     if (target === before) { pause(); return; }
     let lastResult = null;
     for (let step = before + 1; step <= target; step++) {
+      if (!state.policy && state.sim.between && _workingStandaloneEntryOrder()) {
+        if (_fillStandaloneEntryOrderOnBar(state.bars[step], step)) return;
+      }
       if (state.policy && state.policy.beforeFlatStep && state.sim.between && state.sim.qty <= 0 && !state._flatAttemptPending) {
         let decision = null;
         try {
@@ -21043,6 +21388,8 @@ Sim.Ctrl = (function(){
     // Restore data state. Replace state.sim wholesale; everything reads it fresh.
     state.sim = snap.sim;
     state._curve = snap.curve;
+    state._entryOrderOwner = snap.entryOrderOwner || null;
+    state._entryOrderState = snap.entryOrderState || null;
     // _maskChart wipes _legMarkers/_rMarkers/_hitRLevels; restore AFTER masking.
     _maskChart(state.sim.playIdx);
     state._legMarkers = snap.legMarkers;
@@ -21050,6 +21397,7 @@ Sim.Ctrl = (function(){
     state._hitRLevels = new Set(snap.hitRLevels);
     _applyAllMarkers();
     _rebuildStopLinesFromSim();
+    _syncStandaloneEntryOrderUI();
     _centerOnEntry(state.sim.entry.barIdx);
     _render();
   }
@@ -21226,7 +21574,8 @@ Sim.Ctrl = (function(){
       ['sim-btn-add',  onAddClick],
       ['sim-btn-movestop', onMoveStopClick],
       ['sim-btn-closeall', onCloseAllClick],
-      ['sim-btn-newleg', onNewEntryClick]
+      ['sim-btn-newleg', onNewEntryClick],
+      ['sim-btn-cancel-entry-order', _cancelStandaloneEntryOrder]
     ];
     pairs.forEach(([id, fn]) => { const el = byId(id); if (el) el.addEventListener('click', fn); });
     window.addEventListener('pagehide', _exitPickMode);
@@ -21261,6 +21610,8 @@ Sim.Ctrl = (function(){
     }
     pause();
     _setFlatGuideLine(null);
+    state._entryOrderOwner = null;
+    state._entryOrderState = null;
     state._lastSetup = null;
     let sim;
     try {
@@ -21281,7 +21632,7 @@ Sim.Ctrl = (function(){
     state.speed = 1;
     state._history = [];
     state.policy = policy;
-    state._flatEndBarIdx = policy ? p.endBarIdx : null;
+    state._flatEndBarIdx = p.endBarIdx != null ? p.endBarIdx : null;
     state._flatCompletedLegs = new Set();
     state._flatAttemptPending = false;
     state._flatExitReason = null;
