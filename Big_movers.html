@@ -7407,7 +7407,7 @@ function applyTheme() {
     // Update volume colors
     if (currentBars.length) {
       const tf = currentTF;
-      const bars = resampleBars(currentBars, tf);
+      const bars = resampleBars(chartBarsThroughSimulationCutoff(currentBars), tf);
       volSeries.setData(bars.map(b => ({
         time: b.time,
         value: b.volume,
@@ -7543,6 +7543,7 @@ function clearIndicatorOverlays() {
 
 function applyIndicatorOverlays() {
   clearIndicatorOverlays();
+  const cutoff = activeSimulationChartCutoff();
 
   // (1) MA lines — gated by aiOverlayEnabled
   if (aiIndicators && aiOverlayEnabled) {
@@ -7555,7 +7556,8 @@ function applyIndicatorOverlays() {
         priceLineVisible: false, lastValueVisible: false,
         crosshairMarkerVisible: false,
       });
-      series.setData(data.map(p => ({ time: p.time, value: p.value })));
+      const visibleData = cutoff ? data.filter(p => p && p.time <= cutoff) : data;
+      series.setData(visibleData.map(p => ({ time: p.time, value: p.value })));
       aiSeries[key] = series;
     }
   }
@@ -7565,9 +7567,14 @@ function applyIndicatorOverlays() {
   const markers = [];
 
   // Always merge in the low/high range markers from selectRow
-  for (const m of (extraCandleMarkers || [])) markers.push(m);
+  if (!cutoff) {
+    for (const m of (extraCandleMarkers || [])) markers.push(m);
+  }
   markers.sort((a, b) => a.time < b.time ? -1 : 1);
   candleSeries.setMarkers(markers);
+  if (cutoff && window.Sim && Sim.Ctrl && typeof Sim.Ctrl.refreshChartCutoff === 'function') {
+    Sim.Ctrl.refreshChartCutoff();
+  }
 }
 
 async function loadAIClassifications() {
@@ -7782,7 +7789,7 @@ function updateSuperTrend() {
 
   if (!stEnabled || !currentBars || !currentBars.length) return;
 
-  const bars = resampleBars(currentBars, currentTF);
+  const bars = resampleBars(chartBarsThroughSimulationCutoff(currentBars), currentTF);
   const result = computeSuperTrend(bars, stConfig);
   const pts = result.line;
   if (!pts.length) return;
@@ -8078,10 +8085,13 @@ function removeMaRow(id){
 }
 function updateMaSeries(id){
   const m=getMa(id);if(!m?.series||!currentBars.length)return;
-  const bars = resampleBars(currentBars, currentTF);
+  const bars = resampleBars(chartBarsThroughSimulationCutoff(currentBars), currentTF);
   const data = m.enabled ? getMaData(bars, m.type, m.period) : [];
   m.series.setData(data);
   m._dataMap = new Map(data.map(p => [p.time, p.value]));
+  if(activeSimulationChartCutoff() && window.Sim && Sim.Ctrl && typeof Sim.Ctrl.refreshChartCutoff === 'function') {
+    Sim.Ctrl.refreshChartCutoff();
+  }
 }
 function updateAllMA(){maList.forEach(m=>updateMaSeries(m.id));}
 document.getElementById('ma-add-btn').addEventListener('click',()=>{addMaRow();saveSettings();});
@@ -8235,7 +8245,7 @@ function updateCrosshairInfo(param) {
   }
 
   // ── 3. Find resampledBar by timeStr (includes volume) ──
-  const resampledBars = resampleBars(currentBars, currentTF);
+  const resampledBars = resampleBars(chartBarsThroughSimulationCutoff(currentBars), currentTF);
   let bar = resampledBars.find(b => b.time === timeStr) || null;
   if (!bar) {
     // Fallback: nearest bar if exact date not found
@@ -8300,7 +8310,7 @@ function updateCrosshairInfo(param) {
   // MA values (stable width)
   if (infoMA) {
     const keyTime = bar.time || timeStr;
-    const tfBars = resampleBars(currentBars, currentTF);
+    const tfBars = resampleBars(chartBarsThroughSimulationCutoff(currentBars), currentTF);
     const parts = [];
     for (const m of maList) {
       if (!m?.enabled) continue;
@@ -8389,25 +8399,38 @@ document.addEventListener('click',e=>{ if(!e.target.closest('.tool-group')) docu
 // ==============================================
 // TIMEFRAME RESAMPLING
 // ==============================================
+function activeSimulationChartCutoff(){
+  try {
+    return (window.Sim && Sim.Ctrl && typeof Sim.Ctrl.getCutoffBarTime === 'function')
+      ? Sim.Ctrl.getCutoffBarTime()
+      : null;
+  } catch(e) { return null; }
+}
+
+function chartBarsThroughSimulationCutoff(bars){
+  const source = Array.isArray(bars) ? bars : [];
+  const cutoff = activeSimulationChartCutoff();
+  return cutoff ? source.filter(b => b && b.time <= cutoff) : source;
+}
+
+function timeframeBucketStart(dateStr, tf){
+  if(tf === 'D') return dateStr;
+  const d = new Date(dateStr);
+  if(tf === 'W'){
+    const day=d.getUTCDay()||7;
+    const mon=new Date(d);
+    mon.setUTCDate(d.getUTCDate()-(day-1));
+    return mon.toISOString().slice(0,10);
+  }
+  return dateStr.slice(0,7)+'-01';
+}
+
 function resampleBars(bars, tf){
   if(tf==='D') return bars;
-  const isWeekly = tf==='W';
-
-  function getPeriodKey(dateStr){
-    const d=new Date(dateStr);
-    if(isWeekly){
-      const day=d.getUTCDay()||7;
-      const mon=new Date(d);
-      mon.setUTCDate(d.getUTCDate()-(day-1));
-      return mon.toISOString().slice(0,10);
-    } else {
-      return dateStr.slice(0,7)+'-01';
-    }
-  }
 
   const groups=new Map();
   for(const b of bars){
-    const key=getPeriodKey(b.time);
+    const key=timeframeBucketStart(b.time, tf);
     if(!groups.has(key)){
       groups.set(key,{time:key,open:b.open,high:b.high,low:b.low,close:b.close,volume:b.volume});
     } else {
@@ -8522,7 +8545,9 @@ function updateSpyOverlay(){
     return;
   }
 
-  const tfBars = resampleBars(spyBars, currentTF);
+  const cutoff = activeSimulationChartCutoff();
+  const visibleSpyBars = cutoff ? spyBars.filter(b => b && b.time <= cutoff) : spyBars;
+  const tfBars = resampleBars(visibleSpyBars, currentTF);
   if (!tfBars || !tfBars.length) return;
 
   const baseTime = spyVisibleFromTime || null;
@@ -8550,11 +8575,15 @@ function setTimeframe(tf){
   if(manualLegPick)cancelManualLegPick();
   currentTF=tf;
   ['D','W','M'].forEach(t=>document.getElementById('tf-'+t).classList.toggle('active',t===tf));
+  if(window.Sim && Sim.Ctrl && typeof Sim.Ctrl.isActive === 'function' && Sim.Ctrl.isActive()){
+    if(typeof Sim.Ctrl.refreshChartCutoff === 'function') Sim.Ctrl.refreshChartCutoff();
+    return;
+  }
   if(activeIdx>=0) selectRow(activeIdx);
 }
 
 function applyTimeframe(){
-  const bars=resampleBars(currentBars, currentTF);
+  const bars=resampleBars(chartBarsThroughSimulationCutoff(currentBars), currentTF);
   // Compute base normalization window (left edge) from the selected row's low/high dates.
   // This keeps the SPY overlay comparable when we later setVisibleRange().
   spyVisibleFromTime = null;
@@ -8608,9 +8637,12 @@ function applyMoveMarkers(){
   // Re-apply series markers after setData() calls (e.g. when toggling volume pane).
   if(!currentMoveRow || !currentBars || !currentBars.length) return;
   if(!priceSeries) return;
+  // Sim.Ctrl owns entry/exit/R markers while playback is active. Catalogue
+  // low/high markers include future outcome information and stay hidden.
+  if(activeSimulationChartCutoff()) return;
 
   const r = currentMoveRow;
-  const tfBars = resampleBars(currentBars, currentTF);
+  const tfBars = resampleBars(chartBarsThroughSimulationCutoff(currentBars), currentTF);
   if(!tfBars || !tfBars.length) return;
 
   const findBar = t => tfBars.find(b=>b.time===t) || tfBars.reduce((best,b)=>b.time.localeCompare(t)<0?b:best, tfBars[0]);
@@ -8686,7 +8718,7 @@ function time2p(t){
   const direct=chart.timeScale().timeToCoordinate(t);
   if(direct!=null) return direct;
   if(!currentBars.length) return null;
-  const resampled=resampleBars(currentBars, currentTF);
+  const resampled=resampleBars(chartBarsThroughSimulationCutoff(currentBars), currentTF);
   const best=nearestBarTime(resampled,t);
   if(!best) return null;
   return chart.timeScale().timeToCoordinate(best);
@@ -8985,7 +9017,7 @@ function formatRangePrice(change){
 }
 
 function getRangeBarCount(p1,p2){
-  return countBarsInRange(resampleBars(currentBars,currentTF),p1.time,p2.time);
+  return countBarsInRange(resampleBars(chartBarsThroughSimulationCutoff(currentBars),currentTF),p1.time,p2.time);
 }
 
 function getRangeLabelContent(type,p1,p2){
@@ -10418,7 +10450,13 @@ function setChartType(nextType, skipSave=false){
   chartType = (nextType === 'ohlc') ? 'ohlc' : 'candle';
   priceSeries = chartType === 'ohlc' ? ohlcSeries : candleSeries;
   setupChartMenu();
-  if (currentBars.length) applyTimeframe();
+  if (currentBars.length) {
+    if(window.Sim && Sim.Ctrl && typeof Sim.Ctrl.isActive === 'function' && Sim.Ctrl.isActive()){
+      if(typeof Sim.Ctrl.refreshChartCutoff === 'function') Sim.Ctrl.refreshChartCutoff();
+    } else {
+      applyTimeframe();
+    }
+  }
   if (!skipSave) saveSettings();
 }
 
@@ -20119,7 +20157,10 @@ Sim.Ctrl = (function(){
   }
 
   function _applyAllMarkers() {
-    const merged = (state._legMarkers || []).concat(state._rMarkers || []);
+    const merged = (state._legMarkers || []).concat(state._rMarkers || []).map(function(marker){
+      if (typeof currentTF === 'undefined' || currentTF === 'D' || typeof timeframeBucketStart !== 'function') return marker;
+      return Object.assign({}, marker, { time: timeframeBucketStart(marker.time, currentTF) });
+    });
     merged.sort((a, b) => (a.time < b.time ? -1 : a.time > b.time ? 1 : 0));
     try { (priceSeries || candleSeries).setMarkers(merged); } catch(e) {}
   }
@@ -20350,6 +20391,16 @@ Sim.Ctrl = (function(){
 
   function _maskMAs(sliceIdx) {
     if (typeof maList === 'undefined' || !Array.isArray(maList)) return;
+    if (typeof currentTF !== 'undefined' && currentTF !== 'D' && typeof resampleBars === 'function' && typeof getMaData === 'function') {
+      const revealed = resampleBars(state.bars.slice(0, sliceIdx + 1), currentTF);
+      maList.forEach(m => {
+        if (!m || !m.series) return;
+        const data = m.enabled ? getMaData(revealed, m.type, m.period) : [];
+        m._dataMap = new Map(data.map(p => [p.time, p.value]));
+        try { m.series.setData(data); } catch(e) {}
+      });
+      return;
+    }
     maList.forEach(m => {
       if (!m || !m.series) return;
       const dataMap = state._maData && state._maData[m.id];
@@ -20429,8 +20480,11 @@ Sim.Ctrl = (function(){
       });
     } catch(e) {}
   }
-  function _maskChart(sliceIdx) {
-    const slice = state.bars.slice(0, sliceIdx + 1);
+  function _renderMaskedPriceAndVolume(sliceIdx) {
+    const revealed = state.bars.slice(0, sliceIdx + 1);
+    const slice = (typeof resampleBars === 'function' && typeof currentTF !== 'undefined')
+      ? resampleBars(revealed, currentTF)
+      : revealed;
     const candleData = slice.map(_candleBar);
     if (candleData.length > 0) {
       const lastIdx = candleData.length - 1;
@@ -20441,37 +20495,68 @@ Sim.Ctrl = (function(){
     } else {
       state._highlightedIdx = null;
     }
-    try { candleSeries.setData(candleData); } catch(e) { console.warn('sim mask candle', e); }
+    try {
+      if (typeof chartType !== 'undefined' && chartType === 'ohlc' && ohlcSeries) {
+        ohlcSeries.setData(candleData);
+        candleSeries.setData([]);
+        priceSeries = ohlcSeries;
+      } else {
+        candleSeries.setData(candleData);
+        if (typeof ohlcSeries !== 'undefined' && ohlcSeries) ohlcSeries.setData([]);
+        priceSeries = candleSeries;
+      }
+    } catch(e) { console.warn('sim mask price', e); }
     try { volSeries.setData(slice.map(_volBar)); } catch(e) { console.warn('sim mask vol', e); }
-    state._rMarkers = [];
-    state._hitRLevels = new Set();
-    state._legMarkers = [];
-    try { (priceSeries || candleSeries).setMarkers([]); } catch(e) {}
+  }
+  function _maskChart(sliceIdx, options) {
+    options = options || {};
+    _renderMaskedPriceAndVolume(sliceIdx);
+    if (!options.preserveMarkers) {
+      state._rMarkers = [];
+      state._hitRLevels = new Set();
+      state._legMarkers = [];
+    }
+    try {
+      if (options.preserveMarkers) _applyAllMarkers();
+      else (priceSeries || candleSeries).setMarkers([]);
+    } catch(e) {}
     _maskMAs(sliceIdx);
     _maskAiOverlays(sliceIdx);
+    try { if (typeof updateSuperTrend === 'function') updateSuperTrend(); } catch(e) {}
+    try { if (typeof updateSpyOverlay === 'function') updateSpyOverlay(); } catch(e) {}
     // Trigger a drawings redraw so text annotations beyond the cutoff hide too.
     try { if (typeof redrawAll === 'function') redrawAll(); } catch(e){}
-    ['spyLineSeries','spyCandleSeries','spyBarSeries'].forEach(k => {
-      try { if (window[k]) window[k].setData([]); } catch(e) {}
-    });
   }
 
   function _appendBar(idx) {
     const b = state.bars[idx]; if (!b) return;
+    if (typeof currentTF !== 'undefined' && currentTF !== 'D') {
+      _renderMaskedPriceAndVolume(idx);
+      _maskMAs(idx);
+      _maskAiOverlays(idx);
+      try { if (typeof updateSuperTrend === 'function') updateSuperTrend(); } catch(e) {}
+      try { if (typeof updateSpyOverlay === 'function') updateSpyOverlay(); } catch(e) {}
+      _applyAllMarkers();
+      try { if (typeof redrawAll === 'function') redrawAll(); } catch(e){}
+      state._highlightedIdx = idx;
+      return;
+    }
     // normalize previously highlighted bar back to default colors
     if (state._highlightedIdx != null && state._highlightedIdx !== idx) {
       const prev = state.bars[state._highlightedIdx];
-      if (prev) { try { candleSeries.update(_candleBar(prev)); } catch(e) {} }
+      if (prev) { try { (priceSeries || candleSeries).update(_candleBar(prev)); } catch(e) {} }
     }
     // append new bar with highlight
     try {
-      candleSeries.update(Object.assign({}, _candleBar(b), {
+      (priceSeries || candleSeries).update(Object.assign({}, _candleBar(b), {
         color: HIGHLIGHT_COLOR, borderColor: HIGHLIGHT_COLOR, wickColor: HIGHLIGHT_COLOR
       }));
     } catch(e) {}
     try { volSeries.update(_volBar(b)); } catch(e) {}
     _appendMAs(idx);
     _appendAiOverlays(idx);
+    try { if (typeof updateSuperTrend === 'function') updateSuperTrend(); } catch(e) {}
+    try { if (typeof updateSpyOverlay === 'function') updateSpyOverlay(); } catch(e) {}
     // Drawings can be anchored anywhere — the simplest correct approach is to
     // re-run the drawings layer's filter on each step so newly-revealed bar
     // brings any anchored notes/text into view.
@@ -21830,6 +21915,26 @@ Sim.Ctrl = (function(){
     return true;
   }
 
+  function _getCutoffBarTime() {
+    if (!state.active || !state.sim || !state.bars) return null;
+    const b = state.bars[state.sim.playIdx];
+    return b ? b.time : null;
+  }
+
+  function _refreshChartCutoff() {
+    const cutoff = _getCutoffBarTime();
+    if (!cutoff || !state.bars) return false;
+    let sliceIdx = -1;
+    for (let i = 0; i < state.bars.length; i++) {
+      if (state.bars[i] && state.bars[i].time <= cutoff) sliceIdx = i;
+      else break;
+    }
+    if (sliceIdx < 0) return false;
+    _precomputeMAs();
+    _maskChart(sliceIdx, { preserveMarkers:true });
+    return true;
+  }
+
   return { openSetup, exit, isActive: () => state.active, beginPick, isPicking: () => !!state.pickMode, _rerender: () => _render(null), replay,
     // SimBlind dispatches into the same submit path the modal uses, so blind
     // mode can launch a sim without ever opening the setup form (which would
@@ -21857,11 +21962,8 @@ Sim.Ctrl = (function(){
     // is active. Used by the drawings layer (redrawAll) to skip annotations /
     // text labels that are anchored beyond the current bar — otherwise the
     // future leaks ("Aug round-trip to $7.50" labels appearing pre-Aug, etc.).
-    getCutoffBarTime: function(){
-      if (!state.active || !state.sim || !state.bars) return null;
-      const b = state.bars[state.sim.playIdx];
-      return b ? b.time : null;
-    }
+    getCutoffBarTime: _getCutoffBarTime,
+    refreshChartCutoff: _refreshChartCutoff
   };
 })();
 
