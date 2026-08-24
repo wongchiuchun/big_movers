@@ -720,6 +720,51 @@
     updateStrip();
   }
 
+  function captureHistoryState(){
+    const batch = state.batch;
+    const runtime = state.runtime;
+    const candidate = activeCandidate();
+    if (!batch || !runtime || !candidate) return null;
+    return {
+      activeIndex: batch.activeIndex,
+      pendingOrder: clone(candidate.pendingOrder || null),
+      orderEvents: clone(candidate.orderEvents || []),
+      attempts: clone(candidate.attempts || []),
+      orderState: clone(batch.orderState || null),
+      playbackState: clone(runtime.playbackState || null),
+      lastAttempt: clone(runtime.lastAttempt || null),
+      horizonEnded: !!runtime.horizonEnded,
+      orderRetryNotice: clone(runtime.orderRetryNotice || null)
+    };
+  }
+
+  function restoreHistoryState(snapshot){
+    const batch = state.batch;
+    const runtime = state.runtime;
+    if (!snapshot || !batch || !runtime || batch.activeIndex !== snapshot.activeIndex) return false;
+    const candidate = activeCandidate();
+    if (!candidate) return false;
+    candidate.pendingOrder = clone(snapshot.pendingOrder || null);
+    candidate.orderEvents = clone(snapshot.orderEvents || []);
+    candidate.attempts = clone(snapshot.attempts || []);
+    batch.orderState = clone(snapshot.orderState || {
+      cash: batch.startingEquity,
+      reservedBuyingPower: 0,
+      _orderReservationCents: {}
+    });
+    runtime.playbackState = clone(snapshot.playbackState || null);
+    runtime.lastAttempt = clone(snapshot.lastAttempt || null);
+    runtime.horizonEnded = !!snapshot.horizonEnded;
+    runtime.orderRetryNotice = clone(snapshot.orderRetryNotice || null);
+    reconcileOrders(batch, 'Entry Trainer reconciled reservations after rewind.');
+    if (runtime.lastAttempt) showAttemptResult(runtime.lastAttempt);
+    else if (runtime.horizonEnded) showHorizonEnded();
+    else hideAttemptResult();
+    syncOrderPresentation(batch);
+    updateStrip();
+    return true;
+  }
+
   function transitionOrder(candidate, status, details){
     const api = ordersApi();
     const batch = state.batch;
@@ -982,7 +1027,7 @@
             : playback && playback.attemptActive
               ? 'Attempt open · manage the stop or close the full position at the paused close.'
               : order
-                ? 'Limit order working · Wait advances one candle and checks for a fill.'
+                ? 'Limit order working · Play, Forward, or Wait advances candles and checks for a fill.'
                 : hasAttempts
                   ? 'Out of position · wait one bar, enter again, or finish the ticker.'
                   : 'Out of position · wait one bar, enter at this close, or skip the ticker.';
@@ -1221,13 +1266,13 @@
     if (!runtime || !order) return;
     runtime.orderRetryNotice = {
       orderId: order.id,
-      message: 'The limit fill could not be applied. The order remains working; choose Wait to retry.'
+      message: 'The limit fill could not be applied. The order remains working; advance again to retry.'
     };
     try { updateStrip(); }
     catch (error) { console.error('[EntryTrainer] order retry notice could not render:', error); }
   }
 
-  function fillWorkingOrderOnBar(candidate, order, bar, barIdx, fill){
+  function fillWorkingOrderOnBar(candidate, order, bar, barIdx, fill, historyPolicyState){
     const api = ordersApi();
     const batch = state.batch;
     const runtime = state.runtime;
@@ -1316,7 +1361,9 @@
         return terminalizedWithoutFill ? null : { allow:false };
       }
 
-      started = window.Sim.Ctrl.commitFlatEntry(prepared);
+      started = window.Sim.Ctrl.commitFlatEntry(prepared, {
+        historyPolicyState: historyPolicyState
+      });
       if (!started || !started.ok) return { allow:false };
       committed = true;
     } catch (error) {
@@ -1360,7 +1407,9 @@
     const api = ordersApi();
     const fill = api && api.evaluateFill(order, context.bar, context.barIdx);
     if (fill) {
-      return fillWorkingOrderOnBar(candidate, order, context.bar, context.barIdx, fill);
+      return fillWorkingOrderOnBar(
+        candidate, order, context.bar, context.barIdx, fill, context.historyPolicyState
+      );
     }
     return null;
   }
@@ -1395,13 +1444,14 @@
       initialEquity: batch.startingEquity,
       policy: {
         longOnly: true,
-        disableRewind: true,
-        disableAdds: true,
-        fullExitOnly: true,
+        disableJumpToEntry: true,
         pauseWhenFlat: true,
+        allowFlatPlayback: true,
         maxLegs: MAX_ATTEMPTS,
         causalDailyExecution: true,
         entryOrderMode: 'pending_limit',
+        captureHistoryState: captureHistoryState,
+        restoreHistoryState: restoreHistoryState,
         beforeFlatStep: function(context){
           if (!playbackIsCurrent(runtime, index, token)) return { allow:false };
           return handleBeforeFlatStep(context);
@@ -1438,12 +1488,13 @@
     const nodes = [
       document.querySelector('.table-panel'),
       document.querySelector('.filters'),
-      document.querySelector('.chart-topbar'),
       byId('draw-toolbar'),
       byId('add-ticker-btn'), byId('sim-start-btn'), byId('sim-random-btn'),
       byId('sim-blind-btn'), byId('sim-saved-btn'), byId('sim-stats-btn'),
       byId('quiz-btn'), byId('portsim-start-btn'), byId('portsim-saved-btn')
-    ].filter(Boolean);
+    ].concat(Array.from(document.querySelectorAll(
+      '.chart-topbar button:not(#popout-btn), .chart-topbar input, .chart-topbar select'
+    ))).filter(Boolean);
     runtime.lockedControls = nodes.map(function(node){
       const prior = !!node.inert;
       node.inert = true;

@@ -135,6 +135,14 @@
   }
   body.sim-popout .chart-panel > .chart-topbar    { grid-area: topbar; }
   body.sim-popout .chart-panel > .chart-container { grid-area: chart; min-width: 0; min-height: 0; }
+  body.sim-popout.entry-trainer-active .chart-panel {
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "topbar  topbar"
+      "trainer trainer"
+      "chart   sim";
+  }
+  body.sim-popout.entry-trainer-active #entry-trainer-strip { grid-area: trainer; }
   body.sim-popout #sim-panel {
     grid-area: sim;
     margin-top: 0;
@@ -2684,7 +2692,7 @@
   body.entry-trainer-active #portsim-saved-btn,
   body.entry-trainer-active #add-ticker-btn,
   body.entry-trainer-active .filters,
-  body.entry-trainer-active .chart-topbar button,
+  body.entry-trainer-active .chart-topbar button:not(#popout-btn),
   body.entry-trainer-active #draw-toolbar{pointer-events:none;opacity:0.35;}
   @media (max-width:760px){
     .entry-trainer-rules{grid-template-columns:1fr;}
@@ -19501,9 +19509,11 @@ Sim.Ctrl = (function(){
     return Object.freeze({
       longOnly: !!policy.longOnly,
       disableRewind: !!policy.disableRewind,
+      disableJumpToEntry: !!policy.disableJumpToEntry,
       disableAdds: !!policy.disableAdds,
       fullExitOnly: !!policy.fullExitOnly,
       pauseWhenFlat: !!policy.pauseWhenFlat,
+      allowFlatPlayback: !!policy.allowFlatPlayback,
       maxLegs: maxLegs,
       causalDailyExecution: policy.causalDailyExecution === true,
       entryOrderMode: policy.entryOrderMode === 'pending_limit' ? 'pending_limit' : null,
@@ -19511,7 +19521,9 @@ Sim.Ctrl = (function(){
       beforeFlatStep: typeof policy.beforeFlatStep === 'function' ? policy.beforeFlatStep : null,
       onAttemptComplete: typeof policy.onAttemptComplete === 'function' ? policy.onAttemptComplete : null,
       onHorizonComplete: typeof policy.onHorizonComplete === 'function' ? policy.onHorizonComplete : null,
-      onStateChange: typeof policy.onStateChange === 'function' ? policy.onStateChange : null
+      onStateChange: typeof policy.onStateChange === 'function' ? policy.onStateChange : null,
+      captureHistoryState: typeof policy.captureHistoryState === 'function' ? policy.captureHistoryState : null,
+      restoreHistoryState: typeof policy.restoreHistoryState === 'function' ? policy.restoreHistoryState : null
     });
   }
 
@@ -19564,13 +19576,16 @@ Sim.Ctrl = (function(){
     const sim = state.sim;
     const atHorizon = !!(sim && state._flatEndBarIdx != null && sim.playIdx >= state._flatEndBarIdx);
     const activePosition = !!(state.active && sim && sim.qty > 0 && !sim.between && !sim.closed && !sim.stoppedOut);
-    const flatPlaybackLocked = !!(state.policy && state.policy.pauseWhenFlat && !activePosition);
+    const flatPlaybackLocked = !!(state.policy && state.policy.pauseWhenFlat && !activePosition
+      && !state.policy.allowFlatPlayback);
+    const policyPlaybackComplete = !!(state.policy && (state._flatAttemptPending || atHorizon));
     const beforeLastBar = !!(sim && state.bars && sim.playIdx < state.bars.length - 1 && !atHorizon);
     return {
       activePosition: activePosition,
       canMoveStop: activePosition,
-      canPlay: !!(state.active && sim && !sim.closed && !sim.stoppedOut && beforeLastBar && !flatPlaybackLocked),
-      canSetSpeed: !!(state.active && sim && !flatPlaybackLocked)
+      canPlay: !!(state.active && sim && !sim.closed && !sim.stoppedOut && beforeLastBar
+        && !flatPlaybackLocked && !policyPlaybackComplete),
+      canSetSpeed: !!(state.active && sim && !flatPlaybackLocked && !policyPlaybackComplete)
     };
   }
 
@@ -19601,7 +19616,7 @@ Sim.Ctrl = (function(){
     }
     _capturePolicyUI();
     const rules = [
-      ['sim-btn-entry', !!(policy && policy.disableRewind)],
+      ['sim-btn-entry', !!(policy && policy.disableJumpToEntry)],
       ['sim-btn-step-back', !!(policy && policy.disableRewind)],
       ['sim-btn-add', !!(policy && policy.disableAdds)],
       ['sim-btn-sell', !!(policy && policy.fullExitOnly)],
@@ -20960,7 +20975,12 @@ Sim.Ctrl = (function(){
       curve: (state._curve || []).slice()
     };
     try {
-      if (!options.skipSnapshot) _pushSnapshot();
+      if (!options.skipSnapshot) {
+        const snapshotOptions = Object.prototype.hasOwnProperty.call(options, 'historyPolicyState')
+          ? { policyHistoryState:options.historyPolicyState }
+          : null;
+        _pushSnapshot(snapshotOptions);
+      }
       state.sim = preparation.sim;
       state._flatExitReason = preparation.exitReason;
       if (preparation.advancesPlayhead) _appendBar(preparation.barIdx);
@@ -21411,11 +21431,28 @@ Sim.Ctrl = (function(){
   // advance (and before user actions that mutate sim outside _stepForward), so
   // popping restores the exact pre-step state including queued actions, legs,
   // stops, and event history.
-  function _pushSnapshot() {
+  function _capturePolicyHistoryState() {
+    const capture = state.policy && state.policy.captureHistoryState;
+    if (typeof capture !== 'function') return null;
+    try {
+      const value = capture();
+      return value == null ? null : JSON.parse(JSON.stringify(value));
+    } catch (error) {
+      console.error('[Sim.Ctrl] flat playback history capture failed:', error);
+      return null;
+    }
+  }
+
+  function _pushSnapshot(options) {
     if (!state.sim) return;
+    options = options || {};
     let simClone = null;
     try { simClone = JSON.parse(JSON.stringify(state.sim)); }
     catch (e) { console.warn('sim snapshot clone failed', e); return; }
+    const hasPolicyOverride = Object.prototype.hasOwnProperty.call(options, 'policyHistoryState');
+    const policyHistoryState = hasPolicyOverride
+      ? (options.policyHistoryState == null ? null : JSON.parse(JSON.stringify(options.policyHistoryState)))
+      : _capturePolicyHistoryState();
     state._history.push({
       sim: simClone,
       curve: state._curve ? state._curve.slice() : [],
@@ -21423,7 +21460,12 @@ Sim.Ctrl = (function(){
       rMarkers: (state._rMarkers || []).slice(),
       hitRLevels: state._hitRLevels ? Array.from(state._hitRLevels) : [],
       entryOrderOwner: state._entryOrderOwner ? JSON.parse(JSON.stringify(state._entryOrderOwner)) : null,
-      entryOrderState: state._entryOrderState ? JSON.parse(JSON.stringify(state._entryOrderState)) : null
+      entryOrderState: state._entryOrderState ? JSON.parse(JSON.stringify(state._entryOrderState)) : null,
+      flatCompletedLegs: state._flatCompletedLegs ? Array.from(state._flatCompletedLegs) : [],
+      flatAttemptPending: !!state._flatAttemptPending,
+      flatExitReason: state._flatExitReason || null,
+      flatHorizonNotified: !!state._flatHorizonNotified,
+      policyHistoryState: policyHistoryState
     });
     if (state._history.length > HISTORY_MAX) state._history.shift();
   }
@@ -21546,6 +21588,7 @@ Sim.Ctrl = (function(){
     if (target === before) { pause(); return; }
     let lastResult = null;
     for (let step = before + 1; step <= target; step++) {
+      const historyPolicyState = state.policy ? _capturePolicyHistoryState() : null;
       if (!state.policy && state.sim.between && _workingStandaloneEntryOrder()) {
         if (_fillStandaloneEntryOrderOnBar(state.bars[step], step)) return;
       }
@@ -21556,7 +21599,8 @@ Sim.Ctrl = (function(){
             fromBarIdx: state.sim.playIdx,
             barIdx: step,
             bar: state.bars[step],
-            endBarIdx: state._flatEndBarIdx
+            endBarIdx: state._flatEndBarIdx,
+            historyPolicyState: historyPolicyState
           }));
         } catch (error) {
           console.error('[Sim.Ctrl] flat playback beforeFlatStep callback failed:', error);
@@ -21567,7 +21611,7 @@ Sim.Ctrl = (function(){
         if (decision && decision.allow === false) return;
       }
       const playBefore = state.sim.playIdx;
-      _pushSnapshot();
+      _pushSnapshot(state.policy ? { policyHistoryState:historyPolicyState } : null);
       lastResult = Sim.advanceTo(state.sim, state.bars, step);
       if (state.sim.playIdx > playBefore) {
         _appendBar(state.sim.playIdx);
@@ -21605,6 +21649,14 @@ Sim.Ctrl = (function(){
     state._curve = snap.curve;
     state._entryOrderOwner = snap.entryOrderOwner || null;
     state._entryOrderState = snap.entryOrderState || null;
+    state._flatCompletedLegs = new Set(snap.flatCompletedLegs || []);
+    state._flatAttemptPending = !!snap.flatAttemptPending;
+    state._flatExitReason = snap.flatExitReason || null;
+    state._flatHorizonNotified = !!snap.flatHorizonNotified;
+    state._flatPreparedEntry = null;
+    if (state.policy && state.policy.restoreHistoryState) {
+      _policyCallback('restoreHistoryState', snap.policyHistoryState == null ? null : _immutable(snap.policyHistoryState));
+    }
     // _maskChart wipes _legMarkers/_rMarkers/_hitRLevels; restore AFTER masking.
     _maskChart(state.sim.playIdx);
     state._legMarkers = snap.legMarkers;
@@ -21619,7 +21671,7 @@ Sim.Ctrl = (function(){
 
   function jumpToEntry() {
     if (!state.active || !state.sim) return;
-    if (state.policy && state.policy.disableRewind) return;
+    if (state.policy && (state.policy.disableRewind || state.policy.disableJumpToEntry)) return;
     pause();
     Sim.reset(state.sim, state.bars);
     state._history = [];
