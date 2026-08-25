@@ -1492,9 +1492,7 @@
       byId('add-ticker-btn'), byId('sim-start-btn'), byId('sim-random-btn'),
       byId('sim-blind-btn'), byId('sim-saved-btn'), byId('sim-stats-btn'),
       byId('quiz-btn'), byId('portsim-start-btn'), byId('portsim-saved-btn')
-    ].concat(Array.from(document.querySelectorAll(
-      '.chart-topbar button:not(#popout-btn), .chart-topbar input, .chart-topbar select'
-    ))).filter(Boolean);
+    ].filter(Boolean);
     runtime.lockedControls = nodes.map(function(node){
       const prior = !!node.inert;
       node.inert = true;
