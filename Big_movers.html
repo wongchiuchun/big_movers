@@ -5501,7 +5501,7 @@
     <button id="add-ticker-btn" class="tb-btn" title="Fetch new ticker or extend existing" style="font-size:10px;padding:4px 12px;width:auto;border-radius:5px;">+ Add</button>
     <button id="sim-start-btn" class="tb-btn" title="Start P&amp;L walk-through simulator on current chart">▶ Sim</button>
     <button id="sim-random-btn" class="tb-btn" title="Pick a random big-mover from a chosen year and load a year-long sim window">🎲 Random</button>
-    <button id="sim-blind-btn" class="tb-btn" title="Blind replay — random historical big mover with hidden symbol/year/dates. 4mo of context + open setup form to set size, stop, equity. Shift+Click to include current-year tickers (capped to ≥2mo forward data).">🕶 Blind</button>
+    <button id="sim-blind-btn" class="tb-btn" title="Blind replay — Individual Sim mechanics with hidden symbol/year/dates and a random 4–6 months or 6–12 months playback window. Shift+Click to include current-year tickers when enough forward data exists.">🕶 Blind</button>
     <button id="entry-trainer-btn" class="tb-btn" type="button" aria-haspopup="dialog" aria-controls="entry-trainer-setup-modal" aria-pressed="false" title="Practice point-in-time entries on three masked tickers">🎯 Entry Trainer</button>
     <button type="button" id="quiz-btn" class="tb-btn" title="Top-or-Bottom Quiz: can you call the top/bottom?">🎯 Top/Bottom Quiz</button>
     <button id="sim-saved-btn" class="tb-btn" title="Browse saved Sim scenarios">📂 Saved Sim</button>
@@ -16111,9 +16111,10 @@ window.Sim = Sim;
 
 /* ---------- SimBlind: blind random replay (anonymized symbol/year/dates) ----------
  * Random-ticker, random-start-bar playback drill. The picker loads a CSV with
- * ≥4mo of context behind and ≥30 bars ahead of the chosen start, then masks
+ * ≥4mo of context behind and a complete randomized playback window, then masks
  * the ticker's identity (symbol = "BLIND TICKER", year = "????", date axis =
- * "Day −N / Day +N"). The user sets initial equity + bars-to-simulate, then the
+ * "Day −N / Day +N"). The user sets initial equity, fixed R, and either a
+ * randomized 4–6 month or 6–12 month duration, then the
  * sim launches with NO position — they enter via "+ New Entry" once they've
  * watched enough bars to decide. Multiple legs allowed. Sim ends at the bar cap
  * or when the user manually exits.
@@ -16203,7 +16204,7 @@ window.Sim = Sim;
     // the ticker's identity, and it's useful context for trade sizing.
     if (gain) gain.textContent = '';
     if (range) {
-      const remain = Math.max(0, currentBars.length - 1 - _state.dayZeroIdx);
+      const remain = Math.max(0, _state.endIdx - _state.dayZeroIdx);
       range.textContent = 'Day −' + _state.contextBars + ' → Day +' + remain;
     }
     if (vol && _state.row) vol.textContent = '$' + _state.row.avg_vol_b + 'B/mo';
@@ -16240,10 +16241,10 @@ window.Sim = Sim;
     if (btn) btn.style.display = visible ? '' : 'none';
   }
 
-  /* ---------- Mini-modal: Capital, Fixed R + Bars to Simulate ---------- */
-  // The blind setup modal asks for capital, adjusted-R sizing and how many bars to
-  // play. Day-0 is randomized by the picker, the user has no entry/stop yet —
-  // they enter later via "+ New Entry" once they've watched bars play out.
+  /* ---------- Mini-modal: Capital, Fixed R + Duration Band ---------- */
+  // Day-0 and the exact duration are randomized after submit. The user has no
+  // entry/stop yet — the shared Individual Sim controller owns trading once the
+  // blind playback begins.
   function _openBlindMiniModal({onSubmit, onCancel}) {
     _closeBlindMiniModal(); // safety: remove any stale instance
     const overlay = document.createElement('div');
@@ -16265,9 +16266,12 @@ window.Sim = Sim;
           '<input type="number" id="sim-blind-fixed-risk" min="1" step="500" value="' + DEFAULT_FIXED_RISK + '">' +
         '</div>' +
         '<div class="fetch-field">' +
-          '<label for="sim-blind-bars">Bars to simulate</label>' +
-          '<input type="number" id="sim-blind-bars" min="10" max="500" step="1" value="' + DEFAULT_BARS + '">' +
-          '<div class="sim-stop-distance" id="sim-blind-bars-hint" style="margin-top:4px;">~' + Math.round(DEFAULT_BARS / 21) + ' months of trading days</div>' +
+          '<label for="sim-blind-duration">Simulation duration</label>' +
+          '<select id="sim-blind-duration">' +
+            '<option value="4-6">Random 4–6 months</option>' +
+            '<option value="6-12">Random 6–12 months (max 1 year)</option>' +
+          '</select>' +
+          '<div class="sim-stop-distance" style="margin-top:4px;">The exact end point is randomized within the selected range.</div>' +
         '</div>' +
         '<div class="fetch-actions">' +
           '<button class="fetch-btn-cancel" id="sim-blind-cancel">Cancel</button>' +
@@ -16279,14 +16283,8 @@ window.Sim = Sim;
 
     const equityEl = overlay.querySelector('#sim-blind-equity');
     const fixedRiskEl = overlay.querySelector('#sim-blind-fixed-risk');
-    const barsEl = overlay.querySelector('#sim-blind-bars');
-    const hintEl = overlay.querySelector('#sim-blind-bars-hint');
+    const durationEl = overlay.querySelector('#sim-blind-duration');
     const statusEl = overlay.querySelector('#sim-blind-status');
-
-    barsEl.addEventListener('input', function(){
-      const n = parseInt(barsEl.value, 10);
-      if (isFinite(n) && n > 0) hintEl.textContent = '~' + Math.round(n / 21) + ' months of trading days';
-    });
 
     function cleanup(){ _closeBlindMiniModal(); }
     overlay.querySelector('#sim-blind-cancel').onclick = function(){ cleanup(); if (typeof onCancel === 'function') onCancel(); };
@@ -16294,12 +16292,11 @@ window.Sim = Sim;
     overlay.querySelector('#sim-blind-submit').onclick = function(){
       const equity = parseFloat(equityEl.value);
       const fixedRiskDollar = parseFloat(fixedRiskEl.value);
-      const bars = parseInt(barsEl.value, 10);
+      const durationBand = durationEl && durationEl.value === '6-12' ? '6-12' : '4-6';
       if (!isFinite(equity) || equity < 100) { statusEl.textContent = 'Initial equity must be ≥ $100.'; statusEl.style.color = 'var(--red)'; return; }
       if (!isFinite(fixedRiskDollar) || fixedRiskDollar <= 0) { statusEl.textContent = 'Fixed dollar amount per R must be > 0.'; statusEl.style.color = 'var(--red)'; return; }
-      if (!isFinite(bars) || bars < 10) { statusEl.textContent = 'Bars must be ≥ 10.'; statusEl.style.color = 'var(--red)'; return; }
       cleanup();
-      if (typeof onSubmit === 'function') onSubmit({ initialEquity: equity, fixedRiskDollar: fixedRiskDollar, bars: bars });
+      if (typeof onSubmit === 'function') onSubmit({ initialEquity: equity, fixedRiskDollar: fixedRiskDollar, durationBand: durationBand });
     };
     setTimeout(function(){ equityEl.focus(); equityEl.select && equityEl.select(); }, 30);
   }
@@ -16308,24 +16305,51 @@ window.Sim = Sim;
     if (m && m.parentNode) m.parentNode.removeChild(m);
   }
 
-  /* ---------- Open: pick row + start bar from data ALREADY on disk ---------- */
-  //   1. Filter candidate rows by year (default: exclude current year — its CSV
-  //      coverage is incomplete, you'd land in a 10-bar-tail sim).
-  //   2. For each candidate (random order, with retries), call selectRow to load
-  //      its CSV, then validate that currentBars has at least MIN_CONTEXT
-  //      (~85 weekdays) before AND MIN_FORWARD (~30) after a viable pick. If so,
-  //      pick startIdx randomly in [MIN_CONTEXT, length−MIN_FORWARD].
-  //   3. Open the mini-modal: user sets initial equity + bars-to-simulate.
-  //      Submit launches Sim.Ctrl.startBlindPlayback (no entry, sim.between=true).
+  /* ---------- Open: choose duration, then pick local row + complete window ---------- */
+  //   1. Open the existing mini-modal for capital, fixed R and duration band.
+  //   2. Sample the exact duration once, then retry local candidates until one
+  //      has MIN_CONTEXT behind Day 0 and the complete selected window ahead.
+  //   3. Launch Sim.Ctrl.startBlindPlayback (no entry, sim.between=true).
   //
   // Override: Shift+Click the Blind button (or opts.includeCurrentYear) to
   // include current-year rows. Their startIdx is capped to today−2mo so there's
   // always ≥2 months of forward bars to play.
   const MIN_CONTEXT = 85;       // ~4 months of weekday bars before day 0
-  const MIN_FORWARD = 30;       // ~6 weeks of weekday bars after day 0
   const DEFAULT_EQUITY = 500000;
   const DEFAULT_FIXED_RISK = 8000;
-  const DEFAULT_BARS = 90;
+  const DURATION_BANDS = {
+    '4-6': { min: 84, max: 126 },
+    '6-12': { min: 126, max: 252 }
+  };
+
+  function _randomBlindDurationBars(band, rng) {
+    const range = DURATION_BANDS[band] || DURATION_BANDS['4-6'];
+    const random = typeof rng === 'function' ? rng : Math.random;
+    return range.min + Math.floor(random() * (range.max - range.min + 1));
+  }
+
+  function _blindEndIdx(startIdx, durationBars) {
+    return startIdx + durationBars - 1;
+  }
+
+  function _pickBlindWindow(barCount, durationBars, minContext, maxStartCap, rng) {
+    let maxStartIdx = barCount - durationBars;
+    if (Number.isInteger(maxStartCap) && maxStartCap >= 0) {
+      maxStartIdx = Math.min(maxStartIdx, maxStartCap);
+    }
+    if (maxStartIdx < minContext) return null;
+    const random = typeof rng === 'function' ? rng : Math.random;
+    const startIdx = minContext + Math.floor(random() * (maxStartIdx - minContext + 1));
+    const endIdx = _blindEndIdx(startIdx, durationBars);
+    if (endIdx >= barCount) return null;
+    return { startIdx: startIdx, endIdx: endIdx, durationBars: durationBars };
+  }
+
+  function _blindLoadedRowMatches(row, loadedRow) {
+    return !!(row && loadedRow
+      && row.symbol === loadedRow.symbol
+      && String(row.year) === String(loadedRow.year));
+  }
 
   async function _open(opts) {
     opts = opts || {};
@@ -16337,8 +16361,6 @@ window.Sim = Sim;
     }
 
     const currentYear = new Date().getFullYear();
-    const today = _todayISO();
-
     let cands = _candidates();
     if (!includeCurrentYear) cands = cands.filter(function(r){ return +r.year < currentYear; });
     if (!cands.length) {
@@ -16352,11 +16374,38 @@ window.Sim = Sim;
       return;
     }
 
+    if (!window.Sim || !Sim.Ctrl || typeof Sim.Ctrl.startBlindPlayback !== 'function') {
+      alert('Sim.Ctrl.startBlindPlayback missing — cannot launch blind sim.');
+      return;
+    }
+
+    _openBlindMiniModal({
+      onSubmit: function(form){
+        _startBlindSelection(opts, form).catch(function(error){
+          alert('Could not start blind sim: ' + (error && error.message || error));
+          _clearBlind();
+        });
+      },
+      onCancel: function(){ _clearBlind(); }
+    });
+  }
+
+  async function _startBlindSelection(opts, form) {
+    opts = opts || {};
+    form = form || {};
+    const includeCurrentYear = !!opts.includeCurrentYear;
+    const currentYear = new Date().getFullYear();
+    const today = _todayISO();
+    const durationBars = _randomBlindDurationBars(form.durationBand);
+    const durationLabel = form.durationBand === '6-12' ? '6–12 months' : '4–6 months';
+    let cands = _candidates();
+    if (!includeCurrentYear) cands = cands.filter(function(r){ return +r.year < currentYear; });
+
     // Surface table without filters so selectRow can find any candidate.
     _clearFilters();
 
-    // Try multiple rows until one has enough context + forward data.
-    let pickedRow = null, pickedStartIdx = -1;
+    // Sampled durationBars is intentionally reused across every candidate retry.
+    let pickedRow = null, pickedStartIdx = -1, pickedEndIdx = -1;
     const tried = new Set();
     for (let attempts = 0; attempts < 12 && !pickedRow; attempts++) {
       let row = null, tries = 0;
@@ -16371,87 +16420,71 @@ window.Sim = Sim;
       if (typeof selectRow === 'function') {
         try { await selectRow(idx); } catch(e){ continue; }
       }
-      if (typeof currentBars === 'undefined' || !Array.isArray(currentBars) || currentBars.length < MIN_CONTEXT + MIN_FORWARD) continue;
+      if (!_blindLoadedRowMatches(row, currentMoveRow)) continue;
+      if (typeof currentBars === 'undefined' || !Array.isArray(currentBars)) continue;
 
-      // Compute the upper bound on startIdx. For current-year rows, also cap so
-      // there's at least 2 months of forward weekday bars before today.
-      let maxStartIdx = currentBars.length - 1 - MIN_FORWARD;
+      // Preserve the current-year safety cap, then let the pure picker enforce
+      // the full selected playback window without shortening it.
+      let capIdx = null;
       if (+row.year === currentYear) {
         const cap = _shiftMonths(today, -2);
-        let capIdx = -1;
+        capIdx = -1;
         for (let i = currentBars.length - 1; i >= 0; i--) {
           if (currentBars[i].time <= cap) { capIdx = i; break; }
         }
-        if (capIdx >= 0 && capIdx < maxStartIdx) maxStartIdx = capIdx;
+        if (capIdx < 0) capIdx = null;
       }
-      if (maxStartIdx < MIN_CONTEXT) continue;
+      const pickedWindow = _pickBlindWindow(currentBars.length, durationBars, MIN_CONTEXT, capIdx);
+      if (!pickedWindow) continue;
 
-      const startIdx = MIN_CONTEXT + Math.floor(Math.random() * (maxStartIdx - MIN_CONTEXT + 1));
       pickedRow = row;
-      pickedStartIdx = startIdx;
+      pickedStartIdx = pickedWindow.startIdx;
+      pickedEndIdx = pickedWindow.endIdx;
       break;
     }
 
     if (!pickedRow) {
-      alert('Could not find a ticker with ≥4 months of prior context + ≥30 forward bars. Try again or Shift+Click for current-year tickers.');
-      return;
+      const shorterHint = form.durationBand === '6-12' ? ' Try the 4–6 month option.' : ' Try again.';
+      alert('Could not find a ticker with ≥4 months of prior context and a complete ' + durationLabel + ' playback window.' + shorterHint);
+      return false;
     }
 
     const dayZeroBar = currentBars[pickedStartIdx];
     const entryPrice = dayZeroBar && +(dayZeroBar.open || dayZeroBar.close);
     if (!dayZeroBar || !isFinite(entryPrice) || entryPrice <= 0) {
       alert('Day-0 bar has no usable price for ' + pickedRow.symbol + '.');
-      return;
+      return false;
     }
 
     _state = {
       active: true, revealed: false, row: pickedRow,
-      startDate: dayZeroBar.time, dayZeroIdx: pickedStartIdx,
+      startDate: dayZeroBar.time, endDate: currentBars[pickedEndIdx].time,
+      dayZeroIdx: pickedStartIdx, endIdx: pickedEndIdx,
       contextBars: pickedStartIdx
     };
 
-    // Center chart on day 0 so the user sees ~60 bars of context + ~30 forward.
-    try {
-      const fromIdx = Math.max(0, pickedStartIdx - 60);
-      const toIdx = Math.min(currentBars.length - 1, pickedStartIdx + 30);
-      if (chart && chart.timeScale && currentBars[fromIdx] && currentBars[toIdx]) {
-        chart.timeScale().setVisibleRange({ from: currentBars[fromIdx].time, to: currentBars[toIdx].time });
-      }
-    } catch(e){}
-
     _applyMask();
 
-    // Open the mini-modal. User sets initial equity + bars to simulate. On
-    // submit we hand off to the no-entry playback launcher; on cancel we clear
-    // blind state so the chart goes back to normal.
-    if (!window.Sim || !Sim.Ctrl || typeof Sim.Ctrl.startBlindPlayback !== 'function') {
-      alert('Sim.Ctrl.startBlindPlayback missing — cannot launch blind sim.');
-      _clearBlind(); return;
+    let started = false;
+    try {
+      started = Sim.Ctrl.startBlindPlayback({
+        startBarIdx: pickedStartIdx,
+        endBarIdx: pickedEndIdx,
+        initialEquity: form.initialEquity,
+        fixedRiskDollar: form.fixedRiskDollar
+      });
+    } catch(e){
+      alert('Could not start blind sim: ' + (e && e.message || e));
+      _clearBlind();
+      return false;
     }
-    _openBlindMiniModal({
-      onSubmit: function(form){
-        // Cap end bar to whatever's available (don't exceed loaded data length).
-        const endIdx = Math.min(currentBars.length - 1, pickedStartIdx + form.bars - 1);
-        if (endIdx <= pickedStartIdx) {
-          alert('Not enough forward bars to run a sim of that length.');
-          _clearBlind(); return;
-        }
-        try {
-          Sim.Ctrl.startBlindPlayback({
-            startBarIdx: pickedStartIdx,
-            endBarIdx: endIdx,
-            initialEquity: form.initialEquity,
-            fixedRiskDollar: form.fixedRiskDollar
-          });
-        } catch(e){
-          alert('Could not start blind sim: ' + (e && e.message || e));
-          _clearBlind(); return;
-        }
-        // Re-apply mask after sim init runs (it may repaint topbar bits).
-        setTimeout(_applyMask, 50);
-      },
-      onCancel: function(){ _clearBlind(); }
-    });
+    if (!started) {
+      _clearBlind();
+      return false;
+    }
+    // Re-apply mask after sim init runs (it may repaint topbar bits).
+    setTimeout(_applyMask, 50);
+    return true;
   }
 
   function _clearBlind() {
