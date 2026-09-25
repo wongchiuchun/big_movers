@@ -5519,8 +5519,8 @@
       </div>
       <div class="sort-bar" id="table-header">
         <span data-col="symbol">Symbol</span>
-        <span data-col="year">Year</span>
-        <span data-col="gain_pct" class="sort-desc">Gain</span>
+        <span data-col="year" class="sort-asc">Year</span>
+        <span data-col="gain_pct">Gain</span>
         <span data-col="low_date">Low Date</span>
         <span data-col="study">Study</span>
       </div>
@@ -10609,7 +10609,11 @@ function applySort(){
   filtered.sort((a,b)=>{
     let av=a[sortCol],bv=b[sortCol];
     if(['gain_pct','avg_vol_b','year'].includes(sortCol)){av=parseFloat(av);bv=parseFloat(bv);}
-    return av<bv?-sortDir:av>bv?sortDir:0;
+    if(av<bv)return -sortDir;
+    if(av>bv)return sortDir;
+    // Same-year rows may be updated in place or appended by Add.
+    // Use symbol order instead of exposing their CSV insertion positions.
+    return String(a.symbol).localeCompare(String(b.symbol));
   });
   const ciEl = document.getElementById('count-inline'); if (ciEl) ciEl.textContent = filtered.length;
   renderTable();
@@ -10636,7 +10640,7 @@ document.getElementById('table-header').addEventListener('click',e=>{
   const sp=e.target.closest('span[data-col]');if(!sp)return;
   const col=sp.dataset.col;
   sortDir=sortCol===col?sortDir*-1:1;sortCol=col;
-  document.querySelectorAll('.table-header span').forEach(s=>s.classList.remove('sort-asc','sort-desc'));
+  document.querySelectorAll('#table-header span[data-col]').forEach(s=>s.classList.remove('sort-asc','sort-desc'));
   sp.classList.add(sortDir===1?'sort-asc':'sort-desc');
   applySort();
 });

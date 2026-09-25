@@ -6,14 +6,19 @@ const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'Big_movers.html'), 'utf8');
 const filters = html.slice(html.indexOf('function applyFilters(){'), html.indexOf('function populateAIFilter()'));
+const sort = html.slice(html.indexOf('function applySort(){'), html.indexOf("['f-gain','f-sym','f-year'].forEach"));
+const render = html.slice(html.indexOf('function renderTable(){'), html.indexOf('// SELECT ROW'));
+const load = html.slice(html.indexOf('async function loadResults(){'), html.indexOf('function populateTagFilter()'));
 const add = html.slice(html.indexOf('(function() {', html.indexOf('// ============ FETCH TICKER / EXTEND')), html.indexOf('  // Extend to Today button')) + '\n})();';
 
-function harness({ symbol = 'TWST', values = {}, saveError = false, resultMissing = false } = {}) {
+function harness({ symbol = 'TWST', values = {}, saveError = false, resultMissing = false, initialRows = [] } = {}) {
+  let persisted = initialRows.map(r => ({ ...r }));
   const elements = new Map();
   function el(id) {
     if (!elements.has(id)) elements.set(id, {
       value: values[id] || '', textContent: '', className: '', disabled: false,
       classList: { add() {}, remove() {} }, focus() {},
+      innerHTML: '', querySelectorAll: () => [],
       listeners: {}, addEventListener(event, fn) { this.listeners[event] = fn; },
     });
     return elements.get(id);
@@ -23,18 +28,27 @@ function harness({ symbol = 'TWST', values = {}, saveError = false, resultMissin
   el('fetch-year').value = '2026';
   const row = { symbol, year: '2025', gain_pct: symbol === 'TWST' ? '661.71' : '289.62' };
   const ctx = {
-    document: { getElementById: el }, allRows: [], filtered: [], aiClassByMoveKey: {},
+    document: { getElementById: el }, allRows: initialRows.map(r => ({ ...r })), filtered: [], aiClassByMoveKey: {},
+    sortCol: 'year', sortDir: 1, currentMoveRow: null, activeIdx: -1,
+    renderStudyCell: () => '', fmtPeriod: () => '',
     getMeta: () => ({}), getAnnotationSource: () => 'none', moveKey: r => r.symbol + '_' + r.year,
-    applySort() {}, selectRow(index) { ctx.selected = ctx.filtered[index]; },
+    selectRow(index) { ctx.selected = ctx.filtered[index]; },
     setTimeout() { ctx.closing = true; },
-    async fetch(url) {
+    async fetch(url, options) {
+      if (url === '/api/results') return { ok: true, json: async () => persisted.map(r => ({ ...r })) };
       if (url === '/api/fetch-ticker') return { ok: true, json: async () => ({ bars_added: 400, result_row: resultMissing ? null : row }) };
       assert.equal(url, '/api/add-result');
+      if (!saveError) {
+        const saved = JSON.parse(options.body);
+        const i = persisted.findIndex(r => r.symbol === saved.symbol && r.year === saved.year);
+        if (i < 0) persisted.push(saved);
+        else persisted[i] = saved;
+      }
       return { ok: !saveError, json: async () => saveError ? { error: 'Disk full' } : { ok: true } };
     },
   };
   vm.createContext(ctx);
-  vm.runInContext(filters + '\n' + add, ctx);
+  vm.runInContext([filters, sort, render, load, add].join('\n'), ctx);
   return { ctx, el, submit: () => el('fetch-submit-btn').listeners.click() };
 }
 
@@ -59,6 +73,31 @@ test('compatible filters remain in place and re-adding updates the existing row'
   assert.equal(h.el('f-sym').value, 'TW');
   assert.equal(h.el('f-src').value, 'none');
 });
+
+for (const symbol of ['TWST', 'ILMN']) {
+  for (const existing of [false, true]) {
+    test(`${existing ? 'updating' : 'adding'} ${symbol} renders in alphabetical order before and after reload`, async () => {
+      const initialRows = ['TXG', 'IMC', 'TWLO', 'ILAG'].map(symbol => ({symbol, year:'2026', gain_pct:'100'}));
+      if (existing) initialRows.unshift({symbol, year:'2026', gain_pct:'1'});
+      const h = harness({symbol, initialRows, values:{'f-year':'2026'}});
+      await h.submit();
+      const assertSidebar = () => {
+        const symbols = h.ctx.filtered.map(r => r.symbol);
+        assert.deepEqual(symbols, [...symbols].sort());
+        assert.equal(symbols.filter(s => s === symbol).length, 1);
+        assert.ok(h.el('table-body').innerHTML.includes(`<span class="sym">${symbol}</span>`));
+        assert.equal(h.ctx.filtered.find(r => r.symbol === symbol).gain_pct, symbol === 'TWST' ? '661.71' : '289.62');
+      };
+      assertSidebar();
+      assert.equal(h.ctx.selected.symbol, symbol);
+      h.ctx.allRows = [];
+      h.ctx.filtered = [];
+      h.el('table-body').innerHTML = '';
+      await h.ctx.loadResults();
+      assertSidebar();
+    });
+  }
+}
 
 test('failed persistence reports an error without adding an unsaved sidebar row', async () => {
   const h = harness({ saveError: true });
