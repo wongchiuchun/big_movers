@@ -9,7 +9,8 @@
     "Undercut and Reclaim",
     "Steady momentum",
     "momentum burst",
-    "wide and loose"
+    "wide and loose",
+    "Serial Gapper"
   ],
   "items": {
     "AAOI_2024": {
@@ -67,6 +68,14 @@
         "Steady momentum"
       ]
     },
+    "ACLS_2023": {
+      "direction": "long",
+      "notes": "This is an example that shows that the wider the base the better the quality of the breakout when it happens. 3 relatively clean legs over 1 yr. Mid period consolidation but overall very strong PA. respected 20EMA almost the whole time",
+      "rating": "B",
+      "tags": [
+        "Steady momentum"
+      ]
+    },
     "ADTN_2026": {
       "direction": "long",
       "notes": "[AI] Networking slow grinder. Very low ADR (4.6%), 4-week Mar-Apr 10 EMA streak — near-perfect tempo. 0 gaps logged. 68-day +102% patient trade. Style fit for $8+ grinder.",
@@ -81,6 +90,15 @@
       "rating": "",
       "tags": [
         "EP",
+        "Breakout"
+      ]
+    },
+    "AFRM_2023": {
+      "direction": "long",
+      "notes": "11 month base to support the strong multiple X run in a month",
+      "rating": "A",
+      "tags": [
+        "Steady momentum",
         "Breakout"
       ]
     },
@@ -108,6 +126,14 @@
       "tags": [
         "Breakout",
         "EP"
+      ]
+    },
+    "AI_2023": {
+      "direction": "",
+      "notes": "Not much of a trend everything was wide and loose. The early 2023 leg was the most tradable. Then the several retrace would knock you out. May breakout on volume is tradable but still very wide and loose. ~2x opp if executed flawlessly",
+      "rating": "C",
+      "tags": [
+        "wide and loose"
       ]
     },
     "ALAB_2024": {
@@ -160,6 +186,14 @@
       "notes": "No setup",
       "rating": "E",
       "tags": []
+    },
+    "AMD_2023": {
+      "direction": "long",
+      "notes": "",
+      "rating": "B",
+      "tags": [
+        "Steady momentum"
+      ]
     },
     "AMPX_2026": {
       "direction": "long",
@@ -300,7 +334,7 @@
     "BE_2024": {
       "direction": "long",
       "notes": "Random. No setup for most of the year with a strong EP gap up then a small run before fading",
-      "rating": "C",
+      "rating": "D",
       "tags": []
     },
     "BE_2025": {
@@ -485,8 +519,8 @@
     },
     "COHR_2025": {
       "direction": "long",
-      "notes": "[AI] Tradable May-Aug 10EMA trend, then Aug 15 -32% weekly shakeout destroyed it. Recovery in Sep-Dec with Nov EP. The shakeout is the defining event — ends most positions.\n\n[Human] Agree with assessment. The movement afterwards were trailing 20 EMA with a lot of undercuts. Not my favorite target",
-      "rating": "B",
+      "notes": "[AI] Tradable May-Aug 10EMA trend, then Aug 15 -32% weekly shakeout destroyed it. Recovery in Sep-Dec with Nov EP. The shakeout is the defining event — ends most positions.\n\n[Human] Agree with assessment. The movement afterwards were trailing 20 EMA with a lot of undercuts. Not my favorite target\n\nThe 2024 leg was impossible to trade. When a stock is jumping all around the EMAs the best thing you could do for yourself is to stay away from it.",
+      "rating": "C",
       "tags": [
         "Breakout",
         "Flat Base",
@@ -839,8 +873,8 @@
     },
     "HUT_2025": {
       "direction": "long",
-      "notes": "[AI] Cleanest miner of the batch. ADR 7.2%, only 7 50 EMA tests across 134 days, autumn leg $26 → $54 with 85% 10 EMA and 0 50 EMA tests. Oct 10 TRAP was the explicit exit signal. Tradable end-to-end.",
-      "rating": "B",
+      "notes": "[AI] Cleanest miner of the batch. ADR 7.2%, only 7 50 EMA tests across 134 days, autumn leg $26 → $54 with 85% 10 EMA and 0 50 EMA tests. Oct 10 TRAP was the explicit exit signal. Tradable end-to-end.\n\nWay too many chops not even tradable. Just keep stopping out",
+      "rating": "C",
       "tags": [
         "Breakout"
       ]
@@ -1990,6 +2024,15 @@
         "Steady momentum"
       ]
     },
+    "VRT_2024": {
+      "direction": "long",
+      "notes": "",
+      "rating": "B",
+      "tags": [
+        "Steady momentum",
+        "Flag"
+      ]
+    },
     "VRT_2026": {
       "direction": "long",
       "notes": "[AI] Data-center infrastructure. 3-week Jan-Feb 10 EMA streak + Feb 11 REAL +17% vol 3.3x close@92% acceleration add. Low ADR (5.0%), 0 50 EMA tests in core leg. 33-day +67% clean tempo trade. Style fit.",
@@ -2017,10 +2060,11 @@
     },
     "VSCO_2025": {
       "direction": "long",
-      "notes": "[AI] Partially tradable. The first 4 months were untradable chop with multiple traps; 14 Aug character change → 19 Dec was the real move. Patient entry wins, chasing the early TRAPs gets stopped. Slow burner.",
-      "rating": "",
+      "notes": "[AI] Partially tradable. The first 4 months were untradable chop with multiple traps; 14 Aug character change → 19 Dec was the real move. Patient entry wins, chasing the early TRAPs gets stopped. Slow burner.\n\n======================\n\nActual mock trading is actually quite profitable. The entire move could use the typical strategy to tackle",
+      "rating": "B",
       "tags": [
-        "Breakout"
+        "Breakout",
+        "Steady momentum"
       ]
     },
     "VST_2024": {
@@ -2096,6 +2140,15 @@
         "Breakout"
       ]
     },
+    "YPF_2024": {
+      "direction": "long",
+      "notes": "",
+      "rating": "B",
+      "tags": [
+        "Steady momentum",
+        "momentum burst"
+      ]
+    },
     "ZETA_2024": {
       "direction": "long",
       "notes": "I think this is a strong momentum A setup for sure the strong trail very well for the entire year showing strength all over. The only smal challenge is to set the right stop. If you could tolerate risk setting the stop at 50EMA would allow you to ride the entire move up from Jan to Oct. \n\nZooming out this is also a 2 year base with a cup and handle breakout via gap. This is a very good example",
@@ -2106,29 +2159,148 @@
         "Tightness"
       ]
     },
-    "VRT_2024": {
-      "tags": [
-        "Steady momentum",
-        "Flag"
-      ],
-      "rating": "B",
-      "direction": "long",
-      "notes": ""
-    },
-    "YPF_2024": {
-      "tags": [
-        "Steady momentum",
-        "momentum burst"
-      ],
-      "rating": "B",
-      "direction": "long",
-      "notes": ""
-    },
     "ZIM_2024": {
+      "direction": "long",
+      "notes": "Not much setup, a lot of sideway movements",
+      "rating": "D",
+      "tags": []
+    },
+    "AMR_2023": {
+      "tags": [
+        "IPO Base",
+        "Cup and Handle Breakout",
+        "Steady momentum"
+      ],
+      "rating": "B",
+      "direction": "long",
+      "notes": "One to study for early days chop, 1st leg up with consolidation around 50 EMA for 1 month. Clear signal on beakout and then respected mostly 10EMA till Feb 27."
+    },
+    "ANF_2023": {
+      "tags": [
+        "Steady momentum"
+      ],
+      "rating": "B",
+      "direction": "long",
+      "notes": "I think this has to be a B+. I mean other than not fully respecting 20 EMA this had a smooth curve up until YE. The subsequent final leg was also tradable. This is one of the better ones though maybe not a fast mover"
+    },
+    "APLS_2023": {
+      "tags": [],
+      "rating": "E",
+      "direction": "",
+      "notes": "No clear trend. Random up and down move. Not respecting EMAs at all"
+    },
+    "APP_2023": {
+      "tags": [
+        "Steady momentum",
+        "IPO Base"
+      ],
+      "rating": "C",
+      "direction": "long",
+      "notes": "Rather weak uptrend with 2 gaps and full retest of breakout level. Not an easy one to trade. Can't imagine myself making money"
+    },
+    "BBBY_2023": {
+      "tags": [],
+      "rating": "E",
+      "direction": "",
+      "notes": "No trend whatsoever just a few random moves. If anything a short potential?"
+    },
+    "BBIO_2023": {
+      "tags": [
+        "Serial Gapper"
+      ],
+      "rating": "D",
+      "direction": "long",
+      "notes": "This is charcterised by a few large gaps then fade into consolidations."
+    },
+    "BLD_2023": {
       "tags": [],
       "rating": "D",
       "direction": "long",
-      "notes": "Not much setup, a lot of sideway movements"
+      "notes": "Not a nice clean one except for maybe 2 months it was moving up then fully retracing. Not the kind of stock you want to be trading"
+    },
+    "BLDR_2023": {
+      "tags": [
+        "EP",
+        "Steady momentum"
+      ],
+      "rating": "B",
+      "direction": "long",
+      "notes": "I think it is another example that shows how important it is to set a good stop level and how often the real move only comes in the second leg. Tradng the initial weak uptrend could actually cost you money unless you size right with a wide stop"
+    },
+    "CCL_2023": {
+      "tags": [],
+      "rating": "D",
+      "direction": "",
+      "notes": "Lack of a clear trend. A few leg up with full retracement"
+    },
+    "CELH_2023": {
+      "tags": [
+        "Serial Gapper"
+      ],
+      "rating": "D",
+      "direction": "long",
+      "notes": "two gap with a lot of sideway mivements"
+    },
+    "CFLT_2023": {
+      "tags": [],
+      "rating": "D",
+      "direction": "",
+      "notes": ""
+    },
+    "CLSK_2023": {
+      "tags": [],
+      "rating": "D",
+      "direction": "long",
+      "notes": "This is one of those that you need to wait for the right moment to strike. We have 3 waves of pull up and full retracement just to see a 200% move. The move was also subsequently retraced."
+    },
+    "COIN_2023": {
+      "tags": [],
+      "rating": "C",
+      "direction": "long",
+      "notes": "Kinda tradable at the frontend but need to not fall in love with the stock when it rollover. The hard part is you never know how much it has to offer"
+    },
+    "CRWD_2023": {
+      "tags": [],
+      "rating": "C",
+      "direction": "long",
+      "notes": "By no means a smooth sail. One of which that move along 50EMA which requires much better tolerance and patience to trade"
+    },
+    "CVNA_2023": {
+      "tags": [],
+      "rating": "D",
+      "direction": "long",
+      "notes": "No clear trend"
+    },
+    "CYTK_2023": {
+      "tags": [],
+      "rating": "D",
+      "direction": "",
+      "notes": "One huge gap up. No trend"
+    },
+    "DKNG_2023": {
+      "tags": [
+        "Steady momentum"
+      ],
+      "rating": "C",
+      "direction": "long",
+      "notes": "Relatively clear trend but price did not carry this far away enough"
+    },
+    "DUOL_2023": {
+      "tags": [
+        "Steady momentum",
+        "Serial Gapper"
+      ],
+      "rating": "C",
+      "direction": "long",
+      "notes": "Weak up trend with multiple gaps and long consolidation. It is hard to run consistent stop on this name"
+    },
+    "EDU_2023": {
+      "tags": [
+        "Steady momentum"
+      ],
+      "rating": "C",
+      "direction": "long",
+      "notes": "Two long consolidation base followed by a steady upward movement. The stock had a long extended downtrend before and took a lot of time to consolidate. The move up was along 50EMA. Tradable but not the best option for us given style"
     }
   },
   "version": 1

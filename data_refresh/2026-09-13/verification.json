@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "catalogue_rows": 2428,
+  "catalogue_2026": 1034,
+  "chart_files_validated": 1020,
+  "clean_over_100_rows": 988,
+  "earlier_year_rows_unchanged": true,
+  "study_files_unchanged": true,
+  "api_results_and_sample_chart_endpoints": "passed",
+  "cross_checks": true
+}

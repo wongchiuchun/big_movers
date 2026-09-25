@@ -1,0 +1,58 @@
+[
+  {
+    "symbol": "AMD",
+    "yahoo_gain": 204.22,
+    "twelve_gain": 204.22,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  },
+  {
+    "symbol": "INTC",
+    "yahoo_gain": 257.99,
+    "twelve_gain": 257.99,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  },
+  {
+    "symbol": "DELL",
+    "yahoo_gain": 410.75,
+    "twelve_gain": 410.75,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  },
+  {
+    "symbol": "ARM",
+    "yahoo_gain": 320.33,
+    "twelve_gain": 320.33,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  },
+  {
+    "symbol": "ALAB",
+    "yahoo_gain": 381.72,
+    "twelve_gain": 381.72,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  },
+  {
+    "symbol": "AAOI",
+    "yahoo_gain": 575.86,
+    "twelve_gain": 575.86,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  },
+  {
+    "symbol": "AXTI",
+    "yahoo_gain": 759.77,
+    "twelve_gain": 759.77,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  },
+  {
+    "symbol": "LITE",
+    "yahoo_gain": 224.78,
+    "twelve_gain": 224.78,
+    "twelve_latest_date": "2026-09-11",
+    "matches_within_0_02pp": true
+  }
+]
