@@ -12178,32 +12178,51 @@ document.addEventListener('click', e => {
         return;
       }
 
-      statusEl.textContent = `Fetched ${data.bars_added} bars for ${symbol}`;
-      statusEl.className = 'fetch-status success';
+      if (!data.result_row) {
+        throw new Error('Data fetched, but no result row was returned. Ticker was not added.');
+      }
+      let filtersReset = false;
 
       // Add to results table if we got a result row
       if (data.result_row) {
         const row = data.result_row;
         if (yearOverride) row.year = yearOverride;
         // POST to add-result endpoint to persist
-        await fetch('/api/add-result', {
+        const saveResp = await fetch('/api/add-result', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(row)
         });
+        const saved = await saveResp.json();
+        if (!saveResp.ok || saved.error || !saved.ok) {
+          throw new Error(saved.error || 'Could not save ticker to the sidebar');
+        }
         // Add to local allRows and refresh
         const existing = allRows.findIndex(r => r.symbol === row.symbol && String(r.year) === String(row.year));
         if (existing >= 0) allRows[existing] = row;
         else allRows.push(row);
         applyFilters();
         // Select the new ticker
-        const newIdx = filtered.findIndex(r => r.symbol === row.symbol && String(r.year) === String(row.year));
+        let newIdx = filtered.findIndex(r => r.symbol === row.symbol && String(r.year) === String(row.year));
+        if (newIdx < 0) {
+          // A successful Add must be visible even when a study view excludes it.
+          ['f-gain','f-sym','f-tag','f-dir','f-rating','f-ai','f-src'].forEach(id => {
+            document.getElementById(id).value = '';
+          });
+          document.getElementById('f-year').value = String(row.year);
+          filtersReset = true;
+          applyFilters();
+          newIdx = filtered.findIndex(r => r.symbol === row.symbol && String(r.year) === String(row.year));
+        }
         if (newIdx >= 0) selectRow(newIdx);
       }
 
+      statusEl.textContent = `Added ${symbol} (${data.result_row.year}); fetched ${data.bars_added} bars.` +
+        (filtersReset ? ' Sidebar filters reset to show it.' : '');
+      statusEl.className = 'fetch-status success';
       setTimeout(closeFetchModal, 1500);
     } catch (e) {
-      statusEl.textContent = 'Network error: ' + e.message;
+      statusEl.textContent = 'Add failed: ' + e.message;
       statusEl.className = 'fetch-status error';
     }
     submitBtn.disabled = false;
