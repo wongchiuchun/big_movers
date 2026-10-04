@@ -5,9 +5,13 @@ core exercise is finding a useful entry-to-target reward/risk ratio against a
 stop below the currently observed low of day, sizing that risk, and managing
 the fills and exits as a random synthetic session unfolds.
 
-**Implementation status: unverified.** At the user's request, no tests, import
-probes, browser checks, benchmarks, or simulation smoke runs were performed.
-The deferred checklist is [execution-lab-verification.md](../../docs/execution-lab-verification.md).
+**Implementation status: essential automated checks passed.** After initially
+deferring verification, the user authorized essentials: 12 tests covering actual
+ABIDES execution/risk/stops, worker protocol, Flask integration and shutdown
+regression passed, along with syntax/compilation checks. Browser behavior,
+full-session performance and the broader suite remain unverified.
+Commands/results and the deferred checklist are in
+[execution-lab-verification.md](../../docs/execution-lab-verification.md).
 
 ## Install and open manually
 
@@ -34,7 +38,8 @@ The default setup uses the installed system Python 3.13. The worker's
 dependencies are NumPy, pandas, SciPy and exchange-calendars. No Gym/Ray or
 pomegranate is installed. To point the server at an alternate worker
 environment, set `EXECUTION_LAB_PYTHON` to that environment's Python executable
-before starting the server. Dependency compatibility remains untested.
+before starting the server. The installed Python 3.13 environment passed the
+essential worker tests; other dependency/version combinations remain untested.
 
 ## Practice workflow
 
