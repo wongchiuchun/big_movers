@@ -73,6 +73,13 @@ Each tool has independent color, width, and line style (solid/dashed/dotted). Dr
 - **Deliberate entry practice** — wait, skip, market-at-close, or place one persistent exact-price limit; every filled attempt starts with a fixed stop. The user may later replace it manually with an EMA trail, and each ticker permits at most three filled attempts.
 - **R-first review** — completed and abandoned drills separate realized R from dollar P&L, bars held, MFE/MAE, entry and stop self-review, and rule-labelled comparison diagnostics. Training is fully offline/local and does not download data.
 
+### Execution Lab
+
+- **Random intraday execution practice** — a dedicated view backed by a local ABIDES worker, with matching-driven candles/fills, 1/5-minute views, pause/advance and accelerated playback.
+- **Entry reward/risk and LOD stops** — mark a target, size a dollar-risk budget against a fixed buffered low-of-day stop, manage partial exits, and review planned versus actual execution.
+- **Isolated setup** — run `bash execution_lab/setup.sh` from this directory, restart the server, then click Execution Lab. Dependencies live in the Lab's own environment; existing daily-bar simulators retain their execution model.
+- **Unverified implementation** — no checks were run at the user's request. See [setup and model details](execution_lab/README.md) and [deferred verification checklist](../docs/execution-lab-verification.md).
+
 ### Export
 - **Screenshot** — composites chart + drawings + volume pane + header (symbol, gain, rating, tags) + footer (notes) into a single PNG download. Ctrl+Shift+S shortcut.
 

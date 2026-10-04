@@ -27,6 +27,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Make the local `classifier` package importable regardless of cwd
 sys.path.insert(0, SCRIPT_DIR)
 app = Flask(__name__, static_folder=SCRIPT_DIR, static_url_path="")
+from execution_lab.routes import blueprint as execution_lab_blueprint
+app.register_blueprint(execution_lab_blueprint)
 
 AI_CLASSIFICATIONS_FILE = os.path.join(SCRIPT_DIR, "ai_classifications.json")
 SETUP_DEFINITIONS_FILE = os.path.join(SCRIPT_DIR, "setup_definitions.json")
