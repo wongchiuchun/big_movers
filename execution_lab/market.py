@@ -38,14 +38,12 @@ class RecordedBook(OrderBook):
             passive = opposite[0].peek()[0]
             price = passive.limit_price
             if order.agent_id == 1:
-                available = (self.owner.broker_cash // max(1, price)
-                             if order.side.is_bid() else self.owner.broker_shares)
+                available = self.owner.allowed_quantity(order,price)
                 order.quantity = min(order.quantity, max(0, int(available)))
                 if order.quantity <= 0:
                     return None
             if passive.agent_id == 1:
-                available = (self.owner.broker_cash // max(1, price)
-                             if passive.side.is_bid() else self.owner.broker_shares)
+                available = self.owner.allowed_quantity(passive,price)
                 if passive.quantity > available:
                     self.cancel_order(deepcopy(passive))
                     return self.execute_order(order)
@@ -57,6 +55,18 @@ class RecordedBook(OrderBook):
                     sign = 1 if side.is_bid() else -1
                     self.owner.broker_cash -= sign * q * price
                     self.owner.broker_shares += sign * q
+                    record=self.owner.records[order.order_id if agent_id==order.agent_id else matched.order_id]
+                    if record["role"] in {"entry","add"}:
+                        self.owner.broker_lots.append({"price":price,"quantity":q})
+                    else:
+                        left=q
+                        while left and self.owner.broker_lots:
+                            lot=self.owner.broker_lots[0]
+                            taken=min(left,lot["quantity"])
+                            left-=taken
+                            lot["quantity"]-=taken
+                            if not lot["quantity"]:
+                                self.owner.broker_lots.pop(0)
             self.owner.send_message(1, TapeMsg(int(self.owner.current_time), price, q))
         return matched
 
@@ -68,8 +78,22 @@ class LabExchange(ExchangeAgent):
                          pipeline_delay=0, computation_delay=1, log_orders=False)
         self.order_books[SYMBOL] = RecordedBook(self, SYMBOL)
         self.broker_cash, self.broker_shares = cash, 0
+        self.records={}
+        self.broker_lots=[]
         self.log_events = self.log_to_file = False
         self.enabled = True
+
+    def allowed_quantity(self,order,price):
+        record=self.records.get(order.order_id)
+        if not record:
+            return 0
+        sign=1 if record["direction"]=="long" else -1
+        if record["role"]=="exit":
+            return max(0,sign*self.broker_shares)
+        if sign*self.broker_shares<0:
+            return 0
+        restricted=2*sum(l["price"]*l["quantity"] for l in self.broker_lots) if sign==-1 else 0
+        return max(0,(self.broker_cash-restricted)//max(1,price))
 
     def receive_message(self, current_time, sender_id, message):
         if not self.enabled and sender_id != 1:
@@ -99,15 +123,44 @@ class Clock(Agent):
 
 class Fundamental:
     """Hidden seeded background state; never returned in live responses."""
-    def __init__(self, seed):
+    OPTIONS = {"regime": ("trend_up", "trend_down", "range", "reversal"),
+               "volatility": ("low", "normal", "high"),
+               "liquidity": ("deep", "normal", "thin")}
+
+    def __init__(self, seed, selections=None, duration=23400):
+        selections = selections or {}
+        self.selections = {}
+        for key, choices in self.OPTIONS.items():
+            value = selections.get(key) or "random"
+            if value not in ("random", *choices):
+                raise ValueError(f"Invalid {key}; choose random or {', '.join(choices)}.")
+            self.selections[key] = value
         rng = np.random.RandomState(seed)
         self.base = int(rng.choice([2500, 5000, 7500, 10000]))
-        self.vol = float(rng.uniform(0.7, 2.6))
-        self.drift = float(rng.uniform(-0.035, 0.045))
-        self.liquidity = int(rng.choice([60, 120, 250, 500]))
-        self.regime = int(rng.choice([-1, 0, 1]))
+        chosen = {key: str(rng.choice(choices)) if self.selections[key] == "random" else self.selections[key]
+                  for key, choices in self.OPTIONS.items()}
+        self.regime = chosen["regime"]
+        self.volatility = chosen["volatility"]
+        self.liquidity_mode = chosen["liquidity"]
+        lo, hi = {"low": (.00008, .00014), "normal": (.00014, .00030),
+                  "high": (.00030, .00052)}[self.volatility]
+        self.volatility_rate = float(rng.uniform(lo, hi))
+        self.vol = self.base * self.volatility_rate  # cents per square-root second
+        self.drift = self.base * float(rng.uniform(.000005, .000009))
+        self.liquidity = {"deep": 500, "normal": 120, "thin": 60}[self.liquidity_mode]
+        self.duration = duration
+        self.reversal_sign = int(rng.choice([-1, 1]))
         self.rng = np.random.RandomState(seed ^ 0x51A7)
         self.last_second, self.value = 0, float(self.base)
+
+    def bias(self, seconds):
+        if self.regime == "trend_up":
+            return self.drift
+        if self.regime == "trend_down":
+            return -self.drift
+        if self.regime == "reversal":
+            return -self.reversal_sign * self.drift * math.tanh((seconds-self.duration*.45)/600)
+        return (self.base-self.value)*.001  # range: pull back toward the opening anchor
 
     def get_daily_open_price(self, symbol, time):
         return self.base
@@ -117,7 +170,7 @@ class Fundamental:
         while self.last_second < end:
             t = self.last_second
             intraday = 1.0 + 0.8 * math.exp(-t / 1800) + 0.3 * max(0, (t - 21000) / 2400)
-            drift = self.drift + self.regime * .025 * math.sin(t / 1100)
+            drift = self.bias(t) + self.base * .000005 * math.sin(t / 1100)
             self.value = max(500, self.value + drift + self.rng.normal(0, self.vol * intraday))
             self.last_second += 1
         return int(round(self.value))
@@ -156,7 +209,9 @@ class Participant(TradingAgent):
                 for order in list(self.orders.values()):
                     if not isinstance(order, MarketOrder):
                         self.cancel_order(order)
-                side = Side.BID if self.random_state.rand() > .5 - self.fundamental.drift * 2 else Side.ASK
+                bias = self.fundamental.bias((current_time-self.opening)/SECOND)
+                buy_probability = min(.65, max(.35, .5 + bias/self.fundamental.base*10000))
+                side = Side.BID if self.random_state.rand() < buy_probability else Side.ASK
                 qty = int(self.random_state.randint(10, self.fundamental.liquidity + 30))
                 if self.random_state.rand() < .75:
                     self.place_market_order(SYMBOL, qty, side)

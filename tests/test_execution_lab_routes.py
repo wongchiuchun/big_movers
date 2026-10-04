@@ -1,5 +1,6 @@
 """Essential Flask integration smoke checks, using the real isolated worker."""
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -20,6 +21,15 @@ class ExecutionLabRoutesTests(unittest.TestCase):
             response=self.client.get(path)
             self.assertEqual(response.status_code,200,path)
             response.close()
+        page=self.client.get("/execution-lab/")
+        script=self.client.get("/execution-lab/assets/lab.js")
+        ids=set(re.findall(r'\bid="([^"]+)"',page.get_data(as_text=True)))
+        references=set(re.findall(r"\$\('([^']+)'\)",script.get_data(as_text=True)))
+        self.assertFalse(references-ids,f"Missing controls: {references-ids}")
+        self.assertTrue({"new-long","new-short","entry-dialog","exit-dialog","stop-dialog",
+                         "entry-error","exit-error","stop-error"}<=ids)
+        page.close()
+        script.close()
         response=self.client.get("/")
         self.assertIn(b'href="/execution-lab/"',response.data)
         response.close()
@@ -42,6 +52,7 @@ class ExecutionLabRoutesTests(unittest.TestCase):
                     json={"action":"create","command_id":"flask-create","seed":17,"date":"2026-10-02"})
                 self.assertEqual(response.status_code,200,response.get_json())
                 state=response.get_json()["state"]
+                self.assertEqual(state["api_version"],2)
                 self.assertTrue(state["bars"])
                 response=self.client.post("/execution-lab/api/command",headers=headers,
                     json={"action":"advance","command_id":"flask-advance","session_id":state["session_id"],"seconds":1})

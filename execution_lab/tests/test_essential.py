@@ -14,6 +14,7 @@ from execution_lab import session as session_module
 from execution_lab.session import Session
 from execution_lab.broker import Human, TERMINAL
 from execution_lab.session_calendar import schedule
+from execution_lab.market import Fundamental
 
 
 class EssentialTests(unittest.TestCase):
@@ -36,12 +37,114 @@ class EssentialTests(unittest.TestCase):
         if stop>=entry:
             stop=round(entry-.05,2)
         return {"entry":entry,"stop":stop,"target":round(entry+3*(entry-stop),2),
-                "budget":10,"buffer":.05,"order_type":"market","rationale":"essential test"}
+                "budget":10,"buffer":.05,"order_type":"market","rationale":"essential test", "immediate":False}
+
+    def test_direct_short_entry_and_cover_without_playback(self):
+        session=self.new_session()
+        state=session.state()
+        session.command("entry",{"direction":"short","entry":state["bid"],
+            "stop":round(max(b["high"] for b in state["bars"])+.1,2),
+            "size_mode":"shares","size_value":20,"order_type":"market"})
+        self.assertEqual(session.human.shares,-20)
+        self.assertEqual(session.human.active_trade["plan"]["direction"],"short")
+        self.assertIsNone(session.human.active_trade["plan"]["planned_rr"])
+        session.command("exit",{"quantity":10})
+        self.assertEqual(session.human.shares,-10)
+        session.command("exit",{"all":True})
+        self.assertEqual(session.human.shares,0)
+        self.assertEqual(session.human.cash,session.exchange.broker_cash)
+
+    def test_add_and_partial_stop_keep_initial_risk_reference(self):
+        session=self.new_session()
+        body=self.entry(session)
+        body.update(immediate=True,size_mode="shares",size_value=20)
+        session.command("entry",body)
+        self.assertEqual(session.human.shares,20)
+        initial_stop=session.human.active_trade["plan"]["stop"]
+        session.command("add",{"entry":session.state()["ask"],"order_type":"market",
+                               "size_mode":"shares","size_value":10})
+        self.assertEqual(session.human.shares,30)
+        session.command("stop",{"mode":"add","percent":50,"price":round(session.state()["last"]+1,2)})
+        self.assertEqual(session.human.shares,20,"50% stop uses original 20 shares, not the 30 after adding")
+        self.assertEqual(session.human.active_trade["plan"]["stop"],initial_stop)
+        self.assertEqual(session.human.cash,session.exchange.broker_cash)
+        session.command("exit",{"all":True})
+        self.assertEqual(session.human.shares,0)
+
+    def test_direct_limit_can_rest_and_cancel(self):
+        session=self.new_session()
+        entry=round(session.state()["lod"]-1,2)
+        session.command("entry",{"direction":"long","order_type":"limit", "entry":entry,
+            "stop":round(entry-.2,2),"size_mode":"dollars","size_value":500})
+        record=list(session.human.records.values())[-1]
+        self.assertEqual(record["status"],"working")
+        self.assertEqual(session.human.shares,0)
+        session.command("cancel",{"order_id":record["id"]})
+        self.assertEqual(record["status"],"cancelled")
+
+    def test_short_collateral_and_direct_hod_stop(self):
+        session=self.new_session()
+        state=session.state()
+        body={"direction":"short","order_type":"market","entry":state["bid"],
+              "size_mode":"shares","size_value":1_000_000,"stop_strategy":"lod",
+              "stop_parameter":0,"buffer":0}
+        with self.assertRaisesRegex(ValueError,"buying power/collateral"):
+            session.command("entry",body)
+        self.assertFalse(session.human.records)
+        body["size_value"]=20
+        session.command("entry",body)
+        self.assertEqual(session.human.shares,-20)
+        self.assertEqual(session.human.stop,round(state["hod"]*100))
+        initial_risk=session.human.active_trade["initial_risk"]
+        self.assertGreater(initial_risk,0)
+        with self.assertRaises(ValueError):
+            session.command("exit",{"quantity":21})
+        session.command("stop",{"price":round(session.state()["last"]-1,2)})
+        self.assertEqual(session.human.shares,0)
+        self.assertEqual(session.human.trades[-1]["initial_risk"],initial_risk)
+        self.assertTrue(any(f["protective"] and f["side"]=="buy" for f in session.human.fills))
+        self.assertEqual(session.human.cash,session.exchange.broker_cash)
 
     def test_calendar_early_close_and_weekend(self):
         self.assertEqual(schedule("2026-11-27")["close_label"],"13:00")
         with self.assertRaises(ValueError):
             schedule("2026-10-04")
+
+    def test_regime_random_defaults_and_reproducibility(self):
+        default=Fundamental(17)
+        blank=Fundamental(17,{"regime":"","volatility":None,"liquidity":""})
+        explicit=Fundamental(17,{key:"random" for key in Fundamental.OPTIONS})
+        self.assertEqual(default.selections,{key:"random" for key in Fundamental.OPTIONS})
+        self.assertEqual(default.price(60),blank.price(60))
+        self.assertEqual(default.price(60),explicit.price(60))
+        with self.assertRaises(ValueError):
+            Fundamental(17,{"regime":"invalid"})
+        session=self.new_session()
+        self.assertEqual(session.state()["selections"],default.selections)
+        self.assertNotIn("profile",session.state())
+        session.finish()
+        review=json.loads((Path(self.directory.name)/f"{session.id}.json").read_text())
+        self.assertEqual(review["configuration"]["selections"],default.selections)
+        self.assertEqual(review["configuration"]["profile"]["regime"],default.regime)
+
+    def test_selected_regimes_and_volatility_scaling(self):
+        for regime in Fundamental.OPTIONS["regime"]:
+            market=Fundamental(17,{"regime":regime,"volatility":"low","liquidity":"thin"},duration=3600)
+            self.assertEqual(market.regime,regime)
+            self.assertEqual(market.liquidity,60)
+            self.assertAlmostEqual(market.vol/market.base,market.volatility_rate)
+            if regime=="trend_up":self.assertGreater(market.bias(0),0)
+            if regime=="trend_down":self.assertLess(market.bias(0),0)
+            if regime=="reversal":self.assertLess(market.bias(0)*market.bias(3600),0)
+            if regime=="range":
+                market.value=market.base+100
+                self.assertLess(market.bias(0),0)
+                market.value=market.base-100
+                self.assertGreater(market.bias(0),0)
+        high=Fundamental(17,{"volatility":"high","liquidity":"deep"})
+        low=Fundamental(17,{"volatility":"low"})
+        self.assertGreater(high.volatility_rate,low.volatility_rate)
+        self.assertEqual(high.liquidity,500)
 
     def test_risk_sizing_example_and_invalid_plan(self):
         human=Human(10_000_000,17,lambda p:None)

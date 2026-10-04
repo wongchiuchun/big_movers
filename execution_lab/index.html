@@ -1,79 +1,35 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Execution Lab · Chart Studies</title>
-  <link rel="stylesheet" href="/execution-lab/assets/lab.css">
-  <script defer src="/vendor/lightweight-charts.standalone.production.js"></script>
-  <script defer src="/execution-lab/assets/lab.js"></script>
-</head>
-<body>
-<header>
-  <a class="back" href="/">← Chart Studies</a>
-  <div class="brand">Execution <em>Lab</em><span>INTRADAY · ENTRY / RISK / EXECUTION</span></div>
-  <button id="saved">Saved reviews</button><button id="theme" aria-label="Toggle light theme">Light</button>
-</header>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Execution Lab · Chart Studies</title>
+<link rel="stylesheet" href="/execution-lab/assets/lab.css">
+<script defer src="/vendor/lightweight-charts.standalone.production.js"></script>
+<script defer src="/execution-lab/assets/lab.js"></script>
+</head><body>
+<header><a class="back" href="/">← Chart Studies</a><div class="brand">Execution <em>Lab</em><span>INTRADAY · LONG / SHORT / STOPS</span></div><button id="saved">Saved reviews</button><button id="theme">Light</button></header>
 <main>
-  <section class="setup panel">
-    <div><strong>A new market. A deliberate entry.</strong><p>Read the unfolding session. Find room to your target. Define risk against low of day.</p></div>
-    <label>Starting cash<input id="cash" type="number" value="100000" min="1" step="1000"></label>
-    <label>Session date<input id="date" type="date" aria-describedby="date-help"><small id="date-help">Blank: latest US session</small></label>
-    <label>Repeat seed<input id="seed" type="number" min="1" max="4294967295" placeholder="Random"></label>
-    <button id="create" class="primary">Start random session</button>
-  </section>
-  <div id="status" role="status" aria-live="polite">Ready. Start a synthetic US stock session.</div>
-  <section class="workspace">
-    <div class="market panel">
-      <div class="market-head"><div><strong id="symbol">SIM · Synthetic</strong><span id="session-meta">Regular US equity session</span></div><div id="clock">09:30:00 ET</div></div>
-      <div class="quotes"><span>LAST <b id="last">—</b></span><span>BID <b id="bid">—</b></span><span>ASK <b id="ask">—</b></span><span class="lod">LOW OF DAY <b id="lod">—</b></span></div>
-      <div id="chart" aria-label="Intraday candlestick chart"></div>
-      <div class="playback">
-        <button id="play" disabled>▶ Play</button><button id="step" disabled>+10 seconds</button><button id="minute" disabled>+1 minute</button>
-        <label>Speed<select id="speed"><option value="1">1×</option><option value="10" selected>10×</option><option value="60">60×</option></select></label>
-        <label>Candles<select id="timeframe"><option value="1">1 minute</option><option value="5">5 minutes</option></select></label>
-        <label>Chart click<select id="chart-field"><option value="target">Set target</option><option value="entry">Set limit entry</option><option value="stop">Set stop</option></select></label>
-        <button id="finish" class="danger" disabled>Finish &amp; review</button>
-      </div>
-      <p class="chart-note">The future is hidden. LOD includes the unfinished candle. Pause to plan; queued orders execute when time resumes.</p>
-    </div>
-    <aside class="ticket panel">
-      <div class="section-label">01 / PLAN YOUR ENTRY</div>
-      <h1>Room to reward.<br><em>Risk you can define.</em></h1>
-      <form id="entry-form">
-        <div class="form-grid">
-          <label>Entry order<select id="order-type"><option value="market">Market</option><option value="limit">Limit</option></select></label>
-          <label>Planned entry<input id="entry" type="number" step=".01" min=".01" required></label>
-          <label>LOD buffer ($)<input id="buffer" type="number" step=".01" min=".01" value=".01" required></label>
-          <label>Stop price<input id="stop" type="number" step=".01" min=".01" required></label>
-          <label>Target marker<input id="target" type="number" step=".01" min=".01" placeholder="Your price level" required></label>
-          <label>Risk budget ($)<input id="budget" type="number" step=".01" min=".01" value="100" required></label>
-        </div>
-        <label class="check"><input id="follow-lod" type="checkbox" checked>Use current LOD minus buffer for this entry</label>
-        <label class="preference">Preferred minimum reward/risk<select id="minimum-r"><option value="1">1R</option><option value="2" selected>2R</option><option value="3">3R</option><option value="4">4R</option></select></label>
-        <div class="risk-preview"><div><span>REWARD / RISK</span><strong id="preview-rr">—</strong></div><div><span>RISK / SHARE</span><strong id="preview-risk">—</strong></div><div><span>SHARES</span><strong id="preview-shares">—</strong></div><div><span>PLANNED RISK</span><strong id="preview-total">—</strong></div></div>
-        <p id="plan-hint">Choose a target from the visible price structure. A target is a marker, not an automatic exit.</p>
-        <label>Why this entry and target?<textarea id="rationale" rows="2" maxlength="1000" placeholder="The price level, room to resistance, and what invalidates the trade…"></textarea></label>
-        <button id="submit-entry" class="primary wide" type="submit" disabled>Queue risk-sized entry</button>
-        <p class="small">A ratio measures room to a target; it does not estimate your probability of reaching it. Waiting or skipping is a valid decision.</p>
-      </form>
-      <div class="manage">
-        <div class="section-label">02 / MANAGE THE POSITION</div>
-        <label>Replace fixed stop<input id="new-stop" type="number" step=".01" min=".01" placeholder="New protective stop"></label>
-        <p id="stop-preview">Submitted stops stay fixed when LOD moves.</p><button id="replace-stop" disabled>Queue stop change</button>
-        <div class="exit-row"><label>Exit shares<input id="exit-quantity" type="number" min="1" step="1"></label><label>Exit order<select id="exit-type"><option value="market">Market</option><option value="limit">Limit</option></select></label></div>
-        <label id="exit-limit-label" hidden>Exit limit price<input id="exit-limit" type="number" step=".01" min=".01"></label>
-        <div class="button-row"><button id="exit-quarter" disabled>Sell ¼</button><button id="exit-half" disabled>Sell ½</button><button id="exit-custom" disabled>Sell shares</button></div>
-        <button id="close-all" class="danger wide" disabled>Close all / cancel remaining entry</button>
-      </div>
-    </aside>
-    <section class="account panel">
-      <div class="section-label">ACCOUNT / CONFIRMED FILLS ONLY</div>
-      <div class="account-grid"><div><span>EQUITY</span><strong id="equity">—</strong></div><div><span>BUYING POWER</span><strong id="buying-power">—</strong></div><div><span>POSITION</span><strong id="position">0</strong></div><div><span>AVG ENTRY</span><strong id="average">—</strong></div><div><span>REALIZED</span><strong id="realized">—</strong></div><div><span>UNREALIZED</span><strong id="unrealized">—</strong></div><div><span>FIXED STOP</span><strong id="fixed-stop">—</strong></div><div><span>REMAINING RISK</span><strong id="remaining-risk">—</strong></div></div>
-      <p id="protection-status" class="small">Cash and inventory change on exchange executions.</p>
-    </section>
-    <section class="orders panel"><div class="section-label">WORKING ORDERS &amp; FILL HISTORY</div><div class="table-scroll"><table><thead><tr><th>Order</th><th>Type</th><th>Shares</th><th>Filled</th><th>Price</th><th>Status</th><th></th></tr></thead><tbody id="orders-body"></tbody></table></div><div id="recent-fills" class="fill-list">No fills yet.</div></section>
-  </section>
-  <details class="rules panel"><summary>Modeled session rules &amp; setup</summary><p id="rules-text">Synthetic US stock; long-only cash account; matching-driven fills; stops can slip; no auctions, halts or margin.</p><p>First-time setup: <code>bash big_movers/execution_lab/setup.sh</code>, then restart the Chart Studies server. Essential automated checks passed; manual browser testing remains pending.</p></details>
+<section class="setup panel"><div><strong>Trade the unfolding session.</strong><p>The same entry, Sell/Cover, Add and Move Stop workflow as the single-stock Sim.</p></div><label>Starting capital<input id="cash" type="number" value="100000" min="1" step="1000"></label><label>Session date<input id="date" type="date"><small>Blank: latest US session</small></label><label>Repeat seed<input id="seed" type="number" min="1" max="4294967295" placeholder="Random"></label><button id="create" class="primary">Start random session</button></section>
+<section class="conditions panel" aria-label="Session conditions"><label>Regime<select id="regime"><option value="random" selected>Random / blind</option><option value="trend_up">Trending up</option><option value="trend_down">Trending down</option><option value="range">Range / chop</option><option value="reversal">Reversal</option></select></label><label>Volatility<select id="volatility"><option value="random" selected>Random</option><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option></select></label><label>Liquidity<select id="liquidity"><option value="random" selected>Random</option><option value="deep">Deep</option><option value="normal">Normal</option><option value="thin">Thin</option></select></label><p>Leave all three on Random for a blind session. Conditions influence behavior; they do not guarantee a direction. Random choices are revealed in review.</p></section>
+<div id="status" role="status" aria-live="polite">Start a session, then choose Long or Short.</div>
+<section class="workspace">
+<section class="market panel"><div class="market-head"><div><strong id="symbol">SIM · Synthetic</strong><span id="session-meta">Regular US equity session</span></div><div id="clock">09:30:00 ET</div></div><div class="quotes"><span>LAST <b id="last">—</b></span><span>BID <b id="bid">—</b></span><span>ASK <b id="ask">—</b></span><span class="lod">LOW OF DAY <b id="lod">—</b></span><span>HIGH OF DAY <b id="hod">—</b></span></div>
+<div id="chart" aria-label="Intraday candlestick chart"></div>
+<div class="playback"><button id="play" disabled>▶ Play</button><button id="step" disabled>+10 seconds</button><button id="minute" disabled>+1 minute</button><label>Speed<select id="speed"><option value="1">1×</option><option value="10" selected>10×</option><option value="60">60×</option></select></label><label>Candles<select id="timeframe"><option value="1">1 minute</option><option value="5">5 minutes</option></select></label><label>Chart click<select id="chart-field"><option value="target">Set target</option><option value="entry">Set limit entry</option><option value="stop">Set stop</option></select></label><button id="finish" class="danger" disabled>Finish &amp; review</button></div>
+<p class="chart-note">Market orders process directly, including while paused. Limits can rest. Stops trigger on actual trades and may slip.</p></section>
+<section class="position-strip panel"><div class="position-title"><strong id="trade-heading">Out of position</strong><span id="trade-facts">Choose your entry. Targets and notes are optional.</span></div><div class="sim-actions"><button id="new-long" class="primary" disabled>↑ Long</button><button id="new-short" class="short-button" disabled>↓ Short</button><button id="open-exit" disabled>Sell</button><button id="open-add" disabled>Add</button><button id="open-stop" disabled>Move Stop</button><button id="close-all" class="danger" disabled>Close</button></div><div id="stop-levels" class="stop-levels"></div></section>
+<section class="account panel"><div class="section-label">ACCOUNT / CONFIRMED EXECUTIONS</div><div class="account-grid"><div><span>EQUITY</span><strong id="equity">—</strong></div><div><span>BUYING POWER</span><strong id="buying-power">—</strong></div><div><span>POSITION</span><strong id="position">Flat</strong></div><div><span>AVG ENTRY</span><strong id="average">—</strong></div><div><span>REALIZED</span><strong id="realized">—</strong></div><div><span>UNREALIZED</span><strong id="unrealized">—</strong></div><div><span>FALLBACK STOP</span><strong id="fixed-stop">—</strong></div><div><span>REMAINING RISK</span><strong id="remaining-risk">—</strong></div></div><p id="protection-status" class="small">Account changes on exchange fills.</p></section>
+<section class="orders panel"><div class="section-label">ORDERS &amp; FILLS</div><div class="table-scroll"><table><thead><tr><th>Order</th><th>Type</th><th>Shares</th><th>Filled</th><th>Price</th><th>Status</th><th></th></tr></thead><tbody id="orders-body"></tbody></table></div><div id="recent-fills" class="fill-list">No fills yet.</div></section></section>
+<details class="rules panel"><summary>Modeled rules &amp; setup</summary><p id="rules-text">Synthetic long/short trading, simplified collateral, ABIDES matching.</p><p>Setup: <code>bash big_movers/execution_lab/setup.sh</code>, then restart Chart Studies. Shorts are a simplified paper model with proceeds restricted and 100% notional cash collateral; no locate, borrow fees or real broker margin rules.</p></details>
 </main>
+<dialog id="entry-dialog" class="order-dialog"><div class="dialog-head"><h2 id="entry-title">New Entry</h2><button type="button" data-dismiss="entry-dialog">Cancel</button></div>
+<form id="entry-form"><div class="pill-row" id="direction-pills"><button type="button" data-direction="long" class="active">↑ Long</button><button type="button" data-direction="short">↓ Short</button></div>
+<div class="form-grid"><label>Order type<select id="order-type"><option value="market">Market now</option><option value="limit">Limit</option></select></label><label>Entry price<div class="input-pick"><input id="entry" type="number" min=".01" step=".01" required><button type="button" data-pick="entry">Pick</button></div></label></div>
+<div class="pill-row" id="size-pills"><button type="button" data-size="shares" class="active">Shares</button><button type="button" data-size="dollars">$ Amount</button><button type="button" data-size="risk">$ Risk</button></div><input id="size-mode" type="hidden" value="shares"><label><span id="size-label">Shares</span><input id="size-value" type="number" min="1" step="1" value="100" required></label>
+<div class="entry-only"><div class="form-grid"><label>Stop strategy<select id="stop-strategy"><option value="lod">Below LOD / above HOD</option><option value="manual">Manual</option><option value="pct">% from entry</option><option value="swing5">5-bar extreme</option><option value="swing10">10-bar extreme</option><option value="atr">ATR(14) ×</option><option value="ema">EMA snapshot</option><option value="ema_trail">EMA auto-trail</option><option value="base">Session base extreme</option></select></label><label><span id="buffer-label">Buffer ($)</span><input id="buffer" type="number" min="0" step=".01" value=".01"></label></div><label id="ema-entry-label" hidden>EMA period<select id="ema-period"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></label>
+<label>Protective stop<div class="input-pick"><input id="stop" type="number" min=".01" step=".01" required><button type="button" data-pick="stop">Pick</button></div></label>
+<details class="optional-plan"><summary>Optional reward-to-risk plan</summary><label>Target marker<div class="input-pick"><input id="target" type="number" min=".01" step=".01" placeholder="Optional"><button type="button" data-pick="target">Pick</button></div></label><label>Preferred minimum<select id="minimum-r"><option value="1">1R</option><option value="2" selected>2R</option><option value="3">3R</option><option value="4">4R</option></select></label><label>Notes<textarea id="rationale" rows="2" maxlength="1000"></textarea></label></details></div>
+<input id="budget" type="hidden" value="100"><div class="risk-preview"><div><span>SHARES</span><strong id="preview-shares">—</strong></div><div><span>NOTIONAL</span><strong id="preview-notional">—</strong></div><div><span>RISK / SHARE</span><strong id="preview-risk">—</strong></div><div><span>PLANNED RISK</span><strong id="preview-total">—</strong></div><div><span>REWARD / RISK</span><strong id="preview-rr">Optional</strong></div></div><p id="plan-hint" class="small">Set the stop and size. Target is optional.</p><p id="entry-error" class="dialog-error" role="alert" hidden></p><button id="submit-entry" type="submit" class="primary wide">Buy Long</button></form></dialog>
+<dialog id="exit-dialog" class="order-dialog"><div class="dialog-head"><h2 id="exit-title">Sell Shares</h2><button type="button" data-dismiss="exit-dialog">Cancel</button></div><div class="pill-row"><button id="exit-all">All</button><button id="exit-half">Half</button><button id="exit-third">1/3</button></div><label>Quantity<input id="exit-quantity" type="number" min="1" step="1"></label><label>Order type<select id="exit-type"><option value="market">Market now</option><option value="limit">Limit</option></select></label><label id="exit-limit-label" hidden>Limit price<input id="exit-limit" type="number" step=".01" min=".01"></label><p id="exit-preview" class="small"></p><p id="exit-error" class="dialog-error" role="alert" hidden></p><button id="exit-custom" class="primary wide">Sell</button></dialog>
+<dialog id="stop-dialog" class="order-dialog"><div class="dialog-head"><h2>Move / Add Stop</h2><button type="button" data-dismiss="stop-dialog">Cancel</button></div><label>Operation<select id="stop-mode"><option value="add">Add stop level</option><option value="replace">Replace fallback stop</option><option value="edit">Edit selected level</option></select></label><input id="stop-id" type="hidden"><label>Strategy<select id="move-strategy"><option value="manual">Manual</option><option value="lod">LOD / HOD + buffer</option><option value="pct">% from current</option><option value="swing5">5-bar extreme</option><option value="swing10">10-bar extreme</option><option value="atr">ATR(14) ×</option><option value="ema">EMA snapshot</option><option value="ema_trail">EMA auto-trail</option></select></label><div class="form-grid"><label><span id="move-parameter-label">Buffer / distance</span><input id="move-parameter" type="number" min="0" step=".01" value=".01"></label><label id="ema-move-label" hidden>EMA period<select id="move-ema-period"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></label></div><label>Stop price<div class="input-pick"><input id="new-stop" type="number" step=".01" min=".01"><button type="button" data-pick="new-stop">Pick</button></div></label><label>% of original position to close<input id="stop-percent" type="number" min="1" max="100" step="1" value="100"></label><p id="stop-preview" class="small">100% closes all remaining shares, including adds. Partial levels leave the remainder protected by the prior stop.</p><p id="stop-error" class="dialog-error" role="alert" hidden></p><button id="replace-stop" class="primary wide">Add Stop</button></dialog>
 <dialog id="reviews-dialog"><div class="dialog-head"><h2>Session review</h2><button id="close-review">Close</button></div><div id="review-content"></div></dialog>
 </body></html>

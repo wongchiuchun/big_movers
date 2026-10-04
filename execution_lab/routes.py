@@ -115,7 +115,7 @@ def command():
     body = request.get_json(silent=True)
     if not isinstance(body,dict):
         return jsonify(error="Expected a JSON command."),400
-    if body.get("action") not in {"create","state","advance","entry","exit","cancel","stop","finish"}:
+    if body.get("action") not in {"create","state","advance","entry","add","exit","cancel","stop","delete_stop","finish"}:
         return jsonify(error="Unknown command."),400
     try:
         response = manager.call(body)

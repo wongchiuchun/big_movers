@@ -2,11 +2,11 @@
 
 A local intraday execution mode launched from Chart Studies / big_movers. Its
 core exercise is finding a useful entry-to-target reward/risk ratio against a
-stop below the currently observed low of day, sizing that risk, and managing
+stop below the currently observed low of day (above HOD for shorts), sizing that risk, and managing
 the fills and exits as a random synthetic session unfolds.
 
 **Implementation status: essential automated checks passed.** After initially
-deferring verification, the user authorized essentials: 12 tests covering actual
+deferring verification, the user authorized essentials covering actual
 ABIDES execution/risk/stops, worker protocol, Flask integration and shutdown
 regression passed, along with syntax/compilation checks. Browser behavior,
 full-session performance and the broader suite remain unverified.
@@ -47,16 +47,27 @@ essential worker tests; other dependency/version combinations remain untested.
    an explicit holiday/weekend is rejected. Blank seed creates a random seed,
    revealed in the completed review. One observed minute from the open gives
    initial context; the session begins paused at 09:31 ET.
-2. Choose your target from the visible chart. Click the chart to set a target,
-   limit entry or custom stop. Targets are planning markers, not automatic exits.
-3. Set a risk budget and LOD buffer. The preview shows prospective reward/risk,
-   risk per share, cash-capped shares, and planned dollar risk. Market entry
-   estimates follow the current ask; a limit entry uses your selected price.
-4. Queue the entry, then play or advance. Orders entered while paused have not
-   executed. Status and account figures update from actual exchange messages.
-5. Manage a fixed protective stop, partial market/limit exits, and working
-   orders. Close all also cancels/settles a remaining entry. A new lower LOD
-   never automatically lowers your existing stop.
+   Regime, volatility and liquidity each default to **Random**. Choose specific
+   conditions for focused practice or leave them untouched for a blind session.
+   Randomly chosen conditions remain hidden until review. Settings lock during
+   the session; repeat copies the same selections and seed.
+2. Click **Long** or **Short** in the position strip. The entry dialog offers
+   shares, dollar amount or dollar risk sizing and market/limit orders. Use
+   **Pick** to select a limit entry, stop or optional target on the chart.
+3. Default protection is LOD minus buffer for longs, HOD plus buffer for shorts.
+   Manual, percent, 5/10-bar extreme, ATR(14), EMA snapshot/trail and session-base
+   stops are available. Candle strategies require completed one-minute bars.
+   Preview shows notional and risk; an optional target adds reward/risk.
+   Targets remain planning markers, not automatic exits.
+4. Submit directly, including while paused. The worker processes a bounded
+   50ms exchange interval; limits can remain working and fills depend on actual
+   liquidity. Play or advance to let the market unfold.
+5. Use **Sell/Cover**, **Add**, **Move Stop**, or **Close**. Sell/Cover offers
+   All/Half/Third quantities and market/limit exits. Add stays in the current
+   direction. Move Stop adds or replaces levels; stop chips offer Edit/Delete.
+   Partial stops use the original entry size; 100% exits all remaining shares,
+   including adds. The initial fallback cannot be deleted. A new LOD/HOD does
+   not move a fixed stop; EMA auto-trail tightens at advance boundaries.
 6. Finish and review. Inspect planned versus actual initial risk, entry
    slippage, fill-based reward/risk, realized R, stop edits, and partial exits.
    Saved reviews persist locally and can be exported as JSON or used to copy
@@ -71,23 +82,34 @@ outcomes. A high prospective ratio does not establish a likely profit.
   `f9cbe51342b7dedd9587e4e069040d68a5c6477f`; BSD license in `vendor/`.
 - Custom seeded background market makers and trading agents drive one synthetic
   instrument. This is not a calibrated AAPL/NVDA simulation or historical replay.
+- Regimes influence drift/order flow: uptrend, downtrend, opening-anchor range,
+  or a smoothly changing reversal. They do not guarantee profitable direction.
+  Low/normal/high volatility scales with initial stock price and retains the
+  stronger-open/modest-late-session envelope. Deep/normal/thin liquidity changes
+  background order sizes. The updated generator is model version 2; earlier
+  review seeds do not reproduce their original paths under this version.
 - XNYS regular-session calendar, New York display timezone, holidays/early closes.
-- Whole shares, USD cents, $0.01 grid, long-only cash, zero fees. Matching enforces
-  available cash/inventory at the exchange, including in-flight executions.
+- Whole shares, USD cents, $0.01 grid, zero fees. Longs use available cash;
+  shorts restrict proceeds and reserve 100% entry-notional collateral. Losing
+  covers may create a cash debit, blocking new entries. Matching enforces
+  available collateral and direction-aware exit quantities, including in-flight fills.
 - Market orders sweep available liquidity; unmatched remainder expires. Limit
   orders can rest and partly fill. Stops trigger on executed trades and can slip.
   Protective unfilled exits retry on subsequent prints, rather than invent fills.
-- Protective stops are broker-side. They cancel/settle conflicting sell orders
+- Protective stops are broker-side. They cancel/settle conflicting orders
   before exiting remaining inventory. Market orders already dispatched cannot
   be canceled. Late entry fills remain protected after a stop/close trigger.
-- Every new entry requires an explicit entry/stop/target/risk plan. One position
-  or pending entry at a time; no scale-ins, margin, shorting or settlement rules.
+- Every new entry requires a stop and size; target and rationale are optional.
+  One direction at a time, with same-direction adds after working orders settle.
+  Close first to reverse. Short collateral is simplified, with no real broker
+  margin, settlement, locate, borrow fees or SSR model.
 - No opening/closing auctions, extended hours, halts, NBBO, venue routing or
   borrowing. A full session is modeled, but performance is unmeasured.
 - Ending freezes new background orders, settles in-flight human requests,
   expires residual orders and leaves open inventory marked separately. It
   never fabricates a closing liquidation.
-- Initial R retains the original stop. At/below-stop entry fills trigger
+- Initial R retains the original stop, including risk contributed by adds.
+  Entry fills crossing the stop trigger
   protection and make actual-risk/R metrics unavailable; dollar P&L remains.
 - MFE/MAE in review are observed dollar P&L excursions for the trade including
   partial realized exits. Equity/drawdown are sampled at advance boundaries.
@@ -108,4 +130,5 @@ first to see whether the worker accepted it. Command IDs make exact retries
 idempotent. Advances are bounded to at most 60 simulated seconds per request;
 pause takes effect after an already in-flight request completes.
 
-Implementation plan: [2026-10-04-execution-lab.md](../../docs/superpowers/plans/2026-10-04-execution-lab.md).
+Current interaction plan: [direct orders](../../docs/superpowers/plans/2026-10-04-execution-lab-direct-orders.md).
+Original implementation plan: [2026-10-04-execution-lab.md](../../docs/superpowers/plans/2026-10-04-execution-lab.md).
